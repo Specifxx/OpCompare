@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DiscoveryTip } from "@/components/DiscoveryTip";
 import { Breadcrumbs } from "@/components/ui";
 import { WatchlistView } from "@/components/WatchlistView";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 
 export const metadata: Metadata = {
   title: "My Watchlist",
@@ -21,6 +22,7 @@ export default function WatchlistPage() {
         Premium&apos;s Buy List Planner turns this watchlist into the cheapest single store for the lot, and the cheapest way to split it across stores.
       </DiscoveryTip>
       <WatchlistView />
+      <RecentlyViewed className="mt-8" title="Recently viewed — tap one to look again" />
     </div>
   );
 }

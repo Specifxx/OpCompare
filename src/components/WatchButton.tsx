@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "./Icon";
 
 // The watchlist lives in this browser (localStorage) — no account needed.
@@ -20,6 +20,53 @@ export function readWatchlist(): WatchItem[] {
   } catch {
     return [];
   }
+}
+
+// One snapshot per stored string, so useSyncExternalStore sees a stable value.
+const NONE: WatchItem[] = [];
+let snapRaw: string | null | undefined;
+let snap: WatchItem[] = NONE;
+function snapshot(): WatchItem[] {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(WATCH_KEY);
+  } catch {
+    /* blocked */
+  }
+  if (raw !== snapRaw) {
+    snapRaw = raw;
+    try {
+      const v: unknown = JSON.parse(raw || "[]");
+      snap = Array.isArray(v) ? (v as WatchItem[]) : NONE;
+    } catch {
+      snap = NONE;
+    }
+  }
+  return snap;
+}
+function subscribe(on: () => void) {
+  window.addEventListener("op:watchlist", on);
+  window.addEventListener("storage", on);
+  return () => {
+    window.removeEventListener("op:watchlist", on);
+    window.removeEventListener("storage", on);
+  };
+}
+
+/** This browser's watchlist, live (other tabs included); [] on the server. */
+export function useWatchlist(): WatchItem[] {
+  return useSyncExternalStore(subscribe, snapshot, () => NONE);
+}
+
+/** Remove one item (the drawer's and the watchlist page's remove control). */
+export function unwatch(slug: string, kind: "card" | "sealed") {
+  writeWatchlist(readWatchlist().filter((w) => !(w.slug === slug && w.kind === kind)));
+}
+
+/** Open the header's watchlist drawer from anywhere (WatchDrawer listens). */
+export const WATCH_DRAWER_EVENT = "op:watch-drawer";
+export function openWatchDrawer() {
+  window.dispatchEvent(new Event(WATCH_DRAWER_EVENT));
 }
 
 function writeWatchlist(items: WatchItem[]) {

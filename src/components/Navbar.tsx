@@ -13,6 +13,7 @@ import { NavUser } from "./NavUser";
 import { PRIMARY_NAV } from "./nav-groups";
 import { PricingLink } from "./PlanButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { WatchDrawerButton } from "./WatchDrawer";
 
 // Below sm the logo is the hat mark alone: with the market picker, watchlist,
 // account and (from 400px) Pricing, the wordmark overflowed a 390px phone.
@@ -65,9 +66,7 @@ export function Navbar() {
             <HeaderPricing />
             <ThemeToggle />
             <CountrySelect />
-            <Link href="/watchlist" className="tap-icon rounded-md text-slate-200 hover:bg-ink-800 hover:text-brand-400" aria-label="My watchlist">
-              <Icon name="heart" className="h-[18px] w-[18px]" />
-            </Link>
+            <WatchDrawerButton />
             <NavUser />
           </div>
         </div>
