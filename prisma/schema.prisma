@@ -62,8 +62,9 @@ model Card {
 
   // TCGplayer's market price (USD cents) — a REFERENCE, never a listing.
   marketUsd    Int?
-  // Cheapest OPEN listing per market, in that market's currency (cents), and
-  // how many stores have one. Written by the import from Offer rows.
+  // Cheapest OPEN listing per market, in that market's currency (cents) — any
+  // source, TCGplayer and eBay included — and how many real stores (`store:`
+  // rows only) have one. Written by the import from Offer rows.
   lowUS        Int?
   lowAU        Int?
   lowUK        Int?

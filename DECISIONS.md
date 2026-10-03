@@ -489,3 +489,80 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Store matching: SKU numbers, canonical set names, strict DON!!, and the store count
+
+A coverage study replayed every product of today's 235 stores (473,810
+listings, variant SKUs included) through the matcher and listed what it missed
+and what it got wrong. Each fix below was measured on that replay before it was
+adopted, each has its real titles in `tests/match.test.ts`, and none loosens a
+rule: every new path still needs exactly one printing to fit.
+
+- **SKU card numbers** (`skuCardNumber`, `matchCardBySku`). BinderPOS-style
+  stores title singles "Shanks [Legacy of the Master]" and keep the number in
+  the variant SKU ("OP12-007-EN-NF-1", "op17-105-Normal-707116"). A
+  numberless title borrows it only when every SKU agrees on one number and no
+  SKU is marked JP/CN/KR/FR, and the title must still pick one printing.
+  Strict: a title ending in a `[Set]` the catalogue doesn't know is skipped,
+  and the matched printing's set must canon-equal it. Without that, 7% of SKU
+  matches were wrong ("Helmeppo [Starter Deck: Black Smoker]" priced as the
+  OP card, "Blast Breath [Best Selection Vol.1]" as the plain ST04 print).
+- **Canonical set names** (`canonSet`). Stores carry TCGplayer's older set
+  names: "Starter Deck: Black Marshall.D.Teach", "… Release Event" without
+  "Cards", "Super Pre-Release" first or last. The canonical form drops the
+  "ST-nn:" prefix and the deck number, puts "super pre release" first and
+  drops a trailing "cards"; the name path tries it as a fallback, and a
+  title's trailing `[Set]` names a set when the canon forms agree (which also
+  stops "Monkey.D.Luffy (ST21-001) [Starter Deck EX: Gear 5]" going to the
+  Learn Together deck). A key naming two products is still no key.
+- **Strict DON!!** (`matchDonTitle`). A DON!! title must name the set (code or
+  name, the longest name winning: "Vol. 2" is PRB-02), say every word of the
+  printing's TCGplayer name with Gold both ways, and say nothing the printing
+  lacks: "(V.n)", Alternate Art, Manga, Special Foil, Double Pack, or a
+  promo/event word. "DON!! Card (Alternate Art) - Romance Dawn" was the
+  prototype's one wrong-printing pattern (OP01 has no plain AA DON!!); the
+  reverse rule skips it. Exactly one printing must fit.
+- **Smaller rules.** "Alternative Art"/"Alt. Art" is the alt key; Full Art
+  against Alternate Art is decided by the phrase the title says (only when it
+  says one of them, and a Parallel is never dropped); "Binder Set" is a promo,
+  not a binder; "(OP07 Special)" and "Special Rare" are SP; a rarity glued to
+  the number ("OP06-085UC") and a lone "(112)" beside one set code ("(OP17)")
+  are numbers; "OP15 Release Event" is the RE set code.
+- **Wrong prices fixed.** "OP08P" (a store's promo/stamp code), "Best
+  Selection", "Box Topper" and "Extended Art" are printing words: a printing
+  must say them too, so "Robson (OP08-013) OP08P" and "Izo (OP01-033)
+  (Extended Art)" are no longer the plain card (~200 listings, now skipped). A
+  "Dash Pack" single is not a Booster Pack. The PRB DON!! "<30% of market"
+  drop is policy and stays.
+- **One pipeline, truthful misses.** `matchStoreProduct` runs number → name →
+  DON!! → SKU → sealed for the import and `scripts/probe-stores.ts` alike. A
+  miss names the path that got furthest (`sealed-ambiguous`, `don-no-set`,
+  `sku-unknown-set`, `name-unmatched`, `not-sealed`) instead of filing sealed
+  and name-path misses under the card reason `no-number`, so admin store
+  health shows what actually failed. `implausible-price` is unchanged.
+- **`stores<M>` counts real stores only.** The aggregate counted every
+  non-eBay row, TCGplayer included, while its comment said real stores, and
+  the card and sealed pages counted eBay rows as stores. Now `stores<M>` is
+  `store:` rows only and the pages count the same (`isStoreSource`). `low<M>`
+  is still the cheapest listing of any source, so a tile, the booster-box
+  table and the share images say nothing about stores when the low is
+  TCGplayer's or eBay's ("Cheapest US listing" rather than "Cheapest of 0
+  stores"). The homepage, the where-to-buy table and the share image's
+  header count TCGplayer as one of the sellers we track, on purpose, and
+  still do.
+
+Measured on the replay (in-stock card printings priced per market, old → new):
+US 6,112 → 6,269, AU 5,545 → 5,737, UK 3,651 → 3,845, CA 5,923 → 6,012,
+EU 3,609 → 3,646; +672 (printing, market) pairs, of which 169 are over US$20,
+203 US$5–20, 166 US$1–5, 130 under US$1. In-stock store offers 162.2k →
+175.2k. 356 previously matched listings moved printing, all to the printing
+the title names (mostly "Alternative Art" titles that had been priced as the
+base card, older starter-deck names, Full Art vs Alternate Art and Dash Pack
+singles); 251 were dropped, 199 of them "OPnnP" titles and the rest Best
+Selection, Box Topper, Extended Art and Dash Pack listings.
+
+A local full import with the old code and then the new (same stores, an hour
+apart) priced in stock: US 6,112 → 6,269, AU 5,545 → 5,736, UK 3,651 →
+3,846, CA 5,923 → 6,009, EU 3,609 → 3,646 printings; in-stock store offers
+162.2k → 175.1k. With the new count, 703 US printings have a low (TCGplayer)
+and no store: `storesUS` is 6,269 where it had read 6,969.

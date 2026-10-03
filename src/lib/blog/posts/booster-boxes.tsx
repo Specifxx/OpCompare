@@ -46,7 +46,7 @@ export const boosterBoxes: Post = {
         <span key="d" className="whitespace-nowrap text-slate-400">{shortDate(set.releasedOn)}</span>,
         money(s.marketUsd, "US"),
         per ? money(per, "US") : "—",
-        h.kind === "listing" ? `${money(h.cents, country)} (${h.stores})` : "—",
+        h.kind === "listing" ? `${money(h.cents, country)}${h.stores ? ` (${h.stores})` : ""}` : "—",
       ];
     });
     return {

@@ -5,7 +5,7 @@
 // The store import never calls eBay. eBay listing prices come from the separate
 // eBay pass (scripts/ebay.ts, lib/ebay-import.ts, ebay-prices.yml), which writes
 // `ebay` / `ebay_us` Offer rows that aggregate() folds into low<M> (never into
-// stores<M>: eBay is not a store).
+// stores<M>, which counts `store:` rows only: neither eBay nor TCGplayer is a store).
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "./db";
@@ -33,14 +33,14 @@ import {
   anyVariant,
   bestVariant,
   buildCardIndex,
+  buildDonIndex,
   conditionRank,
   buildNameIndex,
-  matchByName,
-  matchCardTitle,
-  matchSealedTitle,
+  matchStoreProduct,
   plausibleSealedPrice,
   plausibleSinglePrice,
   type SealedRef,
+  type StoreMatchIndexes,
 } from "./match";
 import { STORES, type StoreInfo } from "./stores";
 import { fetchStoreProducts, productUrl } from "./store-import";
@@ -291,13 +291,15 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
     where: { number: { not: null } },
     select: { id: true, name: true, tcgName: true, number: true, variant: true, marketUsd: true, set: { select: { code: true, name: true, tcgName: true } } },
   });
-  const idx = buildCardIndex(cards.map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name })));
-  // DON!! cards have no number; they are reachable by the name path only.
-  const dons = await prisma.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, marketUsd: true, set: { select: { name: true, tcgName: true } } } });
+  const idx = buildCardIndex(cards.map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name, setTcgName: c.set.tcgName })));
+  // DON!! cards have no number: the name path and the strict DON!! path.
+  const dons = await prisma.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, marketUsd: true, set: { select: { code: true, name: true, tcgName: true } } } });
   const nameIdx = buildNameIndex([...cards, ...dons].map((c) => ({ id: c.id, tcgName: c.tcgName, setNames: [c.set.name, c.set.tcgName] })));
+  const donIdx = buildDonIndex(dons.map((d) => ({ id: d.id, tcgName: d.tcgName, setCode: d.set.code, setName: d.set.name })));
   for (const d of dons) cards.push({ ...d, name: "DON!! Card", number: null, variant: null, set: { code: "", name: d.set.name, tcgName: d.set.tcgName } });
   const sealedRows = await prisma.sealed.findMany({ select: { id: true, name: true, kind: true, marketUsd: true, set: { select: { code: true, name: true } } } });
   const sealedRefs: SealedRef[] = sealedRows.map((s) => ({ id: s.id, name: s.name, kind: s.kind as SealedRef["kind"], setCode: s.set?.code ?? null, setName: s.set?.name ?? null }));
+  const ix: StoreMatchIndexes = { cards: idx, names: nameIdx, dons: donIdx, sealed: sealedRefs };
   const market = new Map<number, number | null>([...cards.map((c) => [c.id, c.marketUsd] as const), ...sealedRows.map((s) => [s.id, s.marketUsd] as const)]);
   const isSealed = new Set(sealedRows.map((s) => s.id));
 
@@ -329,17 +331,13 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
     }
     const drafts = new Map<number, OfferDraft>();
     for (const p of fetched.products) {
-      let id: number | null = null;
-      const m = matchCardTitle(p.title, idx);
-      const byName = "id" in m ? null : matchByName(p.title, nameIdx);
-      if ("id" in m) id = m.id;
-      else if (byName != null) id = byName;
-      else {
-        const s = matchSealedTitle(p.title, sealedRefs);
-        if ("id" in s) id = s.id;
-        else res.misses[m.miss] = (res.misses[m.miss] ?? 0) + 1;
+      // Card number → TCGplayer name → DON!! → SKU number → sealed (lib/match.ts).
+      const m = matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix);
+      if (!("id" in m)) {
+        res.misses[m.miss] = (res.misses[m.miss] ?? 0) + 1;
+        continue;
       }
-      if (id == null) continue;
+      const id = m.id;
       const best = bestVariant(p.variants ?? []);
       const price = best?.priceCents ?? anyVariant(p.variants ?? []);
       if (price == null) continue;
@@ -372,8 +370,10 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
 }
 
 // ── Aggregates, history, index ───────────────────────────────────────────────
-// low<M> includes eBay rows (the cheapest ask anywhere); stores<M> counts real
-// stores only. The registry cleanup touches `store:` rows only, never `ebay*`.
+// low<M> includes eBay and TCGplayer rows (the cheapest ask anywhere); stores<M>
+// counts real stores only (`store:` rows): never eBay, never TCGplayer, so "3
+// stores" on a tile is three shops. The registry cleanup touches `store:` rows
+// only, never `ebay*`.
 /** An offer not refreshed for this long no longer counts as in stock (RiftCompare's 72h rule). */
 export const STALE_HOURS = 72;
 
@@ -388,7 +388,7 @@ export async function aggregate(log: Log): Promise<void> {
     for (const m of MARKETS) {
       await prisma.$executeRawUnsafe(
         `UPDATE "${table}" t SET "low${m}" = a.low, "stores${m}" = a.n
-         FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*) FILTER (WHERE source NOT LIKE 'ebay%')::int AS n FROM "Offer"
+         FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*) FILTER (WHERE source LIKE 'store:%')::int AS n FROM "Offer"
                WHERE market = $1 AND "inStock" AND "updatedAt" > now() - make_interval(hours => $2::int) GROUP BY "productId") a
          WHERE a."productId" = t.id`,
         m,

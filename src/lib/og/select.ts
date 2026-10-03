@@ -145,7 +145,7 @@ export function storesTracked(stats: Pick<SiteStats, "storeOffers"> | null | und
 }
 
 export interface OgPrice {
-  /** "listing": the cheapest store price; "reference": TCGplayer's market (≈); "none": no price at all. */
+  /** "listing": the cheapest open listing (`stores` = real stores among them, can be 0); "reference": TCGplayer's market (≈); "none": no price at all. */
   kind: "listing" | "reference" | "none";
   country: Country;
   cents: number | null;
@@ -186,7 +186,7 @@ export function ogPriceLines(p: PricedLike, max = 5): { head: OgPrice; others: {
   return { head, others };
 }
 
-/** The number of markets where anything is in stock. */
+/** The number of markets where a real store has it in stock (stores<M> never counts TCGplayer or eBay). */
 export function marketsInStock(p: Pick<PricedLike, "stores">): number {
   return MARKETS.filter((m) => p.stores[m] > 0).length;
 }

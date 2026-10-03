@@ -10,6 +10,9 @@ export interface ShopifyVariant {
   title: string;
   price: string;
   available: boolean;
+  // The store's own SKU ("OP12-007-EN-NF-1"): a number for titles without one
+  // (lib/match.ts matchCardBySku). products.json carries it; nothing strips it.
+  sku?: string | null;
 }
 export interface ShopifyProduct {
   title: string;

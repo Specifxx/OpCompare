@@ -3,15 +3,23 @@ import assert from "node:assert/strict";
 import {
   bestVariant,
   buildCardIndex,
+  buildDonIndex,
   buildNameIndex,
+  canonSet,
   cardNumbersIn,
   conditionRank,
   matchByName,
+  matchCardBySku,
   matchCardTitle,
+  matchDonTitle,
   matchSealedTitle,
+  matchStoreProduct,
   plausibleSinglePrice,
   setCodesIn,
+  skuCardNumber,
+  type PrintingRef,
   type SealedRef,
+  type StoreMatchIndexes,
 } from "../src/lib/match";
 
 // A slice of the real catalogue: OP01-120 Shanks's three printings, a release-
@@ -220,6 +228,8 @@ test("sealed titles", () => {
   assert.equal(sid("One Piece OP-13 Booster Box with Magnetic Case"), "not-sealed");
   assert.equal(sid("One Piece OP-13 Booster Box Protector Case"), "not-sealed");
   assert.equal(sid("Super Pre-Release Starter Deck 36: Yellow Eustass Captain Kid ST-36"), "no-product");
+  // A Dash Pack single is not a booster pack.
+  assert.equal(sid("Nami (Dash Pack) [Adventure on Kami's Island]"), "no-kind");
 });
 
 test("conditions and variants", () => {
@@ -245,4 +255,315 @@ test("prices far from market are treated as mismatches", () => {
   assert.equal(plausibleSinglePrice(9000, 10000), true);
   assert.equal(plausibleSinglePrice(50000, 1000), false);
   assert.equal(plausibleSinglePrice(25, 10), true);
+});
+
+// ── A real catalogue slice (TCGplayer, 2026-10-03) and real store titles ─────
+// Every printing of each number below, exactly as the import indexes it, so
+// "exactly one printing fits" is tested against the real competition.
+const REAL: PrintingRef[] = [
+  { id: 643731, name: "Shanks", number: "OP12-007", variant: null, setCode: "OP12", setName: "Legacy of the Master", setTcgName: "Legacy of the Master" },
+  { id: 649293, name: "Shanks", number: "OP12-007", variant: "Release Event", setCode: "OP12 RE", setName: "Legacy of the Master Release Event Cards", setTcgName: "Legacy of the Master Release Event Cards" },
+  { id: 707116, name: "Charlotte Chiffon", number: "OP17-105", variant: null, setCode: "OP17", setName: "The World's Strongest Warriors", setTcgName: "The World's Strongest Warriors" },
+  { id: 712733, name: "Charlotte Chiffon", number: "OP17-105", variant: "Release Event", setCode: "OP17 RE", setName: "The World's Strongest Warriors Release Event Cards", setTcgName: "The World's Strongest Warriors Release Event Cards" },
+  { id: 685382, name: "Rebecca", number: "OP15-039", variant: null, setCode: "OP15-EB04", setName: "Adventure on Kami's Island", setTcgName: "Adventure on Kami's Island" },
+  { id: 685383, name: "Rebecca", number: "OP15-039", variant: "Alternate Art", setCode: "OP15-EB04", setName: "Adventure on Kami's Island", setTcgName: "Adventure on Kami's Island" },
+  { id: 719666, name: "Rebecca", number: "OP15-039", variant: "Flame-Flame Fruit Coliseum", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 500116, name: "Sogeking", number: "OP03-122", variant: "Alternate Art", setCode: "OP03", setName: "Pillars of Strength", setTcgName: "Pillars of Strength" },
+  { id: 500118, name: "Sogeking", number: "OP03-122", variant: "Alternate Art · Manga", setCode: "OP03", setName: "Pillars of Strength", setTcgName: "Pillars of Strength" },
+  { id: 501997, name: "Sogeking", number: "OP03-122", variant: null, setCode: "OP03", setName: "Pillars of Strength", setTcgName: "Pillars of Strength" },
+  { id: 587710, name: "Sogeking", number: "OP03-122", variant: "Manga", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 615564, name: "Monkey.D.Luffy", number: "ST21-001", variant: null, setCode: "ST-21", setName: "Starter Deck 21: EX Gear 5", setTcgName: "ST-21: Starter Deck 21 EX Gear 5" },
+  { id: 615565, name: "Monkey.D.Luffy", number: "ST21-001", variant: "Parallel", setCode: "ST-21", setName: "Starter Deck 21: EX Gear 5", setTcgName: "ST-21: Starter Deck 21 EX Gear 5" },
+  { id: 656655, name: "Monkey.D.Luffy", number: "ST21-001", variant: "Luffy Deck", setCode: "LT-01", setName: "Learn Together Deck Set", setTcgName: "Learn Together Deck Set" },
+  { id: 706313, name: "Monkey.D.Luffy", number: "ST21-001", variant: null, setCode: "ST-31", setName: "Starter Deck 31: RED Monkey.D.Luffy", setTcgName: "ST-31: Starter Deck 31 RED Monkey.D.Luffy" },
+  { id: 288298, name: "Blast Breath", number: "ST04-016", variant: null, setCode: "ST-04", setName: "Starter Deck 4: Animal Kingdom Pirates", setTcgName: "ST-04: Starter Deck 4 Animal Kingdom Pirates" },
+  { id: 426897, name: "Blast Breath", number: "ST04-016", variant: "Super Pre-Release", setCode: "ST-04 PRE", setName: "Starter Deck 4: Animal Kingdom Pirates (Super Pre-Release Edition)", setTcgName: "ST-04: Starter Deck 4 Animal Kingdom Pirates (Super Pre-Release Edition)" },
+  { id: 546671, name: "Blast Breath", number: "ST04-016", variant: "Premium Card Collection -Best Selection Vol. 1-", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 593589, name: "Blast Breath", number: "ST04-016", variant: "Jolly Roger Foil", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593902, name: "Blast Breath", number: "ST04-016", variant: "Textured Foil", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 599780, name: "Blast Breath", number: "ST04-016", variant: null, setCode: "OP-RP", setName: "Revision Pack Cards", setTcgName: "Revision Pack Cards" },
+  { id: 706355, name: "Bartholomew Kuma", number: "ST35-005", variant: null, setCode: "ST-35", setName: "Starter Deck 35: RED/BLACK Sabo", setTcgName: "ST-35: Starter Deck 35 RED/BLACK Sabo" },
+  { id: 685362, name: "Brook", number: "OP15-022", variant: null, setCode: "OP15-EB04", setName: "Adventure on Kami's Island", setTcgName: "Adventure on Kami's Island" },
+  { id: 685363, name: "Brook", number: "OP15-022", variant: "Alternate Art", setCode: "OP15-EB04", setName: "Adventure on Kami's Island", setTcgName: "Adventure on Kami's Island" },
+  { id: 596924, name: "Shanks", number: "OP09-004", variant: null, setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 596925, name: "Shanks", number: "OP09-004", variant: "Manga", setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 596926, name: "Shanks", number: "OP09-004", variant: "Alternate Art", setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 596927, name: "Shanks", number: "OP09-004", variant: "Wanted Poster", setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 635477, name: "Shanks", number: "OP09-004", variant: "English Version 2nd Anniversary Set", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 646743, name: "Shanks", number: "OP09-004", variant: "Championship 25-26 Offline Regionals Season 2", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 656025, name: "Shanks", number: "OP09-004", variant: "Reprint", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 657442, name: "Shanks", number: "OP09-004", variant: "SP · Gold", setCode: "OP13", setName: "Carrying On His Will", setTcgName: "Carrying On His Will" },
+  { id: 657443, name: "Shanks", number: "OP09-004", variant: "SP · Silver", setCode: "OP13", setName: "Carrying On His Will", setTcgName: "Carrying On His Will" },
+  { id: 288235, name: "Tony Tony.Chopper", number: "ST01-006", variant: null, setCode: "ST-01", setName: "Starter Deck 1: Straw Hat Crew", setTcgName: "ST-01: Starter Deck 1 Straw Hat Crew" },
+  { id: 416671, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Super Pre-Release", setCode: "ST-01 PRE", setName: "Starter Deck 1: Straw Hat Crew (Super Pre-Release Edition)", setTcgName: "ST-01: Starter Deck 1 Straw Hat Crew (Super Pre-Release Edition)" },
+  { id: 455815, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Treasure Cup", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 485267, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Alternate Art", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 501749, name: "Tony Tony.Chopper", number: "ST01-006", variant: "3-on-3 Cup · Winner", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 501750, name: "Tony Tony.Chopper", number: "ST01-006", variant: "3-on-3 Cup · Participant", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 504476, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Premium Card Collection -ONE PIECE FILM RED Edition-", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 523819, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Gift Collection 2023", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 557289, name: "Tony Tony.Chopper", number: "ST01-006", variant: "English Version 1st Anniversary Set", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 586180, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Jolly Roger Foil", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593574, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Full Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593575, name: "Tony Tony.Chopper", number: "ST01-006", variant: "Alternate Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 602800, name: "Tony Tony.Chopper", number: "ST01-006", variant: null, setCode: "OP-DD", setName: "One Piece Demo Deck Cards", setTcgName: "One Piece Demo Deck Cards" },
+  { id: 528666, name: "Satori", number: "OP05-105", variant: null, setCode: "OP05", setName: "Awakening of the New Era", setTcgName: "Awakening of the New Era" },
+  { id: 586804, name: "Satori", number: "OP05-105", variant: "Alternate Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 586805, name: "Satori", number: "OP05-105", variant: "Jolly Roger Foil", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593476, name: "Satori", number: "OP05-105", variant: "Full Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 594332, name: "Satori", number: "OP05-105", variant: "Reprint", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 599736, name: "Satori", number: "OP05-105", variant: "Welcome Pack Vol. 1", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 545825, name: "Crocodile", number: "OP07-040", variant: null, setCode: "OP07", setName: "500 Years in the Future", setTcgName: "500 Years in the Future" },
+  { id: 552110, name: "Crocodile", number: "OP07-040", variant: "Pre-Release", setCode: "OP07 PRE", setName: "500 Years in the Future Pre-Release Cards", setTcgName: "500 Years in the Future Pre-Release Cards" },
+  { id: 588175, name: "Crocodile", number: "OP07-040", variant: "ST15 - ST20 Release Event Winner Pack", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 588176, name: "Crocodile", number: "OP07-040", variant: "ST15 - ST20 Release Event Pack", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 641222, name: "Crocodile", number: "OP07-040", variant: "Judge Pack Vol. 6", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 648089, name: "Crocodile", number: "OP07-040", variant: "Seven Warlords of the Sea Binder Set", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 656197, name: "Crocodile", number: "OP07-040", variant: "Reprint", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 656198, name: "Crocodile", number: "OP07-040", variant: "Pirate Foil", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 656200, name: "Crocodile", number: "OP07-040", variant: "Alternate Art", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 454556, name: "Okiku", number: "OP01-035", variant: null, setCode: "OP01", setName: "Romance Dawn", setTcgName: "Romance Dawn" },
+  { id: 499432, name: "Okiku", number: "OP01-035", variant: "Judge", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 503243, name: "Okiku", number: "OP01-035", variant: "Tournament Pack Vol. 4", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 503247, name: "Okiku", number: "OP01-035", variant: "Winner Pack Vol. 4", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 525308, name: "Okiku", number: "OP01-035", variant: "CS 2023 Celebration Pack", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 545922, name: "Okiku", number: "OP01-035", variant: "SP", setCode: "OP07", setName: "500 Years in the Future", setTcgName: "500 Years in the Future" },
+  { id: 564253, name: "Okiku", number: "OP01-035", variant: "Premium Card Collection -BANDAI CARD GAMES Fest. 23-24 Edition-", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 653430, name: "Roronoa Zoro", number: "PRB02-006", variant: null, setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 653431, name: "Roronoa Zoro", number: "PRB02-006", variant: "Alternate Art", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2", setTcgName: "Premium Booster -The Best- Vol. 2" },
+  { id: 670642, name: "Roronoa Zoro", number: "PRB02-006", variant: "SP", setCode: "OP14", setName: "The Azure Sea's Seven", setTcgName: "The Azure Sea's Seven" },
+  { id: 693119, name: "Roronoa Zoro", number: "PRB02-006", variant: "Welcome Pack 2026 Vol.1", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 707252, name: "Roronoa Zoro", number: "PRB02-006", variant: "Round 1 Promo", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 482423, name: "Edward.Newgate", number: "OP02-004", variant: null, setCode: "OP02", setName: "Paramount War", setTcgName: "Paramount War" },
+  { id: 485861, name: "Edward.Newgate", number: "OP02-004", variant: "Alternate Art", setCode: "OP02", setName: "Paramount War", setTcgName: "Paramount War" },
+  { id: 514045, name: "Edward.Newgate", number: "OP02-004", variant: "Championship 2023", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 516553, name: "Edward.Newgate", number: "OP02-004", variant: "SP", setCode: "OP04", setName: "Kingdoms of Intrigue", setTcgName: "Kingdoms of Intrigue" },
+  { id: 586182, name: "Edward.Newgate", number: "OP02-004", variant: "Alternate Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 594317, name: "Edward.Newgate", number: "OP02-004", variant: "Reprint", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 596970, name: "Buggy", number: "OP09-042", variant: null, setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 596971, name: "Buggy", number: "OP09-042", variant: "Parallel", setCode: "OP09", setName: "Emperors in the New World", setTcgName: "Emperors in the New World" },
+  { id: 633944, name: "Buggy", number: "OP09-042", variant: null, setCode: "ST-25", setName: "Starter Deck 25: BLUE Buggy", setTcgName: "ST-25: Starter Deck 25 BLUE Buggy" },
+  { id: 635470, name: "Buggy", number: "OP09-042", variant: "English Version 2nd Anniversary Set", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 615590, name: "Monkey.D.Luffy", number: "ST21-014", variant: null, setCode: "ST-21", setName: "Starter Deck 21: EX Gear 5", setTcgName: "ST-21: Starter Deck 21 EX Gear 5" },
+  { id: 615591, name: "Monkey.D.Luffy", number: "ST21-014", variant: "Parallel", setCode: "ST-21", setName: "Starter Deck 21: EX Gear 5", setTcgName: "ST-21: Starter Deck 21 EX Gear 5" },
+  { id: 656673, name: "Monkey.D.Luffy", number: "ST21-014", variant: "Luffy Deck", setCode: "LT-01", setName: "Learn Together Deck Set", setTcgName: "Learn Together Deck Set" },
+  { id: 661704, name: "Monkey.D.Luffy", number: "ST21-014", variant: "3rd Anniversary Treasure Campaign Pack", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 541637, name: "Kumacy", number: "OP06-085", variant: null, setCode: "OP06", setName: "Wings of the Captain", setTcgName: "Wings of the Captain" },
+  { id: 541744, name: "Kumacy", number: "OP06-085", variant: "Pre-Release", setCode: "OP06 PRE", setName: "Wings of the Captain Pre-Release Cards", setTcgName: "Wings of the Captain Pre-Release Cards" },
+  { id: 708072, name: "Charlotte Linlin", number: "OP17-112", variant: "Manga", setCode: "OP17", setName: "The World's Strongest Warriors", setTcgName: "The World's Strongest Warriors" },
+  { id: 711324, name: "Charlotte Linlin", number: "OP17-112", variant: "Alternate Art", setCode: "OP17", setName: "The World's Strongest Warriors", setTcgName: "The World's Strongest Warriors" },
+  { id: 711325, name: "Charlotte Linlin", number: "OP17-112", variant: null, setCode: "OP17", setName: "The World's Strongest Warriors", setTcgName: "The World's Strongest Warriors" },
+  { id: 558036, name: "Robson", number: "OP08-013", variant: null, setCode: "OP08", setName: "Two Legends", setTcgName: "Two Legends" },
+  { id: 576455, name: "Robson", number: "OP08-013", variant: "Pre-Release", setCode: "OP08 PRE", setName: "Two Legends Pre-Release Cards", setTcgName: "Two Legends Pre-Release Cards" },
+  { id: 454554, name: "Izo", number: "OP01-033", variant: null, setCode: "OP01", setName: "Romance Dawn", setTcgName: "Romance Dawn" },
+  { id: 483155, name: "Izo", number: "OP01-033", variant: "Tournament Pack Vol. 2", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 483156, name: "Izo", number: "OP01-033", variant: "Tournament Pack Vol. 2 · Winner", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 525307, name: "Izo", number: "OP01-033", variant: "CS 2023 Celebration Pack", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 564252, name: "Izo", number: "OP01-033", variant: "Premium Card Collection -BANDAI CARD GAMES Fest. 23-24 Edition-", setCode: "OP-PR", setName: "One Piece Promotion Cards", setTcgName: "One Piece Promotion Cards" },
+  { id: 586589, name: "Izo", number: "OP01-033", variant: "Jolly Roger Foil", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593284, name: "Izo", number: "OP01-033", variant: "Full Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+  { id: 593285, name: "Izo", number: "OP01-033", variant: "Alternate Art", setCode: "PRB-01", setName: "Premium Booster -The Best-", setTcgName: "Premium Booster -The Best-" },
+];
+const real = buildCardIndex(REAL);
+const r = (t: string) => {
+  const x = matchCardTitle(t, real);
+  return "id" in x ? x.id : x.miss;
+};
+const bySku = (t: string, ...skus: string[]) => {
+  const x = matchCardBySku(t, skus, real);
+  return "id" in x ? x.id : x.miss;
+};
+
+test("SKU numbers: one number, never a foreign SKU", () => {
+  assert.equal(skuCardNumber(["OP12-007-EN-NF-1", "OP12-007-EN-NF-2"]), "OP12-007");
+  assert.equal(skuCardNumber(["op17-105-Normal-707116"]), "OP17-105");
+  assert.equal(skuCardNumber(["OP15-EB04-OP15-039-AA-EN-FO-1"]), "OP15-039");
+  assert.equal(skuCardNumber(["ST-21-ST21-001-EN-NF-1"]), "ST21-001");
+  assert.equal(skuCardNumber(["OP12007-1234567"]), "OP12-007");
+  assert.equal(skuCardNumber(["op12-66-Normal-643805"]), "OP12-066");
+  assert.equal(skuCardNumber(["OP12-007-JP-NF-1"]), null);
+  assert.equal(skuCardNumber(["OP12-007-EN-1", "OP12-008-EN-1"]), null);
+  assert.equal(skuCardNumber(["8355828", ""]), null);
+});
+
+test("SKU numbers lend a number to a numberless title, strictly", () => {
+  assert.equal(bySku("Shanks [Legacy of the Master]", "OP12-007-EN-NF-1"), 643731);
+  assert.equal(bySku("Charlotte Chiffon", "op17-105-Normal-707116"), 707116);
+  assert.equal(bySku("Rebecca (Alternate Art) [Adventure on Kami's Island]", "OP15-EB04-OP15-039-AA-EN-FO-1"), 685383);
+  assert.equal(bySku("Sogeking (Alternate Art)", "SNG-OZC-OP03-122-SEC-NM-1"), 500116);
+  // Not the Learn Together deck's ST21-001 (its "Luffy Deck" tag is in the title by accident).
+  assert.equal(bySku("Monkey.D.Luffy [Starter Deck EX: Gear 5]", "ST-21-ST21-001-EN-NF-1"), 615564);
+  // A set the catalogue doesn't know is a printing it doesn't list.
+  assert.equal(bySku("Blast Breath [Best Selection Vol.1]", "OP-PR-ST04-016-EN-FO-1"), "unknown-set");
+  assert.equal(bySku("Bartholomew Kuma [One Piece Film: Red]", "OP-PR-ST35-005-EN-FO-1"), "unknown-set");
+  // A known set that isn't the matched printing's: the SKU's card, not this listing.
+  assert.equal(bySku("Bartholomew Kuma [Starter Deck: Blue Buggy]", "ST35-005-EN-1"), "set-mismatch");
+});
+
+test("Alternative Art, Alt. Art and SP said as a set's special", () => {
+  assert.equal(r("Brook (OP15-022) - Op15-022, Alternative Art"), 685363);
+  assert.equal(r("Shanks (OP09-004) - Alternative Art"), 596926);
+  assert.equal(r("Okiku (OP07 Special) - OP01-035 - Rare"), 545922);
+  assert.equal(r("Roronoa Zoro (PRB02-006) - The Azure Sea's Seven (Special Rare) [OP14-PRB02-006]"), 670642);
+  assert.equal(r("Edward.Newgate (OP04 Special) - OP02-004"), 516553);
+  // OP13's Shanks SP is Gold or Silver; a title that says neither stays unmatched.
+  assert.equal(typeof r("Shanks (OP09-004) - Carrying on his Will (Special Rare) [OP13-OP09-004]"), "string");
+});
+
+test("Full Art and Alternate Art share a key; the phrase decides between them", () => {
+  assert.equal(r("Tony Tony.Chopper (ST01-006) (Full Art) (ST01-006) [Premium Booster -The Best-]"), 593574);
+  assert.equal(r("Satori (Full Art) (OP05-105) [Premium Booster -The Best-]"), 593476);
+  assert.equal(r("Satori (Alternate Art) (OP05-105) [Premium Booster -The Best-]"), 586804);
+});
+
+test("the Seven Warlords Binder Set is a promo, not a binder", () => {
+  assert.equal(r("Crocodile (Seven Warlords of the Sea Binder Set) - OP07-040"), 648089);
+  assert.equal(r("Crocodile OP07-040 in a 9-pocket binder"), "not-single");
+});
+
+test("a bracketed set in its older TCGplayer name still names the set", () => {
+  assert.equal(r("Buggy (OP09-042) [Starter Deck: Blue Buggy]"), 633944);
+  assert.equal(r("Monkey.D.Luffy (014) (ST21-014) [Starter Deck EX: Gear 5] Foil"), 615590);
+});
+
+test("numbers with a rarity suffix or written as the set's short number", () => {
+  assert.deepEqual(cardNumbersIn("Kumacy - OP06-085UC - Wings of the Captain"), ["OP06-085"]);
+  assert.equal(r("Kumacy - OP06-085UC - Wings of the Captain"), 541637);
+  assert.equal(r("Charlotte Linlin (112) (Alternate Art) - The World's Strongest Warriors (OP17)"), 711324);
+  assert.deepEqual(setCodesIn("Sai [OP15 Release Event]"), ["OP15 RE"]);
+  assert.deepEqual(setCodesIn("OP-05 Pre-Release"), ["OP05 PRE"]);
+  assert.deepEqual(setCodesIn("OP09 Anniversary"), ["OP09 ANN"]);
+});
+
+test("store words for printings TCGplayer doesn't list are never the plain card", () => {
+  assert.equal(r("Robson (OP08-013) OP08P Uncommon Near Mint Englisch"), "no-printing");
+  assert.equal(r("Izo (OP01-033) (Extended Art)"), "no-printing");
+  assert.equal(r("Izo OP01-033 - OP-13 Carrying On His Will Box Topper"), "no-printing");
+  assert.equal(r("Blast Breath (-Best Selection Vol. 1-) - ST04-016 - Common"), "no-printing");
+});
+
+test("canonical set names on the name path", () => {
+  const n = buildNameIndex([
+    { id: 288272, tcgName: "Dracule Mihawk", setNames: ["Starter Deck 3: The Seven Warlords of The Sea", "ST-03: Starter Deck 3 The Seven Warlords of The Sea"] },
+    { id: 422377, tcgName: "Dracule Mihawk", setNames: ["Starter Deck 3: The Seven Warlords of The Sea (Super Pre-Release Edition)", "ST-03: Starter Deck 3 The Seven Warlords of The Sea (Super Pre-Release Edition)"] },
+    { id: 454527, tcgName: "Sai", setNames: ["Romance Dawn", "Romance Dawn"] },
+    { id: 454598, tcgName: "Dracule Mihawk", setNames: ["Romance Dawn", "Romance Dawn"] },
+    { id: 454664, tcgName: "Shanks", setNames: ["Romance Dawn", "Romance Dawn"] },
+    { id: 477316, tcgName: "Shanks", setNames: ["Starter Deck 5: Film Edition", "ST-05: Starter Deck 5 Film Edition"] },
+    { id: 486394, tcgName: "Dracule Mihawk", setNames: ["Paramount War", "Paramount War"] },
+    { id: 486644, tcgName: "Dracule Mihawk", setNames: ["Paramount War Pre-Release Cards", "Paramount War Pre-Release Cards"] },
+    { id: 503224, tcgName: "Shanks", setNames: ["Starter Deck 8: Monkey.D.Luffy", "ST-08: Starter Deck 8 Monkey.D.Luffy"] },
+    { id: 539282, tcgName: "Shanks", setNames: ["Wings of the Captain", "Wings of the Captain"] },
+    { id: 541639, tcgName: "Sai", setNames: ["Wings of the Captain", "Wings of the Captain"] },
+    { id: 541745, tcgName: "Sai", setNames: ["Wings of the Captain Pre-Release Cards", "Wings of the Captain Pre-Release Cards"] },
+    { id: 542109, tcgName: "Dracule Mihawk", setNames: ["Starter Deck 12: Zoro and Sanji", "ST-12: Starter Deck 12 Zoro and Sanji"] },
+    { id: 543611, tcgName: "Shanks", setNames: ["Ultra Deck: The Three Brothers", "ST-13: Ultra Deck The Three Brothers"] },
+    { id: 545829, tcgName: "Dracule Mihawk", setNames: ["500 Years in the Future", "500 Years in the Future"] },
+    { id: 552071, tcgName: "Dracule Mihawk", setNames: ["500 Years in the Future Pre-Release Cards", "500 Years in the Future Pre-Release Cards"] },
+    { id: 581004, tcgName: "Shanks", setNames: ["Starter Deck 16: GREEN Uta", "ST-16: Starter Deck 16 GREEN Uta"] },
+    { id: 596978, tcgName: "Dracule Mihawk", setNames: ["Emperors in the New World", "Emperors in the New World"] },
+    { id: 597025, tcgName: "Catarina Devon", setNames: ["Emperors in the New World", "Emperors in the New World"] },
+    { id: 600781, tcgName: "Catarina Devon", setNames: ["Emperors in the New World: 2nd Anniversary Tournament Cards", "Emperors in the New World: 2nd Anniversary Tournament Cards"] },
+    { id: 602807, tcgName: "Sai", setNames: ["One Piece Demo Deck Cards", "One Piece Demo Deck Cards"] },
+    { id: 617065, tcgName: "Dracule Mihawk", setNames: ["Royal Blood", "Royal Blood"] },
+    { id: 617090, tcgName: "Sai", setNames: ["Royal Blood", "Royal Blood"] },
+    { id: 620769, tcgName: "Sai", setNames: ["Royal Blood Release Event Cards", "Royal Blood Release Event Cards"] },
+    { id: 633180, tcgName: "Catarina Devon", setNames: ["Starter Deck 27: BLACK Marshall.D.Teach", "ST-27: Starter Deck 27 BLACK Marshall.D.Teach"] },
+    { id: 634282, tcgName: "Come On!! We'll Fight You!! (Reprint)", setNames: ["Starter Deck 23: RED Shanks", "ST-23: Starter Deck 23 RED Shanks"] },
+    { id: 643758, tcgName: "Dracule Mihawk", setNames: ["Legacy of the Master", "Legacy of the Master"] },
+    { id: 648094, tcgName: "Trafalgar Law (Seven Warlords of the Sea Binder Set)", setNames: ["One Piece Promotion Cards", "One Piece Promotion Cards"] },
+    { id: 656042, tcgName: "Come On!! We'll Fight You!! (Reprint)", setNames: ["Premium Booster -The Best- Vol. 2", "Premium Booster -The Best- Vol. 2"] },
+    { id: 671370, tcgName: "Shanks", setNames: ["The Azure Sea's Seven", "The Azure Sea's Seven"] },
+    { id: 685369, tcgName: "Dracule Mihawk", setNames: ["Adventure on Kami's Island", "Adventure on Kami's Island"] },
+    { id: 685389, tcgName: "Sai", setNames: ["Adventure on Kami's Island", "Adventure on Kami's Island"] },
+    { id: 686365, tcgName: "Dracule Mihawk", setNames: ["Adventure on Kami's Island Release Event Cards", "Adventure on Kami's Island Release Event Cards"] },
+    { id: 686433, tcgName: "Sai", setNames: ["Adventure on Kami's Island Release Event Cards", "Adventure on Kami's Island Release Event Cards"] },
+    { id: 695990, tcgName: "Shanks", setNames: ["The Time of Battle", "The Time of Battle"] },
+    { id: 696072, tcgName: "Dracule Mihawk", setNames: ["The Time of Battle", "The Time of Battle"] },
+    { id: 696086, tcgName: "Catarina Devon", setNames: ["The Time of Battle", "The Time of Battle"] },
+    { id: 696714, tcgName: "Shanks", setNames: ["The Time of Battle Release Event Cards", "The Time of Battle Release Event Cards"] },
+    { id: 696758, tcgName: "Dracule Mihawk", setNames: ["The Time of Battle Release Event Cards", "The Time of Battle Release Event Cards"] },
+    { id: 706325, tcgName: "Dracule Mihawk", setNames: ["Starter Deck 32: GREEN Roronoa Zoro", "ST-32: Starter Deck 32 GREEN Roronoa Zoro"] },
+  ]);
+  assert.equal(matchByName("Catarina Devon [Starter Deck: Black Marshall.D.Teach]", n), 633180);
+  assert.equal(matchByName("Dracule Mihawk [Starter Deck: Zoro and Sanji]", n), 542109);
+  assert.equal(matchByName("Sai [Adventure on Kami's Island Release Event]", n), 686433);
+  assert.equal(matchByName("Shanks [Starter Deck: GREEN Uta]", n), 581004);
+  assert.equal(matchByName("Come On!! We'll Fight You!! (Reprint) [Starter Deck: Red Shanks]", n), 634282);
+  assert.equal(matchByName("Trafalgar Law (Seven Warlords of the Sea Binder Set) [One Piece Promotion Cards]", n), 648094);
+  assert.equal(canonSet("ST-01: Starter Deck 1 Straw Hat Crew (Super Pre-Release Edition)"), canonSet("Super Pre-Release Starter Deck: Straw Hat Crew"));
+  // A canonical key that names two products is no key at all.
+  const two = buildNameIndex([
+    { id: 1, tcgName: "Nami", setNames: ["Starter Deck 1: Straw Hat Crew"] },
+    { id: 2, tcgName: "Nami", setNames: ["ST-01: Starter Deck Straw Hat Crew Cards"] },
+  ]);
+  assert.equal(matchByName("Nami [Starter Deck: Straw Hat Crew]", two), null);
+});
+
+const DONS = buildDonIndex([
+  { id: 456059, tcgName: "DON!! Card (Manga) (Alternate Art)", setCode: "OP01", setName: "Romance Dawn" },
+  { id: 456320, tcgName: "DON!! Card // One Piece Film RED Promo", setCode: "OP01", setName: "Romance Dawn" },
+  { id: 482273, tcgName: "DON!! Card (Manga)", setCode: "OP02", setName: "Paramount War" },
+  { id: 517476, tcgName: "DON!! Card (Alternate Art)", setCode: "OP04", setName: "Kingdoms of Intrigue" },
+  { id: 517477, tcgName: "DON!! Card (Color) (Special DON!! Card Pack)", setCode: "OP04", setName: "Kingdoms of Intrigue" },
+  { id: 517478, tcgName: "DON!! Card (Black & White) (Special DON!! Card Pack)", setCode: "OP04", setName: "Kingdoms of Intrigue" },
+  { id: 549342, tcgName: "DON!! Card", setCode: "OP02", setName: "Paramount War" },
+  { id: 586188, tcgName: "DON!! Card (Sakazuki) (Gold)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 586886, tcgName: "DON!! Card (Perona) (Gold)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 587706, tcgName: "DON!! Card (Luffy) (Gold)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 593814, tcgName: "DON!! Card (Luffy)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 593817, tcgName: "DON!! Card (Perona)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 593824, tcgName: "DON!! Card (Sakazuki)", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+  { id: 655118, tcgName: "DON!! Card (GEAR5 Luffy) (Gold)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  { id: 655119, tcgName: "DON!! Card (GEAR5 Luffy)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  { id: 655126, tcgName: "DON!! Card (Teach) (Gold)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  { id: 655128, tcgName: "DON!! Card (Teach)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  { id: 655895, tcgName: "DON!! Card (Gear 4 Luffy)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  { id: 655896, tcgName: "DON!! Card (Gear 4 Luffy) (Gold)", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+]);
+const don = (t: string) => {
+  const x = matchDonTitle(t, DONS);
+  return "id" in x ? x.id : x.miss;
+};
+
+test("DON!! cards: the set, every word of the printing, nothing it lacks, one fit", () => {
+  assert.equal(don("DON!! Card (Teach) (Gold) [PRB-02]"), 655126);
+  assert.equal(don("DON!! Card (Teach) [PRB-02]"), 655128);
+  assert.equal(don("DON!! Card (Sakazuki) [Premium Booster -The Best-]"), 593824);
+  assert.equal(don("DON!! Card (Perona) - Premium Booster -The Best-"), 593817);
+  assert.equal(don("DON!! Card (Black & White) (Special DON!! Card Pack) [OP04]"), 517478);
+  assert.equal(don("DON!! Card (Special DON!! Card Pack) (Color) [Kingdoms of Intrigue]"), 517477);
+  // Romance Dawn has no plain alternate-art DON!!: not the Film RED promo.
+  assert.equal(don("DON!! Card (Alternate Art) - Romance Dawn"), "no-printing");
+  // "Vol. 2" names PRB-02, which has no plain Luffy: not PRB-01's.
+  assert.equal(don("DON!! Card (Luffy) - Premium Booster -The Best- Vol. 2"), "no-printing");
+  // A store's own version numbers are never readable; no set, no match.
+  assert.equal(don("Don!! (PRB Perona) (V.2) PRB01 DON!! Near Mint Englisch"), "no-printing");
+  assert.equal(don("DON!! Card (Teach) (Gold)"), "no-set");
+});
+
+test("a store product runs every path in order and says which one missed", () => {
+  const ix: StoreMatchIndexes = {
+    cards: real,
+    names: buildNameIndex([{ id: 581004, tcgName: "Shanks", setNames: ["Starter Deck 16: GREEN Uta"] }]),
+    dons: DONS,
+    sealed: [
+      ...sealed,
+      { id: 106, name: "Adventure on Kami's Island Booster Pack", kind: "Booster Pack", setCode: "OP15-EB04", setName: "Adventure on Kami's Island" },
+    ],
+  };
+  const m = (t: string, ...skus: string[]) => {
+    const x = matchStoreProduct(t, skus, ix);
+    return "id" in x ? `${x.path}:${x.id}` : x.miss;
+  };
+  assert.equal(m("Shanks (OP12-007) [Legacy of the Master]"), "number:643731");
+  assert.equal(m("Shanks [Starter Deck: GREEN Uta]"), "name:581004");
+  assert.equal(m("DON!! Card (Teach) [PRB-02]"), "don:655128");
+  assert.equal(m("Shanks [Legacy of the Master]", "OP12-007-EN-NF-1"), "sku:643731");
+  assert.equal(m("One Piece OP13 Display (24 Packs) EN"), "sealed:100");
+  assert.equal(m("Nami (Dash Pack) [Adventure on Kami's Island]"), "name-unmatched");
+  assert.equal(m("DON!! Card (Alternate Art) - Romance Dawn"), "don-no-printing");
+  assert.equal(m("Blast Breath [Best Selection Vol.1]", "OP-PR-ST04-016-EN-FO-1"), "sku-unknown-set");
+  assert.equal(m("One Piece Romance Dawn Booster Box"), "sealed-ambiguous");
+  assert.equal(m("Shanks OP01-120 (Japanese)"), "foreign");
 });

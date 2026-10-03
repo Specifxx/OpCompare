@@ -27,6 +27,7 @@ import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { isStoreSource } from "@/lib/stores";
 
 type Props = { params: { slug: string } };
 
@@ -94,6 +95,8 @@ export default async function CardPage({ params }: Props) {
       value: `+${card.counter.toLocaleString("en-US")}`,
     });
   const inMarket = card.offers.filter((o) => o.market === country && o.inStock);
+  // "N stores" counts real stores only; the TCGplayer and eBay rows are listings, not stores.
+  const inStores = inMarket.filter((o) => isStoreSource(o.source));
   const cardText = card.effect ? (
     <div className="card-surface p-4">
       <p className="eyebrow mb-2">Card text</p>
@@ -225,7 +228,7 @@ export default async function CardPage({ params }: Props) {
                   In stock at · {co.code}
                 </p>
                 <p className="num mt-1 text-xl font-bold text-white">
-                  {inMarket.length} {inMarket.length === 1 ? "store" : "stores"}
+                  {inStores.length} {inStores.length === 1 ? "store" : "stores"}
                 </p>
               </div>
               {stats.slice(0, 2).map((s) => (
@@ -394,9 +397,9 @@ export default async function CardPage({ params }: Props) {
             },
             {
               q: `Where is the cheapest place to buy ${card.name}${card.variant ? ` (${card.variant})` : ""}?`,
-              a: inMarket.length
-                ? `Right now, ${inMarket.sort((a, b) => a.priceCents - b.priceCents)[0] ? "the first row of the comparison above" : ""} — ${inMarket.length} ${co.adjective} ${
-                    inMarket.length === 1 ? "store has" : "stores have"
+              a: inStores.length
+                ? `Right now, ${inStores.sort((a, b) => a.priceCents - b.priceCents)[0] ? "the first row of the comparison above" : ""} — ${inStores.length} ${co.adjective} ${
+                    inStores.length === 1 ? "store has" : "stores have"
                   } it in stock, ranked by item price. Postage is added at each store's checkout.`
                 : `No ${co.adjective} store we track has it in stock today. Try the eBay search above, or switch market to see other countries.`,
             },

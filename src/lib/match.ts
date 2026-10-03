@@ -18,9 +18,10 @@ export const FOREIGN_LANG =
   /[㐀-鿿぀-ヿ가-힯]|\b(cn|chn|chs|cht|jp|jpn|jap|kr|kor|chinese|japanese|korean|asia|asian|simplified|traditional|mandarin|cantonese|french|francais|français|german|deutsch|italian|italiano|spanish|español|non[\s-]?english)\b/i;
 
 // Graded slabs, live breaks, lots and serialised prints are not the card a
-// shopper is pricing.
+// shopper is pricing. A "binder" is an accessory, but the "Seven Warlords of the
+// Sea Binder Set" is a promo distribution TCGplayer prints as a variant.
 const NOT_A_RAW_SINGLE =
-  /\b(psa|bgs|cgc|beckett|sgc|graded|slab(bed)?|gem mint|live break|serialized|serialised|lot of|playset|proxy|proxies|custom|replica|sticker|sleeves?|playmat|binder|figure|pop!|ace grading)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b|\b\d{1,4}\/\d{2,4}\b(?!\s*cards)|\bx\s?[2-9]\b|\b[2-9]\s?x\b/i;
+  /\b(psa|bgs|cgc|beckett|sgc|graded|slab(bed)?|gem mint|live break|serialized|serialised|lot of|playset|proxy|proxies|custom|replica|sticker|sleeves?|playmat|binder(?!\s+set)|figure|pop!|ace grading)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b|\b\d{1,4}\/\d{2,4}\b(?!\s*cards)|\bx\s?[2-9]\b|\b[2-9]\s?x\b/i;
 
 export function isForeign(title: string): boolean {
   return FOREIGN_LANG.test(title);
@@ -28,10 +29,13 @@ export function isForeign(title: string): boolean {
 
 // ── Card numbers ─────────────────────────────────────────────────────────────
 
-/** Every One Piece card number in a title, normalised: "OP-01-003" → "OP01-003", "p-001" → "P-001". */
+/**
+ * Every One Piece card number in a title, normalised: "OP-01-003" → "OP01-003",
+ * "p-001" → "P-001". A rarity glued to the number ("OP06-085UC") is still it.
+ */
 export function cardNumbersIn(title: string): string[] {
   const out = new Set<string>();
-  for (const m of title.matchAll(/\b(OP|ST|EB|PRB)[-\s]?(\d{2})-(\d{3})\b/gi)) out.add(`${m[1].toUpperCase()}${m[2]}-${m[3]}`);
+  for (const m of title.matchAll(/\b(OP|ST|EB|PRB)[-\s]?(\d{2})-(\d{3})(?:C|UC|R|SR|SEC|L)?\b/gi)) out.add(`${m[1].toUpperCase()}${m[2]}-${m[3]}`);
   for (const m of title.matchAll(/\bP-(\d{3})\b/gi)) out.add(`P-${m[1]}`);
   return [...out];
 }
@@ -48,10 +52,11 @@ const KEY_PATTERNS: [string, RegExp][] = [
   ["redsaa", /\bred\s+(?:super\s+(?:alt(?:ernate)?[\s-]*art|parallel)|saa)\b/i],
   ["superleader", /\bsuper\s+leader\b/i],
   ["superalt", /\bsuper\s+(?:alt(?:ernate)?\s*art|parallel)\b|\bsaa\b/i],
-  ["alt", /\bparallel\b|\balt(?:ernate)?[\s-]*art\b|\bfull[\s-]*art\b|\baa\b|\balt\b/i],
+  ["alt", /\bparallel\b|\balt(?:ernat(?:e|ive))?\.?[\s-]*art\b|\bfull[\s-]*art\b|\baa\b|\balt\b/i],
   ["manga", /\bmanga\b/i],
   ["wanted", /\bwanted\b/i],
-  ["sp", /\bsp\b(?!\s*played)|\bspecial card\b/i],
+  // "Okiku (OP07 Special)", "(Special Rare)": the SP reprint, said as a set's special.
+  ["sp", /\bsp\b(?!\s*played)|\bspecial card\b|\(\s*(?:OP|EB|ST|PRB)-?\d{2}\s+special\s*\)|\bspecial rare\b/i],
   ["treasure", /\btreasure rare\b|\btr\b/i],
   ["gold", /\bgold\b(?!\s*(?:roger|en))/i],
   ["jolly", /\bjolly roger\b/i],
@@ -118,9 +123,10 @@ export interface PrintingRef {
   variant: string | null;
   setCode?: string | null; // "OP01", "PRB-01", "ST-01"
   setName?: string | null;
+  setTcgName?: string | null; // TCGplayer's own set name ("ST-01: Starter Deck 1 Straw Hat Crew")
 }
 
-type Indexed = PrintingRef & { keys: Set<string>; extras: string[]; nameWords: string[]; home: boolean };
+type Indexed = PrintingRef & { keys: Set<string>; extras: string[]; nameWords: string[]; home: boolean; canon: string[] };
 export type CardIndex = Map<string, Indexed[]>;
 
 const nameWords = (name: string): string[] => {
@@ -145,7 +151,8 @@ export function buildCardIndex(cards: PrintingRef[]): CardIndex {
     const { keys, extras } = printingKeys(c.variant);
     const key = c.number.toUpperCase();
     const list = idx.get(key) ?? [];
-    list.push({ ...c, keys, extras, nameWords: nameWords(c.name), home: isHomeSet(c.number, c.setCode) });
+    const canon = [...new Set([c.setName, c.setTcgName].filter((n): n is string => !!n).map(canonSet))].filter((n) => n.length >= 6);
+    list.push({ ...c, keys, extras, nameWords: nameWords(c.name), home: isHomeSet(c.number, c.setCode), canon });
     idx.set(key, list);
   }
   return idx;
@@ -163,7 +170,8 @@ const PRINTING_WORDS: [string, RegExp][] = [
   ["prerelease", /\bpre[\s-]?release\b|\b(?:OP|ST|EB)-?\d{2}\s+PRE\b/i],
   ["releaseevent", /\brelease event\b|\b(?:OP|ST|EB)-?\d{2}\s+RE\b/i],
   ["judge", /\bjudge\b/i],
-  ["promo", /\bpromo(?:s|tion|tional)?\b/i],
+  // "Robson (OP08-013) OP08P": a store's code for the set's promo, never the plain print.
+  ["promo", /\bpromo(?:s|tion|tional)?\b|\b(?:OP|EB|ST|PRB)\d{2}P\b/i],
   ["anniversary", /\banniversary\b|\b(?:OP|ST|EB)-?\d{2}\s+ANN\b/i],
   ["tournament", /\btournament\b/i],
   ["winner", /\bwinner\b/i],
@@ -180,6 +188,10 @@ const PRINTING_WORDS: [string, RegExp][] = [
   ["demodeck", /\bdemo deck\b/i],
   ["thebest", /\bthe best\b/i],
   ["premiumbooster", /\bpremium booster\b/i],
+  ["bestselection", /\bbest selection\b/i],
+  ["boxtopper", /\bbox topper\b/i],
+  // "Izo (OP01-033) (Extended Art)": no such printing, and never the OP01 card.
+  ["extendedart", /\bextended art\b/i],
 ];
 const compact = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
 const PRB_TITLE = /\bthe best\b|\bpremium booster\b/i;
@@ -217,11 +229,33 @@ export function codeNamesSet(titleCode: string, setCode: string | null | undefin
 
 export type MatchMiss = "foreign" | "not-single" | "no-number" | "many-numbers" | "unknown-number" | "name" | "no-printing" | "ambiguous";
 
+const FULL_ART = /\bfull[\s-]*art\b/i;
+const ALT_ART = /\balt(?:ernat(?:e|ive))?\.?[\s-]*art\b/i;
+
+const TRAILING_SET = /\[([^\]]+)\]\s*(?:foil|non-foil|normal|holofoil)?\s*$/i;
+
+/** The set a title ends on in brackets: "Buggy (OP09-042) [Starter Deck: Blue Buggy] Foil" → "Starter Deck: Blue Buggy". */
+export function trailingSet(title: string): string | null {
+  return TRAILING_SET.exec(title)?.[1] ?? null;
+}
+
+/**
+ * A card number written as the set's short number: "Charlotte Linlin (112)
+ * (Alternate Art) - The World's Strongest Warriors (OP17)" is OP17-112. Only
+ * with exactly one "(NNN)" and exactly one plain OP/EB/ST set code.
+ */
+function shortNumber(title: string): string[] {
+  const short = [...title.matchAll(/\((\d{3})\)/g)].map((m) => m[1]);
+  const codes = setCodesIn(title).filter((c) => /^(?:OP\d{2}|EB-\d{2}|ST-\d{2})$/.test(c));
+  return short.length === 1 && codes.length === 1 ? [`${codes[0].replace("-", "")}-${short[0]}`] : [];
+}
+
 /** The one printing a store title names, or why not. */
 export function matchCardTitle(title: string, idx: CardIndex): { id: number } | { miss: MatchMiss } {
   if (isForeign(title)) return { miss: "foreign" };
   if (NOT_A_RAW_SINGLE.test(title)) return { miss: "not-single" };
   const nums = cardNumbersIn(title);
+  if (!nums.length) nums.push(...shortNumber(title));
   if (!nums.length) return { miss: "no-number" };
   if (nums.length > 1) return { miss: "many-numbers" };
   const cands = idx.get(nums[0]);
@@ -236,7 +270,12 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
   for (const m of title.matchAll(EVENT_CODE)) for (const w of EVENT_WORDS[m[1].toUpperCase()] ?? []) words.add(w);
   const codes = setCodesIn(title);
   const flat = lower.replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ");
-  const setNamed = (c: Indexed) => codes.some((tc) => codeNamesSet(tc, c.setCode)) || nameInTitle(flat, c.setName);
+  // "[Starter Deck: Blue Buggy]": a set named the way BinderPOS's older TCGplayer
+  // catalogue named it ("Starter Deck 25: BLUE Buggy" today) still names it.
+  const bracket = trailingSet(title);
+  const bracketCanon = bracket ? canonSet(bracket) : "";
+  const setNamed = (c: Indexed) =>
+    codes.some((tc) => codeNamesSet(tc, c.setCode)) || nameInTitle(flat, c.setName) || (bracketCanon.length >= 6 && c.canon.includes(bracketCanon));
   const out = ruledOut(title, codes);
   // When the title names the set of one of this number's printings, only
   // printings in a set it names fit: "Roronoa Zoro (OP06-118) - Wings of the
@@ -270,12 +309,25 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
     const byName = fits.filter((c) => nameInTitle(flat, c.setName));
     if (byName.length) fits = byName;
   }
-  // 3. the most specific tag (a "Judge Pack" print over the standard one);
+  // 3. Full Art against Alternate Art, which share the "alt" key: when the
+  //    title says exactly one of the two phrases, not the printing that says
+  //    only the other ("Satori (Full Art) (OP05-105) [Premium Booster -The
+  //    Best-]" is the Full Art, not the AA). A Parallel is left alone.
+  if (fits.length > 1) {
+    const full = FULL_ART.test(title);
+    const alt = ALT_ART.test(title);
+    if (full !== alt) {
+      const [said, other] = full ? [FULL_ART, ALT_ART] : [ALT_ART, FULL_ART];
+      const bySaid = fits.filter((c) => said.test(c.variant ?? "") || !other.test(c.variant ?? ""));
+      if (bySaid.length) fits = bySaid;
+    }
+  }
+  // 4. the most specific tag (a "Judge Pack" print over the standard one);
   if (fits.length > 1) {
     const best = Math.max(...fits.map((c) => c.extras.length));
     fits = fits.filter((c) => c.extras.length === best);
   }
-  // 4. and, when nothing else separates them, the card number's own set: a
+  // 5. and, when nothing else separates them, the card number's own set: a
   //    store selling "Luffy OP01-024" with no other word sells the OP01 print.
   if (fits.length > 1 && !codes.length) {
     const home = fits.filter((c) => c.home);
@@ -316,13 +368,31 @@ export function normName(s: string): string {
     .trim();
 }
 
-/** "ST-01: Starter Deck 1 Straw Hat Crew" → also "starter deck 1 straw hat crew". */
+/**
+ * A set name in the one form every catalogue generation shares. BinderPOS stores
+ * still carry TCGplayer's older names: "Starter Deck: Black Marshall.D.Teach" is
+ * today's "Starter Deck 27: BLACK Marshall.D.Teach", "… Release Event" is
+ * "… Release Event Cards", and the Super Pre-Release decks put the edition
+ * first or last. So: no "ST-27:" prefix, no deck number, "super pre release"
+ * first, no trailing "cards".
+ */
+export function canonSet(name: string): string {
+  let n = normName(name).replace(/^(?:st|op|eb|prb) ?\d{2}(?: \w+)? (?=starter|ultra)/, "");
+  n = n.replace(/\b(starter deck|ultra deck) \d{1,2}\b/, "$1");
+  const spr = /\bsuper pre release\b/.test(n);
+  n = n.replace(/\bsuper pre release( edition)?\b/g, " ").replace(/\s+/g, " ").trim();
+  if (spr) n = `super pre release ${n}`;
+  return n.replace(/ cards$/, "").replace(/\s+/g, " ").trim();
+}
+
+/** "ST-01: Starter Deck 1 Straw Hat Crew" → also "starter deck 1 straw hat crew" and its canonical form. */
 function setNameForms(names: string[]): string[] {
   const out = new Set<string>();
   for (const n of names) {
     if (!n) continue;
     out.add(normName(n));
     out.add(normName(n.replace(/^[A-Z]{2,3}-?\d{2}(?:-[A-Z]{2}\d{2})?:\s*/, "")));
+    out.add(canonSet(n));
   }
   out.delete("");
   return [...out];
@@ -350,8 +420,145 @@ export function matchByName(title: string, idx: NameIndex): number | null {
   let m = /^(.+?)\s*\[([^\]]+)\]\s*$/.exec(t);
   if (!m) m = /^(.+?)\s+-\s+(.+)$/.exec(t);
   if (!m) return null;
-  const id = idx.get(`${normName(m[1])}|${normName(m[2])}`);
+  const name = normName(m[1]);
+  const id = idx.get(`${name}|${normName(m[2])}`) ?? idx.get(`${name}|${canonSet(m[2])}`);
   return id != null && id > 0 ? id : null;
+}
+
+// ── The SKU path ─────────────────────────────────────────────────────────────
+// Many stores title a single without its number ("Shanks [Legacy of the
+// Master]") but carry it in the variant SKU ("OP12-007-EN-NF-1"). The SKU only
+// lends a number to a title that has none; the title must still pick ONE
+// printing through matchCardTitle, and a title that names a set must name that
+// printing's set ("Helmeppo [Starter Deck: Black Smoker]" with an OP-set SKU is
+// not the OP card).
+
+// A SKU marked as another language never lends its number.
+const FOREIGN_SKU = /(?:^|-)(JP|JPN|CN|KR|FR)(?:-|$)|-JP\d/;
+
+/** The one card number a product's variant SKUs agree on, or null. */
+export function skuCardNumber(skus: (string | null | undefined)[]): string | null {
+  const out = new Set<string>();
+  for (const raw of skus) {
+    if (!raw) continue;
+    const s = raw.trim().toUpperCase();
+    if (FOREIGN_SKU.test(s)) return null;
+    let ns = cardNumbersIn(s.replace(/_/g, "-"));
+    if (!ns.length) {
+      // Compact forms: "OP12007-123456" and "OP17-105-NORMAL…" (short number).
+      const a = /^(OP|ST|EB|PRB)(\d{2})(\d{3})-\d{5,}$/.exec(s);
+      const b = /^(OP|ST|EB)(\d{2})-(\d{1,3})-NORMAL/.exec(s);
+      if (a) ns = [`${a[1]}${a[2]}-${a[3]}`];
+      else if (b) ns = [`${b[1]}${b[2]}-${b[3].padStart(3, "0")}`];
+    }
+    for (const n of ns) out.add(n);
+  }
+  return out.size === 1 ? [...out][0] : null;
+}
+
+export type SkuMiss = "no-sku-number" | "unknown-set" | "set-mismatch" | MatchMiss;
+
+const indexMeta = new WeakMap<CardIndex, { byId: Map<number, Indexed>; canon: Set<string> }>();
+function metaOf(idx: CardIndex) {
+  let m = indexMeta.get(idx);
+  if (!m) {
+    const all = [...idx.values()].flat();
+    m = { byId: new Map(all.map((c) => [c.id, c])), canon: new Set(all.flatMap((c) => c.canon)) };
+    indexMeta.set(idx, m);
+  }
+  return m;
+}
+
+/** A numberless title matched through the number its SKUs carry, strictly. */
+export function matchCardBySku(title: string, skus: (string | null | undefined)[], idx: CardIndex): { id: number } | { miss: SkuMiss } {
+  const n = skuCardNumber(skus);
+  if (!n) return { miss: "no-sku-number" };
+  const bracket = trailingSet(title);
+  const named = bracket ? canonSet(bracket) : "";
+  const meta = metaOf(idx);
+  // "[Best Selection Vol.1]", "[One Piece Film: Red]": a set the catalogue doesn't
+  // know is a printing it doesn't list, not the plain card the SKU numbers.
+  if (named && !meta.canon.has(named)) return { miss: "unknown-set" };
+  // The number goes before a trailing "[Set]", which must stay the title's last word.
+  const at = TRAILING_SET.exec(title)?.index ?? title.length;
+  const m = matchCardTitle(`${title.slice(0, at).trimEnd()} (${n}) ${title.slice(at)}`.trim(), idx);
+  if (!("id" in m)) return m;
+  if (named && !meta.byId.get(m.id)?.canon.includes(named)) return { miss: "set-mismatch" };
+  return m;
+}
+
+// ── DON!! cards ──────────────────────────────────────────────────────────────
+// DON!! cards have no number, so the number path never sees them, and their
+// names repeat across sets ("DON!! Card (Alternate Art)" is in a dozen). A DON!!
+// title is matched only when it names the set, says every word of the
+// printing's TCGplayer name, says nothing the printing lacks, and exactly one
+// printing fits.
+
+export interface DonRef {
+  id: number;
+  tcgName: string; // "DON!! Card (Teach) (Gold)"
+  setCode: string | null;
+  setName: string | null;
+}
+type DonIndexed = DonRef & { toks: string[]; gold: boolean; text: string; own: string; setNorm: string };
+export type DonIndex = DonIndexed[];
+
+export const DON_TITLE = /\bdon!!|\bdon card\b/i;
+
+/** Words a DON!! title may carry only when the printing carries them too. */
+const DON_MARKS: [RegExp, string][] = [
+  [/\bparallel\b|\balt(?:ernat(?:e|ive))?\.?[\s-]*art\b|\baa\b/i, "alternate art"],
+  [/\bmanga\b/i, "manga"],
+  [/\bspecial foil\b/i, "special foil"],
+  [/\bdouble pack\b/i, "double pack"],
+  [/\btextured\b/i, "textured"],
+];
+// "(V.2)": the store's own numbering of a set's DON!! versions; never readable.
+const ANY_VERSION = /\(\s*v(?:er(?:sion)?)?\.?\s*\d+\s*\)/i;
+
+export function buildDonIndex(dons: DonRef[]): DonIndex {
+  return dons
+    .filter((d) => /^DON!! Card\b/i.test(d.tcgName))
+    .map((d) => ({
+      ...d,
+      toks: [...d.tcgName.matchAll(/[([]([^)\]]+)[)\]]/g)].map((m) => normName(m[1])).filter(Boolean),
+      gold: /\bgold\b/i.test(d.tcgName),
+      text: ` ${normName(`${d.tcgName} ${d.setName ?? ""}`)} `,
+      own: compact(`${d.tcgName} ${d.setName ?? ""}`),
+      setNorm: normName(d.setName ?? ""),
+    }));
+}
+
+export function matchDonTitle(title: string, idx: DonIndex): { id: number } | { miss: string } {
+  if (isForeign(title)) return { miss: "foreign" };
+  if (NOT_A_RAW_SINGLE.test(title)) return { miss: "not-single" };
+  if (ANY_VERSION.test(title)) return { miss: "no-printing" };
+  const words = ` ${normName(title)} `;
+  const flat = title.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ");
+  const codes = setCodesIn(title);
+  // By name, the longest set name the title says: "Premium Booster -The Best-
+  // Vol. 2" names PRB-02, not also PRB-01.
+  const byName = new Set(idx.filter((d) => nameInTitle(flat, d.setName)).map((d) => d.setNorm));
+  const named = (d: DonIndexed) =>
+    codes.some((tc) => codeNamesSet(tc, d.setCode)) || (byName.has(d.setNorm) && ![...byName].some((o) => o !== d.setNorm && o.includes(d.setNorm)));
+  const inSet = idx.filter(named);
+  if (!inSet.length) return { miss: "no-set" };
+  const gold = /\bgold\b/i.test(title);
+  const marks = DON_MARKS.filter(([re]) => re.test(title)).map(([, w]) => w);
+  const said = PRINTING_WORDS.filter(([, re]) => re.test(title)).map(([w]) => w);
+  const fits = inSet.filter(
+    (d) =>
+      d.gold === gold &&
+      d.toks.every((t) => words.includes(` ${t} `)) &&
+      marks.every((w) => d.text.includes(` ${w} `)) &&
+      said.every((w) => d.own.includes(w)),
+  );
+  // A printing whose words are a strict part of another fit's leaves the rest
+  // of the title unexplained: "(Alternate Art) (The Four Emperors)" is not the
+  // plain "(Alternate Art)" DON!!.
+  const top = fits.filter((d) => !fits.some((o) => o !== d && o.toks.length > d.toks.length && d.toks.every((t) => o.toks.includes(t))));
+  if (top.length === 1) return { id: top[0].id };
+  return { miss: fits.length ? "ambiguous" : "no-printing" };
 }
 
 // ── Conditions ───────────────────────────────────────────────────────────────
@@ -429,11 +636,13 @@ export interface SealedRef {
 /** "OP-13" / "op13" / "[OP-13]" → "OP13"; "ST36" → "ST-36"; "EB-02" → "EB-02". */
 export function setCodesIn(title: string): string[] {
   const out = new Set<string>();
-  for (const m of title.matchAll(/\b(OP|EB|PRB|ST|SD)[-\s]?(\d{2})\b(?!-\d{3})(?:\s+(PRE|RE|ANN)\b)?/gi)) {
+  for (const m of title.matchAll(/\b(OP|EB|PRB|ST|SD)[-\s]?(\d{2})\b(?!-\d{3})(?:\s+(PRE|RE|ANN|pre[\s-]?release|release\s+event|anniversary)\b)?/gi)) {
     const p = m[1].toUpperCase();
     const code = p === "OP" || p === "SD" ? `${p}${m[2]}` : `${p}-${m[2]}`;
-    // "OP03 PRE", "OP15 RE", "OP09 ANN": the event group, as TCGplayer codes it.
-    out.add(m[3] ? `${code} ${m[3].toUpperCase()}` : code);
+    // "OP03 PRE", "OP15 RE" / "OP15 Release Event", "OP09 ANN": the event group,
+    // as TCGplayer codes it.
+    const ev = m[3] ? (/^pre/i.test(m[3]) ? "PRE" : /^re/i.test(m[3]) ? "RE" : "ANN") : null;
+    out.add(ev ? `${code} ${ev}` : code);
   }
   return [...out];
 }
@@ -443,7 +652,8 @@ export function sealedKindOfTitle(title: string): SealedKind | null {
   const t = title.toLowerCase();
   // Products we do not match from store titles (their names vary too much to
   // tell apart safely), and singles that name the product they came from.
-  if (/illustration box|tin pack|gift collection|premium card collection|devil fruits|don!!|\bdon card\b|alternate art|parallel|\bmanga\b|\bleader\b|\[sp\]|\(sp\)/.test(t)) return null;
+  // A "Dash Pack" single ("Nami (Dash Pack) [Adventure on Kami's Island]") is not a booster pack.
+  if (/illustration box|tin pack|gift collection|premium card collection|devil fruits|dash pack|don!!|\bdon card\b|alternate art|parallel|\bmanga\b|\bleader\b|\[sp\]|\(sp\)/.test(t)) return null;
   const deck = /starter deck|ultra deck|deck set|\bst-?\d{2}\b/.test(t);
   const dbl = /double pack/.test(t);
   // A case is said in so many words ("Booster Box Case", "Booster Case (12
@@ -488,4 +698,52 @@ export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: numb
     if (wave) cands = cands.filter((s) => s.name.toLowerCase().includes(wave));
   }
   return cands.length === 1 ? { id: cands[0].id } : { miss: "ambiguous" };
+}
+
+
+// ── One store product ────────────────────────────────────────────────────────
+
+export interface StoreMatchIndexes {
+  cards: CardIndex;
+  names: NameIndex;
+  dons: DonIndex;
+  sealed: SealedRef[];
+}
+
+export type StoreMatchPath = "number" | "name" | "don" | "sku" | "sealed";
+
+/**
+ * The one product a store listing is, by the strict paths in order — its card
+ * number, TCGplayer name + set, a DON!! card, the number in its SKUs, a sealed
+ * product — or the reason none fits. The reason names the path that got
+ * furthest: "sealed-ambiguous" is a sealed title, "don-no-set" a DON!! card,
+ * "name-unmatched" a "Name [Set]" title none of them knew.
+ */
+export function matchStoreProduct(
+  title: string,
+  skus: (string | null | undefined)[],
+  ix: StoreMatchIndexes,
+): { id: number; path: StoreMatchPath } | { miss: string } {
+  const m = matchCardTitle(title, ix.cards);
+  if ("id" in m) return { id: m.id, path: "number" };
+  const byName = matchByName(title, ix.names);
+  if (byName != null) return { id: byName, path: "name" };
+  let miss: string = m.miss;
+  if (m.miss === "no-number") {
+    if (DON_TITLE.test(title)) {
+      const d = matchDonTitle(title, ix.dons);
+      if ("id" in d) return { id: d.id, path: "don" };
+      miss = `don-${d.miss}`;
+    } else {
+      const k = matchCardBySku(title, skus, ix.cards);
+      if ("id" in k) return { id: k.id, path: "sku" };
+      if (k.miss !== "no-sku-number") miss = `sku-${k.miss}`;
+      else if (trailingSet(title) || / - /.test(title)) miss = "name-unmatched";
+    }
+  }
+  const s = matchSealedTitle(title, ix.sealed);
+  if ("id" in s) return { id: s.id, path: "sealed" };
+  if (s.miss === "no-product" || s.miss === "ambiguous") miss = `sealed-${s.miss}`;
+  else if (s.miss === "not-sealed" && m.miss === "no-number") miss = "not-sealed";
+  return { miss };
 }

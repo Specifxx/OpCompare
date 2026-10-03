@@ -287,7 +287,8 @@ function MiniTable({ rows }: { rows: OgRow[] }) {
         const badge = `${badgeText(r)} · ${r.number ?? r.setCode}`;
         const listed = r.low != null;
         const price = listed ? ogMoney(r.low) : `≈${ogMoney(r.marketUsd)}`;
-        const sub = listed ? `${plural(r.stores, "store")} · mkt ${ogMoney(r.marketUsd)}` : r.stores
+        // r.stores counts real stores only: a TCGplayer or eBay low has none to name.
+        const sub = listed ? (r.stores ? `${plural(r.stores, "store")} · mkt ${ogMoney(r.marketUsd)}` : `mkt ${ogMoney(r.marketUsd)}`) : r.stores
             ? `mkt · ${plural(r.stores, "store")} far above`
             : "no store · TCGplayer mkt";
         return (
@@ -414,14 +415,18 @@ function PriceBlock({
   const lines: string[] = [];
   if (head.kind === "listing") {
     const mkt = marketUsd != null ? `TCGplayer market ${ogMoney(marketUsd)}` : null;
-    lines.push([mkt, extra].filter(Boolean).join(" · ") || "Cheapest in-stock store price");
-    lines.push(`Cheapest of ${plural(head.stores, `${where} store`)} · ${MARKETS.length} markets compared`);
+    lines.push([mkt, extra].filter(Boolean).join(" · ") || (head.stores ? "Cheapest in-stock store price" : "Cheapest in-stock listing"));
+    lines.push(
+      head.stores
+        ? `Cheapest of ${plural(head.stores, `${where} store`)} · ${MARKETS.length} markets compared`
+        : `Cheapest ${where} listing · ${MARKETS.length} markets compared`,
+    );
   } else if (head.kind === "reference") {
     lines.push(["TCGplayer market price", extra].filter(Boolean).join(" · "));
     if (head.ask) {
       // A lone listing far above the market: shown, never the headline.
       const at = head.ask.country === "US" ? "US" : head.ask.country;
-      lines.push(`Cheapest ${at} listing ${ogMoney(head.ask.cents, head.ask.country)} (${plural(head.ask.stores, "store")})`);
+      lines.push(`Cheapest ${at} listing ${ogMoney(head.ask.cents, head.ask.country)}${head.ask.stores ? ` (${plural(head.ask.stores, "store")})` : ""}`);
     } else {
       lines.push(`No store listings yet · tracked across ${MARKETS.length} markets`);
     }

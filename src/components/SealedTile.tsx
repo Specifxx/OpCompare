@@ -36,9 +36,11 @@ export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Co
                 <p className="num text-lg font-bold text-accent">{money(h.cents, country)}</p>
                 {perPack ? <p className="num text-[11px] text-slate-400">{money(perPack, country)} / pack</p> : null}
               </div>
-              <p className="pb-1 text-[11px] font-semibold text-emerald-400">
-                {h.stores} {h.stores === 1 ? "store" : "stores"}
-              </p>
+              {h.stores > 0 ? (
+                <p className="pb-1 text-[11px] font-semibold text-emerald-400">
+                  {h.stores} {h.stores === 1 ? "store" : "stores"}
+                </p>
+              ) : null}
             </>
           ) : h.kind === "reference" ? (
             <div>

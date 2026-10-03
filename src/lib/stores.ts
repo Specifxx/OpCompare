@@ -269,6 +269,11 @@ export function storesIn(country: Country): StoreInfo[] {
   return STORES.filter((s) => s.country === country);
 }
 
+/** A real store's row ("store:<key>"): what every "N stores" count counts — never TCGplayer or eBay. */
+export function isStoreSource(source: string): boolean {
+  return source.startsWith("store:");
+}
+
 /** "store:cherry" → the store; "tcgplayer" → null. */
 export function storeForSource(source: string): StoreInfo | null {
   return source.startsWith("store:") ? STORE_BY_KEY[source.slice(6)] ?? null : null;

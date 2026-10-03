@@ -38,9 +38,12 @@ export function PriceLine({ card, country }: { card: Pick<CardLite, "low" | "sto
           <p className="text-[11px] text-slate-500">from</p>
           <p className="num text-lg font-bold text-accent">{money(h.cents, country)}</p>
         </div>
-        <p className="pb-1 text-[11px] font-semibold text-emerald-400">
-          {h.stores} {h.stores === 1 ? "store" : "stores"}
-        </p>
+        {/* Real stores only: a TCGplayer or eBay low has no store to count. */}
+        {h.stores > 0 ? (
+          <p className="pb-1 text-[11px] font-semibold text-emerald-400">
+            {h.stores} {h.stores === 1 ? "store" : "stores"}
+          </p>
+        ) : null}
       </div>
     );
   }

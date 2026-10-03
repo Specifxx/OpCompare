@@ -21,6 +21,7 @@ import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { isStoreSource } from "@/lib/stores";
 
 type Props = { params: { slug: string } };
 
@@ -55,6 +56,8 @@ export default async function SealedDetailPage({ params }: Props) {
     : { kind: "none" as const, cents: null, stores: 0 };
   const set = s.setId ? cat.setById.get(s.setId) : undefined;
   const inMarket = s.offers.filter((o) => o.market === country && o.inStock);
+  // "N stores" counts real stores only; the TCGplayer and eBay rows are listings, not stores.
+  const inStores = inMarket.filter((o) => isStoreSource(o.source));
   const perPack =
     s.packCount && s.packCount > 1 && h.cents != null
       ? Math.round(h.cents / s.packCount)
@@ -197,7 +200,7 @@ export default async function SealedDetailPage({ params }: Props) {
                   In stock at · {co.code}
                 </p>
                 <p className="num mt-1 text-xl font-bold text-white">
-                  {inMarket.length} {inMarket.length === 1 ? "store" : "stores"}
+                  {inStores.length} {inStores.length === 1 ? "store" : "stores"}
                 </p>
               </div>
               <div>

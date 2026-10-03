@@ -1,5 +1,7 @@
 // What a tile or row shows as "the price" in a market, in one place:
-//   listing   — the cheapest open listing we track there (a real, buyable price)
+//   listing   — the cheapest open listing we track there (a real, buyable price:
+//               a store, TCGplayer or eBay); `stores` counts the real stores
+//               among them only, so it can be 0 beside a TCGplayer/eBay low
 //   reference — TCGplayer's market price converted to the market's currency (≈)
 //   none      — neither
 import type { Country } from "./country";
