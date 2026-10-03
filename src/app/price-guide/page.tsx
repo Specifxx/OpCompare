@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Pagination } from "@/components/Pagination";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { Breadcrumbs, Delta, StatTile } from "@/components/ui";
 import { rarityLabel } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -309,6 +310,7 @@ export default async function PriceGuidePage({
         pages={pages}
         href={(p) => href({ page: p > 1 ? String(p) : undefined })}
       />
+      <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>
   );
 }

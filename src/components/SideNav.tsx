@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { COUNTRIES } from "@/lib/country";
+import { useMe } from "@/lib/use-me";
 import { BrandLockup } from "./Logo";
 import { Icon } from "./Icon";
 import { NAV_GROUPS, searchNav } from "./nav-groups";
 import { useCountry } from "./CountryProvider";
+import { PricingLink } from "./PlanButton";
 
 // The persistent desktop navigation rail (RiftCompare's SideNav): the full left
 // edge from `lg` up, carrying the brand, one search box and every link in
@@ -49,6 +51,7 @@ export function SideNav() {
     });
   };
   const results = useMemo(() => searchNav(q), [q]);
+  const { me } = useMe();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-rail hidden w-[var(--sidenav-w)] flex-col border-r border-ink-800 bg-ink-950 lg:flex" aria-label="Site navigation">
@@ -124,10 +127,13 @@ export function SideNav() {
           <Icon name="heart" className="h-4 w-4 text-brand-400" />
           My Watchlist
         </Link>
-        <Link href="/premium" className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800" data-ad-placement="pricing-link">
-          <Icon name="crown" className="h-4 w-4 text-straw" />
-          Pricing
-        </Link>
+        {/* Hidden for Plus/Premium members (first paint: the oc_adfree hint). */}
+        {!me.tier ? (
+          <PricingLink surface="nav:rail" memberHint className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800">
+            <Icon name="crown" className="h-4 w-4 text-straw" />
+            Pricing
+          </PricingLink>
+        ) : null}
       </div>
     </aside>
   );

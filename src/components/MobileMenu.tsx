@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { useMe } from "@/lib/use-me";
 import { Icon } from "./Icon";
+import { PricingLink } from "./PlanButton";
 import { BrandLockup } from "./Logo";
 import { NAV_GROUPS } from "./nav-groups";
 
 export function MobileMenu({ onClose }: { onClose: () => void }) {
+  const { me } = useMe();
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -48,6 +51,16 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </nav>
+        {/* Pinned like the rail's foot: the one route to pricing below 400px,
+            where the header bar has no room for it. Not for members. */}
+        {!me.tier ? (
+          <div className="border-t border-ink-800 p-3">
+            <PricingLink surface="nav:menu" memberHint onClick={onClose} className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[15px] font-semibold text-slate-200 hover:bg-ink-800">
+              <Icon name="crown" className="h-4 w-4 text-straw" />
+              Pricing
+            </PricingLink>
+          </div>
+        ) : null}
       </div>
     </div>
   );

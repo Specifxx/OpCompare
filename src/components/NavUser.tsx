@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { TIER_NAMES } from "@/lib/plans";
 import { invalidateMe, useMe } from "@/lib/use-me";
 import { Icon } from "./Icon";
+import { PricingLink } from "./PlanButton";
 
 // The header's account corner (RiftCompare's NavUser + UserMenu): "Log in" when
 // signed out, an avatar menu when signed in. Pricing is linked for non-members.
@@ -70,9 +71,9 @@ export function NavUser() {
               Buy List Planner
             </Link>
           ) : (
-            <Link role="menuitem" href="/premium" className="block rounded-md px-3 py-2 text-sm font-semibold text-straw hover:bg-ink-800">
+            <PricingLink role="menuitem" surface="nav:account-menu" className="block rounded-md px-3 py-2 text-sm font-semibold text-straw hover:bg-ink-800">
               {me.tier ? "Upgrade to Premium" : "Pricing"}
-            </Link>
+            </PricingLink>
           )}
           <button role="menuitem" type="button" onClick={signOut} className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-300 hover:bg-ink-800">
             Sign out
