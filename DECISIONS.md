@@ -56,9 +56,20 @@ names two products is dropped.
 The first registry was the 114 RiftCompare stores that also list One Piece
 singles with card numbers (probed 2026-10-03: ≥20 numbered One Piece listings on
 the first page of their One Piece collections). The owner pointed out One Piece
-needs its own stores; One Piece specialists and large One Piece retailers found
-by search and verified the same way were added on top. Only Shopify stores are
-read (that is the scraper); a store must price in its market's currency.
+needs its own stores, so 121 One Piece specialists and large One Piece retailers,
+found by search and through regional store directories and verified the same
+way (English, ungraded, numbered, priced in the market's currency), were added
+on top: 235 stores — US 73, CA 57, AU 50, UK 30, EU 24, SG 1. Only Shopify
+stores are read (that is the scraper). Stores were left out when their One
+Piece stock is Japanese or French behind English titles, when their singles
+are graded slabs, or when they charge a currency other than their market's.
+
+Singapore stays thin on purpose. Its One Piece shops mostly sell Japanese
+cards, or sell through Instagram and Carousell, or don't run Shopify, so SG
+visitors get TCGplayer's price as the ≈ reference and an eBay search link. The
+big non-Shopify retailers (TCGplayer's own marketplace aside: Troll and Toad,
+CoolStuffInc, Chaos Cards, Magic Madhouse, Cardmarket and others) would each
+need a scraper of their own.
 
 ## 2026-10-03 — Cardmarket is not an EU source (yet)
 
@@ -97,3 +108,30 @@ reuses RiftCompare's service account (`GSC_SA_KEY`) on a new property; a daily
 workflow submits the sitemap and reports indexing. IndexNow reuses
 RiftCompare's public key (keys are verified per host). Social-media marketing
 was explicitly left out.
+
+## 2026-10-03 — The domain is opcompare.app, and the code defaults to it
+
+The owner's domain is `opcompare.app`. It is the default `SITE_URL` in
+`src/lib/site.ts` and in every workflow (`vars.SITE_URL || 'https://opcompare.app'`,
+`GSC_PROPERTY` defaulting to `sc-domain:opcompare.app`), so a missing or
+mistyped variable can never publish canonical URLs, the sitemap or JSON-LD on
+another host. The env vars still override it. The apex is canonical and
+`next.config.js` redirects `www.opcompare.app` to it whatever the Vercel domain
+settings say. `.app` is on the HSTS preload list, so the site exists only over
+HTTPS. Vercel's automatic certificate covers that.
+
+## 2026-10-03 — A title that names another printing rules the plain one out
+
+The matcher asked a title for the words a printing's tag carries, but never
+the reverse, so a title naming a printing TCGplayer doesn't list fell through
+to the plain card: "Koala (3rd Anniversary Stamp) OP13-081", "Rayleigh
+(OP14-108) - Unnumbered Promos", "Boa Marigold [OP07 PRE …] Pre-Release Cards"
+and "Baby 5 (OP04-032) (V.2) PRB01" were all priced as the base print. Now a
+title's stamp, promo, event and reprint words (`PRINTING_WORDS` in
+`src/lib/match.ts`) must also appear in the printing's name, tag or set, a
+"(V.2)" is never the plain print, and a PRB code names that Premium Booster. A
+Premium Booster title with no printing words means the booster's "(Reprint)".
+Replayed over the 328k listings then stored, 99.5% were unchanged, 967 moved to
+the printing their title names (mostly PRB reprints and Pre-Release / Super
+Pre-Release / Anniversary stamps) and 758 that name a printing TCGplayer doesn't
+list are skipped. "(Non-English)" titles are now foreign.

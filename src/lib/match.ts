@@ -15,7 +15,7 @@ import type { SealedKind } from "./constants";
 // Non-English printings (ported from RiftCompare's lib/scrape-http.ts): any CJK
 // character, or a language word an English title can still carry.
 export const FOREIGN_LANG =
-  /[㐀-鿿぀-ヿ가-힯]|\b(cn|chn|chs|cht|jp|jpn|jap|kr|kor|chinese|japanese|korean|asia|asian|simplified|traditional|mandarin|cantonese|french|francais|français|german|deutsch|italian|italiano|spanish|español)\b/i;
+  /[㐀-鿿぀-ヿ가-힯]|\b(cn|chn|chs|cht|jp|jpn|jap|kr|kor|chinese|japanese|korean|asia|asian|simplified|traditional|mandarin|cantonese|french|francais|français|german|deutsch|italian|italiano|spanish|español|non[\s-]?english)\b/i;
 
 // Graded slabs, live breaks, lots and serialised prints are not the card a
 // shopper is pricing.
@@ -137,6 +137,59 @@ export function buildCardIndex(cards: PrintingRef[]): CardIndex {
 
 const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));
 
+// Words that name a printing other than the plain one: event stamps, promo
+// distributions, reprint products. The keys above only ever ASK a title for
+// words; these work the other way. A printing fits a title that says one only
+// if the printing's own name, tag or set says it too, so "Koala (3rd Anniversary
+// Stamp) OP13-081" or "Rayleigh (OP14-108) - Unnumbered Promos" is skipped when
+// TCGplayer has no such printing, instead of being priced as the plain card.
+const PRINTING_WORDS: [string, RegExp][] = [
+  ["prerelease", /\bpre[\s-]?release\b/i],
+  ["releaseevent", /\brelease event\b/i],
+  ["judge", /\bjudge\b/i],
+  ["promo", /\bpromo(?:s|tion|tional)?\b/i],
+  ["anniversary", /\banniversary\b/i],
+  ["tournament", /\btournament\b/i],
+  ["winner", /\bwinner\b/i],
+  ["finalist", /\bfinalist\b/i],
+  ["participa", /\bparticipa(?:nt|tion)\b/i],
+  ["championship", /\bchampionships?\b/i],
+  ["regional", /\bregionals?\b/i],
+  ["treasurecup", /\btreasure cup\b/i],
+  ["celebration", /\bcelebration\b/i],
+  ["eventpack", /\bevent pack\b/i],
+  ["dashpack", /\bdash pack\b/i],
+  ["stamp", /\bstamp(?:ed)?\b/i],
+  ["illustrationbox", /\billustration box\b/i],
+  ["demodeck", /\bdemo deck\b/i],
+  ["thebest", /\bthe best\b/i],
+  ["premiumbooster", /\bpremium booster\b/i],
+];
+const compact = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
+const PRB_TITLE = /\bthe best\b|\bpremium booster\b/i;
+// "(V.2)": the store's second version of the card, never the plain print.
+const LATER_VERSION = /\(\s*v(?:er(?:sion)?)?\.?\s*[2-9]\s*\)/i;
+
+/** Drop printings the title rules out: it names a stamp, promo or reprint they don't carry. */
+function ruledOut(title: string, codes: string[]): (c: Indexed) => boolean {
+  const said = PRINTING_WORDS.filter(([, re]) => re.test(title)).map(([w]) => w);
+  const later = LATER_VERSION.test(title);
+  const prb = codes.filter((c) => c.startsWith("PRB-"));
+  const flat = compact(title);
+  return (c) => {
+    // A P- number is a promo by definition, whatever set TCGplayer files it in;
+    // and "Uta - ST08-002 - Starter Deck 8: Monkey.D.Luffy Promo" is one store's
+    // word for a deck card: "promo" right after the card's own set is allowed.
+    const set = compact(c.setName ?? "");
+    const promo = c.number?.startsWith("P-") || (set.length >= 6 && flat.includes(`${set}promo`));
+    const own = compact(`${c.name} ${c.variant ?? ""} ${c.setName ?? ""}`) + (promo ? "promo" : "");
+    if (!said.every((w) => own.includes(w))) return true;
+    if (later && !c.keys.size && !c.extras.length) return true;
+    // A Premium Booster code ("PRB01-ST14-013") names that reprint.
+    return prb.length > 0 && !prb.some((tc) => codeNamesSet(tc, c.setCode));
+  };
+}
+
 /** Does a set code named in a title ("OP-01" → "OP01", "PRB01" → "PRB-01") name this set? */
 export function codeNamesSet(titleCode: string, setCode: string | null | undefined): boolean {
   if (!setCode) return false;
@@ -161,13 +214,19 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
   if (!named.length) return { miss: "name" };
   const tk = titleKeys(title);
   const words = new Set(lower.replace(/[’']/g, "").split(/[^a-z0-9]+/).filter(Boolean));
-  let fits = named.filter((c) => sameSet(c.keys, tk) && c.extras.every((w) => words.has(w)));
+  const codes = setCodesIn(title);
+  const out = ruledOut(title, codes);
+  const fit = (keys: Set<string>) => named.filter((c) => sameSet(c.keys, keys) && c.extras.every((w) => words.has(w)) && !out(c));
+  let fits = fit(tk);
+  // A Premium Booster title with no printing words sells the booster's plain
+  // reprint, which TCGplayer tags "(Reprint)": "Premium Booster 02 - Sabo
+  // (Common) - ST13-007" is "Sabo - ST13-007 (Reprint)" [PRB-02].
+  if (!fits.length && !tk.size && (PRB_TITLE.test(title) || codes.some((c) => c.startsWith("PRB-")))) fits = fit(new Set(["reprint"]));
   if (!fits.length) return { miss: "no-printing" };
   if (fits.length === 1) return { id: fits[0].id };
 
   // Several printings fit. Narrow, in order, by what the title says:
   // 1. a set code it names ("… PRB-01 …" → the Premium Booster reprint);
-  const codes = setCodesIn(title);
   if (codes.length) {
     const byCode = fits.filter((c) => codes.some((tc) => codeNamesSet(tc, c.setCode)));
     if (byCode.length) fits = byCode;

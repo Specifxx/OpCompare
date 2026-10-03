@@ -75,8 +75,52 @@ test("Special Card means SP", () => {
   assert.equal(id("One Piece - Two Legends - Gecko Moria (Special Card) - ST03-004"), 50);
 });
 
+test("a title naming a stamp, promo or reprint the printing lacks is skipped", () => {
+  const ix = buildCardIndex([
+    { id: 60, name: "Koala", number: "OP13-081", variant: null, setCode: "OP13", setName: "Carrying On His Will" },
+    { id: 61, name: "Silvers Rayleigh", number: "OP14-108", variant: null, setCode: "OP14", setName: "The Azure Sea's Seven" },
+    { id: 62, name: "Silvers Rayleigh", number: "OP14-108", variant: "Dash Pack", setCode: "OP14", setName: "The Azure Sea's Seven" },
+    { id: 63, name: "Boa Marigold", number: "OP07-052", variant: null, setCode: "OP07", setName: "500 Years in the Future" },
+    { id: 64, name: "Baby 5", number: "OP04-032", variant: null, setCode: "OP04", setName: "Kingdoms of Intrigue" },
+    { id: 65, name: "Brannew", number: "OP03-089", variant: null, setCode: "OP03", setName: "Pillars of Strength" },
+    { id: 66, name: "Vinsmoke Judge", number: "OP11-044", variant: null, setCode: "OP11", setName: "A Fist of Divine Speed" },
+    { id: 67, name: "Alvida", number: "OP15-003", variant: null, setCode: "OP15", setName: "Adventure on Kami's Island" },
+    { id: 68, name: "Concelot", number: "OP08-024", variant: null, setCode: "OP08", setName: "Two Legends" },
+    { id: 69, name: "Concelot", number: "OP08-024", variant: "Pre-Release", setCode: "OP08 PRE", setName: "Two Legends Pre-Release Cards" },
+    { id: 70, name: "Adio", number: "P-078", variant: null, setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+    { id: 74, name: "Uta", number: "ST08-002", variant: null, setCode: "ST-08", setName: "Starter Deck 8: Monkey.D.Luffy" },
+    { id: 71, name: "Sabo", number: "ST13-007", variant: null, setCode: "ST-13", setName: "Ultra Deck: The Three Brothers" },
+    { id: 72, name: "Sabo", number: "ST13-007", variant: "Reprint", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+    { id: 73, name: "Sabo", number: "ST13-007", variant: "Pirate Foil", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+  ]);
+  const m = (t: string) => {
+    const r = matchCardTitle(t, ix);
+    return "id" in r ? r.id : r.miss;
+  };
+  // Real titles whose printing TCGplayer doesn't list: once priced as the plain card.
+  assert.equal(m("Koala (3rd Anniversary Stamp) - C - OP13-081"), "no-printing");
+  assert.equal(m("Silvers Rayleigh (OP14-108) (V.2) - Unnumbered Promos (Rare) [UP-OP14-108]"), "no-printing");
+  assert.equal(m("Boa Marigold [OP07 PRE - OP07-052 - Common] - 500 Years in the Future Pre-Release Cards"), "no-printing");
+  assert.equal(m("Baby 5 (OP04-032) (V.2) PRB01 Uncommon Near Mint Englisch"), "no-printing");
+  assert.equal(m("Brannew (OP03-089) (V.2) - The Best (Rare) [OP03-089]"), "no-printing");
+  // Still matched: the word is the card's own name, its set, its tag or a P- promo.
+  assert.equal(m("Vinsmoke Judge [OP11 - OP11-044]"), 66);
+  assert.equal(m("Alvida (OP15-003) (V.1) - Adventure on Kami’s Island (Rare) [OP15-003]"), 67);
+  assert.equal(m("Concelot [Two Legends Pre-Release Cards] OP08-024"), 69);
+  assert.equal(m("Concelot OP08-024"), 68);
+  assert.equal(m("Adio (P-078) (Promo)"), 70);
+  assert.equal(m("Uta - ST08-002 - Starter Deck 8: Monkey.D.Luffy Promo"), 74);
+  assert.equal(m("Uta (ST08-002) - Unnumbered Promos"), "no-printing");
+  // A Premium Booster title with no printing words is the booster's reprint.
+  assert.equal(m("One Piece - Premium Booster 02 - Sabo (Common) - ST13-007"), 72);
+  assert.equal(m("Sabo (ST13-007) [PRB02 Foil]"), 72);
+  assert.equal(m("Sabo - ST13-007 (Pirate Foil) [Premium Booster -The Best- Vol. 2]"), 73);
+  assert.equal(m("Sabo ST13-007"), 71);
+});
+
 test("never matched: foreign, graded, playsets, wrong names, unknown printings", () => {
   assert.equal(id("Shanks OP01-120 (Japanese)"), "foreign");
+  assert.equal(id("Shanks (OP01-120) (V.1) - The Best (Non-English) (Secret Rare) [OP01-120]"), "foreign");
   assert.equal(id("PSA 10 Shanks OP01-120 Parallel"), "not-single");
   assert.equal(id("Playset (4) 4x Shanks OP01-120"), "not-single");
   assert.equal(id("Kaido OP01-120"), "name");

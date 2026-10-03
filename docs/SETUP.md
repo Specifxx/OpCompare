@@ -1,7 +1,8 @@
 # OP Compare — setup: database, Vercel, GitHub, Google
 
-Everything OP Compare needs to go live, in the order to do it. OP Compare has
-its **own** database, Vercel project, GA4 property and Search Console property —
+Everything OP Compare needs to go live, in the order to do it. The domain is
+**opcompare.app** (owned; `.app` is HTTPS-only, Vercel issues the certificate).
+OP Compare has its **own** database, Vercel project, GA4 property and Search Console property —
 it never reads or writes anything of RiftCompare's. A few values are reused from
 RiftCompare where that is safe (marked **reuse**).
 
@@ -33,8 +34,8 @@ daily *Production deploy* workflow pushes one release commit to `main`).
 | Secret | `DATABASE_URL` | The new Neon pooled connection string | **New** — never a RiftCompare database |
 | Secret | `CRON_SECRET` | A long random string (same value as in Vercel) | New (a fresh one is better than reusing) |
 | Secret | `GSC_SA_KEY` | The Search Console service-account JSON key | **Reuse** — the same JSON RiftCompare's `GSC_SA_KEY` holds. GitHub secrets can't be read back, so paste it from your saved key file, or create a new JSON key for the same service account in Google Cloud Console (IAM & Admin → Service accounts → Keys → Add key) |
-| Variable | `SITE_URL` | `https://<your-domain>` (no trailing slash; the `*.vercel.app` URL until a domain is attached) | New |
-| Variable | `GSC_PROPERTY` | `sc-domain:<your-domain>` (Domain property) or `https://<your-domain>/` (URL-prefix property) | New |
+| Variable | `SITE_URL` | `https://opcompare.app` (no trailing slash; the workflows default to it) | New |
+| Variable | `GSC_PROPERTY` | `sc-domain:opcompare.app` (Domain property, the workflow's default) or `https://opcompare.app/` (URL-prefix property) | New |
 | Variable | `INDEXNOW_KEY` | `43ac93dd97a44d4894bedf52d621c57c` | **Reuse** — RiftCompare's public IndexNow key (a key is verified per host, so one key serves both sites) |
 
 Not needed here: `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` (OP Compare never calls
@@ -67,7 +68,7 @@ build.
 |---|---|---|
 | `DATABASE_URL` | Same Neon pooled string as GitHub | **New** |
 | `CRON_SECRET` | Same value as the GitHub secret | New |
-| `NEXT_PUBLIC_SITE_URL` | `https://<your-domain>` | New |
+| `NEXT_PUBLIC_SITE_URL` | `https://opcompare.app` (also the code's default) | New |
 | `NEXT_PUBLIC_GA_ID` | The new GA4 property's measurement id `G-…` (Production only) | **New property**, same Google Analytics account |
 | `GOOGLE_SITE_VERIFICATION` | The `content` value of Search Console's HTML-tag method (only for a URL-prefix property; a Domain property verifies by DNS instead) | New |
 | `INDEXNOW_KEY` | `43ac93dd97a44d4894bedf52d621c57c` | **Reuse** |
@@ -77,8 +78,10 @@ build.
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Optional — public contact address (defaults to RiftCompare's) | Optional |
 | `NEXT_PUBLIC_USD_TO_AUD` … `_EUR` | Optional FX overrides | **Reuse** if RiftCompare sets them |
 
-**Domains:** add your domain (and `www` redirecting to it). Then make sure
-`SITE_URL` / `NEXT_PUBLIC_SITE_URL` match it.
+**Domains:** add `opcompare.app` (primary) and `www.opcompare.app` redirecting
+to it (`next.config.js` also redirects `www` → apex). If the domain isn't on
+Vercel's nameservers, add the A (`@`) and CNAME (`www`) records Vercel shows at
+the registrar.
 
 **First deploy:** run *Production deploy* → Run workflow in GitHub (it lands the
 `[deploy]` commit Vercel builds), or Redeploy from the Vercel dashboard.
@@ -86,7 +89,7 @@ build.
 ## 4. Google Analytics 4
 
 In the same Google Analytics account as RiftCompare: *Admin → Create → Property*
-"OP Compare" → *Web* data stream for `https://<your-domain>` with Enhanced
+"OP Compare" → *Web* data stream for `https://opcompare.app` with Enhanced
 measurement on. Copy the measurement id `G-…` into Vercel's `NEXT_PUBLIC_GA_ID`
 and redeploy. The site sends `buy_click` events (`retailer`, `page_type`) for
 every store, TCGplayer and eBay click; mark `buy_click` as a key event if you
@@ -95,22 +98,22 @@ denied by default (cookieless pings).
 
 ## 5. Google Search Console
 
-1. *Add property*: a **Domain** property (`<your-domain>`, verified with a DNS TXT
-   record at your registrar) is best; or a **URL-prefix** property
-   (`https://<your-domain>/`) verified with the HTML tag → put its `content` in
+1. *Add property*: a **Domain** property (`opcompare.app`, verified with a DNS TXT
+   record on `@` wherever its DNS lives) is best; or a **URL-prefix** property
+   (`https://opcompare.app/`) verified with the HTML tag → put its `content` in
    Vercel's `GOOGLE_SITE_VERIFICATION`, redeploy, then press Verify.
 2. *Settings → Users and permissions → Add user*: the service account's
    `client_email` from `GSC_SA_KEY` (the same one on RiftCompare's property),
    permission **Full** (it submits the sitemap).
-3. *Sitemaps*: submit `https://<your-domain>/sitemap.xml` (the daily workflow
+3. *Sitemaps*: submit `https://opcompare.app/sitemap.xml` (the daily workflow
    re-submits it too).
 4. Set GitHub's `GSC_PROPERTY` to exactly the property you made
-   (`sc-domain:<your-domain>` or `https://<your-domain>/`).
+   (`sc-domain:opcompare.app` or `https://opcompare.app/`).
 5. Optional: Bing Webmaster Tools → *Import from Google Search Console*.
 
 ## 6. Affiliate programmes (optional but recommended)
 
-- **TCGplayer / Impact:** add `<your-domain>` as a promotional property on the
+- **TCGplayer / Impact:** add `https://opcompare.app` as a promotional property on the
   Impact account so OP Compare's traffic is within the programme's terms. Clicks
   carry `sharedid=oc-…`.
 - **eBay Partner Network:** the existing campaign works (clicks carry

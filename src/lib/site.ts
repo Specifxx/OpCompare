@@ -1,12 +1,13 @@
 // Site identity. Everything brand-shaped reads from here, so a rename or a new
 // domain is a one-file change.
 //
-// SITE_URL is env-overridable because the production domain is the owner's
-// call: set NEXT_PUBLIC_SITE_URL in Vercel once the domain is attached. It is
-// used for canonical URLs, the sitemap, Open Graph and JSON-LD.
+// The production domain is opcompare.app (a .app domain: HTTPS-only, it is on
+// the HSTS preload list). It is the default so a missing env var can never
+// publish canonical URLs, the sitemap, Open Graph or JSON-LD on another host;
+// NEXT_PUBLIC_SITE_URL overrides it (local development, a preview domain).
 export const SITE_NAME = "OP Compare";
 export const SITE_SHORT = "OPCompare";
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.com").replace(/\/+$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
 export const SITE_TAGLINE = "One Piece Card Game prices, compared";
 export const SITE_DESCRIPTION =
   "Compare One Piece Card Game prices across stores in the US, Australia, the UK, Singapore, Canada and the EU. Every card, every parallel and every sealed product, priced daily.";

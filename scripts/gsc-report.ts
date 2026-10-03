@@ -3,8 +3,9 @@
 //
 //   GSC_SA_KEY   — service-account JSON key (RiftCompare's works: add its
 //                  client_email as a Full user on the OP Compare property)
-//   GSC_PROPERTY — "sc-domain:opcompare.com" or "https://opcompare.com/"
-//   SITE_URL     — https://opcompare.com
+//   GSC_PROPERTY — "sc-domain:opcompare.app" (Domain property; the workflow's
+//                  default) or "https://opcompare.app/" (URL-prefix property)
+//   SITE_URL     — https://opcompare.app (the workflow's default)
 //
 // Submitting a sitemap needs the account to have Full or Owner permission on the
 // property; the report itself needs only read access.
