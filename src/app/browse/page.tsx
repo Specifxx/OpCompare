@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
+import { FilterChips } from "@/components/FilterChips";
 import { CardTile } from "@/components/CardTile";
 import { FormCleaner } from "@/components/FormCleaner";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
@@ -108,7 +109,12 @@ export default async function BrowsePage({
             </p>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <FilterChips
+            sets={Object.fromEntries(cat.sets.flatMap((s) => [[s.slug, `${s.name} (${s.code})`], [s.code.toLowerCase(), `${s.name} (${s.code})`]]))}
+            symbol={c.symbol}
+            adjective={c.adjective}
+          />
+          <div id="results" className="mt-6 flex scroll-mt-24 flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
               <span className="num font-semibold text-white">{int(total)}</span>{" "}
               cards · page {page} of {pages}

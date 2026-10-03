@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { Country } from "@/lib/country";
 import type { CardLite, SetLite } from "@/lib/data";
 import { money } from "@/lib/format";
+import { Sparkline } from "./Sparkline";
 import { cardImage } from "@/lib/images";
 
-export function MoverList({ title, sub, tone, rows, setById, empty }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string }) {
+export function MoverList({ title, sub, tone, rows, setById, empty, spark }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string; spark?: Record<number, number[]> }) {
   return (
     <div className="card-surface min-w-0">
       <div className="border-b border-ink-800 px-4 py-3">
@@ -31,6 +32,7 @@ export function MoverList({ title, sub, tone, rows, setById, empty }: { title: s
                     {setById.get(card.setId)?.code} · {card.number ?? "DON!!"}
                   </span>
                 </span>
+                {spark ? <Sparkline values={spark[card.id]} className="hidden h-7 w-14 min-[400px]:block lg:hidden 2xl:block" /> : null}
                 <span className="flex shrink-0 flex-col items-end">
                   <span className="num text-sm font-semibold text-accent">{money(price, "US")}</span>
                   {right}

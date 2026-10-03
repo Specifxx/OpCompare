@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MoverList } from "@/components/MoverList";
 import { Breadcrumbs, Delta, InShort } from "@/components/ui";
-import { getCatalog, getIndexSeries } from "@/lib/data";
+import { getCatalog, getIndexSeries, getSparklines } from "@/lib/data";
 import { longDate } from "@/lib/format";
 import { movers, offHighs } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
@@ -20,6 +20,7 @@ export default async function MoversPage() {
   const up = movers(cat.cards, "up", 15);
   const down = movers(cat.cards, "down", 15);
   const value = offHighs(cat.cards, 15);
+  const spark = await getSparklines([...up, ...down, ...value.map((v) => v.card)].map((c) => c.id));
   const first = series[0]?.day;
   const ready = first
     ? new Date(Date.parse(first) + 7 * 864e5).toISOString().slice(0, 10)
@@ -77,6 +78,7 @@ export default async function MoversPage() {
             right: <Delta v={card.change7d} className="text-xs" />,
           }))}
           setById={cat.setById}
+          spark={spark}
           empty="No week-on-week moves yet."
         />
         <MoverList
@@ -89,6 +91,7 @@ export default async function MoversPage() {
             right: <Delta v={card.change7d} className="text-xs" />,
           }))}
           setById={cat.setById}
+          spark={spark}
           empty="No week-on-week moves yet."
         />
         <MoverList
@@ -105,6 +108,7 @@ export default async function MoversPage() {
             ),
           }))}
           setById={cat.setById}
+          spark={spark}
           empty="Appears once a card has fallen from a recorded high."
         />
       </div>

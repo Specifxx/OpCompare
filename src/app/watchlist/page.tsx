@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/ui";
 import { WatchlistView } from "@/components/WatchlistView";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 
 export const metadata: Metadata = {
   title: "My Watchlist",
@@ -17,6 +18,7 @@ export default function WatchlistPage() {
         needed.
       </p>
       <WatchlistView />
+      <RecentlyViewed className="mt-8" title="Recently viewed — tap one to look again" />
     </div>
   );
 }

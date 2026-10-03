@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BlogShopStrip } from "@/components/BlogShopStrip";
+import { collectMentions } from "@/components/blog/mentions";
 import { ShareRow } from "@/components/blog/ShareRow";
 import { HatMark } from "@/components/Logo";
 import { JsonLd } from "@/components/ui";
@@ -48,6 +50,18 @@ export default async function PostPage({ params }: Props) {
   const url = `${SITE_URL}/blog/${post.slug}`;
   const updated = ctx.cat.pricesAt.slice(0, 10);
   const more = POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
+  // The shop strip: the hero cards, then every other card and product the post
+  // names, in order of first mention (components/blog/mentions.ts).
+  const mentioned = collectMentions([body.lede, ...body.sections.map((x) => x.body)]);
+  const shopSlugs = [...new Set([...body.heroCards.map((c) => c.slug), ...mentioned.cards])];
+  const shopCards = shopSlugs
+    .map((slug) => ctx.cat.bySlug.get(slug))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
+    .slice(0, 6);
+  const shopSealed = mentioned.sealed
+    .map((slug) => ctx.sealed.find((x) => x.slug === slug))
+    .filter((x): x is NonNullable<typeof x> => Boolean(x))
+    .slice(0, shopCards.length ? 2 : 4);
   return (
     <div className="container-app py-6">
       <JsonLd
@@ -184,6 +198,13 @@ export default async function PostPage({ params }: Props) {
             </section>
           ))}
         </div>
+
+        <BlogShopStrip
+          cards={shopCards}
+          sealed={shopSealed}
+          setById={ctx.cat.setById}
+          country={country}
+        />
 
         <div className="card-surface mt-10 flex flex-wrap items-center gap-2 p-4 text-sm">
           <span className="text-slate-400">The data behind this post:</span>

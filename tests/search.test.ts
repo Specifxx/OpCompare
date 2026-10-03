@@ -35,3 +35,70 @@ test("browse params", () => {
   assert.equal(q.per, 100);
   assert.equal(q.page, 1);
 });
+
+// ── Search upgrades (RiftCompare parity, ux track) ───────────────────────────
+import { editDistance, queryVariants, splitNumber, squash, suggestNames } from "../src/lib/search";
+
+const more = [
+  ...cards,
+  mk(5, 'Eustass"Captain"Kid', "OP01-051"),
+  mk(6, "Charlotte Linlin", "OP03-114"),
+  mk(7, "Kaido & Linlin", "OP08-119", "standard", 50),
+  mk(8, "Marshall.D.Teach", "OP09-081"),
+  mk(9, "Monkey.D.Luffy", "OP05-119", "manga", 90000),
+  mk(10, "Sanji", "OP01-013"),
+  mk(11, "Nami", "OP01-016", "sp", 500),
+];
+
+test("punctuation and squashed names", () => {
+  assert.equal(squash("Monkey.D.Luffy"), "monkeydluffy");
+  const ids = (q: string) => searchCards(more, sets, q).map((c) => c.id);
+  assert.ok(ids("Monkey.D.Luffy").includes(1));
+  assert.ok(ids("monkeydluffy").includes(1));
+  assert.deepEqual(ids("captain kid"), [5]);
+  assert.deepEqual(ids("eustasscaptainkid"), [5]);
+});
+
+test("a word matches the start of a word, not the middle of a short one", () => {
+  // "sp" is the SP printing, not "Sanji"'s "s…p" and not every name containing "sp".
+  const ids = searchCards(more, sets, "nami sp").map((c) => c.id);
+  assert.deepEqual(ids, [11]);
+  // Four letters or more may match inside a word.
+  assert.ok(searchCards(more, sets, "linlin").map((c) => c.id).includes(7));
+});
+
+test("card number anywhere in the query, narrowed by the other words", () => {
+  assert.deepEqual(splitNumber("OP05-119 manga"), { number: "OP05-119", rest: "manga" });
+  assert.deepEqual(splitNumber("luffy"), { number: null, rest: "luffy" });
+  assert.deepEqual(searchCards(more, sets, "OP05-119 manga").map((c) => c.id), [9]);
+  assert.deepEqual(searchCards(more, sets, "op05119").map((c) => c.id), [9]);
+});
+
+test("One Piece nicknames add results, never remove them", () => {
+  assert.ok(queryVariants("big mom").includes("linlin"));
+  assert.deepEqual(searchCards(more, sets, "big mom").map((c) => c.id).sort((a, b) => a - b), [6, 7]);
+  assert.deepEqual(searchCards(more, sets, "blackbeard").map((c) => c.id), [8]);
+  // The original words are always tried too.
+  assert.ok(queryVariants("roronoa zoro").includes("roronoa zoro"));
+});
+
+test("ranking: exact names first, then by print and value", () => {
+  const r = searchCards(more, sets, "nami").map((c) => c.id);
+  assert.deepEqual(r.slice(0, 2).sort(), [11, 4].sort());
+  const l = searchCards(more, sets, "monkey d luffy").map((c) => c.id);
+  assert.deepEqual(l.slice().sort((a, b) => a - b), [1, 2, 9]);
+  // Same name and value: the standard print first.
+  const tie = searchCards([mk(20, "Nami", "OP01-016", "alt", 100), mk(21, "Nami", "OP01-016", "standard", 100)], sets, "nami").map((c) => c.id);
+  assert.deepEqual(tie, [21, 20]);
+});
+
+test("did you mean: real names within a small edit distance", () => {
+  assert.equal(editDistance("lufy", "luffy"), 1);
+  assert.equal(editDistance("teh", "the"), 1);
+  assert.ok(editDistance("kaido", "zoro", 2) > 2);
+  const names = more.map((c) => c.name);
+  assert.deepEqual(suggestNames(names, "lufy"), ["Monkey.D.Luffy"]);
+  assert.deepEqual(suggestNames(names, "charlote linlin"), ["Charlotte Linlin"]);
+  assert.deepEqual(suggestNames(names, "xx"), []);
+  assert.deepEqual(suggestNames(names, "qwertyuiop"), []);
+});

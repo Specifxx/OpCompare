@@ -433,3 +433,26 @@ export async function getProductHistory(id: number): Promise<HistoryPoint[]> {
   const f = await historyFile<BucketFile>(`products/${bucketOf(id)}.json`);
   return chartSeries(f?.p[String(id)], dayNum(new Date().toISOString()), 365);
 }
+
+// ---- ux track loaders ----
+// Sparklines for mover and watchlist rows: the last `days` of each card's
+// TCGplayer market price, downsampled to at most 30 points. Reads the same
+// history bucket files as getProductHistory (GitHub raw, pinned and fetch-
+// cached for a month), one file per distinct bucket, never the database. Not
+// an unstable_cache: the fetch cache already holds every file. Capped at 48
+// ids per call so a long list cannot fan out into every bucket.
+export async function getSparklines(ids: number[], days = 30): Promise<Record<number, number[]>> {
+  const want = [...new Set(ids)].slice(0, 48);
+  const buckets = [...new Set(want.map(bucketOf))];
+  const files = await Promise.all(buckets.map((b) => historyFile<BucketFile>(`products/${b}.json`)));
+  const byBucket = new Map(buckets.map((b, i) => [b, files[i]]));
+  const today = dayNum(new Date().toISOString());
+  const out: Record<number, number[]> = {};
+  for (const id of want) {
+    const series = chartSeries(byBucket.get(bucketOf(id))?.p[String(id)], today, days)
+      .map((p) => p.marketUsd)
+      .filter((v): v is number => v != null);
+    if (series.length >= 2) out[id] = series.length <= 30 ? series : Array.from({ length: 30 }, (_, i) => series[Math.round((i * (series.length - 1)) / 29)]);
+  }
+  return out;
+}

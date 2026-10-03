@@ -11,6 +11,7 @@ import { MobileMenu } from "./MobileMenu";
 import { NavUser } from "./NavUser";
 import { PRIMARY_NAV } from "./nav-groups";
 import { ThemeToggle } from "./ThemeToggle";
+import { WatchDrawerButton } from "./WatchDrawer";
 
 // The top bar (RiftCompare's Navbar): "Database", the card search, the primary
 // links, theme, market and watchlist. It pads against --sidenav-w so it never
@@ -60,9 +61,7 @@ export function Navbar() {
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
             <CountrySelect />
-            <Link href="/watchlist" className="tap-icon rounded-md text-slate-200 hover:bg-ink-800 hover:text-brand-400" aria-label="My watchlist">
-              <Icon name="heart" className="h-[18px] w-[18px]" />
-            </Link>
+            <WatchDrawerButton />
             <NavUser />
           </div>
         </div>

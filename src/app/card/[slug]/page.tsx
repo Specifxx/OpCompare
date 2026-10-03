@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { WatchButton } from "@/components/WatchButton";
 import {
@@ -376,6 +377,8 @@ export default async function CardPage({ params }: Props) {
           </div>
         </section>
       ) : null}
+
+      <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
       <section className="mt-10">
         <SectionHeader title="Questions" />
