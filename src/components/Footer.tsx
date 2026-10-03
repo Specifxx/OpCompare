@@ -6,7 +6,7 @@ import { NAV_GROUPS } from "./nav-groups";
 export function Footer() {
   const year = new Date().getUTCFullYear();
   return (
-    <footer className="mt-16 border-t border-ink-800 bg-ink-950" style={{ paddingLeft: "var(--sidenav-w)" }}>
+    <footer className="border-t border-ink-800 bg-ink-950" style={{ paddingLeft: "var(--sidenav-w)" }}>
       <div className="container-app py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">

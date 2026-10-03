@@ -19,7 +19,11 @@ export default function Privacy() {
         </li>
       </ul>
       <h2>Analytics</h2>
-      <p>Vercel Web Analytics counts page views without cookies and without identifying you.</p>
+      <p>
+        Vercel Web Analytics counts page views without cookies. Google Analytics 4 measures visits and which store links are clicked; in the EEA, the UK and
+        Switzerland it runs in Google&apos;s consent mode with analytics cookies off, sending only cookieless, aggregated signals. Advertising storage is off
+        everywhere — the site shows no ads.
+      </p>
       <h2>Your location</h2>
       <p>On a first visit, your country is read from the request&apos;s IP-based location header to pick a market. It is not stored.</p>
       <h2>Links to stores</h2>

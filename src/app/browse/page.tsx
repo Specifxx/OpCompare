@@ -3,6 +3,9 @@ import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
 import { CardTile } from "@/components/CardTile";
+import { EbaySearchPanel } from "@/components/EbaySearchPanel";
+import { cardEbayQuery } from "@/lib/affiliate";
+import { mostValuable, newestBoosterSet } from "@/lib/selectors";
 import { Pagination } from "@/components/Pagination";
 import { Breadcrumbs, EmptyState } from "@/components/ui";
 import { SORTS, browseHref, parseBrowse, runBrowse, type SearchParams } from "@/lib/browse";
@@ -25,6 +28,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: Searc
   const q = parseBrowse(searchParams);
   const { total, pages, items } = runBrowse(cat.cards, cat.sets, cat.setById, q, country);
   const page = Math.min(q.page, pages);
+  const newest = newestBoosterSet(cat.sets);
+  const chase = newest ? mostValuable(cat.cards, 6, (x) => x.setId === newest.id) : [];
   const filtered = q.q || q.sets.length || q.colors.length || q.rarities.length || q.types.length || q.printings.length || q.priced || q.min != null || q.max != null;
 
   return (
@@ -72,6 +77,18 @@ export default async function BrowsePage({ searchParams }: { searchParams: Searc
               <AutoSubmitSelect form="filters" name="sort" value={q.sort} label="Sort" options={Object.entries(SORTS) as [string, string][]} />
             </div>
           </div>
+
+          {!filtered && newest ? (
+            <div className="mt-4">
+              <EbaySearchPanel
+                heading={`${newest.name} chase cards on eBay`}
+                sub="Live listings for the newest set's most valuable printings, on your own eBay."
+                country={country}
+                page="browse"
+                links={chase.map((c) => ({ label: `${c.name}${c.variant ? ` (${c.variant.split(" · ")[0]})` : ""}`, query: cardEbayQuery(c) }))}
+              />
+            </div>
+          ) : null}
 
           {items.length ? (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">

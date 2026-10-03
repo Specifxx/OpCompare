@@ -74,10 +74,10 @@ export function PriceBoard({
                   </p>
                 </div>
                 <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(o.priceCents, country)}</span>
-                <a href={href} target="_blank" rel={outboundRel()} className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={o.source.replace("store:", "")} data-page={page} className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
                   {tcg ? "Buy on TCGplayer →" : "View deal →"}
                 </a>
-                <a href={href} target="_blank" rel={outboundRel()} className="btn-primary shrink-0 px-3 sm:hidden" aria-label={`Buy at ${sourceLabel(o.source)}`}>
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={o.source.replace("store:", "")} data-page={page} className="btn-primary shrink-0 px-3 sm:hidden" aria-label={`Buy at ${sourceLabel(o.source)}`}>
                   →
                 </a>
               </li>
@@ -105,7 +105,7 @@ export function PriceBoard({
         <span className="flex-1 text-sm text-slate-300">
           <span className="font-semibold text-white">{ebayLabel(country)}</span> — search live listings for this {noun}
         </span>
-        <a href={ebay} target="_blank" rel={outboundRel()} className="btn-ebay-ghost min-h-10">
+        <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page={page} className="btn-ebay-ghost min-h-10">
           Search {ebayLabel(country)} →
         </a>
       </div>

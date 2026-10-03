@@ -27,6 +27,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "Guides & News",
+    icon: "book",
+    links: [
+      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "guides", "analysis", "posts"] },
+      { href: "/blog/one-piece-card-rarities-explained", label: "Rarities explained", keywords: ["rarity", "parallel", "manga", "sp", "treasure rare", "guide"] },
+      { href: "/blog/where-to-buy-one-piece-cards", label: "Where to buy", keywords: ["where to buy", "buy", "stores", "shops"] },
+      { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline"] },
+      { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "corrections"] },
+    ],
+  },
+  {
     title: "The Card Database",
     icon: "search",
     links: [
@@ -65,6 +76,7 @@ export const PRIMARY_NAV = [
   { href: "/price-guide", label: "Price Guide" },
   { href: "/movers", label: "Movers" },
   { href: "/sets", label: "Sets" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function searchNav(q: string): NavLink[] {

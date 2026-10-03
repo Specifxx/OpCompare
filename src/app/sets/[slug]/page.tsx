@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardTile } from "@/components/CardTile";
+import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { SealedTile } from "@/components/SealedTile";
+import { cardEbayQuery, onePieceEbayQuery } from "@/lib/affiliate";
 import { Breadcrumbs, InShort, SectionHeader, StatTile } from "@/components/ui";
 import { SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -84,6 +86,19 @@ export default async function SetPage({ params, searchParams }: Props) {
           </InShort>
         </div>
       ) : null}
+
+      <div className="mt-6">
+        <EbaySearchPanel
+          heading={`${set.name} on eBay`}
+          country={country}
+          page="set"
+          links={[
+            ...(["booster", "extra", "premium"].includes(set.kind) ? [{ label: `${set.code} booster box`, query: onePieceEbayQuery(`${set.name} ${set.code} booster box English`) }] : []),
+            { label: `${set.code} singles`, query: onePieceEbayQuery(`${set.code} ${set.name}`) },
+            ...[...cards].sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0)).slice(0, 4).map((c) => ({ label: `${c.name}${c.variant ? ` (${c.variant.split(" · ")[0]})` : ""}`, query: cardEbayQuery(c) })),
+          ]}
+        />
+      </div>
 
       {setSealed.length ? (
         <section className="mt-10">

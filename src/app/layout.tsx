@@ -3,7 +3,9 @@ import { Archivo, Inter, JetBrains_Mono, Luckiest_Guy } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
+import { FooterAds } from "@/components/AffiliateAds";
 import { CountryProvider } from "@/components/CountryProvider";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
@@ -31,6 +33,13 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
+  // Search Console's "HTML tag" verification and Bing Webmaster Tools'. Each
+  // renders only when its variable is set in Vercel (a placeholder would just
+  // fail verification).
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export const viewport: Viewport = {
@@ -62,10 +71,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main id="main" style={{ paddingLeft: "var(--sidenav-w)" }}>
             {children}
+            <FooterAds />
           </main>
           <Footer />
         </CountryProvider>
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );

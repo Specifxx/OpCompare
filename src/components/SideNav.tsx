@@ -15,7 +15,7 @@ import { useCountry } from "./CountryProvider";
 // it reads --sidenav-w from globals.css. A group header is a disclosure, never
 // a link; the leaves are the links.
 const STORAGE_KEY = "op:sidenav:collapsed";
-const DEFAULT_OPEN = ["Prices", "The Card Database"];
+const DEFAULT_OPEN = ["Prices", "Guides & News"];
 const DEFAULT_COLLAPSED = NAV_GROUPS.map((g) => g.title).filter((t) => !DEFAULT_OPEN.includes(t));
 
 function isActive(pathname: string | null, href: string): boolean {

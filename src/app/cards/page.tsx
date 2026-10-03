@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 const PRINTING_NOTES: Record<string, string> = {
   standard: "The regular print of a card — what most decks are built from.",
   alt: "Parallel and alternate-art prints: the same card with new art, usually foil, pulled far less often.",
-  manga: "Manga rares: black-and-white manga-panel art, the scarcest pulls in a booster set.",
+  manga: "Manga rares: art drawn from the manga's own panels, usually the scarcest pull in a set.",
   sp: "SP (special) cards: earlier sets' cards reprinted with new art in later boxes.",
-  treasure: "Treasure Rares: gold-bordered prints, among the rarest in recent sets.",
+  treasure: "Treasure Rares (TR): a special rarity in recent sets, among the scarcest pulls.",
   foil: "Special foils — Jolly Roger, Pirate, Gold and textured finishes.",
   reprint: "Reprints, mostly from the Premium Booster “The Best” sets.",
   promo: "Promos and event prints: tournament, release-event, pre-release and product promos.",

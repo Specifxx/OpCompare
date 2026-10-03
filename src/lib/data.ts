@@ -365,8 +365,15 @@ export const getSiteStats = unstable_cache(
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
+export interface IndexPoint {
+  day: string;
+  value: number;
+  totalUsd: number;
+  cardCount: number;
+}
+
 export const getIndexSeries = unstable_cache(
-  async (): Promise<{ day: string; value: number; totalUsd: number; cardCount: number }[]> => {
+  async (): Promise<IndexPoint[]> => {
     const rows = await prisma.indexDay.findMany({ orderBy: { day: "asc" }, take: 730 });
     return rows.map((r) => ({ day: r.day.toISOString().slice(0, 10), value: r.value, totalUsd: r.totalUsd, cardCount: r.cardCount }));
   },
