@@ -181,6 +181,22 @@ export function invalidateWatchlist() {
   publish();
 }
 
+// invalidateMe() (use-me.ts) fires `oc:me` on sign-in, sign-out and plan
+// changes. Follow it so a mounted heart or header count never keeps the old
+// account's list (or the local list after signing in) until a reload: drop the
+// cached state and, when anything is listening, load again (one ids request,
+// or none signed out).
+let meListening = false;
+function listenMe() {
+  if (meListening || typeof window === "undefined" || typeof window.addEventListener !== "function") return;
+  meListening = true;
+  window.addEventListener("oc:me", () => {
+    if (state === null && inflight === null) return;
+    invalidateWatchlist();
+    if (subscribers.size) void load();
+  });
+}
+
 /** Watched cards + saved sealed items right now (0 before the first load). */
 export function watchCount(): number {
   return state?.count ?? 0;
@@ -223,6 +239,7 @@ export const watchlistStore = {
   load,
   get: (): WatchlistState | null => copy(state),
   subscribe(fn: (s: WatchlistState | null) => void): () => void {
+    listenMe();
     subscribers.add(fn);
     return () => {
       subscribers.delete(fn);

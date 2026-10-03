@@ -1180,7 +1180,11 @@ RiftCompare's design system byte for byte, with one deliberate difference.
   older local items that carry none, by slug. Signed in, it reads
   `/api/alerts/watchlist?ids=1` (the member track's route; until then a 404 is
   an empty list). The merge of the local list into the account is the member
-  track's.
+  track's. Unlike RiftCompare's, a subscribed store also follows `oc:me`
+  (fired by `invalidateMe()` on sign-in, sign-out and plan changes): it drops
+  its state and loads again, so the header count and every heart switch
+  between the local and the account list without a reload, even where a caller
+  forgets `invalidateWatchlist()` (the account menu's sign-out did).
 - **`trackEvent` sends to GA4 only** (`src/lib/analytics.ts`) and is a no-op
   without `NEXT_PUBLIC_GA_ID`; RiftCompare also mirrors to Vercel Analytics,
   whose custom events are billed.

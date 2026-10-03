@@ -157,7 +157,7 @@ export function PremiumSlideIn() {
       role="region"
       aria-label="OP Compare Plus and Premium offer"
       data-nudge="slidein"
-      className={`fixed z-overlay w-[calc(100%-2rem)] transition-[opacity,transform] duration-300 ease-out ${details ? "max-w-[23rem]" : "max-w-[20rem]"} ${entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"}`}
+      className={`fixed z-[70] w-[calc(100%-2rem)] transition-[opacity,transform] duration-slow ease-out ${details ? "max-w-[23rem]" : "max-w-[20rem]"} ${entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"}`}
       style={{ left: "calc(var(--sidenav-w) + 1rem)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
     >
       <div className="relative max-h-[min(80dvh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">

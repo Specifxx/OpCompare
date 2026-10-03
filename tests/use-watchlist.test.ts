@@ -210,3 +210,25 @@ test("the local key is WatchButton's, and the module keeps RiftCompare's optimis
   assert.match(src, /publish\(\);\s*\n\s*trackEvent\("watch_add"/, "watch_add fires right after the optimistic publish()");
   assert.match(src, /publish\(\);\s*\n\s*trackEvent\("watch_remove"/, "watch_remove fires right after the optimistic publish()");
 });
+
+test("a subscribed store follows invalidateMe(): signing in swaps the local list for the account list without a reload", async () => {
+  signedIn(null, [luffy.id]); // installs the account responder
+  (g.document as { cookie: string }).cookie = ""; // …but start signed out
+  invalidateMe();
+  invalidateWatchlist();
+  const seen: (string | null)[] = [];
+  const off = watchlistStore.subscribe((s) => seen.push(s ? s.mode : null));
+  await watchlistStore.load();
+  assert.equal(watchlistStore.get()?.mode, "local");
+  // Sign in: only the cookie and invalidateMe() (what the login flow does). The
+  // store hears oc:me, drops its state and, with a subscriber, loads again.
+  (g.document as { cookie: string }).cookie = "oc_auth=1";
+  invalidateMe();
+  await new Promise((r) => setTimeout(r, 20));
+  const s = watchlistStore.get();
+  assert.equal(s?.mode, "account");
+  assert.ok(s?.ids.has(luffy.id));
+  assert.deepEqual(seen.slice(-2), [null, "account"]);
+  off();
+  signedOut();
+});
