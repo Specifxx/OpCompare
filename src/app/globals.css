@@ -1,0 +1,285 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* ── Palette: DARK (the default) — "night sea" ─────────────────────────────
+     RGB triplets, because tailwind.config.ts wraps each one as
+     `rgb(var(--c-x) / <alpha-value>)` so opacity modifiers keep working. The
+     structure is RiftCompare's (dark default, light opt-in under
+     [data-theme="light"]); the colours are One Piece's: navy surfaces, Straw Hat
+     red actions, straw-gold accents. tests/theme.test.ts pins that both sets
+     define every variable. */
+  --c-ink-950: 6 11 20;
+  --c-ink-900: 10 17 30;
+  --c-ink-850: 14 23 40;
+  --c-ink-800: 20 31 52;
+  --c-ink-700: 33 47 75;
+  --c-ink-600: 50 67 101;
+  --c-brand-400: 255 107 107;
+  --c-straw: 245 197 66;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 154 168 190;
+  --c-slate-500: 137 151 173;
+  --c-slate-600: 121 135 156;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-accent: 238 241 245;
+  --c-gold: 222 184 92;
+  --c-up: 63 185 80;
+  --c-down: 240 98 120;
+  --c-white: 255 255 255;
+  --c-rose-200: 254 205 211;
+  --c-rose-300: 253 164 175;
+  --c-rose-400: 251 113 133;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-amber-100: 254 243 199;
+  --c-amber-200: 253 230 138;
+  --c-amber-300: 252 211 77;
+  --c-sky-200: 186 230 253;
+  --c-sky-300: 125 211 252;
+  --c-sky-400: 56 189 248;
+  --c-lime-200: 217 249 157;
+  --c-lime-300: 190 242 100;
+  --c-purple-300: 216 180 254;
+  --c-blue-300: 147 197 253;
+  --page-bg: #070c16;
+  --page-fg: #e9edf3;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-header: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --scroll-track: #0c1424;
+  --scroll-thumb: #26385a;
+  --scroll-thumb-hover: #34497a;
+  --hero-sea: radial-gradient(1200px 420px at 50% -10%, rgba(217, 43, 51, 0.16), transparent 60%),
+    radial-gradient(900px 360px at 85% 10%, rgba(245, 197, 66, 0.08), transparent 60%);
+  /* Reserved width for the persistent desktop SideNav — RiftCompare's
+     one-width, one-breakpoint rule (17rem from 1024px, 0 below). */
+  --sidenav-w: 0px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --sidenav-w: 17rem;
+  }
+}
+
+/* ── Palette: LIGHT — "chart paper" ──────────────────────────────────────── */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --c-ink-950: 247 243 235;
+  --c-ink-900: 255 255 255;
+  --c-ink-850: 243 238 228;
+  --c-ink-800: 231 224 210;
+  --c-ink-700: 212 202 184;
+  --c-ink-600: 184 172 150;
+  --c-brand-400: 176 22 30;
+  --c-straw: 140 98 10;
+  --c-slate-100: 15 23 42;
+  --c-slate-200: 30 41 59;
+  --c-slate-300: 51 65 85;
+  --c-slate-400: 71 85 105;
+  --c-slate-500: 82 94 116;
+  --c-slate-600: 92 103 122;
+  --c-slate-700: 148 163 184;
+  --c-slate-800: 203 213 225;
+  --c-slate-900: 226 232 240;
+  --c-accent: 11 15 20;
+  --c-gold: 122 90 16;
+  --c-up: 22 101 52;
+  --c-down: 190 18 60;
+  --c-white: 11 15 20;
+  --c-rose-200: 136 19 55;
+  --c-rose-300: 159 18 57;
+  --c-rose-400: 190 18 60;
+  --c-red-300: 153 27 27;
+  --c-red-400: 185 28 28;
+  --c-emerald-300: 6 95 70;
+  --c-emerald-400: 4 120 87;
+  --c-amber-100: 120 53 15;
+  --c-amber-200: 146 64 14;
+  --c-amber-300: 146 64 14;
+  --c-sky-200: 7 89 133;
+  --c-sky-300: 7 89 133;
+  --c-sky-400: 3 105 161;
+  --c-lime-200: 63 98 18;
+  --c-lime-300: 63 98 18;
+  --c-purple-300: 107 33 168;
+  --c-blue-300: 30 64 175;
+  --page-bg: #f7f3eb;
+  --page-fg: #0b0f14;
+  --shadow-card: 0 1px 2px rgba(40, 30, 10, 0.06), 0 1px 3px rgba(40, 30, 10, 0.1);
+  --shadow-glow: 0 4px 12px rgba(40, 30, 10, 0.12);
+  --shadow-header: 0 4px 12px rgba(40, 30, 10, 0.08);
+  --scroll-track: #efe9dc;
+  --scroll-thumb: #d4cab8;
+  --scroll-thumb-hover: #b8ac96;
+  --hero-sea: radial-gradient(1200px 420px at 50% -10%, rgba(217, 43, 51, 0.1), transparent 60%),
+    radial-gradient(900px 360px at 85% 10%, rgba(233, 183, 58, 0.14), transparent 60%);
+}
+
+html,
+body {
+  background-color: var(--page-bg);
+  color: var(--page-fg);
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: clip;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+:where(p, blockquote, figcaption, summary, label, dt, article li, nav li) {
+  font-feature-settings: "lnum" 1;
+}
+
+/* Headings: Archivo at its heaviest cuts — the bold, square, sans voice of the
+   One Piece Card Game's own product typography. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  font-weight: 900;
+}
+
+/* The hero headline and wordmark: a round, bold adventure-comic face. */
+.font-brand {
+  letter-spacing: 0.01em;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
+
+@layer components {
+  .container-app {
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6;
+  }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-fast active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  /* Primary action: flat, solid Straw Hat red. White ink measures 4.8:1 on it. */
+  .btn-primary {
+    @apply btn bg-brand-500 text-[#ffffff] hover:bg-brand-600;
+  }
+  .btn-ghost {
+    @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
+  }
+  /* eBay wears eBay blue (RiftCompare's rule): colour only, never position. */
+  .btn-ebay {
+    @apply btn bg-[#0064d2] text-[#ffffff] hover:bg-[#0079e6];
+  }
+  .btn-ebay-ghost {
+    @apply btn border border-[#0064d2]/60 bg-[#0064d2]/10 text-sky-300 hover:border-[#0064d2] hover:bg-[#0064d2]/20;
+  }
+  .btn-straw {
+    @apply btn bg-straw-500 text-[#1a1203] hover:brightness-110;
+  }
+  .input {
+    @apply min-h-11 w-full rounded-md border border-ink-700 bg-ink-950 px-3 py-2 text-base text-slate-100 outline-none placeholder:text-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 sm:text-sm;
+  }
+  .tap-icon {
+    @apply grid h-11 w-11 place-items-center sm:h-9 sm:w-9;
+  }
+  .tap-link {
+    @apply inline-flex min-h-6 min-w-6 items-center;
+  }
+  .card-surface {
+    @apply rounded-lg border border-ink-800 bg-ink-900 shadow-card transition-colors duration-150;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-xs font-medium;
+  }
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-straw;
+  }
+  .link {
+    @apply font-medium text-brand-400 hover:underline;
+  }
+  .prose-op p {
+    @apply mb-4 leading-relaxed text-slate-300;
+  }
+  .prose-op h2 {
+    @apply mb-3 mt-8 text-xl text-white;
+  }
+  .prose-op h3 {
+    @apply mb-2 mt-6 text-lg text-white;
+  }
+  .prose-op ul {
+    @apply mb-4 list-disc space-y-1.5 pl-5 text-slate-300;
+  }
+  .prose-op a {
+    @apply font-medium text-brand-400 hover:underline;
+  }
+  .prose-op strong {
+    @apply text-white;
+  }
+  /* Price-guide style data tables. */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead th {
+    @apply border-b border-ink-800 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+  .data-table tbody tr {
+    @apply border-b border-ink-800/70 transition-colors hover:bg-ink-800/40;
+  }
+  .data-table tbody td {
+    @apply px-3 py-2;
+  }
+}
+
+/* A faint chart grid behind the hero — the Grand Line, not a texture file. */
+.sea-grid {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

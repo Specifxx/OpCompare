@@ -1,0 +1,31 @@
+import type { MetadataRoute } from "next";
+import { getCatalog, getSealedCatalog } from "@/lib/data";
+import { COLORS, COLOR_KEYS } from "@/lib/constants";
+import { SITE_URL } from "@/lib/site";
+
+// Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
+export const revalidate = 86400;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+  const fixed = [
+    "", "/browse", "/price-guide", "/sealed", "/market", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
+    "/tools/deal-finder", "/tools/box-value", "/about", "/methodology", "/contact", "/privacy", "/terms",
+  ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
+  // A build with no database yet (the very first deploy) still gets a sitemap;
+  // the daily revalidation fills in the cards once the import has run.
+  let data: [Awaited<ReturnType<typeof getCatalog>>, Awaited<ReturnType<typeof getSealedCatalog>>];
+  try {
+    data = await Promise.all([getCatalog(), getSealedCatalog()]);
+  } catch {
+    return fixed;
+  }
+  const [cat, sealed] = data;
+  return [
+    ...fixed,
+    ...COLOR_KEYS.map((k) => ({ url: `${SITE_URL}/colors/${COLORS[k].slug}`, lastModified: now })),
+    ...cat.sets.map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: now })),
+    ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
+    ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
+  ];
+}

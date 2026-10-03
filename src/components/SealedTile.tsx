@@ -1,0 +1,55 @@
+import Link from "next/link";
+import type { Country } from "@/lib/country";
+import type { SealedLite } from "@/lib/data";
+import { money } from "@/lib/format";
+import { headline } from "@/lib/price";
+import { WatchButton } from "./WatchButton";
+
+export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Country; setCode?: string | null }) {
+  const h = headline(s, country);
+  const perPack = s.packCount && s.packCount > 1 && h.cents != null ? Math.round(h.cents / s.packCount) : null;
+  return (
+    <Link href={`/sealed/${s.slug}`} className="group card-surface flex flex-col overflow-hidden hover:border-ink-600">
+      <div className="relative bg-white/95 p-3">
+        <span className="absolute left-2 top-2 z-[1] rounded-sm bg-ink-950/85 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-100">{s.kind}</span>
+        <span className="absolute right-2 top-2 z-[1]">
+          <WatchButton slug={s.slug} kind="sealed" name={s.name} />
+        </span>
+        {s.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.imageUrl.replace("_in_1000x1000", "_400w")} alt={`${s.name} One Piece sealed product`} loading="lazy" className="mx-auto aspect-square w-full object-contain" />
+        ) : (
+          <div className="grid aspect-square place-items-center text-xs text-slate-500">No image</div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col gap-1 p-3">
+        <h3 className="line-clamp-2 font-display text-[15px] font-extrabold leading-snug text-white group-hover:text-brand-400">{s.name}</h3>
+        <p className="text-xs text-slate-400">
+          {setCode ?? "One Piece"}
+          {s.presale ? " · pre-order" : ""}
+        </p>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+          {h.kind === "listing" ? (
+            <>
+              <div>
+                <p className="text-[11px] text-slate-500">from</p>
+                <p className="num text-lg font-bold text-accent">{money(h.cents, country)}</p>
+                {perPack ? <p className="num text-[11px] text-slate-400">{money(perPack, country)} / pack</p> : null}
+              </div>
+              <p className="pb-1 text-[11px] font-semibold text-emerald-400">
+                {h.stores} {h.stores === 1 ? "store" : "stores"}
+              </p>
+            </>
+          ) : h.kind === "reference" ? (
+            <div>
+              <p className="text-[11px] text-slate-500">TCGplayer market</p>
+              <p className="num text-lg font-semibold text-slate-300">≈ {money(h.cents, country)}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No price yet</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}

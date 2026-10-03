@@ -1,0 +1,171 @@
+// OP Compare — One Piece Card Game prices.
+//
+// ONE database (a Neon project of its own; DATABASE_URL). Nothing here is
+// shared with RiftCompare: the Riftbound databases are never read or written.
+//
+// The catalogue is TCGplayer's, mirrored daily by TCGCSV (category 68 = One
+// Piece Card Game). A Card is ONE PRINTING — TCGplayer's own product — so the
+// base OP01-120 Shanks, its Parallel and its Manga art are three rows that share
+// a `number`. Ids are TCGplayer product/group ids, stable for life.
+//
+// EGRESS: every page reads through the self-cached loaders in src/lib/data.ts
+// (unstable_cache, tag "prices", purged by the import). Read the rules at the
+// top of src/lib/db.ts before adding a query to a request path.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Set {
+  id          Int       @id // TCGplayer groupId
+  slug        String    @unique
+  code        String // "OP01", "ST-01", "EB-01", "OP-PR"
+  name        String // "Romance Dawn"
+  tcgName     String @default("") // TCGplayer's own group name: "ST-01: Starter Deck 1 Straw Hat Crew"
+  kind        String // booster | extra | premium | starter | promo | event | collection
+  releasedOn  DateTime?
+  cardCount   Int       @default(0)
+  sealedCount Int       @default(0)
+  updatedAt   DateTime  @updatedAt
+  cards       Card[]
+  sealed      Sealed[]
+}
+
+model Card {
+  id           Int       @id // TCGplayer productId — one printing
+  slug         String    @unique
+  name         String // display name, variant suffixes removed: "Monkey.D.Luffy"
+  tcgName      String // TCGplayer's own product name
+  number       String? // "OP01-003"; null only for DON!! cards
+  setId        Int
+  set          Set       @relation(fields: [setId], references: [id])
+  rarity       String? // L C UC R SR SEC PR TR DON!!
+  variant      String? // "Parallel", "Manga · Alternate Art", "SP", "Reprint"… null = standard print
+  printing     String // standard | alt | manga | sp | treasure | reprint | promo | foil | don
+  colors       String[]
+  cardType     String? // Leader | Character | Event | Stage | DON!!
+  cost         Int?
+  power        Int?
+  counter      Int?
+  life         Int?
+  attribute    String?
+  subtypes     String[]
+  effect       String?
+  finish       String? // TCGplayer price subtype: Normal | Foil
+  hasImage     Boolean   @default(true)
+  tcgplayerUrl String
+
+  // TCGplayer's market price (USD cents) — a REFERENCE, never a listing.
+  marketUsd    Int?
+  // Cheapest OPEN listing per market, in that market's currency (cents), and
+  // how many stores have one. Written by the import from Offer rows.
+  lowUS        Int?
+  lowAU        Int?
+  lowUK        Int?
+  lowSG        Int?
+  lowCA        Int?
+  lowEU        Int?
+  storesUS     Int       @default(0)
+  storesAU     Int       @default(0)
+  storesUK     Int       @default(0)
+  storesSG     Int       @default(0)
+  storesCA     Int       @default(0)
+  storesEU     Int       @default(0)
+  // TCGplayer market price change against ~7 and ~30 days ago, percent.
+  change7d     Float?
+  change30d    Float?
+  // Highest market price in the last 90 days (USD cents) — "best value" movers.
+  high90Usd    Int?
+  firstSeen    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([setId])
+  @@index([number])
+  @@index([marketUsd])
+}
+
+model Sealed {
+  id           Int       @id // TCGplayer productId
+  slug         String    @unique
+  name         String
+  setId        Int?
+  set          Set?      @relation(fields: [setId], references: [id])
+  kind         String // Booster Box | Booster Case | Booster Pack | Starter Deck | …
+  packCount    Int?
+  imageUrl     String?
+  tcgplayerUrl String
+  releasedOn   DateTime?
+  presale      Boolean   @default(false)
+  marketUsd    Int?
+  lowUS        Int?
+  lowAU        Int?
+  lowUK        Int?
+  lowSG        Int?
+  lowCA        Int?
+  lowEU        Int?
+  storesUS     Int       @default(0)
+  storesAU     Int       @default(0)
+  storesUK     Int       @default(0)
+  storesSG     Int       @default(0)
+  storesCA     Int       @default(0)
+  storesEU     Int       @default(0)
+  change7d     Float?
+  firstSeen    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([setId])
+}
+
+// One store's (or TCGplayer's) offer for one product in one market. Card and
+// sealed ids are both TCGplayer product ids, so one table serves both.
+model Offer {
+  id         String   @id @default(cuid())
+  productId  Int
+  source     String // "tcgplayer" | "store:<key>"
+  market     String // US AU UK SG CA EU
+  priceCents Int // in `currency`
+  currency   String
+  url        String
+  inStock    Boolean
+  condition  String?
+  title      String? // the store's own listing title, kept for audits
+  updatedAt  DateTime
+
+  @@unique([productId, source, market])
+  @@index([market, productId])
+  @@index([source])
+}
+
+// One row per product per day: TCGplayer market price and the cheapest US
+// listing, both USD cents. Feeds the card page chart, movers and the index.
+model PriceDay {
+  productId Int
+  day       DateTime @db.Date
+  marketUsd Int?
+  lowUsd    Int?
+
+  @@id([productId, day])
+  @@index([day])
+}
+
+// The site-wide OP Compare Index, one row a day (see src/lib/market-index.ts).
+model IndexDay {
+  day        DateTime @id @db.Date
+  value      Float
+  totalUsd   Int
+  cardCount  Int
+}
+
+model ImportRun {
+  id         Int       @id @default(autoincrement())
+  kind       String // "full" | "catalog" | "stores"
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ok         Boolean   @default(false)
+  summary    Json?
+}

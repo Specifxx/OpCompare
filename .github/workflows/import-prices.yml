@@ -1,0 +1,67 @@
+name: Import prices
+
+# The twice-daily One Piece price import (scripts/import.ts):
+#   07:00 UTC — before the 08:00 production release, so it builds on fresh prices
+#   19:00 UTC — after TCGCSV's daily TCGplayer refresh (~20:00 UTC the day before
+#               is already in; this run picks up the stores' afternoon changes)
+# It writes ONLY to the OP Compare database (secret DATABASE_URL) and never calls
+# the eBay API. Without the secret it is a no-op, so the repo can be pushed
+# before the database exists.
+on:
+  schedule:
+    - cron: "7 7 * * *"
+    - cron: "7 19 * * *"
+  workflow_dispatch:
+    inputs:
+      stores:
+        description: "Read the stores too (uncheck for a ~30 s catalogue + TCGplayer run)"
+        type: boolean
+        default: true
+      only_stores:
+        description: "Comma-separated store keys to read (blank = all)"
+        type: string
+        required: false
+
+concurrency:
+  group: import-prices
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      REVALIDATE_URL: ${{ vars.SITE_URL && format('{0}/api/revalidate', vars.SITE_URL) || '' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+      IMPORT_STORES: ${{ (github.event_name != 'workflow_dispatch' || inputs.stores) && '1' || '0' }}
+      IMPORT_ONLY_STORES: ${{ inputs.only_stores }}
+    steps:
+      - name: Skip when the database is not configured
+        id: gate
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL secret is not set — nothing to import."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.run == 'true'
+      # Creates the tables on the first run; later runs apply additive schema
+      # changes. A destructive change fails here (no --accept-data-loss) rather
+      # than dropping data.
+      - name: Sync schema
+        if: steps.gate.outputs.run == 'true'
+        run: npx prisma db push --skip-generate && npx prisma generate
+      - name: Import
+        if: steps.gate.outputs.run == 'true'
+        run: npx tsx scripts/import.ts
