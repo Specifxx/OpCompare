@@ -28,7 +28,7 @@ export function NavUser() {
   if (!loaded) return <span className="inline-block h-8 w-8" aria-hidden />;
   if (!me.user) {
     return (
-      <Link href={`/login?next=${encodeURIComponent(pathname)}`} rel="nofollow" className="rounded-md px-2.5 py-1.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white">
+      <Link href={`/login?next=${encodeURIComponent(pathname)}`} rel="nofollow" className="whitespace-nowrap rounded-md px-1.5 py-1.5 text-sm font-semibold sm:px-2.5 text-slate-200 hover:bg-ink-800 hover:text-white">
         Log in
       </Link>
     );

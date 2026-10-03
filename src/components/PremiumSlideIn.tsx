@@ -6,7 +6,7 @@ import { accountAgeMs, capsAllow, premiumSlideInEligible } from "@/lib/nudge-gat
 import { armNudge, readStoredNum, useSessionViews } from "@/lib/nudge-runtime";
 import { firePlanClick } from "@/lib/nudge-surface";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
-import { planPrice } from "@/lib/plans";
+import { TIER_NAMES, planPrice, type Tier } from "@/lib/plans";
 import { useMe } from "@/lib/use-me";
 import { Icon } from "./Icon";
 import { usePlanDialog } from "./PlanProvider";
@@ -31,19 +31,22 @@ const SNOOZE_UNTIL = "oc_prem_slidein_until"; // localStorage: epoch ms
 const PV_KEY = "oc_prem_slidein_pv"; // sessionStorage: signed-in page views
 
 // One honest line per kind of page, naming the paid feature that fits it.
-const CONTEXT_PITCH: { prefixes: string[]; heading: string; line: string }[] = [
+const CONTEXT_PITCH: { prefixes: string[]; tier: Tier; heading: string; line: string }[] = [
   {
     prefixes: ["/card/"],
+    tier: "plus",
     heading: "Deal Finder shows every card under TCGplayer market",
     line: "Every One Piece card whose cheapest listing at a real store in your market sits under TCGplayer's market price, at every price level. Your free account shows the top three; Plus shows them all, with no ads.",
   },
   {
     prefixes: ["/movers", "/market", "/price-guide"],
+    tier: "plus",
     heading: "Know whether today's price is a good one",
     line: "Movers say a price changed. Plus's Deal Finder lists every card selling under TCGplayer market in your market right now, with no ads on any page.",
   },
   {
     prefixes: ["/sealed", "/sets"],
+    tier: "premium",
     heading: "Premium plans which stores to buy your list from",
     line: "Heart the cards and boxes you want and the Buy List Planner finds the cheapest single store for the lot, and the cheapest way to split it across stores.",
   },
@@ -123,7 +126,7 @@ export function PremiumSlideIn() {
   }, []);
 
   const accept = useCallback(() => {
-    firePlanClick("slidein", "plus");
+    firePlanClick("slidein", contextPitchFor(pathname)?.tier ?? "plus");
     try {
       // Engaging is not refusing: a longer snooze, no strike.
       localStorage.setItem(SNOOZE_UNTIL, String(Date.now() + SNOOZE_AFTER_CLICK_MS));
@@ -132,7 +135,7 @@ export function PremiumSlideIn() {
     }
     setShown(false);
     router.push("/premium");
-  }, [router]);
+  }, [router, pathname]);
 
   useEffect(() => {
     if (!shown) return;
@@ -145,20 +148,21 @@ export function PremiumSlideIn() {
 
   if (!shown) return null;
   const pitch = contextPitchFor(pathname);
+  const tier: Tier = pitch?.tier ?? "plus";
   const heading = pitch?.heading ?? "Never overpay for a One Piece card";
   const line = pitch?.line ?? "You've been comparing prices. Plus shows every Deal Finder deal with no ads; Premium also plans which stores to buy your list from.";
 
   return (
     <div
       role="region"
-      aria-label="OP Compare Plus offer"
+      aria-label="OP Compare Plus and Premium offer"
       data-nudge="slidein"
       className={`fixed z-overlay w-[calc(100%-2rem)] transition-[opacity,transform] duration-300 ease-out ${details ? "max-w-[23rem]" : "max-w-[20rem]"} ${entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"}`}
       style={{ left: "calc(var(--sidenav-w) + 1rem)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
     >
       <div className="relative max-h-[min(80dvh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-straw/50 bg-ink-900 shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center gap-2 bg-ink-900 py-1 pl-4 pr-1">
-          <span className="rounded border border-straw/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-straw">Plus</span>
+          <span className="rounded border border-straw/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-straw">{TIER_NAMES[tier]}</span>
           <span className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-slate-100">{heading}</span>
           <button type="button" onClick={dismiss} aria-label="Dismiss" className="tap-icon shrink-0 self-start rounded-lg text-slate-400 hover:bg-ink-800 hover:text-white">
             <Icon name="x" className="h-4 w-4" />
@@ -166,7 +170,7 @@ export function PremiumSlideIn() {
         </div>
         <div className="px-4 pb-1.5 pt-0.5">
           <p className="text-xs text-slate-400">
-            <span className="font-bold text-white">From {planPrice("plus", "month")}/mo</span> · cancel anytime
+            <span className="font-bold text-white">{tier === "plus" ? "From " : ""}{planPrice(tier, "month")}/mo</span> · cancel anytime
           </p>
           <div className="mt-2 flex items-center gap-2">
             <button type="button" onClick={accept} className="btn-primary min-h-11 flex-1 px-3 text-xs">

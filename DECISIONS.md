@@ -489,3 +489,65 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Plus/Premium surfaces at RiftCompare parity: dialog, header Pricing, nudges, beacons
+
+The owner asked for full functional parity with RiftCompare and "pricing at the
+very top". Ported, adapted to One Piece:
+
+- **One dialog, opened from every wall.** `PlanProvider` (root layout) +
+  `PlanDialog` + `PlanButton({surface, tier})`. The dialog opens on the LOWEST
+  tier that unlocks the wall (Deal Finder: Plus; Buy List Planner: Premium),
+  uses the shared `TierComparisonTable`, and its button follows the visitor:
+  member → billing portal / tools; Stripe unconfigured → the same "Opening
+  soon" /premium shows (unchanged owner state); signed out → `/login?next=
+  /premium?go=<tier>-<interval>`, which PricingCards' existing `?go=` logic
+  turns into checkout; signed in → the one checkout path (`startCheckout`,
+  shared with PricingCards). `checkoutOpen` reaches the layout as
+  `stripeEnabled()`, an environment read, never a session read: the root
+  layout still never reads the session.
+- **Pricing in the header from 400px**, hidden for members (the `oc_adfree`
+  hint hides it at first paint, `useMe()` after). To fit, the header shows the
+  hat mark without the wordmark below `sm` (390px already overflowed by 25px
+  before this change), the right cluster's gap is 2px below `sm`, and the
+  desktop links don't wrap. The rail's foot link and the phone menu's pinned
+  link are hidden for members too; the avatar menu keeps its entry.
+- **/premium:** pricing cards directly under a one-line H1, two columns at
+  every width (both buttons in the first 390×844 screen), "Cancel anytime ·
+  secure checkout by Stripe", the proof line (renders nothing until the Deal
+  Finder track's `/api/premium/proof` answers with ≥ 5), a member view in
+  place of the cards (subscription from `/api/premium/subscription`, read
+  client-side so the page stays static), "What you get" from `PLAN_FEATURES`,
+  the comparison table, a visible FAQ with FAQPage JSON-LD, and Product JSON-LD
+  with one Offer per tier. Prices, features and trial policy untouched; no $1
+  month, no price-rise banner.
+- **Nudges: RiftCompare's rules, unchanged numbers** (`lib/nudge-gate.ts`,
+  `nudge-timing.ts`, `nudge-runtime.ts`): the slide-in is for signed-in
+  non-members only, while checkout is open, from the 3rd page view, on an
+  account ≥ 48 h old (`/api/me` now returns `createdAt`), 12 s after
+  eligibility at a quiet moment (no open dialog — `body[data-oc-dialog]` or any
+  `[aria-modal=true]` —, no scrolling, no typing), once per session, 7-day
+  snooze after a dismissal, 14 days after a click, never after two dismissals.
+  Skipped on /login /premium /tools /watchlist /account /admin. The annual
+  offer needs a monthly subscription ≥ 2 months old with the yearly Price set
+  up. Signed-out visitors get only in-page `InlineSignupPrompt`s (card pages,
+  /movers, /price-guide), never a corner card.
+- **Switch to yearly** (`/api/premium/switch-to-annual`): same-origin POST,
+  Stripe `subscriptions.update` to the tier's yearly lookup-key Price with
+  `proration_behavior: "always_invoice"`. It never writes entitlement; the
+  webhook/reconcile stamp the new period, extend-only, as for every change.
+  503 with a plain message while Stripe isn't configured.
+- **CardConversionCta promises only what OP does.** RiftCompare's says "we'll
+  email you when it drops"; OP's watchlist is browser-only with no email, so
+  the copy says the card joins the watchlist. No `PremiumNudgeCard` ("4 cards
+  you watch are underpriced"): it needs a server-side watchlist.
+- **Beacons are live, unlike RiftCompare's.** RiftCompare switched its click
+  beacon off to save history-DB egress; OP's two tables (`ClickEvent`,
+  `PremiumClick`) are one small insert per click into the operational DB and
+  are read only by `/admin/clicks` and `/admin/premium` (uncached,
+  `lib/admin-clicks.ts`). One global listener (`OutboundBeacon`) reports any
+  `a[data-retailer]` click, so new shop links are counted without wiring.
+  Rows hold the retailer key, page type, card/sealed slug, market and the
+  account id if signed in — never an IP, URL or user agent. Both routes are
+  rate-limited per hashed IP, validate against fixed patterns
+  (`lib/click-event.ts`, `lib/nudge-surface.ts`) and always answer 204.

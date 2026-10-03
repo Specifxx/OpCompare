@@ -77,7 +77,7 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
     <div className="fixed inset-0 z-modal overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-dialog-title">
       <button type="button" tabIndex={-1} aria-label="Close" className="fixed inset-0 h-full w-full cursor-default bg-black/70" onClick={onClose} />
       <div className="pointer-events-none relative flex min-h-full items-center justify-center p-3 sm:p-6">
-        <div ref={panel} className="pointer-events-auto relative w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl animate-fade-in">
+        <div ref={panel} className="pointer-events-auto relative w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 py-1 pl-5 pr-2">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">OP Compare</span>

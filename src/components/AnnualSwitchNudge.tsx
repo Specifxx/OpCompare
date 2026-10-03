@@ -132,7 +132,7 @@ export function AnnualSwitchNudge() {
       role="region"
       aria-label={`Switch to yearly ${name}`}
       data-nudge="annual"
-      className="fixed z-overlay w-[calc(100%-2rem)] max-w-sm animate-fade-in"
+      className="fixed z-overlay w-[calc(100%-2rem)] max-w-sm"
       style={{ left: "calc(var(--sidenav-w) + 1rem)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
     >
       <div className="overflow-hidden rounded-xl border border-straw/40 bg-ink-900 shadow-2xl">
