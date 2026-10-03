@@ -227,7 +227,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                               value={l.card.id}
                               onChange={(e) => switchPrinting(l, Number(e.target.value))}
                               disabled={loading}
-                              className="max-w-[16rem] rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 text-xs text-slate-200"
+                              className="w-full min-w-0 max-w-full rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 text-xs text-slate-200 sm:w-auto sm:max-w-[16rem]"
                             >
                               {l.options.map((o) => (
                                 <option key={o.id} value={o.id}>

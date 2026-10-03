@@ -85,6 +85,11 @@ test("Leader: lines, parallels and exact printing pins", () => {
   assert.equal(d.productId, 402);
 });
 
+test("a Leader header covers one card, not the rest of an unheaded list", () => {
+  const lines = parseDeckList("Leader\n1xOP01-001\n4xOP01-016\n4xOP01-120");
+  assert.deepEqual(lines.map((l) => l.leader), [true, false, false]);
+});
+
 test("section headers are never cards; card names that look like words are", () => {
   for (const h of ["Leader", "Characters (32)", "Events", "Stages: 2", "DON!!", "DON!! x10", "Main Deck", "Total: 51 cards", "Counter:"]) assert.ok(isSectionHeader(h), h);
   for (const c of ["Nami", "4xOP01-016", "Monkey.D.Luffy"]) assert.ok(!isSectionHeader(c), c);

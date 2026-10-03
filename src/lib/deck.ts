@@ -125,6 +125,7 @@ export function parseDeckList(text: string): DeckLine[] {
       .trim();
     if (!number && !productId && (!name || isSectionHeader(name))) continue;
     out.push({ raw: rawLine.trim(), qty, number, name, parallel, productId, leader: leader || inLeader });
+    inLeader = false; // a Leader section holds one card
   }
   return out;
 }

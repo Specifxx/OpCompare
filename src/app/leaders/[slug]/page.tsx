@@ -81,7 +81,7 @@ export default async function LeaderPage({ params }: Props) {
         </CardQuickLink>
         <div className="min-w-0">
           <h1 className="text-3xl text-white sm:text-4xl">
-            {base.name} <span className="text-slate-400">{base.number}</span>
+            {base.name} <span className="whitespace-nowrap text-slate-400">{base.number}</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">One Piece Card Game Leader · {cat.setById.get(base.setId)?.name}</p>
           <div className="mt-3 flex flex-wrap gap-2">

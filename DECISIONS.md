@@ -489,3 +489,56 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Tools parity: /tools, the deck price calculator, selling fees and the landing pages
+
+RiftCompare's free tools and SEO pages, ported to One Piece (parity audit §3.5
+and §6). What is not obvious:
+
+- **The deck pricer reads the catalogue, not the database.** `/api/deck/price`
+  parses (`lib/deck.ts`, pure, `tests/deck.test.ts`) and resolves every line
+  against the cached `getCatalog()`; only the resolved printings' offers are
+  read, through the cached per-card `getCardDetail()` (at most 80 per request,
+  rate-limited per IP). No new query sits on a request path.
+- **A number means its standard print.** `4xOP01-120` prices the base print
+  (lowest TCGplayer id among standard prints); a Parallel, Manga or SP is chosen
+  with the line's printing switch, which writes `#<productId>` into the list so
+  the share link and the Buy List Planner get the same printing. `_p1`/`_p2`
+  (deck-builder exports) pick the Nth parallel. A name without a number is
+  matched to the number with the most printings and shown as a guess; an
+  unmatched line is listed, never dropped.
+- **Copies are assumed available.** Stores publish in-stock, not quantities, so
+  a line of four is four times the store's price, and both /deck and the
+  planner say so. eBay rows never fill a deck line (the Buy List Planner's
+  rule): many sellers behind one `source`.
+- **/deck's "buy each card where it's cheapest" is free; the planner stays
+  Premium.** The per-card cheapest store is what every card page already
+  shows; the planner's value is the best single-store orders and the condition
+  floor. A free account now gets its planner TOTAL (RiftCompare's free Best
+  Basket taste): `/api/buy-list` returns only the total and counts unless the
+  account is Premium, so no store name, pick or link leaves the server.
+- **Minimum condition.** `lib/buy-list-condition.ts`: store rows by their
+  recorded grade (unstated = Near Mint, as a store's headline price means);
+  TCGplayer's row is its lowest listing across every condition, so it is left
+  out at "NM only" and "LP or better" instead of being assumed mint.
+- **Selling fees are dated and sourced, or blank.** Rates checked on
+  2026-10-03 on the marketplaces' own pages where they loaded: eBay US (13.25%
+  of the whole sale to $7,500, 2.35% above, $0.30/$0.40 per order), eBay UK
+  private sellers (no final value fee). TCGplayer's help page refused the fetch;
+  its 10.75% / $75 cap / 2.5% + $0.30 comes from a 2026 fee comparison citing
+  the February 10, 2026 change, and links to TCGplayer's page. Cardmarket, eBay
+  Australia and eBay Canada are left for the seller to enter (RiftCompare's
+  rule: a stale percentage is worse than none).
+- **Keywords come from card text.** `Card.effect` is real (6,674 of 7,255
+  printings), so `/keywords` exists: `getCardText()` reads one row per card
+  number (DISTINCT ON) and caches only keyword slugs and types, never the text.
+  A card "has" a keyword when the bracket appears in its text, including cards
+  that gain it; the page says "whose text has". Definitions are short
+  paraphrases of the Comprehensive Rules with no rule numbers cited.
+- **Store pages count "cheapest" in SQL.** `getStoreStats()` aggregates every
+  store row against the market's `low` in one query (live = in stock and
+  refreshed in 72 h). Store pages under 10 live listings are noindex and left
+  out of the sitemap.
+- **Leader pages** link "cards for this deck" by shared type within the
+  Leader's colours (every colour of the card is one of the Leader's), a safe
+  subset; they are a starting point, not a decklist, and the page says so.

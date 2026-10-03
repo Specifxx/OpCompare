@@ -151,7 +151,7 @@ export async function priceDeck(text: string, market: Country, opts: { withOffer
       qty: m.line.qty,
       how: m.how,
       ambiguous: m.ambiguous,
-      leader: m.line.leader || c.cardType === "Leader",
+      leader: c.cardType === "Leader",
       card: cardOut(c, cat),
       text: formatDeckLine(m.line.qty, c, pinned),
       options: m.options.map((o) => ({ id: o.id, label: optionLabel(o, cat.setById.get(o.setId)?.code ?? ""), low: o.low[market] })),
