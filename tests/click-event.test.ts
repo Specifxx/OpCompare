@@ -56,7 +56,7 @@ test("every surface the code fires is one the route accepts", () => {
   const walk = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
   const seen = new Set<string>();
   for (const f of walk(ROOT).filter((f) => f.endsWith(".tsx"))) {
-    for (const m of fs.readFileSync(f, "utf8").matchAll(/surface="([^"]+)"/g)) seen.add(m[1]);
+    for (const m of fs.readFileSync(f, "utf8").matchAll(/(?<![\w-])surface="([^"]+)"/g)) seen.add(m[1]);
   }
   assert.ok(seen.size >= 5, "surfaces are named in the components");
   for (const s of seen) assert.equal(isPlanClickSurface(s) || /^[a-z-]+$/.test(s), true, s);

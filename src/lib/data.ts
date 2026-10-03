@@ -435,7 +435,7 @@ export async function getProductHistory(id: number): Promise<HistoryPoint[]> {
 }
 
 // ---- deals track loaders ----
-import { ebaySourceFor, encodeDealInput, type DealInputTuple, type EbayListingRow, type StoreListing } from "./deals";
+import { ebaySourceFor, encodeDealInput, type DealInputTuple, type EbayListingRow, type StoreListing as DealStoreListing } from "./deals";
 // Deal Finder, the homepage's Today's Top Deals, /market/records and the
 // Premium proof line all rank from these (pure rules in lib/deals.ts). Same
 // freshness rule as aggregate() in lib/import.ts: in stock and refreshed in the
@@ -505,7 +505,7 @@ export const getStoreMins = unstable_cache(
 
 export interface DealOfferDetail {
   id: number;
-  stores: StoreListing[]; // every fresh in-stock store listing in the market
+  stores: DealStoreListing[]; // every fresh in-stock store listing in the market
   ebay: EbayListingRow[]; // the market's eBay singles row(s)
   tcgplayerUrl: string;
 }

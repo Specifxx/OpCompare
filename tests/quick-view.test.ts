@@ -157,7 +157,8 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
     "src/app/sets/[slug]/page.tsx",
     "src/app/cards/all/page.tsx",
     "src/app/colors/[color]/page.tsx",
-    "src/app/leaders/page.tsx",
+    // /leaders rows open each Leader's own page (tools track); its card links are CardQuickLinks.
+    "src/app/leaders/[slug]/page.tsx",
     "src/app/tools/box-value/page.tsx",
     "src/app/blog/[slug]/page.tsx",
     "src/components/blog/BlogBits.tsx",
@@ -210,8 +211,10 @@ test("the payload carries the trimmed history, and none when the loader gave non
 
 test("card search opens a card hit in the QuickView; the TCGplayer banner is an ad members never see", () => {
   const search = read("src/components/CardSearch.tsx");
-  assert.match(search, /useQuickView\(\)/);
-  assert.match(search, /qv\.open\(h\.slug/);
+  // Each card row is a CardQuickLink; Enter clicks the row's own anchor, so a
+  // card hit opens QuickView whenever the provider is mounted.
+  assert.match(search, /<CardQuickLink slug=\{h\.slug\}/);
+  assert.match(search, /querySelector\("a"\)/);
   const banner = read("src/components/TcgplayerBanner.tsx");
   assert.match(banner, /data-ad-placement/);
   assert.match(banner, />Ad</);
