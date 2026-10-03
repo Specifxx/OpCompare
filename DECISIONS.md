@@ -79,3 +79,21 @@ beside the set's card value and how concentrated it is — facts a buyer can che
 TCGCSV's daily price archive answered 403 from here, so there is no backfill:
 history, weekly movers and the index start on the first import, and those pages
 say when they will fill in.
+
+## 2026-10-03 — Blog posts are computed, not typed
+
+The owner wants an SEO blog like RiftCompare's. Every post here is a function of
+the price database: tables, counts, medians and the sentences that quote them
+are built when the page renders (`src/lib/blog/posts/`), and a sentence that
+needs a fact prints only when the fact exists. That keeps posts accurate as
+prices move and avoids publishing hand-typed figures nobody has checked.
+Explanations of the game stay to what the cards and TCGplayer's catalogue show.
+
+## 2026-10-03 — Analytics and search engines
+
+GA4 needs its own property (`NEXT_PUBLIC_GA_ID`; nothing renders without it),
+with Consent Mode defaults that deny storage in the EEA/UK/CH. Search Console
+reuses RiftCompare's service account (`GSC_SA_KEY`) on a new property; a daily
+workflow submits the sitemap and reports indexing. IndexNow reuses
+RiftCompare's public key (keys are verified per host). Social-media marketing
+was explicitly left out.

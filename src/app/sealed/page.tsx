@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
+import { FormCleaner } from "@/components/FormCleaner";
 import { SealedTile } from "@/components/SealedTile";
 import { Breadcrumbs, EmptyState } from "@/components/ui";
 import { SEALED_KINDS } from "@/lib/constants";
@@ -125,6 +126,7 @@ export default async function SealedPage({ searchParams }: { searchParams: SP })
           <button type="submit" className="btn-primary mt-4 w-full">
             Apply filters
           </button>
+          <FormCleaner formId="sf" defaults={{ sort: "featured" }} />
         </form>
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

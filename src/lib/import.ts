@@ -366,7 +366,14 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
 }
 
 // ── Aggregates, history, index ───────────────────────────────────────────────
+/** An offer not refreshed for this long no longer counts as in stock (RiftCompare's 72h rule). */
+export const STALE_HOURS = 72;
+
 export async function aggregate(log: Log): Promise<void> {
+  // A store removed from the registry leaves no rows behind.
+  const known = STORES.map((s) => `store:${s.key}`);
+  const removed = await prisma.offer.deleteMany({ where: { source: { startsWith: "store:", notIn: known } } });
+  if (removed.count) log(`Removed ${removed.count} offers from stores no longer in the registry`);
   for (const table of ["Card", "Sealed"]) {
     const reset = MARKETS.map((m) => `"low${m}" = NULL, "stores${m}" = 0`).join(", ");
     await prisma.$executeRawUnsafe(`UPDATE "${table}" SET ${reset}`);
@@ -374,9 +381,10 @@ export async function aggregate(log: Log): Promise<void> {
       await prisma.$executeRawUnsafe(
         `UPDATE "${table}" t SET "low${m}" = a.low, "stores${m}" = a.n
          FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*)::int AS n FROM "Offer"
-               WHERE market = $1 AND "inStock" GROUP BY "productId") a
+               WHERE market = $1 AND "inStock" AND "updatedAt" > now() - make_interval(hours => $2::int) GROUP BY "productId") a
          WHERE a."productId" = t.id`,
         m,
+        STALE_HOURS,
       );
     }
   }

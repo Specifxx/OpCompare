@@ -226,6 +226,13 @@ export interface CardDetail {
   history: { day: string; marketUsd: number | null; lowUsd: number | null }[];
 }
 
+// An offer not refreshed for 72 hours (its store failed to read since) is shown
+// as sold out rather than as a live price — the same rule the aggregates use.
+const STALE_MS = 72 * 3600 * 1000;
+function freshOffer(o: { source: string; market: string; priceCents: number; currency: string; url: string; inStock: boolean; condition: string | null; updatedAt: Date }): OfferRow {
+  return { ...o, inStock: o.inStock && Date.now() - o.updatedAt.getTime() < STALE_MS, updatedAt: o.updatedAt.toISOString() };
+}
+
 export const getCardDetail = unstable_cache(
   async (slug: string): Promise<CardDetail | null> => {
     const c = await prisma.card.findUnique({
@@ -253,7 +260,7 @@ export const getCardDetail = unstable_cache(
     return {
       ...c,
       set: { ...c.set, releasedOn: c.set.releasedOn ? c.set.releasedOn.toISOString().slice(0, 10) : null },
-      offers: offers.map((o) => ({ ...o, updatedAt: o.updatedAt.toISOString() })),
+      offers: offers.map(freshOffer),
       history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), marketUsd: h.marketUsd, lowUsd: h.lowUsd })),
     };
   },
@@ -331,7 +338,7 @@ export const getSealedDetail = unstable_cache(
     return {
       ...s,
       releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
-      offers: offers.map((o) => ({ ...o, updatedAt: o.updatedAt.toISOString() })),
+      offers: offers.map(freshOffer),
       history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), marketUsd: h.marketUsd, lowUsd: h.lowUsd })),
     };
   },

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
 import { CardTile } from "@/components/CardTile";
+import { FormCleaner } from "@/components/FormCleaner";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { cardEbayQuery } from "@/lib/affiliate";
 import { mostValuable, newestBoosterSet } from "@/lib/selectors";
@@ -44,6 +45,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Searc
           </label>
           <div className="mt-3 hidden peer-checked:block lg:mt-0 lg:block">
             <BrowseFilters q={q} sets={cat.sets} country={country} />
+            <FormCleaner formId="filters" defaults={{ sort: "value", per: "48" }} />
           </div>
         </aside>
         <div className="min-w-0">

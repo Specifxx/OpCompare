@@ -28,6 +28,8 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 | `/leaders`, `/colors`, `/cards`, `/cards/all` | Leaders by colour, colour hubs, type/rarity/printing hub, A–Z index |
 | `/tools/deal-finder`, `/tools/box-value` | Listings under market price; box price vs the set's card value |
 | `/stores` | Every store we read, per market, with today's matched listings |
+| `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`, share images |
+| `/release-dates`, `/authors`, `/editorial-policy` | |
 | `/watchlist` | Hearted cards and products (saved in the browser) |
 | `/about`, `/methodology`, `/contact`, `/privacy`, `/terms` | |
 
@@ -37,7 +39,7 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 |---|---|---|
 | **TCGplayer** via [TCGCSV](https://tcgcsv.com) (category 68) | The whole catalogue (87 groups, ~7,300 printings, ~420 sealed), card text and stats; the cheapest listing (a US offer) and the market price (a reference everywhere, "≈" outside the US) | US + reference |
 | **Shopify stores** (`src/lib/stores.ts`) | Each store's One Piece collections, read with Shopify Markets pricing for its own country; every listing matched to one exact printing (`src/lib/match.ts`) | US AU UK SG CA EU |
-| **eBay** | A *search link* on your own eBay, tagged with the EPN campaign. **No eBay API calls, ever** — RiftCompare's 5,000/day Browse quota is untouched. `tests/no-ebay-api.test.ts` fails if anything names an eBay API host or credential. | all six |
+| **eBay** | *Search links* on your own eBay (card and sealed pages, eBay panels, the footer ad), tagged with the EPN campaign. **No eBay API calls, ever** — RiftCompare's 5,000/day Browse quota is untouched. `tests/no-ebay-api.test.ts` fails if anything names an eBay API host or credential. | all six |
 
 Matching follows RiftCompare's rule: *understated, never wrong*. A listing is
 matched only when exactly one printing fits its card number (or TCGplayer's exact
@@ -50,26 +52,14 @@ printing's market price is dropped as a probable mismatch.
 Next.js 14 (App Router) · TypeScript · Tailwind (RiftCompare's themeable token
 system, recoloured) · Prisma + Postgres (Neon) · Vercel · GitHub Actions.
 
-## Going live — owner checklist
+## Going live
 
-1. **Database.** Create a new Neon project (free tier is plenty) and copy its
-   **pooled** connection string. Do not reuse a RiftCompare database.
-2. **GitHub → Settings → Secrets and variables → Actions**
-   - Secret `DATABASE_URL` — the connection string
-   - Secret `CRON_SECRET` — any long random string
-   - Variable `SITE_URL` — e.g. `https://opcompare.com` (used to call `/api/revalidate`)
-3. **First import.** Actions → *Import prices* → Run workflow. It creates the
-   tables (`prisma db push`), loads the catalogue and TCGplayer prices, then reads
-   every store (~10–20 min). After that it runs at 07:07 and 19:07 UTC.
-4. **Vercel.** Import the repo. Environment variables (Production + Preview):
-   `DATABASE_URL`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`. Set the production
-   branch to `main`.
-5. **`main` branch.** This work is on `claude/tender-noether-2na98p`; create
-   `main` from it (or merge its PR) — CI, the daily release and Vercel production
-   all key off `main`.
-6. **Deploy.** Production builds only for a commit whose *subject* contains
-   `[deploy]` (see below). Run *Production deploy* → Run workflow for the first
-   release, or let the daily 08:00 UTC run do it.
+- **`docs/CHROME-SETUP-PROMPT.md`** — one prompt for Claude in Chrome that does
+  the whole setup: Neon database, GitHub branch/permissions/secrets/variables,
+  Vercel project and env vars, first import and deploy, GA4, Search Console,
+  Bing and the search workflows.
+- **`docs/SETUP.md`** — the same steps written out, with every Vercel and GitHub
+  variable, which ones reuse RiftCompare's values, and the free-tier limits.
 
 ## Deploys are gated (ported from RiftCompare)
 
@@ -115,8 +105,8 @@ card numbers (or TCGplayer-style names) in their titles.
 
 ## Not ported (yet) from RiftCompare
 
-Accounts and sign-in, Premium/Stripe, email price alerts, the blog and guides
-(Riftbound content), decks and deck builder, games, AdSense, the mobile app,
+Accounts and sign-in, Premium/Stripe, email price alerts, decks and deck
+builder, games, AdSense, social/ads marketing, the mobile app,
 and Cardmarket as an EU source (its public files carry no card numbers, and One
 Piece's many same-name printings make name-only matching unsafe — and the data
 permission RiftCompare holds was granted for Riftbound). The watchlist works
