@@ -978,3 +978,32 @@ Compare's data or rules differ.
   the watchlist puts the printing on the sub-line so a long name cannot hide
   it on a phone; chart range tabs are 44px tall on touch screens, as on
   RiftCompare.
+
+## 2026-10-03 — Integrating the five parity tracks
+
+The premium, quickview, deals, tools and ux branches were merged in that order,
+keeping both sides of every conflict. The calls that were not mechanical:
+
+- **Layout nesting:** CountryProvider > QuickViewProvider > PlanProvider, so a
+  QuickView's buttons can open the plan dialog and every corner nudge still
+  yields to the QuickView's `aria-modal`. No session read was added.
+- **/leaders rows** open each Leader's own page (tools), not a QuickView;
+  the card links on `/leaders/[slug]` are CardQuickLinks instead.
+- **Card search** keeps the ux rewrite: each card row is a CardQuickLink and
+  Enter clicks the row's anchor, so QuickView opens with no search-specific
+  QuickView code.
+- **The chart** keeps the ux interactive chart (it already measures real
+  pixels and sizes its gutter); QuickView's `width` is only the width drawn
+  before the wrapper is measured.
+- **Buy List route** keeps the tools version (it tags links inline); its rows
+  carry quickview's `data-card`/`data-surface` and PlanButton's
+  `gate:buy-list` surface.
+- **Premium proof:** `/api/premium/proof` answers `{country, deals, dealCount}`
+  (one number, two names) and PremiumProofLine reads `deals`, falling back to
+  `dealCount`. The default list counts eBay listings too, so the proof line no
+  longer says "at a real store".
+- **Deal Finder's "N more cards"** goes through Upsell's MoreWithPlan with the
+  real count; there is no second count line.
+- QuickView records the card in "recently viewed" when it opens, as the card
+  page does. Home trending links open QuickView. The card page's card number
+  no longer breaks at its hyphen. "a {adjective} store" copy uses withArticle.

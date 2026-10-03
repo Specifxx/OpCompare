@@ -6,6 +6,8 @@ import { DealPager, TcgDealTable, VsEbayTable } from "@/components/DealTable";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { Icon } from "@/components/Icon";
 import PlanButton from "@/components/PlanButton";
+import { MoreWithPlan } from "@/components/Upsell";
+import { withArticle } from "@/lib/filter-chips";
 import { StorePicker } from "@/components/StorePicker";
 import { Breadcrumbs, JsonLd } from "@/components/ui";
 import { ViewTabs } from "@/components/ViewTabs";
@@ -197,7 +199,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
           <section aria-labelledby="df-tcg">
             <h2 id="df-tcg" className="mb-1 text-xl text-white">Underpriced vs TCGplayer</h2>
             <p className="mb-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-              Cards a {info.adjective} store{EBAY_FEED[country] === "own" ? <> or <strong className="text-slate-200">eBay</strong> seller</> : null} is selling
+              Cards {withArticle(info.adjective)} store{EBAY_FEED[country] === "own" ? <> or <strong className="text-slate-200">eBay</strong> seller</> : null} is selling
               for less than <strong className="text-slate-200">TCGplayer&apos;s</strong> US market price
               {country === "US" ? " — and for less than TCGplayer's own lowest listing" : ` (converted to ${info.currency})`}. Store prices are the item
               price; postage is added at checkout.
@@ -286,7 +288,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
           <section aria-labelledby="df-vs-ebay">
             <h2 id="df-vs-ebay" className="mb-1 text-xl text-white">Underpriced vs eBay</h2>
             <p className="mb-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-              Cards a {info.adjective} store sells for less than the cheapest <strong className="text-slate-200">eBay</strong> listing in {info.place}.
+              Cards {withArticle(info.adjective)} store sells for less than the cheapest <strong className="text-slate-200">eBay</strong> listing in {info.place}.
               An eBay listing is one seller&apos;s asking price, not a sale. Store prices are the item price — postage is added at checkout, so the
               real gap is smaller by the store&apos;s postage.
             </p>
@@ -483,20 +485,13 @@ function Locked({ country }: { country: Country }) {
 }
 
 // SIGNED-IN FREE ACCOUNT, under its real rows: how many more there are (the
-// real total of the list), and the Plus button. Takes a COUNT, never rows.
+// real total of the list, said once by Upsell's MoreWithPlan) and the Plus
+// button. Takes a COUNT, never rows.
 function MorePremium({ more }: { more: number }) {
   if (more <= 0) return null;
   return (
-    <div className="mt-3 flex flex-col items-start gap-3 rounded-lg border border-straw/30 bg-straw/[0.05] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-slate-300">
-        <strong className="text-white">
-          {more.toLocaleString("en-US")} more {more === 1 ? "card" : "cards"}
-        </strong>{" "}
-        on this list. {PLUS_GATE_LINE}
-      </p>
-      <PlanButton surface="gate:deal-finder" tier="plus" className="btn-primary shrink-0 text-sm">
-        See Plus
-      </PlanButton>
-    </div>
+    <MoreWithPlan more={more} surface="gate:deal-finder" tier="plus">
+      {PLUS_GATE_LINE}
+    </MoreWithPlan>
   );
 }

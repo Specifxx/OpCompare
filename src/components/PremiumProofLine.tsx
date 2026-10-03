@@ -17,7 +17,8 @@ export function usePlanProof(enabled = true): number | null {
     fetch(`/api/premium/proof?country=${country}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: unknown) => {
-        const n = d && typeof d === "object" ? (d as { deals?: unknown }).deals : null;
+        const o = d && typeof d === "object" ? (d as { deals?: unknown; dealCount?: unknown }) : null;
+        const n = o ? (o.deals ?? o.dealCount) : null;
         if (!cancelled) setDeals(typeof n === "number" && Number.isFinite(n) ? n : null);
       })
       .catch(() => {
@@ -35,7 +36,7 @@ export function PremiumProofLine({ className = "mt-4 text-center text-sm text-sl
   if (deals == null || deals < 5) return null;
   return (
     <p className={className}>
-      <span className="font-bold text-white">{deals.toLocaleString("en-US")} cards below TCGplayer market</span> at a real store on Deal Finder right now.
+      <span className="font-bold text-white">{deals.toLocaleString("en-US")} cards below TCGplayer market</span> on Deal Finder right now.
     </p>
   );
 }

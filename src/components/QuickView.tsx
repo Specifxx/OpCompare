@@ -7,6 +7,7 @@ import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
 import type { QuickViewPayload } from "@/lib/quick-view";
+import { pushRecentCard } from "@/lib/recently-viewed";
 import { ColorDots, Delta, PrintingBadge, RarityBadge } from "./ui";
 import { useCountry } from "./CountryProvider";
 import { Icon } from "./Icon";
@@ -70,6 +71,13 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
       live = false;
     };
   }, [slug, attempt]);
+
+  // Opening a card's QuickView counts as viewing it (RiftCompare): it joins the
+  // recently viewed rail and the empty search box's list, like the card page.
+  useEffect(() => {
+    if (!data || data.slug !== slug) return;
+    pushRecentCard({ slug: data.slug, name: data.name, variant: data.variant, setCode: data.set.code, number: data.number, img: data.hasImage ? cardImage.thumb(data.id) : null });
+  }, [data, slug]);
 
   const href = `/card/${slug}`;
   const m = data?.markets[country];

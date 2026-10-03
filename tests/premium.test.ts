@@ -140,3 +140,13 @@ test("the session is never read by the layout, and gated rows are cut in the que
   assert.match(deal, /pageSize: FREE_DEAL_ROWS/);
   assert.match(read("src/app/api/buy-list/route.ts"), /isPremium\(user, "premium"\)/);
 });
+
+test("the proof line and the proof route agree on the count's key", () => {
+  const root = path.resolve(__dirname, "..");
+  const route = fs.readFileSync(path.join(root, "src/app/api/premium/proof/route.ts"), "utf8");
+  const line = fs.readFileSync(path.join(root, "src/components/PremiumProofLine.tsx"), "utf8");
+  // The route answers {country, deals, dealCount}; the consumer reads `deals`
+  // (falling back to `dealCount`), so neither side can drift alone.
+  assert.match(route, /deals: dealCountValue/);
+  assert.match(line, /\.deals \?\? o\.dealCount/);
+});

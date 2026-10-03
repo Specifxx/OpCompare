@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { CardSearch } from "@/components/CardSearch";
 import { CardTile } from "@/components/CardTile";
 import { MarketPills } from "@/components/CountrySelect";
@@ -67,10 +68,10 @@ export default async function HomePage() {
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Trending</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {trending.map((t) => (
-                  <Link key={t.id} href={`/card/${t.slug}`} className="truncate rounded-md border border-ink-700 bg-ink-900/80 px-3 py-3 text-sm font-medium text-slate-100 hover:border-ink-600 hover:bg-ink-850">
-                    {t.name}
+                  <CardQuickLink key={t.id} slug={t.slug} className="truncate rounded-md border border-ink-700 bg-ink-900/80 px-3 py-3 text-sm font-medium text-slate-100 hover:border-ink-600 hover:bg-ink-850">
+                    <span data-card-name>{t.name}</span>
                     {t.variant ? <span className="text-slate-400"> · {t.variant.split(" · ")[0]}</span> : null}
-                  </Link>
+                  </CardQuickLink>
                 ))}
               </div>
             </div>

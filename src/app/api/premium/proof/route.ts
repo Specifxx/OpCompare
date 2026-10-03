@@ -19,5 +19,7 @@ export async function GET(req: Request) {
     ? { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" }
     : { "Cache-Control": "private, max-age=300", Vary: "Cookie" };
   const dealCountValue = isCountry(country) ? await dealCount(country) : 0;
-  return NextResponse.json({ country, dealCount: dealCountValue }, { headers });
+  // `deals` is what PremiumProofLine and the slide-in read; `dealCount` is the
+  // same number under the Deal Finder work's original name.
+  return NextResponse.json({ country, deals: dealCountValue, dealCount: dealCountValue }, { headers });
 }

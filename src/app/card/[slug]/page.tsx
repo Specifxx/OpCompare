@@ -215,7 +215,12 @@ export default async function CardPage({ params }: Props) {
                   >
                     {card.set.name} ({card.set.code})
                   </Link>
-                  {card.number ? ` · ${card.number}` : ""}
+                  {card.number ? (
+                    <>
+                      {" · "}
+                      <span className="whitespace-nowrap">{card.number}</span>
+                    </>
+                  ) : null}
                 </p>
               </div>
               <div className="flex gap-2">
