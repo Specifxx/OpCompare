@@ -224,7 +224,7 @@ Ask me before touching it.)
 GitHub → Actions → **Import prices** → Run workflow (branch main, defaults).
 It does three things:
 - creates the tables;
-- imports ~7,300 cards, ~420 sealed products and prices from ~235 stores;
+- imports ~7,300 cards, ~420 sealed products and prices from ~386 stores;
 - creates the `data` branch, where the price history is published.
 
 Wait for green (10–20 min). If it fails, open the log and report the error to

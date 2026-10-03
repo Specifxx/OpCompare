@@ -70,7 +70,7 @@ lets scripts call `/api/admin/*` with an `Authorization: Bearer` header.
 | Source | What | Markets |
 |---|---|---|
 | **TCGplayer** via [TCGCSV](https://tcgcsv.com) (category 68) | The whole catalogue (87 groups, ~7,300 printings, ~420 sealed), card text and stats; the cheapest listing (a US offer) and the market price (a reference everywhere, "≈" outside the US) | US + reference |
-| **Shopify stores** (`src/lib/stores.ts`) | Each store's One Piece collections, read with Shopify Markets pricing for its own country; every listing matched to one exact printing (`src/lib/match.ts`) | US AU UK SG CA EU |
+| **Stores** (`src/lib/stores.ts`) | Shopify stores' One Piece collections, read with Shopify Markets pricing for their own country; ShadowPOS, Ecwid and BigCommerce stores through their own readers (`src/lib/store-import.ts`); every listing matched to one exact printing (`src/lib/match.ts`) | US AU UK SG CA EU |
 | **eBay** | **Listing prices** from OP Compare's *own* eBay application (Browse API, its own 5,000 calls a day), searched twice a day by `scripts/ebay.ts` (`ebay-prices.yml`): singles of US$100+ daily, US$20+ (US$50+ in the EU) and sealed of US$30+ every two days; the cheapest matching Buy It Now listing, ranked among the stores by item price, never re-ranked. Off until the GitHub secrets exist. Plus EPN-tagged *search links* on your own eBay everywhere. API hosts and credentials live only in `src/lib/ebay*.ts` (`tests/no-ebay-api.test.ts`). | US UK AU EU (Spain); CA sealed + US-derived singles; SG links only |
 
 Matching follows RiftCompare's rule: *understated, never wrong*. A listing is
@@ -140,8 +140,12 @@ npm run dev
 Add an entry to `src/lib/stores.ts` (`key`, `name`, `base`, `country`, the One
 Piece collection handles, and `currency` only if it charges something other than
 its market's currency). The importer also re-discovers One Piece collections
-from the store's sitemap each run. It must be a Shopify store whose singles carry
-card numbers (or TCGplayer-style names) in their titles.
+from the store's sitemap each run. Its singles must carry card numbers (or
+TCGplayer-style names) in their titles. A store on another platform sets
+`platform` (`shadowpos`, `ecwid`, `bigcommerce`, `nopcommerce`, `woocommerce`;
+see each reader's header for what `collections` means there). Check a candidate
+first with `npx tsx scripts/probe-stores.ts [--platform=…] <base> <market>`: it
+runs the real reader and matcher and prints what the import would keep.
 
 ## Not ported (yet) from RiftCompare
 

@@ -88,8 +88,9 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
       <div>
         <h1 className="text-3xl text-white">Store health</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">
-          From each store&apos;s own reads in the last 8 days of imports (ImportRun summaries). A store&apos;s title-format change usually shows up here first,
-          as a match-rate drop; every matching rule changed for it needs a real title in <code>tests/match.test.ts</code>.
+          From each store&apos;s own reads in the last 8 days of imports (ImportRun summaries), whatever its platform (Shopify, ShadowPOS, Ecwid,
+          BigCommerce…). A store&apos;s title-format change usually shows up here first, as a match-rate drop; every matching rule changed for it needs a
+          real title in <code>tests/match.test.ts</code>.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -113,7 +114,9 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
                       {h.name}
                     </a>
                     <span className="text-xs text-slate-400">{h.country}</span>
-                    <span className="text-xs text-slate-500">{h.key}</span>
+                    <span className="text-xs text-slate-500">
+                      {h.key} · {h.platform}
+                    </span>
                   </p>
                   <AlertLines h={h} />
                   <p className="text-xs text-slate-500">
@@ -140,7 +143,9 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
                         <a href={h.base} target="_blank" rel="nofollow noopener" className="font-semibold text-white hover:text-brand-400">
                           {h.name}
                         </a>
-                        <span className="block text-xs text-slate-500">{h.key}</span>
+                        <span className="block text-xs text-slate-500">
+                          {h.key} · {h.platform}
+                        </span>
                       </td>
                       <td className="px-3 py-2 text-slate-300">{h.country}</td>
                       <td className="px-3 py-2">
@@ -180,11 +185,12 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="data-table min-w-[48rem]">
+          <table className="data-table min-w-[52rem]">
             <thead>
               <tr>
                 <th>Store</th>
                 <th>Market</th>
+                <th>Platform</th>
                 <th>Listings</th>
                 <th>In stock</th>
                 <th>Median (8d)</th>
@@ -197,6 +203,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
                 <tr key={h.key}>
                   <td className="px-3 py-2 text-slate-200">{h.name}</td>
                   <td className="px-3 py-2 text-slate-400">{h.country}</td>
+                  <td className="px-3 py-2 text-xs text-slate-400">{h.platform}</td>
                   <td className="num px-3 py-2">{int(h.offers.listings)}</td>
                   <td className="num px-3 py-2">{int(h.offers.inStock)}</td>
                   <td className="num px-3 py-2">{h.medianListings == null ? "–" : int(Math.round(h.medianListings))}</td>

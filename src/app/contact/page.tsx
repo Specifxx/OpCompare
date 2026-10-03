@@ -24,7 +24,7 @@ export default function Contact() {
       <ContactForm />
       <h2>Stores</h2>
       <p>
-        Stores on Shopify whose One Piece singles carry the card number in the
+        Stores on Shopify or ShadowPOS whose One Piece singles carry the card number in the
         title (for example “OP01-120”) can usually be added within a day.{" "}
         <Link href="/stores/suggest">Suggest a store</Link> with its address and
         the market it ships to.
