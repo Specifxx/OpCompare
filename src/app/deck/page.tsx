@@ -22,15 +22,15 @@ function readList(sp: { list?: string | string[] }): string {
 }
 
 // A shared list unfurls with its own total ("This One Piece deck costs $X"),
-// priced from the cached catalogue only (no per-card offers): the same cheapest
-// listings the page's total uses.
+// priced exactly as the page prices it (each card's cached offers, stores and
+// TCGplayer only), so the unfurl and the page quote the same total.
 export async function generateMetadata({ searchParams }: { searchParams: { list?: string | string[] } }): Promise<Metadata> {
   const base: Metadata = { title: TITLE, description: DESC, alternates: { canonical: "/deck" }, openGraph: pageOg("/deck") };
   const list = readList(searchParams);
   if (!list.trim()) return base;
   try {
     const country = getCountry();
-    const r = await priceDeck(list, country, { withOffers: false });
+    const r = await priceDeck(list, country);
     const t = r.totals[country];
     if (!t.cents) return base;
     const title = `This One Piece deck costs ${money(t.cents, country)}`;

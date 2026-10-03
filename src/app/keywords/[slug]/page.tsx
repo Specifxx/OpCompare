@@ -7,7 +7,7 @@ import { Breadcrumbs, JsonLd, SectionHeader } from "@/components/ui";
 import { COUNTRIES } from "@/lib/country";
 import { getCardTextByNumber, getCatalog, type CardLite } from "@/lib/data";
 import { basePrinting } from "@/lib/deck";
-import { paginate } from "@/lib/facets";
+import { pageSuffix, paginate } from "@/lib/facets";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { breadcrumbLd, faqLd } from "@/lib/jsonld";
@@ -20,14 +20,14 @@ import { pageOg } from "@/lib/og/meta";
 type Props = { params: { slug: string }; searchParams: { page?: string } };
 const PER = 48;
 
-export function generateMetadata({ params }: Props): Metadata {
+export function generateMetadata({ params, searchParams }: Props): Metadata {
   const k = KEYWORD_BY_SLUG.get(params.slug);
   if (!k) return { title: "Keyword not found" };
   return {
     title: `[${k.name}] in the One Piece Card Game — What It Does & Every Card`,
     description: `${k.summary} Every One Piece card whose text has [${k.name}], with live prices.`,
-    alternates: { canonical: `/keywords/${k.slug}` },
-    openGraph: pageOg(`/keywords/${k.slug}`),
+    alternates: { canonical: `/keywords/${k.slug}${pageSuffix(searchParams.page)}` },
+    openGraph: pageOg(`/keywords/${k.slug}${pageSuffix(searchParams.page)}`),
   };
 }
 

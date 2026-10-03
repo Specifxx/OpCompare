@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CardFacetPage } from "@/components/CardFacetPage";
 import { getCatalog } from "@/lib/data";
-import { facetBySlug, TYPE_FACETS } from "@/lib/facets";
+import { facetBySlug, pageSuffix, TYPE_FACETS } from "@/lib/facets";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
 
@@ -10,14 +10,14 @@ import { pageOg } from "@/lib/og/meta";
 // (RiftCompare's facet pages). No generateStaticParams: rendered on demand.
 type Props = { params: { type: string }; searchParams: { page?: string } };
 
-export function generateMetadata({ params }: Props): Metadata {
+export function generateMetadata({ params, searchParams }: Props): Metadata {
   const f = facetBySlug(TYPE_FACETS, params.type);
   if (!f) return { title: "Not found" };
   return {
     title: `One Piece ${f.title} — Prices & Full List`,
     description: `${f.intro} Every One Piece ${f.label} printing with live prices compared across stores in six markets.`,
-    alternates: { canonical: `/cards/type/${f.slug}` },
-    openGraph: pageOg(`/cards/type/${f.slug}`),
+    alternates: { canonical: `/cards/type/${f.slug}${pageSuffix(searchParams.page)}` },
+    openGraph: pageOg(`/cards/type/${f.slug}${pageSuffix(searchParams.page)}`),
   };
 }
 
@@ -32,7 +32,7 @@ export default async function Page({ params, searchParams }: Props) {
       cards={cards}
       cat={cat}
       country={getCountry()}
-      crumbs={[{ href: "/cards", label: "By type" }, { label: f.label }]}
+      crumbs={[{ href: "/cards", label: "By type & rarity" }, { label: f.label }]}
       path={`/cards/type/${f.slug}`}
       pageParam={searchParams.page}
       siblings={TYPE_FACETS}

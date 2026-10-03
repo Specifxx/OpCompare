@@ -309,6 +309,27 @@ export function marketTotals<M extends string>(
   return out;
 }
 
+/**
+ * Each market's cheapest in-stock STORE listing (TCGplayer counts, eBay does
+ * not) from a card's offers. The catalogue's low<M> also folds in eBay asks
+ * (lib/import.ts), so pricing a deck from it could quote an eBay price beside
+ * a link to a dearer store, and put an eBay ask into a "buy at the cheapest
+ * store" total: eBay is never counted as a store (CLAUDE.md).
+ */
+export function storeLows<M extends string>(
+  offers: { source: string; market: string; priceCents: number; inStock: boolean }[],
+  markets: readonly M[],
+): Record<M, number | null> {
+  const out = Object.fromEntries(markets.map((m) => [m, null])) as Record<M, number | null>;
+  for (const o of offers) {
+    if (!o.inStock || o.source.startsWith("ebay") || !(markets as readonly string[]).includes(o.market)) continue;
+    const m = o.market as M;
+    const cur = out[m];
+    if (cur == null || o.priceCents < cur) out[m] = o.priceCents;
+  }
+  return out;
+}
+
 export interface StoreOffer {
   source: string;
   priceCents: number;

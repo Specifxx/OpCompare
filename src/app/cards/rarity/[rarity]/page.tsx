@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CardFacetPage } from "@/components/CardFacetPage";
 import { getCatalog } from "@/lib/data";
-import { facetBySlug, RARITY_FACETS } from "@/lib/facets";
+import { facetBySlug, pageSuffix, RARITY_FACETS } from "@/lib/facets";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
 
@@ -10,14 +10,14 @@ import { pageOg } from "@/lib/og/meta";
 // (RiftCompare's facet pages). No generateStaticParams: rendered on demand.
 type Props = { params: { rarity: string }; searchParams: { page?: string } };
 
-export function generateMetadata({ params }: Props): Metadata {
+export function generateMetadata({ params, searchParams }: Props): Metadata {
   const f = facetBySlug(RARITY_FACETS, params.rarity);
   if (!f) return { title: "Not found" };
   return {
     title: `One Piece ${f.title} — Prices & Full List`,
     description: `${f.intro} Every One Piece ${f.label} printing with live prices compared across stores in six markets.`,
-    alternates: { canonical: `/cards/rarity/${f.slug}` },
-    openGraph: pageOg(`/cards/rarity/${f.slug}`),
+    alternates: { canonical: `/cards/rarity/${f.slug}${pageSuffix(searchParams.page)}` },
+    openGraph: pageOg(`/cards/rarity/${f.slug}${pageSuffix(searchParams.page)}`),
   };
 }
 

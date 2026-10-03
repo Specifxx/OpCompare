@@ -51,3 +51,21 @@ export function planTotal(plan: { split: { totalCents: number; picks: unknown[] 
     unavailable: plan.unavailable.length,
   };
 }
+
+/**
+ * What the free total's cheapest copies are made of (RiftCompare tells a free
+ * account how many played copies its any-condition total includes): per item,
+ * the cheapest live offer is played (LP or worse on a store row) or of unknown
+ * grade (TCGplayer's any-condition low). Counted per item, not per copy.
+ */
+export function cheapestGrades(items: { offers: { source: string; priceCents: number; inStock: boolean; condition: string | null }[] }[]): { played: number; unknown: number } {
+  let played = 0;
+  let unknown = 0;
+  for (const it of items) {
+    const best = it.offers.filter((o) => o.inStock).sort((a, b) => a.priceCents - b.priceCents)[0];
+    if (!best) continue;
+    if (best.source === "tcgplayer") unknown++;
+    else if (conditionRank(best.condition ?? "") >= 1) played++;
+  }
+  return { played, unknown };
+}

@@ -46,12 +46,12 @@ export function DeckPricer({ initialList }: { initialList: string }) {
   const lastPriced = useRef<{ text: string; country: Country } | null>(null);
 
   const price = useCallback(
-    async (list: string) => {
-      if (!list.trim()) return;
+    async (list: string, add?: { slug: string; qty: number }) => {
+      if (!list.trim() && !add) return;
       setLoading(true);
       setError(null);
       try {
-        const r = await fetch("/api/deck/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: list }) });
+        const r = await fetch("/api/deck/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: list, add }) });
         const j = await r.json();
         if (!r.ok) setError(j.error ?? "Please try again.");
         else {
@@ -94,6 +94,23 @@ export function DeckPricer({ initialList }: { initialList: string }) {
     price([...lines, ...result.unmatched].join("\n"));
   };
 
+  // "Add a card": the picked printing joins the list; picked for an unmatched
+  // line, it replaces that line and keeps its quantity (RiftCompare's
+  // search-to-add and "search for this").
+  const [find, setFind] = useState<{ n: number; q: string; raw: string | null }>({ n: 0, q: "", raw: null });
+  const searchBox = useRef<HTMLDivElement>(null);
+  const addCard = (slug: string) => {
+    const raw = find.raw;
+    const qty = raw ? Math.max(1, Math.min(4, parseInt(/^\s*(\d{1,2})/.exec(raw)?.[1] ?? "1", 10) || 1)) : 1;
+    const base = result ? [...result.lines.map((l) => l.text), ...result.unmatched.filter((u) => u !== raw)] : text.split(/\r?\n/).filter((l) => l.trim() && l.trim() !== raw);
+    setFind((f) => ({ n: f.n + 1, q: "", raw: null }));
+    price(base.join("\n"), { slug, qty });
+  };
+  const lookFor = (raw: string) => {
+    setFind((f) => ({ n: f.n + 1, q: raw.replace(/^\s*\d{1,2}\s*[xX×]?\s*/, "").replace(/#\d+/, "").trim(), raw }));
+    searchBox.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   const share = async () => {
     const list = result?.text || text;
     if (!list.trim()) return;
@@ -112,6 +129,17 @@ export function DeckPricer({ initialList }: { initialList: string }) {
   const t = result?.totals[country];
   const fmt = (cents: number | null | undefined) => money(cents, country);
   const listParam = encodeDeckParam(result?.text || text);
+
+  const searchBlock = (
+  <div ref={searchBox}>
+    <DeckAddSearch key={find.n} initialQuery={find.q} label={find.raw ? `Find the card for “${find.q}”` : "Add a card to your list"} onPick={addCard} disabled={loading} />
+    {find.raw ? (
+      <button type="button" onClick={() => setFind((f) => ({ n: f.n + 1, q: "", raw: null }))} className="mt-1 text-xs text-slate-400 hover:text-white">
+        Cancel
+      </button>
+    ) : null}
+  </div>
+  );
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_1fr] xl:grid-cols-[380px_1fr]">
@@ -153,6 +181,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
             {error}
           </p>
         ) : null}
+        {!result && !loading ? searchBlock : null}
         {!result ? (
           loading ? (
             <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
@@ -164,7 +193,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
               <p className="text-lg font-semibold text-white">Price a whole One Piece deck at once</p>
               <p className="mt-1 text-sm text-slate-400">
                 Paste a decklist from any deck builder and every card is matched to its printing and priced at the cheapest in-stock store in {c.place}, with
-                TCGplayer&apos;s market price beside it. Press Sample to try one.
+                TCGplayer&apos;s market price beside it. Press Sample to try one, or build it here, card by card.
               </p>
             </div>
           )
@@ -182,6 +211,12 @@ export function DeckPricer({ initialList }: { initialList: string }) {
             </div>
 
             <DeckChecks result={result} />
+            <p className="text-xs text-slate-400">
+              Matched {result.lineCount - result.unmatched.length} of {result.lineCount} line{result.lineCount === 1 ? "" : "s"}
+              {result.unmatched.length ? `; ${result.unmatched.length} couldn't be matched (listed below).` : "."}
+              {result.truncated ? " Only the first 120 lines are priced." : ""}
+            </p>
+            {searchBlock}
 
             <section className="card-surface overflow-hidden" aria-label="Your list">
               <ul className="divide-y divide-ink-800">
@@ -298,9 +333,9 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                   {result.unmatched.map((u) => (
                     <li key={u} className="flex items-center justify-between gap-3 text-sm">
                       <span className="min-w-0 truncate font-mono text-xs text-slate-300">{u}</span>
-                      <Link href={`/browse?q=${encodeURIComponent(u.replace(/^\d+\s*x?\s*/i, ""))}`} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
-                        Search for it
-                      </Link>
+                      <button type="button" onClick={() => lookFor(u)} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
+                        Find it
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -383,6 +418,133 @@ export function DeckPricer({ initialList }: { initialList: string }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+interface SearchHit {
+  kind: "card" | "sealed";
+  slug: string;
+  name: string;
+  number: string | null;
+  variant: string | null;
+  set: string;
+  img: string | null;
+  price: string;
+}
+
+// The deck page's own card picker over /api/search (the header search
+// navigates; this one adds the picked printing to the list). Cards only.
+function DeckAddSearch({ initialQuery, label, onPick, disabled }: { initialQuery: string; label: string; onPick: (slug: string) => void; disabled: boolean }) {
+  const [q, setQ] = useState(initialQuery);
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [active, setActive] = useState(-1);
+  const [open, setOpen] = useState(Boolean(initialQuery));
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (initialQuery) input.current?.focus();
+  }, [initialQuery]);
+  useEffect(() => {
+    const s = q.trim();
+    if (s.length < 2) {
+      setHits([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/search?q=${encodeURIComponent(s)}`, { signal: ctrl.signal });
+        if (r.ok) {
+          const j = (await r.json()) as { hits?: SearchHit[] };
+          setHits((j.hits ?? []).filter((h) => h.kind === "card"));
+          setActive(-1);
+        }
+      } catch {
+        /* aborted */
+      }
+    }, 160);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [q]);
+  const pick = (h: SearchHit) => {
+    setOpen(false);
+    onPick(h.slug);
+  };
+  const listId = "deck-add-results";
+  return (
+    <div className="card-surface relative p-4">
+      <label htmlFor="deck-add" className="mb-1 block text-xs font-semibold text-slate-300">
+        {label}
+      </label>
+      <input
+        id="deck-add"
+        ref={input}
+        value={q}
+        disabled={disabled}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActive((a) => Math.min(a + 1, hits.length - 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActive((a) => Math.max(a - 1, -1));
+          } else if (e.key === "Enter" && hits.length) {
+            e.preventDefault();
+            pick(hits[Math.max(0, active)]);
+          } else if (e.key === "Escape") setOpen(false);
+        }}
+        role="combobox"
+        aria-expanded={open && hits.length > 0}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+        placeholder="Card name or number, e.g. Nami or OP01-016"
+        autoComplete="off"
+        className="input sm:text-sm"
+      />
+      {open && hits.length ? (
+        <ul id={listId} role="listbox" className="absolute left-4 right-4 z-dropdown mt-1 max-h-80 overflow-y-auto rounded-lg border border-ink-700 bg-ink-900 shadow-glow">
+          {hits.map((h, i) => (
+            <li
+              key={h.slug}
+              id={`${listId}-${i}`}
+              role="option"
+              aria-selected={i === active}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                pick(h);
+              }}
+              className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${i === active ? "bg-ink-800" : "hover:bg-ink-800"}`}
+            >
+              {h.img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={h.img} alt="" className="h-11 w-8 shrink-0 rounded-sm bg-ink-800 object-cover" loading="lazy" />
+              ) : (
+                <span className="h-11 w-8 shrink-0 rounded-sm bg-ink-800" />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-slate-100">
+                  {h.name}
+                  {h.variant ? <span className="font-normal text-slate-400"> · {h.variant}</span> : null}
+                </span>
+                <span className="block truncate text-xs text-slate-500">
+                  {h.set}
+                  {h.number ? ` · ${h.number}` : ""}
+                </span>
+              </span>
+              <span className="num shrink-0 text-sm font-semibold text-accent">{h.price}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

@@ -542,3 +542,27 @@ and §6). What is not obvious:
 - **Leader pages** link "cards for this deck" by shared type within the
   Leader's colours (every colour of the card is one of the Leader's), a safe
   subset; they are a starting point, not a decklist, and the page says so.
+
+## 2026-10-03 — Tools review: deck prices from store listings, condition floor is Premium
+
+- **A deck line is priced from its store listings, not the catalogue's low.**
+  `Card.low<M>` folds in eBay asks (lib/import.ts), so /deck could show an eBay
+  price beside a link to a dearer store and count an eBay ask in a "buy at the
+  cheapest store" total. `lib/deck.ts storeLows()` takes each market's cheapest
+  in-stock store or TCGplayer offer from the card's cached offers; the shared
+  link's unfurl prices the same way, so the og:title and the page agree. The
+  printing switch's option prices still read the catalogue's low (loading
+  every printing's offers per line would multiply the per-card reads).
+- **The minimum condition is a Premium control, as on RiftCompare.** A free or
+  Plus account's total is any condition (the API ignores a floor it sends) and
+  says how many of its cheapest copies are played or TCGplayer's any-condition
+  low (`cheapestGrades`). Premium starts on "LP or better" and the last choice
+  is remembered in the browser. /api/buy-list is rate-limited per account.
+  RiftCompare's "5 free totals a day" is not ported: OP's rate limiter is
+  per-instance memory, so a daily cap would not hold.
+- **/deck gained RiftCompare's search-to-add and "find it" for unmatched
+  lines**, through /api/search's hits and an `add: {slug}` on /api/deck/price
+  (the server turns the slug into the canonical list line).
+- Paged facet and keyword pages carry their own `?page=N` canonical and og:url;
+  a store page with nothing matched is noindex like a thin one; fee deductions
+  and losses read "−$1.50", never "$-1.50".

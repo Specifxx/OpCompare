@@ -11,6 +11,7 @@ import { getCardDetail, getCatalog, type CardLite, type Catalog, type OfferRow }
 import {
   basePrinting,
   checkDeck,
+  DECK_LINE_CAP,
   formatDeckLine,
   indexCards,
   marketTotals,
@@ -18,6 +19,7 @@ import {
   parseDeckList,
   resolveDeck,
   splitByCheapestStore,
+  storeLows,
   type CardIndex,
   type DeckCheck,
   type MarketTotal,
@@ -89,19 +91,35 @@ export interface DeckPriceResult {
   };
   check: DeckCheck;
   text: string;
+  /** Card lines read from the paste (headers and comments not counted). */
+  lineCount: number;
   truncated: boolean;
 }
 
-function cardOut(c: CardLite, cat: Catalog): DeckCardOut {
+function cardOut(c: CardLite, cat: Catalog, low: Record<Country, number | null>): DeckCardOut {
   return {
     id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, printing: c.printing, rarity: c.rarity,
-    cardType: c.cardType, colors: c.colors, setCode: cat.setById.get(c.setId)?.code ?? "", hasImage: c.hasImage, low: c.low, marketUsd: c.marketUsd,
+    cardType: c.cardType, colors: c.colors, setCode: cat.setById.get(c.setId)?.code ?? "", hasImage: c.hasImage, low, marketUsd: c.marketUsd,
   };
 }
+
 
 export function optionLabel(c: Pick<CardLite, "number" | "variant" | "printing">, setCode: string): string {
   const v = c.variant ?? (c.printing === "standard" ? "Standard" : c.printing);
   return `${c.number ?? ""} ${v}${setCode && !(c.number ?? "").startsWith(setCode) ? ` · ${setCode}` : ""}`.trim();
+}
+
+/**
+ * The list line for a card picked in the deck page's search: its number for
+ * the base printing, its number pinned to the exact printing otherwise (what
+ * the printing switch writes). Null for an unknown slug or a DON!! card.
+ */
+export async function lineForSlug(slug: string, qty: number): Promise<string | null> {
+  const { cat, idx } = await deckIndex();
+  const c = cat.bySlug.get(slug);
+  if (!c || c.printing === "don") return null;
+  const base = c.number ? basePrinting(idx.byNumber.get(c.number) ?? [c]) : c;
+  return formatDeckLine(Math.max(1, Math.min(4, Math.floor(qty) || 1)), c, c.id !== base?.id);
 }
 
 /** Offers that can fill a deck line in a market: live, this market, never eBay. */
@@ -146,13 +164,17 @@ export async function priceDeck(text: string, market: Country, opts: { withOffer
     const base = c.number ? basePrinting(idx.byNumber.get(c.number) ?? [c]) : c;
     const pinned = c.id !== base?.id;
     const d = details.get(c.id);
+    // Store listings when the card's offers were loaded; the catalogue's low
+    // otherwise (share metadata past the detail cap — the same figure the card
+    // tiles show).
+    const low = d ? storeLows(d.offers, MARKETS) : c.low;
     return {
       raw: m.line.raw,
       qty: m.line.qty,
       how: m.how,
       ambiguous: m.ambiguous,
       leader: c.cardType === "Leader",
-      card: cardOut(c, cat),
+      card: cardOut(c, cat, low),
       text: formatDeckLine(m.line.qty, c, pinned),
       options: m.options.map((o) => ({ id: o.id, label: optionLabel(o, cat.setById.get(o.setId)?.code ?? ""), low: o.low[market] })),
       cheapest: pick ? { ...pick, store: sourceLabel(pick.source, market), url: affiliateUrl(pick.url, retailerSubId(pick.source), page) } : null,
@@ -183,6 +205,7 @@ export async function priceDeck(text: string, market: Country, opts: { withOffer
     },
     check: checkDeck(lines.map((l) => ({ qty: l.qty, number: l.card.number, isLeader: l.leader }))),
     text: [...lines.map((l) => l.text), ...unmatched].join("\n"),
-    truncated: parsed.length >= 120,
+    lineCount: parsed.length,
+    truncated: parsed.length >= DECK_LINE_CAP,
   };
 }

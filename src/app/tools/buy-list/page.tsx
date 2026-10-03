@@ -58,8 +58,8 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
               <p className="mt-2 text-lg font-bold text-white">See which stores to buy from</p>
               <p className="mt-1 max-w-md text-sm text-slate-300">
                 {tier === "plus"
-                  ? "You're on Plus. Premium adds the store-by-store plan: the cheapest single stores and the cheapest split. Switch plans from your account and the difference is prorated."
-                  : `Your total is free. Premium (${planPrice("premium", "month")}/mo) shows the store-by-store plan: the cheapest single stores and the cheapest split, with links to each listing, no ads and every Deal Finder deal.`}
+                  ? "You're on Plus. Premium adds the store-by-store plan (the cheapest single stores and the cheapest split) and a minimum condition. Switch plans from your account and the difference is prorated."
+                  : `Your total is free. Premium (${planPrice("premium", "month")}/mo) shows the store-by-store plan: the cheapest single stores and the cheapest split, with links to each listing, at the minimum condition you set, with no ads and every Deal Finder deal.`}
               </p>
               <div className="mt-4">
                 {tier === "plus" ? (

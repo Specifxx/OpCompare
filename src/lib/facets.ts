@@ -98,3 +98,9 @@ export function paginate<T>(items: T[], pageParam: string | undefined, per: numb
   const page = Math.min(Math.max(1, parseInt(pageParam ?? "1", 10) || 1), pages);
   return { page, pages, slice: items.slice((page - 1) * per, page * per) };
 }
+
+/** "?page=N" for a page past the first (its canonical and pager links), else "". */
+export function pageSuffix(pageParam: string | undefined): string {
+  const n = parseInt(pageParam ?? "1", 10);
+  return Number.isFinite(n) && n > 1 ? `?page=${n}` : "";
+}

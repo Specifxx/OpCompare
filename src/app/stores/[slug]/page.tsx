@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: `${s.name} (${place.label})${st ? `: ${int(st.inStock)} One Piece listings in stock, the cheapest in ${place.place} for ${int(st.cheapest)} of them` : ""}. Compare its prices with every other store OP Compare tracks.`,
     alternates: { canonical: `/stores/${s.key}` },
     openGraph: pageOg(`/stores/${s.key}`),
-    ...(st && st.inStock < THIN ? { robots: { index: false, follow: true } } : {}),
+    // Thin or empty (nothing matched yet): not indexed, and not in the sitemap.
+    ...(!st || st.inStock < THIN ? { robots: { index: false, follow: true } } : {}),
   };
 }
 

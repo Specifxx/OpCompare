@@ -6,7 +6,11 @@ import { readWatchlist, type WatchItem } from "@/components/WatchButton";
 import { useCountry } from "@/components/CountryProvider";
 import { money } from "@/lib/format";
 import { outboundRel } from "@/lib/affiliate";
-import { MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, type MinCondition } from "@/lib/buy-list-condition";
+import { MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, parseMinCondition, type MinCondition } from "@/lib/buy-list-condition";
+
+// Premium's floor starts on "LP or better" and remembers the last choice in
+// this browser (RiftCompare's Best Basket); a free total is any condition.
+const FLOOR_KEY = "oc_buylist_floor";
 
 interface Pick {
   slug: string;
@@ -40,6 +44,9 @@ interface TotalOnly {
   stores: number;
   priced: number;
   unavailable: number;
+  /** Items whose cheapest copy is LP or worse, and items priced at TCGplayer's any-condition low. */
+  played: number;
+  unknown: number;
 }
 
 type Source = "paste" | "watchlist";
@@ -49,7 +56,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
   const [list, setList] = useState<WatchItem[] | null>(null);
   const [source, setSource] = useState<Source>(initialList ? "paste" : "watchlist");
   const [text, setText] = useState(initialList);
-  const [floor, setFloor] = useState<MinCondition>("any");
+  const [floor, setFloor] = useState<MinCondition>(premium ? "lp" : "any");
   const [plan, setPlan] = useState<FullPlan | TotalOnly | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +64,15 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
     const w = readWatchlist();
     setList(w);
     if (!initialList && !w.length) setSource("paste");
-  }, [initialList]);
+    if (premium) {
+      try {
+        const saved = window.localStorage.getItem(FLOOR_KEY);
+        if (saved) setFloor(parseMinCondition(saved));
+      } catch {
+        /* storage blocked: keep the default */
+      }
+    }
+  }, [initialList, premium]);
 
   const run = async (nextFloor = floor) => {
     if (source === "watchlist" ? !list?.length : !text.trim()) return;
@@ -165,16 +180,23 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
                 key={m}
                 type="button"
                 aria-pressed={floor === m}
+                disabled={!premium}
                 onClick={() => {
                   setFloor(m);
+                  try {
+                    window.localStorage.setItem(FLOOR_KEY, m);
+                  } catch {
+                    /* storage blocked */
+                  }
                   if (plan) run(m);
                 }}
-                className={`chip min-h-9 px-3 ${floor === m ? "bg-straw text-[#1a1203]" : "border border-ink-700 bg-ink-850 text-slate-300 hover:border-ink-600"}`}
+                className={`chip min-h-9 px-3 disabled:cursor-not-allowed disabled:opacity-50 ${floor === m ? "bg-straw text-[#1a1203]" : "border border-ink-700 bg-ink-850 text-slate-300 hover:border-ink-600"}`}
               >
                 {MIN_CONDITION_LABEL[m]}
               </button>
             ))}
           </div>
+          {!premium ? <p className="mt-1.5 text-xs text-slate-400">Setting a minimum condition is part of Premium. Your free total counts each card&apos;s cheapest copy in any condition.</p> : null}
         </fieldset>
         <button type="button" onClick={() => run()} disabled={busy || !canRun} className="btn-primary mt-4 w-full sm:w-auto disabled:opacity-60">
           {busy ? "Planning…" : `Plan it in ${place}`}
@@ -191,10 +213,21 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
           <p className="eyebrow">Your total</p>
           <p className="num mt-1 text-4xl font-extrabold text-accent">{money(plan.splitTotalCents, country)}</p>
           <p className="mt-1 text-sm text-slate-300">
-            {plan.priced} of {plan.count} item{plan.count === 1 ? "" : "s"} at the cheapest {MIN_CONDITION_PHRASE[plan.minCondition]} listing in {place}, across{" "}
+            {plan.priced} of {plan.count} item{plan.count === 1 ? "" : "s"} at the cheapest in-stock listing in {place} ({MIN_CONDITION_PHRASE[plan.minCondition]}), across{" "}
             {plan.stores} store{plan.stores === 1 ? "" : "s"}, before postage.
             {plan.unavailable ? ` ${plan.unavailable} not in stock anywhere in ${place} at this condition.` : ""}
           </p>
+          {plan.played || plan.unknown ? (
+            <p className="mt-1 text-sm text-straw">
+              {[
+                plan.played ? `${plan.played} of the cheapest copies ${plan.played === 1 ? "is" : "are"} played (LP or worse)` : null,
+                plan.unknown ? `${plan.unknown} ${plan.unknown === 1 ? "is" : "are"} TCGplayer's cheapest listing, which can be any condition` : null,
+              ]
+                .filter(Boolean)
+                .join("; ")}
+              .
+            </p>
+          ) : null}
           {!premium ? <p className="mt-2 text-xs text-slate-400">Which stores, and the cheapest single-store order, are part of Premium.</p> : null}
         </section>
       ) : plan?.mode === "plan" ? (

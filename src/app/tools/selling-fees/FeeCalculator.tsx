@@ -53,7 +53,12 @@ export function FeeCalculator() {
   );
   // Amounts are in the schedule's market currency (TCGplayer: US dollars).
   const cur: Country = s.id === "custom" ? country : s.market;
-  const fmt = (n: number) => money(Math.round(n * 100), cur);
+  // A deduction or a loss leads with U+2212 ("−$1.50"), never "$-1.50", and a
+  // zero is never "−$0.00" (RiftCompare's formatMoney).
+  const fmt = (n: number) => {
+    const cents = Math.round(n * 100);
+    return cents < 0 ? `\u2212${money(-cents, cur)}` : money(cents === 0 ? 0 : cents, cur);
+  };
 
   const field = (label: string, value: string, set: (v: string) => void, hint?: string, placeholder?: string) => (
     <label className="block text-sm">
