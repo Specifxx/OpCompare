@@ -135,3 +135,35 @@ Replayed over the 328k listings then stored, 99.5% were unchanged, 967 moved to
 the printing their title names (mostly PRB reprints and Pre-Release / Super
 Pre-Release / Anniversary stamps) and 758 that name a printing TCGplayer doesn't
 list are skipped. "(Non-English)" titles are now foreign.
+
+## 2026-10-03 — The set a title names decides; aliases are names (review fixes)
+
+A correctness review replayed every stored offer and found:
+
+- **Mangas:** TCGplayer writes the original-set Mangas "(Alternate Art) (Manga)"
+  and the Premium Booster ones "(Manga)". So a store's "Zoro OP06-118 Manga
+  Rare" fitted only the PRB-01 print and put OP06 listings on a €2,000 PRB page.
+  "Manga" now implies the alternate art on both sides, and the set decides.
+- **Named sets:** when a title names a set (by code, with an event suffix like
+  "OP03 PRE", or by name) that holds a printing of the card, only printings in
+  a named set fit. With no printing words, the named set's "(Reprint)" is the
+  printing. "[ST-27-OP09-083]" is the ST-27 reprint, not OP09's card.
+- **Untagged strays:** a single plain fit outside the number's own set, in a
+  set the title doesn't name, is skipped when the number has other printings.
+  ("Monkey.D.Luffy (P-001)" is not the Demo Deck card.)
+- **Phrases:** "Red Super Alternate Art" and "Super Leader Alternate Art" are
+  keys, and a title must say each as one phrase. A stray "Red" (colour) or
+  "Leader" (type) no longer picks a $1,700 printing.
+- **Slabs and accessories:** TAG/AGS slabs are graded. Acrylic, magnetic and
+  protector cases are accessories. A booster case must be written as a case
+  ("Booster Box Case", "Case (12 Boxes)"), so "Booster Box (Case Fresh)" is a
+  box and an acrylic box case is never a $25 "Booster Case".
+- **Aliases:** "(Galdino)", "(Zala)", "(Grandma Nyon)", "(Navy)" and 30-odd
+  more character aliases were read as printing tags, which made base cards
+  "promos". `foldNameAliases` puts them back in the name. It only folds a token
+  that every printing of the number in its own set carries and that stands
+  alone on one of them, so "(Box Topper)" beside its untagged twin stays a
+  tag. 97 printings change.
+- `/market`'s index loaded the OLDEST 730 days, so it would have frozen after
+  two years. 401 Games failed every run on a 5,300-product collection past the
+  20-page cap; the cap is now 30 pages.

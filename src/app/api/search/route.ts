@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const q = (new URL(req.url).searchParams.get("q") ?? "").slice(0, 80);
-  if (q.trim().length < 2) return NextResponse.json({ hits: [] });
+  if (norm(q).replace(/\s/g, "").length < 2) return NextResponse.json({ hits: [] });
   const country = getCountry();
   const [cat, sealed] = await Promise.all([getCatalog(), getSealedCatalog()]);
   const cards = searchCards(cat.cards, cat.setById, q, 7).map((c) => {

@@ -147,7 +147,9 @@ export function variantTokens(name: string, number: string | null): string[] {
   return out;
 }
 
-const ALT = /^(parallel|alternate art|full art|super alternate art|wanted poster|alt art)$/i;
+// A word match, not an exact token: "Red Super Alternate Art" and "Super Leader
+// Alternate Art" are alternate arts too.
+const ALT = /\b(parallel|alt(?:ernate)? art|full art|wanted poster)\b/i;
 const FOIL = /^(jolly roger foil|pirate foil|gold|textured foil|textured|gem|foil)$/i;
 
 export function classifyPrinting(input: { tokens: string[]; rarity: string | null; cardType: string | null }): Printing {
@@ -272,6 +274,43 @@ export function parseCard(p: TcgcsvProduct, setCodeHint?: string, group?: Pick<T
     hasImage: (p.imageCount ?? 1) > 0 && Boolean(p.imageUrl),
     slugBase: slugify([name, number ?? (isDon ? setCodeHint : null), variant].filter(Boolean).join(" ")),
   };
+}
+
+/**
+ * A character alias TCGplayer writes in parentheses belongs to the NAME:
+ * "Mr.3 (Galdino)", "Miss Doublefinger(Zala)", "Gloriosa (Grandma Nyon)". Read as
+ * a printing tag it makes the base card a "promo" and leaves the matcher no
+ * name word in "Mr.3". An alias is a token that every printing of the number in
+ * its own set carries and that is the ONLY token on one of them (its plain
+ * print) — so "(Box Topper)", which sits beside an untagged twin, is not one —
+ * and that is not printing vocabulary. Folding it also renames the card's
+ * reprints elsewhere that carry the alias.
+ */
+const NOT_AN_ALIAS = /parallel|alt(?:ernate)?\s*art|full art|manga|\bsp\b|special|treasure|\btr\b|foil|reprint|wanted|topper|pack|deck|event|release|tournament|anniversary|vol\b|winner|finalist|participant|promo|edition|collection|box|\d/i;
+
+export function foldNameAliases(cards: CatalogCard[], setCodeOf: (setId: number) => string): void {
+  const home = (c: CatalogCard) => {
+    const code = setCodeOf(c.setId).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return Boolean(c.number) && code.includes(c.number!.toUpperCase().split("-")[0]);
+  };
+  const byNumber = new Map<string, CatalogCard[]>();
+  for (const c of cards) if (c.number && !c.number.startsWith("P-") && c.printing !== "don") (byNumber.get(c.number) ?? byNumber.set(c.number, []).get(c.number)!).push(c);
+  for (const list of byNumber.values()) {
+    const own = list.filter(home);
+    const tokens = (c: CatalogCard) => (c.variant ? c.variant.split(" · ") : []);
+    const alias = own.map(tokens).find((t) => t.length === 1)?.[0];
+    if (!alias || NOT_AN_ALIAS.test(alias) || !own.every((c) => tokens(c).includes(alias))) continue;
+    for (const c of list) {
+      const t = tokens(c);
+      if (!t.includes(alias)) continue;
+      const rest = t.filter((x) => x !== alias);
+      c.name = `${c.name} (${alias})`;
+      c.variant = rest.length ? rest.join(" · ") : null;
+      c.printing = classifyPrinting({ tokens: rest, rarity: c.rarity, cardType: c.cardType });
+      if (!c.variant && c.printing === "treasure") c.variant = "Treasure Rare";
+      c.slugBase = slugify([c.name, c.number, c.variant].filter(Boolean).join(" "));
+    }
+  }
 }
 
 // ── Sealed ───────────────────────────────────────────────────────────────────

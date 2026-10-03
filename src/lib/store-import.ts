@@ -26,7 +26,9 @@ export const SKIP_HANDLE =
   /japan|(?:^|-)jp(?:-|$)|japanese|chinese|korean|graded|grade|slab|psa|proxies|proxy|figure|funko|manga-?books|books|toy|model-kit|statue|sleeve|accessor|playmat|binder|plush|live-break|digital|zubehor|accesorios|tickets|(?:^|-)events?$|tournois|banpresto|(?:^|-)pop(?:-|$)|figuarts|lots|merch|apparel|storage/i;
 
 const MAX_HANDLES = 24;
-const MAX_PAGES = 20;
+// 30 × 250: the biggest One Piece singles collections (401 Games, GameZilla,
+// Collect-Edition) hold 5,000–5,500 products, past the old 20-page cap.
+const MAX_PAGES = 30;
 
 /** One Piece collection handles from a store's Shopify sitemap. */
 export async function discoverOnePieceCollections(base: string): Promise<string[]> {

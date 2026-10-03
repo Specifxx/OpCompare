@@ -118,6 +118,54 @@ test("a title naming a stamp, promo or reprint the printing lacks is skipped", (
   assert.equal(m("Sabo ST13-007"), 71);
 });
 
+test("the set a title names decides, and a stray plain print is not a guess", () => {
+  const ix = buildCardIndex([
+    { id: 80, name: "Roronoa Zoro", number: "OP06-118", variant: null, setCode: "OP06", setName: "Wings of the Captain" },
+    { id: 81, name: "Roronoa Zoro", number: "OP06-118", variant: "Alternate Art", setCode: "OP06", setName: "Wings of the Captain" },
+    { id: 82, name: "Roronoa Zoro", number: "OP06-118", variant: "Alternate Art · Manga", setCode: "OP06", setName: "Wings of the Captain" },
+    { id: 83, name: "Roronoa Zoro", number: "OP06-118", variant: "Manga", setCode: "PRB-01", setName: "Premium Booster -The Best-" },
+    { id: 84, name: "Roronoa Zoro", number: "OP06-118", variant: "Reprint", setCode: "PRB-02", setName: "Premium Booster -The Best- Vol. 2" },
+    { id: 85, name: "Van Augur", number: "OP09-083", variant: null, setCode: "OP09", setName: "Emperors in the New World" },
+    { id: 86, name: "Van Augur", number: "OP09-083", variant: "Reprint", setCode: "ST-27", setName: "Starter Deck 27: BLACK Marshall.D.Teach" },
+    { id: 87, name: "Charlotte Praline", number: "OP03-111", variant: null, setCode: "OP03", setName: "Pillars of Strength" },
+    { id: 88, name: "Charlotte Praline", number: "OP03-111", variant: "Pre-Release", setCode: "OP03 PRE", setName: "Pillars of Strength Pre-Release Cards" },
+    { id: 89, name: "Braham", number: "OP15-110", variant: null, setCode: "OP15", setName: "Adventure on Kami's Island" },
+    { id: 90, name: "Monkey.D.Luffy", number: "P-001", variant: null, setCode: "OP-DD", setName: "One Piece Demo Deck Cards" },
+    { id: 91, name: "Monkey.D.Luffy", number: "P-001", variant: "Promotion Pack 2022", setCode: "OP-PR", setName: "One Piece Promotion Cards" },
+    { id: 92, name: "Monkey.D.Luffy", number: "P-001", variant: "Premium Card Collection -BANDAI CARD GAMES Fest. 23-24 Edition-", setCode: "OP-PR", setName: "One Piece Promotion Cards" },
+    { id: 93, name: "Sabo", number: "OP13-120", variant: null, setCode: "OP13", setName: "Carrying On His Will" },
+    { id: 94, name: "Sabo", number: "OP13-120", variant: "Super Alternate Art", setCode: "OP13", setName: "Carrying On His Will" },
+    { id: 95, name: "Sabo", number: "OP13-120", variant: "Red Super Alternate Art", setCode: "OP13", setName: "Carrying On His Will" },
+    { id: 96, name: "Monkey.D.Luffy", number: "OP17-079", variant: "Alternate Art", setCode: "OP17", setName: "The World's Strongest Warriors" },
+    { id: 97, name: "Monkey.D.Luffy", number: "OP17-079", variant: "Super Leader Alternate Art", setCode: "OP17", setName: "The World's Strongest Warriors" },
+  ]);
+  const m = (t: string) => {
+    const r = matchCardTitle(t, ix);
+    return "id" in r ? r.id : r.miss;
+  };
+  // A store's "Manga" is the original set's Manga unless the title says The Best.
+  assert.equal(m("Roronoa Zoro (OP06-118) - Wings of the Captain (Manga Rare) [OP06-118]"), 82);
+  assert.equal(m("Roronoa Zoro OP06-118 Manga Alt Art"), 82);
+  assert.equal(m("Roronoa Zoro - OP06-118 - Secret Rare (Manga) - The Best"), 83);
+  // A set code for another printing of the number: that printing or nothing.
+  assert.equal(m("Van Augur (OP09-083) - Starter Deck: Black Marshall.D.Teach (Rare) [ST-27-OP09-083]"), 86);
+  assert.equal(m("Van Augur (OP09-083) - Emperors in the New World (Rare)"), 85);
+  // Event stamps written as set-code suffixes.
+  assert.equal(m("Charlotte Praline [OP03 PRE - OP03-111]"), 88);
+  assert.equal(m("Braham [OP15 RE - OP15-110]"), "no-printing");
+  // Every promo P-001 is tagged; the untagged title is not the Demo Deck card.
+  assert.equal(m("Monkey.D.Luffy (P-001)"), "ambiguous");
+  assert.equal(m("Monkey.D.Luffy (Promotion Pack 2022) (P-001)"), 91);
+  assert.equal(m("Monkey.D.Luffy (P-001) One Piece Demo Deck Cards"), 90);
+  // "Red" and "Leader" count only as part of the printing's phrase.
+  assert.equal(m("Sabo - OP13-120 - Red Leader (Super Alternate Art)"), 94);
+  assert.equal(m("Sabo OP13-120 Red Super Alternate Art"), 95);
+  assert.equal(m("Monkey.D.Luffy - OP17-079 - Leader (Alternate Art)"), 96);
+  assert.equal(m("Monkey.D.Luffy (Super Leader Alternate Art) (OP17-079)"), 97);
+  // Other graders' slabs.
+  assert.equal(m("2024 Monkey.D.Luffy #P-001 Card Games Fest TAG 9"), "not-single");
+});
+
 test("never matched: foreign, graded, playsets, wrong names, unknown printings", () => {
   assert.equal(id("Shanks OP01-120 (Japanese)"), "foreign");
   assert.equal(id("Shanks (OP01-120) (V.1) - The Best (Non-English) (Secret Rare) [OP01-120]"), "foreign");
@@ -147,6 +195,7 @@ const sealed: SealedRef[] = [
   { id: 102, name: "Romance Dawn - Booster Box (Wave 1 - Blue)", kind: "Booster Box", setCode: "OP01", setName: "Romance Dawn" },
   { id: 103, name: "Romance Dawn - Booster Box (Wave 2 - White)", kind: "Booster Box", setCode: "OP01", setName: "Romance Dawn" },
   { id: 104, name: "Starter Deck 36: YELLOW Eustass\"Captain\"Kid", kind: "Starter Deck", setCode: "ST-36", setName: "Starter Deck 36: YELLOW Eustass\"Captain\"Kid" },
+  { id: 105, name: "Carrying On His Will Booster Box Case", kind: "Booster Case", setCode: "OP13", setName: "Carrying On His Will" },
 ];
 const sid = (t: string) => {
   const r = matchSealedTitle(t, sealed);
@@ -164,6 +213,13 @@ test("sealed titles", () => {
   assert.equal(sid("One Piece OP-13 Booster Box (Japanese)"), "foreign");
   assert.equal(sid("Koala (Alternate Art) [Premium Booster -The Best-]"), "no-kind");
   assert.equal(sid("One Piece OP-13 Booster Box - Empty"), "not-sealed");
+  // Cases: only when the title says "box case" or similar; accessories never.
+  assert.equal(sid("One Piece Card Game OP-13 Booster Box Case (12 Boxes)"), 105);
+  assert.equal(sid("One Piece OP13 Booster Box (Case Fresh)"), 100);
+  assert.equal(sid("Alaris Design: Premium Acrylic Case for One Piece Card Game Booster Boxes (OP-13 onwards)"), "not-sealed");
+  assert.equal(sid("One Piece OP-13 Booster Box with Magnetic Case"), "not-sealed");
+  assert.equal(sid("One Piece OP-13 Booster Box Protector Case"), "not-sealed");
+  assert.equal(sid("Super Pre-Release Starter Deck 36: Yellow Eustass Captain Kid ST-36"), "no-product");
 });
 
 test("conditions and variants", () => {

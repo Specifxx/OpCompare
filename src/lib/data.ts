@@ -381,9 +381,10 @@ export interface IndexPoint {
 
 export const getIndexSeries = unstable_cache(
   async (): Promise<IndexPoint[]> => {
-    const rows = await prisma.indexDay.findMany({ orderBy: { day: "asc" }, take: 730 });
+    // The NEWEST two years, oldest first for the chart.
+    const rows = (await prisma.indexDay.findMany({ orderBy: { day: "desc" }, take: 730 })).reverse();
     return rows.map((r) => ({ day: r.day.toISOString().slice(0, 10), value: r.value, totalUsd: r.totalUsd, cardCount: r.cardCount }));
   },
-  ["index-series-v1"],
+  ["index-series-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );

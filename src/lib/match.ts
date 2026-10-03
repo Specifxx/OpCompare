@@ -20,7 +20,7 @@ export const FOREIGN_LANG =
 // Graded slabs, live breaks, lots and serialised prints are not the card a
 // shopper is pricing.
 const NOT_A_RAW_SINGLE =
-  /\b(psa|bgs|cgc|beckett|sgc|graded|slab(bed)?|gem mint|live break|serialized|serialised|lot of|playset|proxy|proxies|custom|replica|sticker|sleeves?|playmat|binder|figure|pop!)\b|\b\d{1,4}\/\d{2,4}\b(?!\s*cards)|\bx\s?[2-9]\b|\b[2-9]\s?x\b/i;
+  /\b(psa|bgs|cgc|beckett|sgc|graded|slab(bed)?|gem mint|live break|serialized|serialised|lot of|playset|proxy|proxies|custom|replica|sticker|sleeves?|playmat|binder|figure|pop!|ace grading)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b|\b\d{1,4}\/\d{2,4}\b(?!\s*cards)|\bx\s?[2-9]\b|\b[2-9]\s?x\b/i;
 
 export function isForeign(title: string): boolean {
   return FOREIGN_LANG.test(title);
@@ -42,6 +42,11 @@ export function cardNumbersIn(title: string): string[] {
 // printing's tag carries (e.g. "judge" for a "Judge Pack Vol. 2" print).
 
 const KEY_PATTERNS: [string, RegExp][] = [
+  // The red-bordered SAA and the Super Leader AA are their own printings; a
+  // title has to say so in one phrase ("Sabo OP13-120 Red SAA"). A stray "Red"
+  // (the card's colour) or "Leader" (its type) elsewhere in a title is not it.
+  ["redsaa", /\bred\s+(?:super\s+(?:alt(?:ernate)?[\s-]*art|parallel)|saa)\b/i],
+  ["superleader", /\bsuper\s+leader\b/i],
   ["superalt", /\bsuper\s+(?:alt(?:ernate)?\s*art|parallel)\b|\bsaa\b/i],
   ["alt", /\bparallel\b|\balt(?:ernate)?[\s-]*art\b|\bfull[\s-]*art\b|\baa\b|\balt\b/i],
   ["manga", /\bmanga\b/i],
@@ -80,8 +85,19 @@ export function printingKeys(variant: string | null): { keys: Set<string>; extra
       if (w && !STOP.has(w) && (w.length >= 2 || /^\d$/.test(w))) extras.push(w);
     }
   }
-  if (keys.has("superalt")) keys.delete("alt");
+  normaliseKeys(keys);
   return { keys, extras: [...new Set(extras)] };
+}
+
+/**
+ * Keys that imply others. A Manga is always an alternate art, but TCGplayer
+ * writes the original-set Mangas "(Alternate Art) (Manga)" and the Premium
+ * Booster ones just "(Manga)", while stores write "Manga Rare" for both — so
+ * "manga" stands alone on both sides and the set decides between them.
+ */
+function normaliseKeys(keys: Set<string>): void {
+  if (keys.has("redsaa")) keys.delete("superalt");
+  if (keys.has("redsaa") || keys.has("superalt") || keys.has("manga")) keys.delete("alt");
 }
 
 /** Keys a store title states. "Foil" alone is not a key: stores add it to every SR. */
@@ -89,7 +105,7 @@ export function titleKeys(title: string): Set<string> {
   const t = title.replace(/\bslightly played\b/gi, "");
   const keys = new Set<string>();
   for (const [k, re] of KEY_PATTERNS) if (re.test(t)) keys.add(k);
-  if (keys.has("superalt")) keys.delete("alt");
+  normaliseKeys(keys);
   // "Shanks (Wanted) … Special Foil": the wanted-poster print, not an SP.
   if (keys.has("wanted")) keys.delete("sp");
   return keys;
@@ -144,11 +160,11 @@ const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].
 // Stamp) OP13-081" or "Rayleigh (OP14-108) - Unnumbered Promos" is skipped when
 // TCGplayer has no such printing, instead of being priced as the plain card.
 const PRINTING_WORDS: [string, RegExp][] = [
-  ["prerelease", /\bpre[\s-]?release\b/i],
-  ["releaseevent", /\brelease event\b/i],
+  ["prerelease", /\bpre[\s-]?release\b|\b(?:OP|ST|EB)-?\d{2}\s+PRE\b/i],
+  ["releaseevent", /\brelease event\b|\b(?:OP|ST|EB)-?\d{2}\s+RE\b/i],
   ["judge", /\bjudge\b/i],
   ["promo", /\bpromo(?:s|tion|tional)?\b/i],
-  ["anniversary", /\banniversary\b/i],
+  ["anniversary", /\banniversary\b|\b(?:OP|ST|EB)-?\d{2}\s+ANN\b/i],
   ["tournament", /\btournament\b/i],
   ["winner", /\bwinner\b/i],
   ["finalist", /\bfinalist\b/i],
@@ -167,6 +183,8 @@ const PRINTING_WORDS: [string, RegExp][] = [
 ];
 const compact = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
 const PRB_TITLE = /\bthe best\b|\bpremium booster\b/i;
+const EVENT_CODE = /\b(?:OP|ST|EB)-?\d{2}\s+(PRE|RE|ANN)\b/gi;
+const EVENT_WORDS: Record<string, string[]> = { PRE: ["pre", "release"], RE: ["release", "event"], ANN: ["anniversary", "tournament"] };
 // "(V.2)": the store's second version of the card, never the plain print.
 const LATER_VERSION = /\(\s*v(?:er(?:sion)?)?\.?\s*[2-9]\s*\)/i;
 
@@ -214,16 +232,32 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
   if (!named.length) return { miss: "name" };
   const tk = titleKeys(title);
   const words = new Set(lower.replace(/[’']/g, "").split(/[^a-z0-9]+/).filter(Boolean));
+  // "[OP03 PRE - OP03-111]": the stamp written as a suffix to the set code.
+  for (const m of title.matchAll(EVENT_CODE)) for (const w of EVENT_WORDS[m[1].toUpperCase()] ?? []) words.add(w);
   const codes = setCodesIn(title);
+  const flat = lower.replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ");
+  const setNamed = (c: Indexed) => codes.some((tc) => codeNamesSet(tc, c.setCode)) || nameInTitle(flat, c.setName);
   const out = ruledOut(title, codes);
-  const fit = (keys: Set<string>) => named.filter((c) => sameSet(c.keys, keys) && c.extras.every((w) => words.has(w)) && !out(c));
+  // When the title names the set of one of this number's printings, only
+  // printings in a set it names fit: "Roronoa Zoro (OP06-118) - Wings of the
+  // Captain (Manga Rare)" is OP06's Manga, not the Premium Booster's, and "Van
+  // Augur (OP09-083) - Starter Deck: Black Marshall.D.Teach [ST-27-OP09-083]"
+  // is not OP09's card.
+  const namesSet = named.some(setNamed);
+  const fit = (keys: Set<string>) =>
+    named.filter((c) => sameSet(c.keys, keys) && c.extras.every((w) => words.has(w)) && !out(c) && (!namesSet || setNamed(c)));
   let fits = fit(tk);
-  // A Premium Booster title with no printing words sells the booster's plain
-  // reprint, which TCGplayer tags "(Reprint)": "Premium Booster 02 - Sabo
-  // (Common) - ST13-007" is "Sabo - ST13-007 (Reprint)" [PRB-02].
-  if (!fits.length && !tk.size && (PRB_TITLE.test(title) || codes.some((c) => c.startsWith("PRB-")))) fits = fit(new Set(["reprint"]));
+  // A reprint title with no printing words sells the plain reprint, which
+  // TCGplayer tags "(Reprint)": "Premium Booster 02 - Sabo (Common) - ST13-007"
+  // is "Sabo - ST13-007 (Reprint)" [PRB-02].
+  if (!fits.length && !tk.size && (namesSet || PRB_TITLE.test(title) || codes.some((c) => c.startsWith("PRB-")))) fits = fit(new Set(["reprint"]));
   if (!fits.length) return { miss: "no-printing" };
-  if (fits.length === 1) return { id: fits[0].id };
+  // A plain printing outside the number's own set, which the title doesn't
+  // name, is only a guess when the number has other printings: "Monkey.D.Luffy
+  // (P-001)" is not the Demo Deck card just because every promo P-001 is tagged.
+  const accept = (c: Indexed) =>
+    c.home || c.keys.size > 0 || c.extras.length > 0 || setNamed(c) || named.length === 1 ? { id: c.id } : { miss: "ambiguous" as const };
+  if (fits.length === 1) return accept(fits[0]);
 
   // Several printings fit. Narrow, in order, by what the title says:
   // 1. a set code it names ("… PRB-01 …" → the Premium Booster reprint);
@@ -233,11 +267,7 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
   }
   // 2. a set name it names ("… The Best …", "… Demo Deck …");
   if (fits.length > 1) {
-    const flat = lower.replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ");
-    const byName = fits.filter((c) => {
-      const n = (c.setName ?? "").toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();
-      return n.length >= 6 && flat.includes(n);
-    });
+    const byName = fits.filter((c) => nameInTitle(flat, c.setName));
     if (byName.length) fits = byName;
   }
   // 3. the most specific tag (a "Judge Pack" print over the standard one);
@@ -251,7 +281,13 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
     const home = fits.filter((c) => c.home);
     if (home.length === 1) fits = home;
   }
-  return fits.length === 1 ? { id: fits[0].id } : { miss: "ambiguous" };
+  return fits.length === 1 ? accept(fits[0]) : { miss: "ambiguous" };
+}
+
+/** Does the title (flattened to "a z 0 9" words) name this set? */
+function nameInTitle(flat: string, setName: string | null | undefined): boolean {
+  const n = (setName ?? "").toLowerCase().normalize("NFKD").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  return n.length >= 6 && ` ${flat} `.includes(` ${n} `);
 }
 
 // ── The name path ────────────────────────────────────────────────────────────
@@ -383,9 +419,11 @@ export interface SealedRef {
 /** "OP-13" / "op13" / "[OP-13]" → "OP13"; "ST36" → "ST-36"; "EB-02" → "EB-02". */
 export function setCodesIn(title: string): string[] {
   const out = new Set<string>();
-  for (const m of title.matchAll(/\b(OP|EB|PRB|ST|SD)[-\s]?(\d{2})\b(?!-\d{3})/gi)) {
+  for (const m of title.matchAll(/\b(OP|EB|PRB|ST|SD)[-\s]?(\d{2})\b(?!-\d{3})(?:\s+(PRE|RE|ANN)\b)?/gi)) {
     const p = m[1].toUpperCase();
-    out.add(p === "OP" || p === "SD" ? `${p}${m[2]}` : `${p}-${m[2]}`);
+    const code = p === "OP" || p === "SD" ? `${p}${m[2]}` : `${p}-${m[2]}`;
+    // "OP03 PRE", "OP15 RE", "OP09 ANN": the event group, as TCGplayer codes it.
+    out.add(m[3] ? `${code} ${m[3].toUpperCase()}` : code);
   }
   return [...out];
 }
@@ -398,7 +436,12 @@ export function sealedKindOfTitle(title: string): SealedKind | null {
   if (/illustration box|tin pack|gift collection|premium card collection|devil fruits|don!!|\bdon card\b|alternate art|parallel|\bmanga\b|\bleader\b|\[sp\]|\(sp\)/.test(t)) return null;
   const deck = /starter deck|ultra deck|deck set|\bst-?\d{2}\b/.test(t);
   const dbl = /double pack/.test(t);
-  if (/\bcase\b/.test(t)) return deck || dbl ? "Display Case" : "Booster Case";
+  // A case is said in so many words ("Booster Box Case", "Booster Case (12
+  // Boxes)", "Display Case"). "Booster Box (Case Fresh)" is a box; a title with
+  // any other "case" in it is an accessory or a puzzle, and is not matched.
+  const u = t.replace(/\bcase[\s-]fresh\b/g, "");
+  if (/\b(?:box|booster|display|sealed|master)\s+case\b|\bcase\s+of\s+\d+|\bcase\s*\(\s*\d+\s*(?:x\s*)?(?:booster\s+)?(?:boxes|displays)\b/.test(u)) return deck || dbl ? "Display Case" : "Booster Case";
+  if (/\bcase\b/.test(u)) return null;
   if (dbl) return /display/.test(t) ? "Display" : "Double Pack Set";
   if (deck) return /display/.test(t) ? "Display" : "Starter Deck";
   if (/sleeved/.test(t)) return "Sleeved Booster Pack";
@@ -408,7 +451,7 @@ export function sealedKindOfTitle(title: string): SealedKind | null {
   return null;
 }
 
-const NOT_SEALED_PRODUCT = /\b(empty|opened|open box|damaged|dented|live break|storage box|deck box|sleeves?|playmat|binder|card case|toploader|lot of|bundle of|\d+\s?x\b|x\s?\d+\b)\b/i;
+const NOT_SEALED_PRODUCT = /\b(empty|opened|open box|damaged|dented|live break|storage box|deck box|sleeves?|playmat|binder|card case|toploader|acrylic|protector|magnetic|lot of|bundle of|\d+\s?x\b|x\s?\d+\b)\b/i;
 
 export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: number } | { miss: string } {
   if (isForeign(title)) return { miss: "foreign" };
@@ -426,6 +469,8 @@ export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: numb
     return n.length >= 6 && lower.includes(n);
   };
   let cands = sealed.filter((s) => s.kind === kind && bySet(s));
+  // "Super Pre-Release Starter Deck 1" is not Starter Deck 1.
+  if (/pre[\s-]?release/.test(lower)) cands = cands.filter((s) => /pre[\s-]?release/i.test(`${s.name} ${s.setName ?? ""}`));
   if (!cands.length) return { miss: "no-product" };
   if (cands.length > 1) {
     // Romance Dawn's two box waves, and similar: only a title that says which.

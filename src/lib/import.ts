@@ -11,6 +11,7 @@ import { prisma } from "./db";
 import {
   TCGCSV_BASE,
   assignSlugs,
+  foldNameAliases,
   isSealedProduct,
   parseCard,
   parseSealed,
@@ -183,6 +184,8 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     ["code", "name", "tcgName", "kind", "releasedOn", "cardCount", "sealedCount", "updatedAt"],
   );
 
+  const codeBySet = new Map(data.map(({ g }) => [g.groupId, setCode(g)] as const));
+  foldNameAliases(cards, (id) => codeBySet.get(id) ?? "");
   const existingCardSlugs = new Map((await prisma.card.findMany({ select: { id: true, slug: true } })).map((r) => [r.id, r.slug]));
   const cardSlugs = assignSlugs(cards, existingCardSlugs);
   await upsert(

@@ -4,6 +4,7 @@ import {
   assignSlugs,
   classifyPrinting,
   eventTag,
+  foldNameAliases,
   parseCard,
   pickPrice,
   plausibleLow,
@@ -152,4 +153,28 @@ test("slugs are stable and unique", () => {
   assert.equal(out.get(5), "nami-op01-016");
   assert.equal(out.get(9), "nami-op01-016-9");
   assert.equal(out.get(3), "zoro");
+});
+
+test("a character alias in parentheses is part of the name, a box topper is not", () => {
+  const sets = new Map([[1, "OP01"], [2, "OP09"], [3, "PRB-02"], [4, "OP09 RE"]]);
+  const cards = [
+    parseCard(card("Mr.3 (Galdino)", { Number: "OP09-056", Rarity: "UC", CardType: "Character" }, 1, 2), "OP09"),
+    parseCard(card("Mr.3(Galdino) - OP09-056 (Reprint)", { Number: "OP09-056", Rarity: "UC", CardType: "Character" }, 2, 3), "PRB-02"),
+    parseCard(card("Mr.3 (Galdino)", { Number: "OP09-056", Rarity: "UC", CardType: "Character" }, 3, 4), "OP09 RE", { name: "Emperors in the New World Release Event Cards", abbreviation: "OP09 RE" }),
+    parseCard(card("Cavendish", { Number: "OP01-008", Rarity: "R", CardType: "Character" }, 4, 1), "OP01"),
+    parseCard(card("Cavendish (Box Topper)", { Number: "OP01-008", Rarity: "R", CardType: "Character" }, 5, 1), "OP01"),
+  ].map((c, i) => ({ ...c, setId: [2, 3, 4, 1, 1][i] }));
+  assert.equal(cards[0].printing, "promo"); // what it was: "(Galdino)" read as a tag
+  foldNameAliases(cards, (id) => sets.get(id) ?? "");
+  assert.deepEqual([cards[0].name, cards[0].variant, cards[0].printing], ["Mr.3 (Galdino)", null, "standard"]);
+  assert.deepEqual([cards[1].name, cards[1].variant, cards[1].printing], ["Mr.3 (Galdino)", "Reprint", "reprint"]);
+  assert.deepEqual([cards[2].name, cards[2].variant], ["Mr.3 (Galdino)", "Release Event"]);
+  assert.equal(cards[0].slugBase, "mr-3-galdino-op09-056");
+  assert.deepEqual([cards[4].name, cards[4].variant, cards[4].printing], ["Cavendish", "Box Topper", "promo"]);
+});
+
+test("coloured and Super Leader alternate arts are alternate arts", () => {
+  for (const t of ["Red Super Alternate Art", "Super Leader Alternate Art"]) {
+    assert.equal(classifyPrinting({ tokens: [t], rarity: "SEC", cardType: "Character" }), "alt");
+  }
 });
