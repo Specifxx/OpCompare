@@ -7,7 +7,7 @@
 // (IMPORT_ONLY_STORES / IMPORT_ONLY_COUNTRY) or a catalogue-only run simply
 // contributes nothing for the stores it did not read. Every threshold below is
 // exported and pinned by a test.
-import type { StoreInfo } from "./stores";
+import { platformOf, type StoreInfo, type StorePlatform } from "./stores";
 
 export interface StoreAppearance {
   runId: number;
@@ -18,6 +18,8 @@ export interface StoreAppearance {
   inStock: number;
   failed: boolean;
   skipped?: string;
+  /** The reader's own words for a failed or empty read ("HTTP 503", "no price in GBP"). */
+  note?: string;
   misses?: Record<string, number>;
 }
 
@@ -34,6 +36,7 @@ export interface StoreHealth {
   name: string;
   country: string;
   base: string;
+  platform: StorePlatform;
   latest: StoreAppearance | null;
   offers: OfferStat;
   medianListings: number | null;
@@ -98,13 +101,13 @@ export function storeAlerts(history: StoreAppearance[], offers: OfferStat, now =
   if (streak.length === FAILING_STREAK && streak.every((a) => a.failed)) {
     let n = 0;
     while (n < history.length && history[n]!.failed) n++;
-    alerts.push({ kind: "failing", text: `Failed the last ${n} reads in a row` });
+    alerts.push({ kind: "failing", text: `Failed the last ${n} reads in a row${latest.note ? ` (${latest.note})` : ""}` });
   } else if (latest.failed) {
-    alerts.push({ kind: "last-read-failed", text: "The latest read failed (once; a second failure in a row raises “failing”)" });
+    alerts.push({ kind: "last-read-failed", text: `The latest read failed${latest.note ? ` (${latest.note})` : ""} (once; a second failure in a row raises “failing”)` });
   }
   if (latest.skipped) alerts.push({ kind: "currency-skip", text: `Skipped: ${latest.skipped}` });
   if (latest.products === 0 && !latest.failed && !latest.skipped) {
-    alerts.push({ kind: "empty-read", text: "Read 0 products without an error (robots.txt now blocks it, or its collections are gone)" });
+    alerts.push({ kind: "empty-read", text: `Read 0 products without an error (robots.txt now blocks it, or its collections/feed are gone)${latest.note ? `: ${latest.note}` : ""}` });
   }
   const implausible = latest.misses?.["implausible-price"] ?? 0;
   if (latest.products > 0 && implausible / latest.products > IMPLAUSIBLE_SHARE) {
@@ -138,6 +141,7 @@ export function computeStoreHealth(stores: StoreInfo[], history: Map<string, Sto
       name: s.name,
       country: s.country,
       base: s.base,
+      platform: platformOf(s),
       latest,
       offers: o,
       medianListings: median(clean.map(listingsOf)),
