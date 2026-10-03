@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs, InShort, JsonLd } from "@/components/ui";
 import { getCardText } from "@/lib/data";
 import { int } from "@/lib/format";
-import { breadcrumbLd, itemListLd } from "@/lib/jsonld";
+import { itemListLd } from "@/lib/jsonld";
 import { KEYWORDS } from "@/lib/keywords";
 import { pageOg } from "@/lib/og/meta";
 
@@ -25,9 +25,8 @@ export default async function KeywordsHub() {
   ];
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Keywords", path: "/keywords" }])} />
       <JsonLd data={itemListLd("One Piece Card Game keywords", "/keywords", KEYWORDS.map((k) => ({ name: k.name, path: `/keywords/${k.slug}` })))} />
-      <Breadcrumbs items={[{ label: "Keywords" }]} />
+      <Breadcrumbs trail={[{ name: "Keywords" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece Card Game keywords</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         What each bracketed keyword and timing on a One Piece card means, and every card whose text carries it, priced. Counts are card numbers (all

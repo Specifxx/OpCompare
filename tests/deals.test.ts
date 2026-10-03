@@ -415,7 +415,9 @@ test("the old Card.low<M> deal ranking is retired", () => {
   assert.doesNotMatch(read("src/lib/selectors.ts"), /biggestSavings|DEAL_MAX_SAVING_PCT/);
   assert.doesNotMatch(read("src/app/page.tsx"), /DealList|biggestSavings/);
   assert.ok(!fs.existsSync(path.resolve(__dirname, "../src/components/DealList.tsx")));
-  assert.match(read("src/app/page.tsx"), /<TodaysTopDeals deals=\{deals\} \/>/);
+  // The cached homepage carries every market's deals; HomeTopDeals shows the visitor's.
+  assert.match(read("src/app/page.tsx"), /<HomeTopDeals dealsByCountry=\{data\.dealsByCountry\} \/>/);
+  assert.match(read("src/components/home/HomeTopDeals.tsx"), /<TodaysTopDeals key=\{country\} deals=\{deals\} \/>/);
   assert.match(read("src/components/TodaysTopDeals.tsx"), /PlanButton surface="gate:home-deals" tier="plus"/);
 });
 

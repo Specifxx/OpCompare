@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function FeedbackPage() {
   return (
     <div className="mx-auto max-w-2xl">
-      <Breadcrumbs items={[{ label: "Feedback" }]} />
+      <Breadcrumbs trail={[{ name: "Feedback" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Feedback</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-slate-300">
         OP Compare is built by one person. A rating, a sentence or both helps decide what comes next. Nothing you send is shown publicly unless you tick the box,

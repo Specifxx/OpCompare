@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, Faq, InShort, JsonLd } from "@/components/ui";
-import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { FEE_SCHEDULES, FEES_CHECKED } from "@/lib/selling-fees";
 import { SITE_URL } from "@/lib/site";
@@ -41,7 +41,6 @@ const FAQS = [
 export default function SellingFeesPage() {
   return (
     <div className="mx-auto max-w-4xl">
-      <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Selling Fee Calculator", path: "/tools/selling-fees" }])} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -54,7 +53,7 @@ export default function SellingFeesPage() {
         }}
       />
       <JsonLd data={faqLd(FAQS)} />
-      <Breadcrumbs items={[{ href: "/tools", label: "Tools" }, { label: "Selling Fee Calculator" }]} />
+      <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Selling Fee Calculator" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Selling fee calculator</h1>
       <p className="mt-3 mb-5 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         What you actually keep selling a One Piece card: the marketplace&apos;s commission, payment processing, its per-order fee and your own postage,

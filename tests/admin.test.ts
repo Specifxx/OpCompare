@@ -163,7 +163,7 @@ test("analytics never records an /admin page view", () => {
 
 test("the account menu learns only the caller's own admin flag, from /api/me", () => {
   assert.match(read("src/app/api/me/route.ts"), /admin: user\?\.isAdmin === true/);
-  assert.match(read("src/components/NavUser.tsx"), /me\.admin \?[\s\S]*?href="\/admin"/);
+  assert.match(read("src/components/UserMenu.tsx"), /me\.admin \?[\s\S]*?href="\/admin"/);
   assert.doesNotMatch(read("src/app/layout.tsx"), /getCurrentUser|cookies\(\)/, "the root layout never reads the session");
 });
 

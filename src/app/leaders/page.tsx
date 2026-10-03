@@ -50,7 +50,7 @@ export default async function LeadersPage() {
   ];
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Leaders" }]} />
+      <Breadcrumbs trail={[{ name: "Leaders" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece Leader cards
       </h1>

@@ -162,10 +162,10 @@ export default async function CardPage({ params }: Props) {
         }}
       />
       <Breadcrumbs
-        items={[
-          { href: "/browse", label: "Cards" },
-          { href: `/sets/${card.set.slug}`, label: card.set.name },
-          { label: card.name },
+        trail={[
+          { href: "/browse", name: "Cards" },
+          { href: `/sets/${card.set.slug}`, name: card.set.name },
+          { name: card.name },
         ]}
       />
 

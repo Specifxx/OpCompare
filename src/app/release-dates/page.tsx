@@ -36,7 +36,7 @@ export default async function ReleaseDates() {
   const next = upcoming[0];
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Release dates" }]} />
+      <Breadcrumbs trail={[{ name: "Release dates" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece TCG release dates
       </h1>

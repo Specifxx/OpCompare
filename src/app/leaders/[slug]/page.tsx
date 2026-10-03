@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardLinkGrid } from "@/components/CardLinkGrid";
 import { CardArt } from "@/components/CardTile";
-import { Breadcrumbs, ColorBadge, InShort, JsonLd, SectionHeader, StatTile } from "@/components/ui";
+import { Breadcrumbs, ColorBadge, InShort, SectionHeader, StatTile } from "@/components/ui";
 import { COUNTRIES, MARKETS } from "@/lib/country";
 import { getCardDetail, getCardTextByNumber, getCatalog, type CardLite, type Catalog } from "@/lib/data";
 import { encodeDeckParam } from "@/lib/deck";
@@ -12,7 +12,6 @@ import { leaderSlug } from "@/lib/facets";
 import { money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { getCountry } from "@/lib/get-country";
-import { breadcrumbLd } from "@/lib/jsonld";
 import { KEYWORD_BY_SLUG } from "@/lib/keywords";
 import { pageOg } from "@/lib/og/meta";
 import { headline } from "@/lib/price";
@@ -74,8 +73,7 @@ export default async function LeaderPage({ params }: Props) {
 
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Leaders", path: "/leaders" }, { name: `${base.name} ${base.number}`, path: `/leaders/${slug}` }])} />
-      <Breadcrumbs items={[{ href: "/leaders", label: "Leaders" }, { label: `${base.name} ${base.number}` }]} />
+      <Breadcrumbs trail={[{ href: "/leaders", name: "Leaders" }, { name: `${base.name} ${base.number}` }]} />
       <div className="grid gap-6 md:grid-cols-[240px_1fr]">
         <CardQuickLink slug={base.slug} className="block max-w-[240px]">
           <CardArt id={base.id} hasImage={base.hasImage} alt={`${base.name} ${base.number} One Piece Leader card`} size="large" />

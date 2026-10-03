@@ -53,7 +53,7 @@ export default async function MarketPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Market index" }]} />
+      <Breadcrumbs trail={[{ name: "Market index" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">The OP Compare Index</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>

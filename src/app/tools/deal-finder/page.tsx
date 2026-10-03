@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheapestOnEbay } from "@/components/CheapestOnEbay";
-import { MarketPills } from "@/components/CountrySelect";
+import { RegionToggle } from "@/components/RegionToggle";
 import { DealPager, TcgDealTable, VsEbayTable } from "@/components/DealTable";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { Icon } from "@/components/Icon";
@@ -158,15 +158,6 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         data={[
           {
             "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-              { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
-              { "@type": "ListItem", position: 3, name: "Deal Finder", item: `${SITE_URL}/tools/deal-finder` },
-            ],
-          },
-          {
-            "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "One Piece Deal Finder",
             url: `${SITE_URL}/tools/deal-finder`,
@@ -183,10 +174,10 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         ]}
       />
       <div className="mx-auto max-w-4xl">
-        <Breadcrumbs items={[{ href: "/tools", label: "Tools" }, { label: "Deal Finder" }]} />
+        <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Deal Finder" }]} />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-3xl text-white sm:text-4xl">Deal Finder</h1>
-          <MarketPills />
+          <RegionToggle />
         </div>
         <p className="mb-5 mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
           One Piece cards you can buy for less than they usually go for. Each list sets the cheapest in-stock copy we track in {info.place}{" "}

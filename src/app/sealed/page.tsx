@@ -107,7 +107,7 @@ export default async function SealedPage({
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Sealed" }]} />
+      <Breadcrumbs trail={[{ name: "Sealed" }]} />
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <h1 className="text-3xl text-white sm:text-4xl">Sealed Products</h1>
         <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">

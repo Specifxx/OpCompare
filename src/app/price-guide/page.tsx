@@ -78,7 +78,7 @@ export default async function PriceGuidePage({
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Price guide" }]} />
+      <Breadcrumbs trail={[{ name: "Price guide" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece Price Guide</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>
@@ -345,11 +345,7 @@ export default async function PriceGuidePage({
           purchases — at no extra cost to you.
         </p>
       </section>
-      <Pagination
-        page={page}
-        pages={pages}
-        href={(p) => href({ page: p > 1 ? String(p) : undefined })}
-      />
+      <Pagination page={page} totalPages={pages} params={{ sort: searchParams.sort, set: searchParams.set }} basePath="/price-guide" />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>
   );

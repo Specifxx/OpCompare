@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import PlanButton from "@/components/PlanButton";
-import { Breadcrumbs, InShort, JsonLd } from "@/components/ui";
+import { Breadcrumbs, InShort } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
-import { breadcrumbLd } from "@/lib/jsonld";
 import { planPrice } from "@/lib/plans";
 import { isPremium, tierOf } from "@/lib/premium";
 import { BuyListPlanner } from "./BuyListPlanner";
@@ -30,11 +29,10 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
   const next = `/tools/buy-list${list ? `?list=${encodeURIComponent(list)}` : ""}`;
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Buy List Planner", path: "/tools/buy-list" }])} />
       <Breadcrumbs
-        items={[
-          { href: "/tools", label: "Tools" },
-          { label: "Buy List Planner" },
+        trail={[
+          { href: "/tools", name: "Tools" },
+          { name: "Buy List Planner" },
         ]}
       />
       <h1 className="text-3xl text-white sm:text-4xl">Buy List Planner</h1>

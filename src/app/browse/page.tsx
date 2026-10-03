@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
+import { SortSelect } from "@/components/SortSelect";
+import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
 import { FilterChips } from "@/components/FilterChips";
 import { CardTile } from "@/components/CardTile";
@@ -68,7 +69,7 @@ export default async function BrowsePage({
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Card database" }]} />
+      <Breadcrumbs trail={[{ name: "Card database" }]} />
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-w-0">
           {/* One copy of the filters: a CSS-only toggle on phones, always open from lg. */}
@@ -131,24 +132,8 @@ export default async function BrowsePage({
               ) : null}
             </p>
             <div className="flex items-center gap-2">
-              <AutoSubmitSelect
-                form="filters"
-                name="per"
-                value={String(q.per)}
-                label="Show"
-                options={[
-                  ["24", "24"],
-                  ["48", "48"],
-                  ["100", "100"],
-                ]}
-              />
-              <AutoSubmitSelect
-                form="filters"
-                name="sort"
-                value={q.sort}
-                label="Sort"
-                options={Object.entries(SORTS) as [string, string][]}
-              />
+              <PageSizeSelect size={q.per} />
+              <SortSelect defaultSort="value" options={Object.entries(SORTS).map(([value, label]) => ({ value, label }))} />
             </div>
           </div>
 
@@ -206,11 +191,7 @@ export default async function BrowsePage({
               />
             </div>
           )}
-          <Pagination
-            page={page}
-            pages={pages}
-            href={(p) => browseHref(searchParams, { page: String(p) })}
-          />
+          <Pagination page={page} totalPages={pages} params={searchParams} basePath="/browse" />
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>

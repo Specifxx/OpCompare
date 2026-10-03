@@ -734,3 +734,101 @@ export async function getEmailStatus(): Promise<EmailStatus> {
   }
 }
 // ── end wave2:foundation ──
+// ── wave2:design ──
+// The homepage and region homes. Composed from the cached loaders above — no
+// new cache wraps a loader (CLAUDE.md, "Egress"); the only new queries are the
+// popularity read (one select-limited findMany, cached) and the approved
+// reviews (cached). Pure rules live in lib/home.ts.
+import { homeStatsFrom, popularKind, recentMoves, type HomeStats, type PopularKind, type RecentMove } from "./home";
+import { mostValuable, newestBoosterSet } from "./selectors";
+import type { DayFile } from "./history";
+
+/** Per-market hero stats: cards, stores (store:* + TCGplayer in the US, never eBay), freshness. */
+export async function getHomeStats(): Promise<HomeStats> {
+  const [cat, stats] = await Promise.all([getCatalog(), getSiteStats()]);
+  const priced = Object.fromEntries(MARKETS.map((m) => [m, 0])) as Record<Country, number>;
+  for (const c of cat.cards) for (const m of MARKETS) if (c.low[m] != null) priced[m]++;
+  return homeStatsFrom(stats.storeOffers, priced, cat.cards.length, stats.lastImportAt);
+}
+
+const loadSearched = unstable_cache(
+  async (): Promise<number[]> =>
+    (
+      await prisma.card.findMany({
+        where: { searchCount: { gt: 0 } },
+        orderBy: [{ searchCount: "desc" }, { marketUsd: { sort: "desc", nulls: "last" } }, { viewCount: "desc" }],
+        take: 24,
+        select: { id: true },
+      })
+    ).map((r) => r.id),
+  ["home-searched-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/**
+ * The "Most popular" row: the most-searched cards once Card.searchCount has
+ * data, else the newest booster set's most valuable printings ("chase").
+ */
+export async function getPopular(n = 12): Promise<{ kind: PopularKind; cards: CardLite[] }> {
+  const cat = await getCatalog();
+  let searched: number[] = [];
+  try {
+    searched = await loadSearched();
+  } catch {
+    /* the counter is a nicety: fall back to the chase row */
+  }
+  if (popularKind(searched) === "popular") {
+    return { kind: "popular", cards: searched.map((id) => cat.byId.get(id)).filter((c): c is CardLite => !!c).slice(0, n) };
+  }
+  const newest = newestBoosterSet(cat.sets);
+  return { kind: "chase", cards: newest ? mostValuable(cat.cards, n, (x) => x.setId === newest.id) : mostValuable(cat.cards, n) };
+}
+
+/** Cards whose price changed between the two newest daily history files (lib/home.ts recentMoves). */
+export async function getRecentlyUpdated(n = 24): Promise<{ card: CardLite; pct: number }[]> {
+  try {
+    const days = (await getIndexSeries()).map((d) => d.day);
+    if (days.length < 2) return [];
+    const [a, b] = days.slice(-2);
+    const [prev, last, cat] = await Promise.all([historyFile<DayFile>(`days/${a}.json`), historyFile<DayFile>(`days/${b}.json`), getCatalog()]);
+    if (!prev || !last) return [];
+    return recentMoves(prev.p, last.p, (id) => cat.byId.has(id), n).flatMap((m: RecentMove) => {
+      const card = cat.byId.get(m.id);
+      return card ? [{ card, pct: m.pct }] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export interface PublicReview {
+  id: string;
+  rating: number | null;
+  message: string;
+  displayName: string | null;
+}
+/** Reviews below this count stay hidden (RiftCompare's rule): a strip of one quote reads as staged. */
+export const MIN_REVIEWS_TO_DISPLAY = 3;
+
+const loadReviews = unstable_cache(
+  async (): Promise<PublicReview[]> =>
+    prisma.feedback.findMany({
+      where: { status: "APPROVED", consentPublic: true, publishedAt: { not: null }, message: { not: "" } },
+      orderBy: { publishedAt: "desc" },
+      take: 12,
+      // Never widen this to `email`: a reply address, never public.
+      select: { id: true, rating: true, message: true, displayName: true },
+    }),
+  ["approved-reviews-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/** Approved, consented public feedback, newest first. Any error is an empty list. */
+export async function getApprovedReviews(limit = 6): Promise<PublicReview[]> {
+  try {
+    return (await loadReviews()).slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+// ── end wave2:design ──

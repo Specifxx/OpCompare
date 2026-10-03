@@ -115,10 +115,10 @@ export default async function SealedDetailPage({ params }: Props) {
         }}
       />
       <Breadcrumbs
-        items={[
-          { href: "/sealed", label: "Sealed" },
-          ...(set ? [{ href: `/sets/${set.slug}`, label: set.name }] : []),
-          { label: s.name },
+        trail={[
+          { href: "/sealed", name: "Sealed" },
+          ...(set ? [{ href: `/sets/${set.slug}`, name: set.name }] : []),
+          { name: s.name },
         ]}
       />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">

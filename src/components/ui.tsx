@@ -1,29 +1,12 @@
 // Small shared presentational pieces: breadcrumbs, stat tiles, badges,
 // section headers, the "in short" box and FAQ — RiftCompare's page furniture.
 import Link from "next/link";
+import { ColorBadge as ChipColorBadge, RarityBadge as ChipRarityBadge } from "./Badge";
 import { COLORS, PRINTINGS, RARITIES, isColor } from "@/lib/constants";
 
-export function Breadcrumbs({ items }: { items: { href?: string; label: string }[] }) {
-  return (
-    <nav aria-label="Breadcrumb" className="mb-3 text-sm text-slate-400">
-      <ol className="flex flex-wrap items-center gap-1.5">
-        <li>
-          <Link href="/" className="hover:text-white">Home</Link>
-        </li>
-        {items.map((it, i) => (
-          <li key={i} className="flex items-center gap-1.5">
-            <span className="text-slate-600">/</span>
-            {it.href ? (
-              <Link href={it.href} className="hover:text-white">{it.label}</Link>
-            ) : (
-              <span className="text-slate-200" aria-current="page">{it.label}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
+// RiftCompare's Breadcrumbs (components/Breadcrumbs.tsx): `trail` of { name, href },
+// BreadcrumbList JSON-LD included. Re-exported here for the pages that import it from ui.
+export { Breadcrumbs } from "./Breadcrumbs";
 
 export function StatTile({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: string }) {
   return (
@@ -45,20 +28,14 @@ export function ColorDots({ colors, size = "h-2.5 w-2.5" }: { colors: string[]; 
   );
 }
 
+// RiftCompare's Badge.tsx chip + data-ink pattern (components/Badge.tsx).
 export function ColorBadge({ color }: { color: string }) {
-  const hex = isColor(color) ? COLORS[color].hex : "#888";
-  return (
-    <Link href={`/colors/${color.toLowerCase()}`} className="chip border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600">
-      <span className="h-2 w-2 rounded-full" style={{ background: hex }} />
-      {color}
-    </Link>
-  );
+  return <ChipColorBadge color={color} href={`/colors/${color.toLowerCase()}`} />;
 }
 
 export function RarityBadge({ rarity }: { rarity: string | null }) {
   if (!rarity) return null;
-  const r = RARITIES[rarity];
-  return <span className={`chip border border-ink-700 bg-ink-850 font-semibold ${r?.tone ?? "text-slate-200"}`}>{r?.label ?? rarity}</span>;
+  return <ChipRarityBadge rarity={rarity} />;
 }
 
 export function PrintingBadge({ printing, variant }: { printing: string; variant?: string | null }) {

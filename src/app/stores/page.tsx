@@ -21,7 +21,7 @@ export default async function StoresPage() {
   );
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Stores we track" }]} />
+      <Breadcrumbs trail={[{ name: "Stores we track" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Stores we track</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         OP Compare reads the public product listings of every store below twice

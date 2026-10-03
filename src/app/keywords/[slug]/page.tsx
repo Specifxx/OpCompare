@@ -10,7 +10,7 @@ import { basePrinting } from "@/lib/deck";
 import { pageSuffix, paginate } from "@/lib/facets";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { faqLd } from "@/lib/jsonld";
 import { KEYWORD_BY_SLUG, KEYWORDS } from "@/lib/keywords";
 import { pageOg } from "@/lib/og/meta";
 
@@ -47,9 +47,8 @@ export default async function KeywordPage({ params, searchParams }: Props) {
   const path = `/keywords/${k.slug}`;
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Keywords", path: "/keywords" }, { name: k.name, path }])} />
       <JsonLd data={faqLd([{ q: `What does [${k.name}] do in the One Piece Card Game?`, a: [k.summary, ...k.body].join(" ") }])} />
-      <Breadcrumbs items={[{ href: "/keywords", label: "Keywords" }, { label: k.name }]} />
+      <Breadcrumbs trail={[{ href: "/keywords", name: "Keywords" }, { name: k.name }]} />
       <h1 className="text-3xl text-white sm:text-4xl">[{k.name}]</h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200">{k.summary}</p>
       <div className="mt-4 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -66,7 +65,7 @@ export default async function KeywordPage({ params, searchParams }: Props) {
           sub={`${[...types.entries()].map(([t, n]) => `${n} ${t}${n === 1 ? "" : "s"}`).join(" · ")} · most valuable first, cheapest listing in ${COUNTRIES[country].place}${pages > 1 ? ` · page ${page} of ${pages}` : ""}`}
         />
         {slice.length ? <CardLinkGrid cards={slice} cat={cat} country={country} /> : <p className="text-slate-400">No card in the catalogue has it yet.</p>}
-        <Pagination page={page} pages={pages} href={(p) => `${path}${p > 1 ? `?page=${p}` : ""}`} />
+        <Pagination page={page} totalPages={pages} params={{}} basePath={path} />
       </section>
       <nav className="mt-10" aria-label="Other keywords">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Other keywords</h2>

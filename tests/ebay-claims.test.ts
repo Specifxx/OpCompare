@@ -31,7 +31,8 @@ test("eBay-collection copy is gated on data, so 'off' keeps the old wording", ()
     assert.ok(cond > 0 && at - cond < 400, `${file}: "${phrase}" must sit inside {${flag} ? … }`);
   };
   gated("src/components/PriceBoard.tsx", "hasEbayRow", "eBay&apos;s Buy It Now listings");
-  gated("src/app/page.tsx", "stats.ebayLive", "cheapest matching eBay Buy It Now listing");
+  gated("src/lib/home-faq.ts", "opts.ebayLive", "the cheapest matching eBay listing");
+  gated("src/components/home/RegionHome.tsx", "ebayLive", "plus the cheapest matching eBay listing");
   gated("src/app/methodology/page.tsx", "ebayLive", "Twice a day we search eBay");
   gated("src/app/methodology/page.tsx", "ebayLive", "an eBay row shows the postage eBay states");
   gated("src/app/about/page.tsx", "ebayLive", "eBay prices are the cheapest matching Buy It Now listing");
