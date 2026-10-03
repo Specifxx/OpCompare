@@ -1048,3 +1048,14 @@ mechanical:
   different total than the page).
 - **Header "Pricing" stays a link to /premium**, as RiftCompare's is; opening
   the plan dialog there instead is the owner's call.
+
+## 2026-10-03 — Light theme is the default
+
+**Decision.** OP Compare now opens in the light theme. The root layout renders
+`<html data-theme="light">`, and the boot script switches to dark only when the
+visitor has chosen dark with the toggle (`op:theme` = `dark`). Dark stays fully
+supported.
+
+**Why.** The owner asked for light by default. This departs from RiftCompare,
+which defaults to dark; the wave-2 design port (RC's `theme-shared.ts`) must
+keep light as the default when it replaces `src/lib/theme.ts`.
