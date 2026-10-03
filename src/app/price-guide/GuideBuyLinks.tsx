@@ -29,7 +29,7 @@ export function GuideBuyLinks({
   const tcgHref = affiliateUrl(`https://www.tcgplayer.com/product/${id}`, "tcgplayer", "/price-guide");
   const ebayHref = ebaySearchUrl(country, cardEbayQuery({ name, number, variant }), "price-guide");
   return (
-    <span className="flex flex-col gap-1 sm:flex-row sm:justify-end">
+    <span className="flex flex-col gap-1 xl:flex-row xl:justify-end">
       <a
         href={tcgHref}
         target="_blank"
@@ -38,11 +38,11 @@ export function GuideBuyLinks({
         data-page="price-guide"
         data-card={slug}
         data-surface="price_guide_tcgplayer"
-        className="btn-ghost min-h-8 gap-1 whitespace-nowrap px-2 py-1 text-[11px]"
+        className="btn-ghost min-h-8 w-full gap-1 whitespace-nowrap px-2 py-1 text-[11px] xl:w-auto"
         aria-label={`${name}${variant ? ` (${variant})` : ""} on TCGplayer`}
       >
         <span className="font-extrabold">TCGplayer</span>
-        {tcg ? <span className="num font-semibold text-slate-300">{tcg}</span> : null}
+        {tcg ? <span className="num hidden font-semibold text-slate-300 sm:inline">{tcg}</span> : null}
       </a>
       <a
         href={ebayHref}
@@ -52,7 +52,7 @@ export function GuideBuyLinks({
         data-page="price-guide"
         data-card={slug}
         data-surface="price_guide_ebay"
-        className="btn-ebay-ghost min-h-8 gap-1 whitespace-nowrap px-2 py-1 text-[11px]"
+        className="btn-ebay-ghost min-h-8 w-full gap-1 whitespace-nowrap px-2 py-1 text-[11px] xl:w-auto"
         aria-label={`Search eBay for ${name}${variant ? ` (${variant})` : ""}`}
       >
         <span className="font-extrabold">eBay</span>

@@ -489,3 +489,75 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Card QuickView and the card page's affiliate layout (RiftCompare parity)
+
+The owner wants RiftCompare's interactions one to one. RiftCompare opens most
+card taps in a QuickView popup, highlights eBay and TCGplayer directly under the
+price comparison, and pins a buy bar on phones; OP Compare linked every card to
+its page, showed TCGplayer's market price as one grey footer sentence with no
+link, and sent the card-details TCGplayer link out untagged (no commission).
+
+- **QuickView: one provider, one link component, one cached JSON.**
+  `QuickViewProvider` is mounted in the root layout inside `CountryProvider`
+  and reads no session and no cookie (the layout rule stands). Every card
+  surface links through `CardQuickLink` (`CardTile`, `MoverList`, the price
+  guide's rows and stats, set pages, `/cards/all`, the card page's related
+  tiles): a real `/card/<slug>` href for crawlers, new tabs and modifier
+  clicks; a plain left click opens the dialog; with no provider it is a link.
+  Data comes from `GET /api/card/[slug]`, which reads only the self-cached
+  `getCardDetail` (the card page's own loader — an open costs a Data Cache
+  read, never a query) and is shaped by `quickViewPayload`
+  (`src/lib/quick-view.ts`): every market's top five open rows, already
+  affiliate-tagged on the server (the partner-id env vars never reach the
+  browser), every market's eBay search and the TCGplayer link; ~10 KB, CDN
+  10 minutes, market-independent so one response serves everyone and a market
+  switch needs no second request. Hover/focus prefetches it.
+- **The dialog has an address.** `history.pushState` puts `/card/<slug>` in
+  the URL bar without navigating (Next 14.2 patches pushState and copies its
+  own state in, so the page underneath is untouched): the link can be shared,
+  Back closes, Forward reopens, and visiting the URL renders the full page.
+  An open that arrives while a close's `history.back()` is still pending is
+  queued until the popstate lands — otherwise that popstate would close the
+  new dialog, the "open it again quickly and nothing happens" bug. Links
+  inside the dialog are plain anchors (full loads), so no client navigation
+  leaves a stray `/card/` entry; any other route change closes it.
+- **`Dialog.tsx` (RiftCompare's ui/Dialog, ported)**: portal, refcounted scroll
+  lock (with scrollbar-gutter compensation) and `body[data-oc-dialog]`,
+  Escape closes the topmost layer only, Tab trap, focus returned to the
+  opener, and a click on the empty space around the panel closes it
+  (RiftCompare's backdrop sits under the centring wrapper and never got it).
+- **Card page order, top to bottom** (RiftCompare's "Pushing eBay clicks"):
+  phones get `CardTopBuy` (cheapest open listing + Buy) under the name; the
+  board; the **eBay fallback block directly under the board** whenever the
+  market has no eBay row ("Search eBay for <card>" in eBay blue, RiftCompare's
+  copy, pre-release copy for an unreleased set), else the board's own "More
+  listings on eBay" strip; then **`TcgMarketPrice`** ("TCGplayer market price
+  · reference", local ≈ figure with the US$ beside it, "Check on TCGplayer →"
+  through Impact) in place of the footer sentence; then **`EbayCardBanner`**,
+  a card-contextual "Find <card> on eBay" house banner labelled Ad with
+  `data-ad-placement`, so ad-free members never see it. The fallback and the
+  TCGplayer block are buy paths, not ads, and stay for members. Sealed pages
+  get the same fallback and TCGplayer block. A card from an unreleased set or
+  with no listing in any market also gets `EbayBuyCta` above the board.
+- **One ranking for every buy surface.** `marketRows`/`cheapestBuyRow` are the
+  board's rule (in stock, the market's currency, item price first), used by
+  the board, the QuickView, `CardTopBuy` and `CardStickyBuyBar`, so the bar
+  can never name a different store from the board's #1 row. The sticky bar
+  shows only once the top block has scrolled above the viewport and hides
+  while the board is on screen; hidden, it is `inert`.
+- **Price guide rows** get a TCGplayer button (the card's product page —
+  ids are TCGplayer product ids — with its US market price in US$) and an eBay
+  search button, built in a small client island from the row's raw fields so
+  the long affiliate URLs are not serialised twice per row. The table is
+  fixed-layout and drops columns by width instead of scrolling sideways.
+- **Click tracking.** Every outbound link on these surfaces carries
+  `data-retailer`, `data-page`, `data-card` (slug) and `data-surface`; the GA
+  `buy_click` beacon now sends `card` and `surface` too. The Buy List
+  Planner's links are tagged on the way out (`tagPlanLinks`), so its TCGplayer
+  picks earn like the board's.
+- **Not ported:** RiftCompare's live eBay listing carousel and Graded tab
+  (OP's eBay pass stores one listing per pair; more would cost Browse calls
+  from OP's own quota — the owner's decision), the in-popup price chart,
+  "Add to collection" (OP has no collection), and a sealed QuickView.
+  `tests/quick-view.test.ts` pins the payload, the ranking and the wiring.

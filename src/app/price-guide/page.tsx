@@ -248,7 +248,7 @@ export default async function PriceGuidePage({
                 <th className="w-[5.5rem] text-right sm:w-28">Price ({c.currency})</th>
                 <th className="hidden w-16 text-right sm:table-cell">Stores</th>
                 <th className="hidden w-20 text-right sm:table-cell">7 days</th>
-                <th className="w-[6.5rem] text-right sm:w-[12.5rem]">Buy</th>
+                <th className="w-[6.5rem] text-right sm:w-40 xl:w-60">Buy</th>
               </tr>
             </thead>
             <tbody>

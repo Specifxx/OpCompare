@@ -133,7 +133,7 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
           ) : null}
 
           <div className="mt-2 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-            <div className="min-w-0 flex-1 basis-44 pr-10 sm:pr-0">
+            <div className="min-w-0 flex-1 basis-56">
               <h2 id="quickview-title" className="break-words text-xl leading-tight text-white sm:text-2xl">
                 {data ? data.name : (label ?? "Loading card…")}
                 {data?.variant ? <span className="block text-base font-bold text-slate-300">{data.variant}</span> : null}
