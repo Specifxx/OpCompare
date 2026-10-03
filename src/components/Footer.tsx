@@ -40,6 +40,7 @@ export function Footer() {
             <Link href="/privacy" className="tap-link hover:text-slate-300">Privacy policy</Link>
             <Link href="/terms" className="tap-link hover:text-slate-300">Terms of service</Link>
             <Link href="/methodology" className="tap-link hover:text-slate-300">How we compare</Link>
+            <Link href="/feedback" className="tap-link hover:text-slate-300">Feedback</Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-straw hover:underline">{CONTACT_EMAIL}</a>
           </p>
           <p>

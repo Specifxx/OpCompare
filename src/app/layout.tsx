@@ -12,6 +12,7 @@ import { SideNav } from "@/components/SideNav";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
 // Inter for UI, JetBrains Mono for prices (RiftCompare's pairing), Archivo at
@@ -30,7 +31,10 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  openGraph: { siteName: SITE_NAME, type: "website", url: SITE_URL, locale: "en_US" },
+  // No og:url here: every page inherits this object, so a url would point each
+  // share at the homepage. The image is src/app/opengraph-image.tsx (the price
+  // guide); twitter:image copies it, so there is no twitter-image file.
+  openGraph: { ...OG_BASE },
   twitter: { card: "summary_large_image" },
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",

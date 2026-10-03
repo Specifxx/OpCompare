@@ -46,3 +46,14 @@ export function shortDate(d: Date | string | null | undefined): string {
   const dt = typeof d === "string" ? new Date(d) : d;
   return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
+
+/** "$12.34", "A$12.34" — minor units in any ISO currency (Stripe amounts, report snapshots). */
+export function moneyCode(cents: number | null | undefined, currency: string | null | undefined): string {
+  if (cents == null) return "—";
+  if (!currency) return (cents / 100).toFixed(2);
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}

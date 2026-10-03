@@ -7,28 +7,57 @@ import { getCatalog, type CardLite, type SetLite } from "@/lib/data";
 import { int, longDate, money, shortDate } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { upcomingSets } from "@/lib/selectors";
+import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
   title: "One Piece Sets — Card Lists & Prices for Every Set",
-  description: "Every One Piece Card Game set in release order — booster sets, extra boosters, premium boosters, starter decks and promos — each with its full card list and live prices.",
+  description:
+    "Every One Piece Card Game set in release order — booster sets, extra boosters, premium boosters, starter decks and promos — each with its full card list and live prices.",
   alternates: { canonical: "/sets" },
+  openGraph: pageOg("/sets"),
 };
 
-function SetCard({ s, cards, country }: { s: SetLite; cards: CardLite[]; country: ReturnType<typeof getCountry> }) {
-  const top = [...cards].sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))[0];
+function SetCard({
+  s,
+  cards,
+  country,
+}: {
+  s: SetLite;
+  cards: CardLite[];
+  country: ReturnType<typeof getCountry>;
+}) {
+  const top = [...cards].sort(
+    (a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0),
+  )[0];
   const priced = cards.filter((c) => c.low[country] != null).length;
   return (
-    <Link href={`/sets/${s.slug}`} className="card-surface group flex flex-col p-4 hover:border-ink-600">
+    <Link
+      href={`/sets/${s.slug}`}
+      className="card-surface group flex flex-col p-4 hover:border-ink-600"
+    >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">{s.code}</span>
-        <span className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300">{int(s.cardCount)} cards</span>
+        <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">
+          {s.code}
+        </span>
+        <span className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
+          {int(s.cardCount)} cards
+        </span>
       </div>
-      <h3 className="mt-2 text-lg leading-snug text-white group-hover:text-brand-400">{s.name}</h3>
-      <p className="text-xs text-slate-400">{s.releasedOn ? `Released ${shortDate(s.releasedOn)}` : "Release date TBA"}</p>
+      <h3 className="mt-2 text-lg leading-snug text-white group-hover:text-brand-400">
+        {s.name}
+      </h3>
+      <p className="text-xs text-slate-400">
+        {s.releasedOn
+          ? `Released ${shortDate(s.releasedOn)}`
+          : "Release date TBA"}
+      </p>
       <div className="mt-auto pt-3 text-xs text-slate-400">
         {top?.marketUsd ? (
           <p className="truncate">
-            Top card: <span className="text-slate-200">{top.name}</span> <span className="num text-accent">{money(top.marketUsd, "US")}</span>
+            Top card: <span className="text-slate-200">{top.name}</span>{" "}
+            <span className="num text-accent">
+              {money(top.marketUsd, "US")}
+            </span>
           </p>
         ) : null}
         <p>
@@ -44,13 +73,24 @@ export default async function SetsPage() {
   const c = COUNTRIES[country];
   const cat = await getCatalog();
   const bySet = new Map<number, CardLite[]>();
-  for (const card of cat.cards) (bySet.get(card.setId) ?? bySet.set(card.setId, []).get(card.setId)!).push(card);
+  for (const card of cat.cards)
+    (bySet.get(card.setId) ?? bySet.set(card.setId, []).get(card.setId)!).push(
+      card,
+    );
   const today = new Date().toISOString().slice(0, 10);
-  const released = cat.sets.filter((s) => !s.releasedOn || s.releasedOn <= today);
+  const released = cat.sets.filter(
+    (s) => !s.releasedOn || s.releasedOn <= today,
+  );
   const upcoming = upcomingSets(cat.sets);
   const groups = Object.entries(SET_KINDS)
     .sort((a, b) => a[1].order - b[1].order)
-    .map(([kind, v]) => ({ kind, label: v.plural, sets: released.filter((s) => s.kind === kind).sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")) }))
+    .map(([kind, v]) => ({
+      kind,
+      label: v.plural,
+      sets: released
+        .filter((s) => s.kind === kind)
+        .sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")),
+    }))
     .filter((g) => g.sets.length);
   const boosters = released.filter((s) => s.kind === "booster").length;
 
@@ -58,38 +98,64 @@ export default async function SetsPage() {
     <div className="container-app py-6">
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <Breadcrumbs items={[{ label: "Sets" }]} />
-        <h1 className="text-3xl text-white sm:text-4xl">One Piece sets — card lists &amp; prices</h1>
+        <h1 className="text-3xl text-white sm:text-4xl">
+          One Piece sets — card lists &amp; prices
+        </h1>
         <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
           <p>
-            Every One Piece Card Game set in release order, each with its own page carrying the full card list, live prices and where that set&apos;s value is
-            concentrated. Set pages answer two questions in particular: what is in a set before you buy sealed, and which of its cards are worth the most
-            right now.
+            Every One Piece Card Game set in release order, each with its own
+            page carrying the full card list, live prices and where that
+            set&apos;s value is concentrated. Set pages answer two questions in
+            particular: what is in a set before you buy sealed, and which of its
+            cards are worth the most right now.
           </p>
           <p>
-            Prices on every set page are the cheapest in-stock listing we track for each card in your market — {c.place} for you, in {c.currency} — read
-            twice a day. Sealed product for each set is priced on the <Link href="/sealed" className="link">sealed products page</Link>.
+            Prices on every set page are the cheapest in-stock listing we track
+            for each card in your market — {c.place} for you, in {c.currency} —
+            read twice a day. Sealed product for each set is priced on the{" "}
+            <Link href="/sealed" className="link">
+              sealed products page
+            </Link>
+            .
           </p>
         </div>
         <div className="mt-6">
           <InShort>
-            The One Piece Card Game has {boosters} released booster sets plus extra boosters, premium boosters, {released.filter((s) => s.kind === "starter").length}{" "}
-            starter and ultra decks and years of promos{upcoming.length ? `, with ${upcoming.length} more announced` : ""}. Every set below links to its
-            complete card list with the lowest live price for each card.
+            The One Piece Card Game has {boosters} released booster sets plus
+            extra boosters, premium boosters,{" "}
+            {released.filter((s) => s.kind === "starter").length} starter and
+            ultra decks and years of promos
+            {upcoming.length ? `, with ${upcoming.length} more announced` : ""}.
+            Every set below links to its complete card list with the lowest live
+            price for each card.
           </InShort>
         </div>
       </div>
 
       {upcoming.length ? (
         <section className="mt-10">
-          <SectionHeader title="Coming soon" sub="Announced sets, with pre-order prices where TCGplayer and stores list them." />
+          <SectionHeader
+            title="Coming soon"
+            sub="Announced sets, with pre-order prices where TCGplayer and stores list them."
+          />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((s) => (
-              <Link key={s.id} href={`/sets/${s.slug}`} className="card-surface flex items-center justify-between gap-3 p-4 hover:border-ink-600">
+              <Link
+                key={s.id}
+                href={`/sets/${s.slug}`}
+                className="card-surface flex items-center justify-between gap-3 p-4 hover:border-ink-600"
+              >
                 <span>
-                  <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">{s.code}</span>
-                  <span className="block text-base font-bold text-white">{s.name}</span>
+                  <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">
+                    {s.code}
+                  </span>
+                  <span className="block text-base font-bold text-white">
+                    {s.name}
+                  </span>
                 </span>
-                <span className="text-right text-xs text-slate-400">{longDate(s.releasedOn)}</span>
+                <span className="text-right text-xs text-slate-400">
+                  {longDate(s.releasedOn)}
+                </span>
               </Link>
             ))}
           </div>
@@ -101,7 +167,12 @@ export default async function SetsPage() {
           <SectionHeader title={g.label} />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {g.sets.map((s) => (
-              <SetCard key={s.id} s={s} cards={bySet.get(s.id) ?? []} country={country} />
+              <SetCard
+                key={s.id}
+                s={s}
+                cards={bySet.get(s.id) ?? []}
+                country={country}
+              />
             ))}
           </div>
         </section>

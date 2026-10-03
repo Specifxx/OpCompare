@@ -32,6 +32,9 @@ Accounts and billing are the one exception, and a narrow one: `src/lib/auth.ts`
 from account pages and `/api/*` routes — never from the root layout, which must
 not read the session (the header asks `/api/me`, and only when the `oc_auth`
 hint cookie exists). Gated rows are limited in the QUERY, never hidden with CSS.
+Admin pages read through uncached `src/lib/admin*.ts`; public forms write
+through `src/lib/inbox.ts`. Share images read only `src/lib/data.ts` loaders
+(see "Share images").
 
 ## Price history lives in GitHub, not Postgres
 
@@ -42,12 +45,66 @@ Prisma, and never push to `data` by hand — it is the workflow's.
 
 ## Plus & Premium (Stripe)
 
-Entitlement is `User.premiumUntil` + `premiumTier`, written only by the webhook
-and the daily reconcile, extend-only, and only for subscriptions whose Price or
-metadata says `site=opcompare` (`src/lib/stripe-entitlement.ts`). `past_due`
+Entitlement is `User.premiumUntil` + `premiumTier`, written only by the webhook,
+the daily reconcile and the admin grant/revoke routes (`src/lib/admin-billing.ts`,
+admin session only, audited), extend-only except an explicit admin revoke, and
+Stripe writes only for subscriptions whose Price or metadata says
+`site=opcompare` (`src/lib/stripe-entitlement.ts`). `past_due`
 never entitles. Prices live in `src/lib/plans.ts` and reach Stripe through
 `scripts/stripe-setup.ts` (lookup keys), never through hand-typed price ids.
 Changing a price, a tier's features or the trial policy is the owner's call.
+
+## Admin access: one helper, every page and route, fail closed
+
+An admin is `SessionUser.isAdmin` (`User.isAdmin` or `isAdminEmail`, from
+`src/lib/admin-emails.ts`: the built-in `mastermisclick@gmail.com`, which
+`ADMIN_EMAILS` REPLACES when set). Nothing else decides it. Every
+`src/app/admin/**` page calls `requireAdminPage()` first (the layout is chrome,
+not the gate) and every `src/app/api/admin/**` route calls `requireAdminApi()`
+first, both from `src/lib/admin.ts`; `tests/admin.test.ts` walks the tree and
+fails on a page or route that doesn't. Fail closed: no session, no admin flag,
+an error or a missing env var means a 404 (pages) or 401/403 (APIs), never
+the page. Mutations are POST + same-origin + JSON, and log with `adminLog`.
+`ADMIN_TOKEN` is optional, for scripts, header-only (`Authorization: Bearer`),
+at least 32 characters, and never in a URL, a query string or client props.
+`/admin` stays out of robots, the sitemap, GA and the public UI (only an
+admin's own account menu links it).
+
+## Share images (link thumbnails)
+
+Every `src/app/**/opengraph-image.tsx` is a thin route: it exports only
+`runtime = "nodejs"`, `revalidate = 21600`, `alt`, `size` (1200×630),
+`contentType` and `default`, and calls a loader-and-draw function in
+`src/lib/og/images.tsx` (compositions in `compose.tsx`, pure selection in
+`select.ts`). `tests/og.test.ts` pins this.
+
+- **What each shows.** `/` and every page without its own image: the price
+  guide (logo, "ONE PIECE PRICE GUIDE", card/store/market counts, five real
+  top cards with art, printing, cheapest US price, TCGplayer market, number and
+  store count or 7-day change). `/price-guide`: the same with the guide footer.
+  `/sets/[slug]`: the set's top five cards (or its release date when unpriced).
+  `/sealed/[slug]`: product art on a white plate with its price.
+  `/card/[slug]`: card art, printing and rarity chips, and per-market prices.
+  `/blog/[slug]`: the title beside three hero cards.
+- **Real data only,** from the cached `src/lib/data.ts` loaders (no Offer or
+  per-card query). Any error, empty database or unknown slug draws the
+  data-free fallback image, never a 500 and never invented numbers.
+- **Page metadata:** a page's `openGraph` replaces the root's whole object, so
+  build it with `pageOg(canonicalPath)` (keeps site name/locale/type, sets
+  `og:url`, re-adds the default image) or, beside its own
+  `opengraph-image.tsx`, `pageOgOwnImage(path)`, which has no `images` key:
+  the key alone blocks the sibling file (`src/lib/og/meta.ts`). The root layout
+  sets no `og:url`. Images send a 6 h CDN header, the fallback one minute.
+- **Safe area:** content inside x 48–1152, y 30–612; nothing essential below
+  ~575 (Reddit and X overlay the domain there); the centre square
+  (x 285–915) always holds real content.
+- **Fonts:** the bundled TTFs in `src/lib/og/fonts/` (Luckiest Guy, Archivo
+  900, Inter 600/700, JetBrains Mono 700; licences beside them), traced in by
+  `next.config.js`. TTF/OTF only, never WOFF2; no emoji or flag glyphs. Follow
+  the satori rules at the top of `compose.tsx`.
+- Render changes locally and look at every PNG before shipping; check the live
+  image in a link-preview tester before any Reddit post (Reddit freezes a
+  post's thumbnail).
 
 ## Matching store listings
 

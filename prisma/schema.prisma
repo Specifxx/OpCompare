@@ -183,3 +183,77 @@ model Meta {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// ── Inbox (admin port from RiftCompare) ─────────────────────────────────────
+// What visitors send: wrong-price reports, store suggestions, feedback and
+// contact messages, read in /admin/inbox. Written only through src/lib/inbox.ts.
+// No IP address is stored anywhere, and no row has a foreign key to User, so
+// deleting an account never cascades through the inbox.
+model PriceReport {
+  id              String   @id @default(cuid())
+  productId       Int // TCGplayer id: Card.id or Sealed.id
+  kind            String // "card" | "sealed"
+  source          String // Offer.source, e.g. "store:foo" | "tcgplayer"
+  market          String
+  storeName       String // from stores.ts sourceLabel(source), never from the request
+  shownPriceCents Int? // Offer.priceCents read server-side; null if the offer is gone
+  currency        String?
+  listingTitle    String? // Offer.title snapshot, for tests/match.test.ts
+  listingUrl      String?
+  issue           String // REPORT_ISSUES (lib/inbox-rules.ts)
+  claimedCents    Int?
+  note            String?
+  userId          String?
+  page            String?
+  status          String   @default("NEW") // NEW | CONFIRMED | REJECTED | FIXED
+  createdAt       DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([source, createdAt])
+  @@index([productId])
+}
+
+model StoreSuggestion {
+  id        String   @id @default(cuid())
+  storeName String
+  storeUrl  String // https://<bare host>
+  country   String // a MARKETS code or "OTHER"
+  note      String?
+  userId    String?
+  status    String   @default("pending") // pending | added | rejected
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([storeUrl])
+}
+
+model Feedback {
+  id            String    @id @default(cuid())
+  userId        String?
+  rating        Int? // 1–5
+  message       String // may be "" when only a rating was given
+  displayName   String? // stored only with consentPublic
+  consentPublic Boolean   @default(false)
+  page          String?
+  source        String    @default("page") // page | widget
+  status        String    @default("NEW") // NEW | APPROVED | HIDDEN | SPAM
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([status, publishedAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String // the visitor typed it so the owner can reply by hand
+  subject   String?
+  category  String   @default("OTHER") // PAYMENT | ACCOUNT | PRICE_OR_STORE | OTHER
+  message   String
+  userId    String?
+  status    String   @default("NEW") // NEW | DONE
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}

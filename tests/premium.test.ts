@@ -67,6 +67,8 @@ test("tiers: admins are Premium, an expired date is nothing, Plus is below Premi
   const now = T * 1000;
   const future = new Date(now + 86400000);
   assert.equal(tierOf({ isAdmin: true, premiumUntil: null, premiumTier: "plus" }, now), "premium");
+  // An admin whose Plus has lapsed still reads as Premium (admin port).
+  assert.equal(tierOf({ isAdmin: true, premiumUntil: new Date(now - 1), premiumTier: "plus" }, now), "premium");
   assert.equal(tierOf({ isAdmin: false, premiumUntil: new Date(now - 1), premiumTier: "premium" }, now), null);
   assert.equal(isPremium({ isAdmin: false, premiumUntil: future, premiumTier: "plus" }, "plus", now), true);
   assert.equal(isPremium({ isAdmin: false, premiumUntil: future, premiumTier: "plus" }, "premium", now), false);

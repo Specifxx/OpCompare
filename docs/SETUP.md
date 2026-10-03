@@ -80,7 +80,9 @@ Each workflow is a no-op until its values exist.
 | `NEXT_PUBLIC_SITE_URL` | `https://opcompare.app` | New |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | The OP Compare Google OAuth client (see 5) | **New** (recommended) |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Optional: the OP Compare Discord app | New |
-| `ADMIN_EMAILS` | The owner's email(s), comma-separated; treated as Premium | New |
+| `ADMIN_EMAILS` | Optional. Admin addresses, comma-separated. The code's built-in default is `mastermisclick@gmail.com`; **setting this REPLACES that default**, so either leave it unset or include `mastermisclick@gmail.com` in the list. Admins open `/admin` and count as Premium | New (not RiftCompare's list) |
+| `ADMIN_TOKEN` | Optional, **Vercel only**, usually unset. A **new** random secret of at least 32 characters (`openssl rand -hex 32`) for scripts calling `/api/admin/*` with `Authorization: Bearer …`; shorter or unset closes the token path. Never in a URL | **New**, never RiftCompare's |
+| `ADMIN_EXTRA_ORIGINS` | Optional, rarely needed. Extra origins (comma-separated, e.g. a preview URL) allowed to submit admin and public-form POSTs (feedback, contact, price reports, store suggestions) in production; `https://opcompare.app` is always allowed | New |
 | `STRIPE_SECRET_KEY` | OP Compare's Stripe secret key | **New** account |
 | `STRIPE_WEBHOOK_SECRET` | The webhook endpoint's signing secret (`whsec_…`) | New |
 | `NEXT_PUBLIC_GA_ID` | The new GA4 measurement id `G-…` (Production) | **New property**, same GA account |
@@ -183,7 +185,18 @@ theirs.
 3. Open https://opcompare.app. Check:
    - a card page shows store prices;
    - `/login` shows the sign-in buttons;
-   - `/premium` shows live buttons.
+   - `/premium` shows live buttons;
+   - sign in as **mastermisclick@gmail.com** → the account menu shows *Admin*
+     and `/admin` loads (accounts, subscriptions, store health, inbox). Signed
+     out or as any other account, `/admin` is an ordinary 404;
+   - share images: paste `https://opcompare.app` and
+     `https://opcompare.app/price-guide` into a link-preview tester such as
+     https://www.opengraph.xyz/ and into a Discord message, and start a Reddit
+     post with the link to see its preview. Each should show the price-guide
+     image (real cards and prices, not the empty "ghost table" fallback). Then
+     try one card, one set and one sealed page. If the fallback shows, re-run
+     *Import prices* (it purges the cache) and check again **before** posting to
+     Reddit: Reddit keeps a post's thumbnail forever.
 4. GitHub → run *Search Console* and *IndexNow submit*.
 
 ## Limits to watch

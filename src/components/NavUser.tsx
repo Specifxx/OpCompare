@@ -9,6 +9,8 @@ import { Icon } from "./Icon";
 
 // The header's account corner (RiftCompare's NavUser + UserMenu): "Log in" when
 // signed out, an avatar menu when signed in. Pricing is linked for non-members.
+// Below sm the crown goes: the header's right cluster has
+// to fit a 390px phone (the tier still shows in the menu).
 export function NavUser() {
   const { me, loaded } = useMe();
   const pathname = usePathname() ?? "/";
@@ -44,7 +46,7 @@ export function NavUser() {
         ) : (
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">{me.user.name.slice(0, 1).toUpperCase()}</span>
         )}
-        {me.tier ? <Icon name="crown" className="mr-1 h-3.5 w-3.5 text-straw" /> : null}
+        {me.tier ? <Icon name="crown" className="mr-1 hidden h-3.5 w-3.5 text-straw sm:block" /> : null}
       </button>
       {open ? (
         <div role="menu" className="absolute right-0 top-full z-menu mt-2 w-56 rounded-lg border border-ink-700 bg-ink-900 p-1.5 shadow-xl">
@@ -55,6 +57,11 @@ export function NavUser() {
           <Link role="menuitem" href="/account" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
             Your account
           </Link>
+          {me.admin ? (
+            <Link role="menuitem" href="/admin" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
+              Admin
+            </Link>
+          ) : null}
           <Link role="menuitem" href="/watchlist" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
             Watchlist
           </Link>

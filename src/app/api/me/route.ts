@@ -15,6 +15,7 @@ export async function GET() {
       tier,
       adFree: tier != null,
       until: user?.premiumUntil?.toISOString() ?? null,
+      admin: user?.isAdmin === true,
     },
     { headers: { "Cache-Control": "no-store" } },
   );

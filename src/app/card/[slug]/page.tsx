@@ -6,7 +6,16 @@ import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { ShareButton } from "@/components/ShareButton";
 import { WatchButton } from "@/components/WatchButton";
-import { Breadcrumbs, ColorBadge, Faq, JsonLd, PrintingBadge, RarityBadge, SectionHeader, StatTile } from "@/components/ui";
+import {
+  Breadcrumbs,
+  ColorBadge,
+  Faq,
+  JsonLd,
+  PrintingBadge,
+  RarityBadge,
+  SectionHeader,
+  StatTile,
+} from "@/components/ui";
 import { cardEbayQuery } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -15,11 +24,16 @@ import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
+import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: { slug: string } };
 
-function displayTitle(c: { name: string; variant: string | null; number: string | null }): string {
+function displayTitle(c: {
+  name: string;
+  variant: string | null;
+  number: string | null;
+}): string {
   return `${c.name}${c.variant ? ` (${c.variant})` : ""}${c.number ? ` ${c.number}` : ""}`;
 }
 
@@ -27,43 +41,66 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = await getCardDetail(params.slug);
   if (!c) return { title: "Card not found" };
   const t = displayTitle(c);
-  const title = `${t} Price`.length <= 52 ? `${t} Price — ${c.set.code}` : `${t} Price`;
+  const title =
+    `${t} Price`.length <= 52 ? `${t} Price — ${c.set.code}` : `${t} Price`;
   return {
     title: { absolute: `${title.slice(0, 60)}` },
     description: `${t} from ${c.set.name} (${c.set.code}): live One Piece Card Game prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${
       c.marketUsd ? `. TCGplayer market price ${usd(c.marketUsd)}` : ""
     }.`,
     alternates: { canonical: `/card/${c.slug}` },
-    openGraph: { title: `${t} — ${SITE_NAME}`, images: c.hasImage ? [{ url: cardImage.large(c.id), width: 300, height: 419 }] : undefined },
+    // No `images`: the sibling opengraph-image.tsx draws the 1200×630 share card.
+    openGraph: pageOgOwnImage(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}` }),
   };
 }
 
 export default async function CardPage({ params }: Props) {
   const country = getCountry();
   const co = COUNTRIES[country];
-  const [card, cat] = await Promise.all([getCardDetail(params.slug), getCatalog()]);
+  const [card, cat] = await Promise.all([
+    getCardDetail(params.slug),
+    getCatalog(),
+  ]);
   if (!card) notFound();
   const history = await getProductHistory(card.id);
   const lite = cat.bySlug.get(card.slug);
-  const h = lite ? headline(lite, country) : { kind: "none" as const, cents: null, stores: 0 };
-  const siblings = card.number ? cat.cards.filter((x) => x.number === card.number && x.id !== card.id).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0)) : [];
+  const h = lite
+    ? headline(lite, country)
+    : { kind: "none" as const, cents: null, stores: 0 };
+  const siblings = card.number
+    ? cat.cards
+        .filter((x) => x.number === card.number && x.id !== card.id)
+        .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
+    : [];
   const fromSet = cat.cards
-    .filter((x) => x.setId === card.set.id && x.id !== card.id && x.number !== card.number)
+    .filter(
+      (x) =>
+        x.setId === card.set.id && x.id !== card.id && x.number !== card.number,
+    )
     .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
     .slice(0, 6);
   const title = displayTitle(card);
   const leader = card.cardType === "Leader";
   const stats: { label: string; value: string | number }[] = [];
-  if (leader && card.life != null) stats.push({ label: "Life", value: card.life });
+  if (leader && card.life != null)
+    stats.push({ label: "Life", value: card.life });
   else if (card.cost != null) stats.push({ label: "Cost", value: card.cost });
-  if (card.power != null) stats.push({ label: "Power", value: card.power.toLocaleString("en-US") });
-  if (card.counter != null) stats.push({ label: "Counter", value: `+${card.counter.toLocaleString("en-US")}` });
+  if (card.power != null)
+    stats.push({ label: "Power", value: card.power.toLocaleString("en-US") });
+  if (card.counter != null)
+    stats.push({
+      label: "Counter",
+      value: `+${card.counter.toLocaleString("en-US")}`,
+    });
   const inMarket = card.offers.filter((o) => o.market === country && o.inStock);
   const cardText = card.effect ? (
     <div className="card-surface p-4">
       <p className="eyebrow mb-2">Card text</p>
       {card.effect.split("\n").map((l, i) => (
-        <p key={i} className="mb-2 text-sm leading-relaxed text-slate-200 last:mb-0">
+        <p
+          key={i}
+          className="mb-2 text-sm leading-relaxed text-slate-200 last:mb-0"
+        >
           {l}
         </p>
       ))}
@@ -87,8 +124,12 @@ export default async function CardPage({ params }: Props) {
                 offers: {
                   "@type": "AggregateOffer",
                   priceCurrency: co.currency,
-                  lowPrice: (Math.min(...inMarket.map((o) => o.priceCents)) / 100).toFixed(2),
-                  highPrice: (Math.max(...inMarket.map((o) => o.priceCents)) / 100).toFixed(2),
+                  lowPrice: (
+                    Math.min(...inMarket.map((o) => o.priceCents)) / 100
+                  ).toFixed(2),
+                  highPrice: (
+                    Math.max(...inMarket.map((o) => o.priceCents)) / 100
+                  ).toFixed(2),
                   offerCount: inMarket.length,
                   availability: "https://schema.org/InStock",
                 },
@@ -96,13 +137,24 @@ export default async function CardPage({ params }: Props) {
             : {}),
         }}
       />
-      <Breadcrumbs items={[{ href: "/browse", label: "Cards" }, { href: `/sets/${card.set.slug}`, label: card.set.name }, { label: card.name }]} />
+      <Breadcrumbs
+        items={[
+          { href: "/browse", label: "Cards" },
+          { href: `/sets/${card.set.slug}`, label: card.set.name },
+          { label: card.name },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* ── Art + card text ── */}
         <div className="min-w-0 space-y-4">
           <div className="card-surface p-4">
-            <CardArt id={card.id} hasImage={card.hasImage} alt={`${title} — One Piece Card Game`} size="large" />
+            <CardArt
+              id={card.id}
+              hasImage={card.hasImage}
+              alt={`${title} — One Piece Card Game`}
+              size="large"
+            />
           </div>
           {cardText ? <div className="hidden lg:block">{cardText}</div> : null}
         </div>
@@ -115,68 +167,116 @@ export default async function CardPage({ params }: Props) {
                 <ColorBadge key={c} color={c} />
               ))}
               <RarityBadge rarity={card.rarity} />
-              {card.cardType ? <span className="chip border border-ink-700 bg-ink-850 text-slate-200">{card.cardType}</span> : null}
+              {card.cardType ? (
+                <span className="chip border border-ink-700 bg-ink-850 text-slate-200">
+                  {card.cardType}
+                </span>
+              ) : null}
               <PrintingBadge printing={card.printing} variant={card.variant} />
             </div>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <h1 className="text-3xl leading-tight text-white sm:text-4xl">
                   {card.name}
-                  {card.variant ? <span className="block text-lg font-bold text-slate-300 sm:text-xl">{card.variant}</span> : null}
+                  {card.variant ? (
+                    <span className="block text-lg font-bold text-slate-300 sm:text-xl">
+                      {card.variant}
+                    </span>
+                  ) : null}
                 </h1>
                 <p className="num mt-1 text-sm text-slate-400">
-                  <Link href={`/sets/${card.set.slug}`} className="hover:text-white">
+                  <Link
+                    href={`/sets/${card.set.slug}`}
+                    className="hover:text-white"
+                  >
                     {card.set.name} ({card.set.code})
                   </Link>
                   {card.number ? ` · ${card.number}` : ""}
                 </p>
               </div>
               <div className="flex gap-2">
-                <WatchButton slug={card.slug} kind="card" name={title} variant="button" />
+                <WatchButton
+                  slug={card.slug}
+                  kind="card"
+                  name={title}
+                  variant="button"
+                />
                 <ShareButton title={`${title} — ${SITE_NAME}`} />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Cheapest · {co.place}
+                </p>
                 <p className="num mt-1 text-xl font-bold text-accent">
-                  {h.kind === "listing" ? money(h.cents, country) : h.kind === "reference" ? `≈ ${money(h.cents, country)}` : "—"}
+                  {h.kind === "listing"
+                    ? money(h.cents, country)
+                    : h.kind === "reference"
+                      ? `≈ ${money(h.cents, country)}`
+                      : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">In stock at · {co.code}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  In stock at · {co.code}
+                </p>
                 <p className="num mt-1 text-xl font-bold text-white">
                   {inMarket.length} {inMarket.length === 1 ? "store" : "stores"}
                 </p>
               </div>
               {stats.slice(0, 2).map((s) => (
                 <div key={s.label}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{s.label}</p>
-                  <p className="num mt-1 text-xl font-bold text-white">{s.value}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    {s.label}
+                  </p>
+                  <p className="num mt-1 text-xl font-bold text-white">
+                    {s.value}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
           <p className="text-right text-xs text-slate-400">
-            Cheapest first by item price; postage is added at each store&apos;s checkout.{" "}
+            Cheapest first by item price; postage is added at each store&apos;s
+            checkout.{" "}
             <Link href="/methodology" className="link">
               How we compare prices →
             </Link>
           </p>
 
-          <PriceBoard offers={card.offers} country={country} marketUsd={card.marketUsd} ebayQuery={cardEbayQuery(card)} page="card" />
+          <PriceBoard
+            productId={card.id}
+            offers={card.offers}
+            country={country}
+            marketUsd={card.marketUsd}
+            ebayQuery={cardEbayQuery(card)}
+            page="card"
+          />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-lg text-white">Price history</h2>
-              <p className="text-xs text-slate-400">US dollars · TCGplayer market and the cheapest US listing we track</p>
+              <p className="text-xs text-slate-400">
+                US dollars · TCGplayer market and the cheapest US listing we
+                track
+              </p>
             </div>
             <LineChart
               series={[
-                { label: "TCGplayer market", color: "#e9b73a", points: history.map((p) => ({ x: p.day, y: p.marketUsd })) },
-                { label: "Cheapest US listing", color: "#ff6b6b", points: history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
+                {
+                  label: "TCGplayer market",
+                  color: "#e9b73a",
+                  points: history.map((p) => ({ x: p.day, y: p.marketUsd })),
+                },
+                {
+                  label: "Cheapest US listing",
+                  color: "#ff6b6b",
+                  points: history.map((p) => ({ x: p.day, y: p.lowUsd })),
+                  dashed: true,
+                },
               ]}
               format={(v) => usd(Math.round(v))}
               empty={`Price history starts ${history[0] ? longDate(history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
@@ -190,17 +290,28 @@ export default async function CardPage({ params }: Props) {
                 ["Card number", card.number ?? "—"],
                 ["Set", `${card.set.name} (${card.set.code})`],
                 ["Set type", SET_KINDS[card.set.kind]?.label ?? card.set.kind],
-                ["Released", card.set.releasedOn ? longDate(card.set.releasedOn) : "—"],
-                ["Rarity", `${rarityLabel(card.rarity)}${card.rarity && card.rarity !== rarityLabel(card.rarity) ? ` (${card.rarity})` : ""}`],
+                [
+                  "Released",
+                  card.set.releasedOn ? longDate(card.set.releasedOn) : "—",
+                ],
+                [
+                  "Rarity",
+                  `${rarityLabel(card.rarity)}${card.rarity && card.rarity !== rarityLabel(card.rarity) ? ` (${card.rarity})` : ""}`,
+                ],
                 ["Printing", card.variant ?? "Standard"],
                 ["Card type", card.cardType ?? "—"],
                 ["Colour", card.colors.join(" / ") || "—"],
-                ...stats.map((s) => [s.label, String(s.value)] as [string, string]),
+                ...stats.map(
+                  (s) => [s.label, String(s.value)] as [string, string],
+                ),
                 ["Attribute", card.attribute ?? "—"],
                 ["Types", card.subtypes.join(", ") || "—"],
                 ["Finish", card.finish ?? "—"],
               ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 border-b border-ink-800 py-1.5">
+                <div
+                  key={k}
+                  className="flex justify-between gap-4 border-b border-ink-800 py-1.5"
+                >
                   <dt className="text-slate-400">{k}</dt>
                   <dd className="text-right font-medium text-slate-100">{v}</dd>
                 </div>
@@ -208,7 +319,12 @@ export default async function CardPage({ params }: Props) {
             </dl>
             <p className="mt-3 text-xs text-slate-500">
               TCGplayer listing:{" "}
-              <a href={card.tcgplayerUrl} className="underline hover:text-slate-300" rel="nofollow noopener noreferrer" target="_blank">
+              <a
+                href={card.tcgplayerUrl}
+                className="underline hover:text-slate-300"
+                rel="nofollow noopener noreferrer"
+                target="_blank"
+              >
                 {card.tcgName}
               </a>
             </p>
@@ -218,10 +334,18 @@ export default async function CardPage({ params }: Props) {
 
       {siblings.length ? (
         <section className="mt-10">
-          <SectionHeader title={`Other printings of ${card.number}`} sub={`The same card in other art, finishes and promo releases — priced in ${co.place}.`} />
+          <SectionHeader
+            title={`Other printings of ${card.number}`}
+            sub={`The same card in other art, finishes and promo releases — priced in ${co.place}.`}
+          />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {siblings.slice(0, 12).map((s) => (
-              <CardTile key={s.id} card={s} setCode={cat.setById.get(s.setId)?.code ?? ""} country={country} />
+              <CardTile
+                key={s.id}
+                card={s}
+                setCode={cat.setById.get(s.setId)?.code ?? ""}
+                country={country}
+              />
             ))}
           </div>
         </section>
@@ -239,7 +363,12 @@ export default async function CardPage({ params }: Props) {
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {fromSet.map((s) => (
-              <CardTile key={s.id} card={s} setCode={card.set.code} country={country} />
+              <CardTile
+                key={s.id}
+                card={s}
+                setCode={card.set.code}
+                country={country}
+              />
             ))}
           </div>
         </section>
@@ -254,7 +383,9 @@ export default async function CardPage({ params }: Props) {
               a:
                 card.marketUsd != null
                   ? `TCGplayer's market price — what it has recently sold for there — is ${usd(card.marketUsd)}. The cheapest listing we track in ${co.place} is ${
-                      h.kind === "listing" ? money(h.cents, country) : "not available right now"
+                      h.kind === "listing"
+                        ? money(h.cents, country)
+                        : "not available right now"
                     }. Prices are read twice a day.`
                   : `There is no recent TCGplayer sale to value it on yet. Store listings appear above as soon as a store we track lists it.`,
             },

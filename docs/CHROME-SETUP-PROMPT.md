@@ -95,8 +95,15 @@ time. You need two:
    - `AUTH_SECRET` = a NEW random secret (never RiftCompare's)
    - `NEXT_PUBLIC_SITE_URL` = `https://opcompare.app`
    - `INDEXNOW_KEY` = `43ac93dd97a44d4894bedf52d621c57c`
-   - `ADMIN_EMAILS` = my email address. Ask me which one; it is the account
-     treated as Premium for free.
+   - `ADMIN_EMAILS`: usually **leave it unset**. The code's built-in admin
+     is `mastermisclick@gmail.com` (it opens `/admin` and counts as Premium).
+     Setting `ADMIN_EMAILS` REPLACES that default, so if I want another admin
+     address too, set it to a comma-separated list that **includes
+     `mastermisclick@gmail.com`**. Never copy RiftCompare's value.
+   - `ADMIN_TOKEN`: leave unset unless I ask for script access to the admin
+     API. Then generate a NEW random secret of at least 32 characters (for
+     example `openssl rand -hex 32`), put it in Vercel only (never GitHub,
+     never a URL), and never reuse RiftCompare's.
 
    Then copy these from RiftCompare's Vercel project, but only the ones it
    has. Read the values there and change nothing:
@@ -134,7 +141,7 @@ time. You need two:
 2. **Consent screen.** APIs & Services → **OAuth consent screen** (Google Auth
    Platform):
    - App name "OP Compare"; user support email and developer contact = my
-     email (same as ADMIN_EMAILS)
+     email
    - Audience **External**
    - Authorized domain `opcompare.app`
    - Home page `https://opcompare.app`, privacy policy
@@ -227,9 +234,21 @@ me.
    - `/indexnow.txt` shows the key;
    - `https://www.opcompare.app` redirects to `https://opcompare.app`;
    - `/login` shows "Continue with Google" (and Discord, if set up);
-   - sign in with my Google account: it lands on `/account`, which says
-     "Premium (owner account)" when ADMIN_EMAILS is my email;
-   - `/premium` shows "Get Plus" and "Get Premium" buttons, not "Opening soon".
+   - sign in with my Google account: it lands on `/account`;
+   - sign in as **mastermisclick@gmail.com**: `/account` says "Premium (owner
+     account)", the account menu shows **Admin**, and **https://opcompare.app/admin**
+     loads (Accounts, Subscriptions, Store health, Inbox). Signed out, or as
+     any other account, `/admin` must be an ordinary 404 page;
+   - `/premium` shows "Get Plus" and "Get Premium" buttons, not "Opening soon";
+   - **share images (link thumbnails):** paste `https://opcompare.app` and
+     `https://opcompare.app/price-guide` into https://www.opengraph.xyz/ and
+     into a Discord message (a private channel or DM is fine), and open
+     Reddit's *Create post → Link* with each URL to see its preview (do not
+     submit the post). Each must show the price-guide image: the OP Compare
+     logo, "ONE PIECE PRICE GUIDE" and a table of five real cards with
+     prices. If it shows an empty grey "ghost" table instead, tell me: the
+     image rendered before the data was ready. Also check one card page, one
+     set page and one sealed page in the same tester.
 3. Optional end-to-end payment test (ask me first). In Stripe, create a coupon
    at 100% off for one month and a promotion code `OWNERTEST`.
    1. Sign in on the site with a second Google account.
@@ -301,7 +320,8 @@ Give me:
 - the GA4 measurement ID;
 - the GSC property, its verification status, and whether Bing is set up;
 - the results of the Import / Stripe setup / Production deploy / Search
-  Console / IndexNow runs, and of the sign-in test;
+  Console / IndexNow runs, of the sign-in test, of the `/admin` check, and
+  of the share-image checks (which testers showed the price-guide image);
 - anything you could not finish, and why.
 
 ---

@@ -9,10 +9,16 @@ import { WatchButton } from "@/components/WatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES } from "@/lib/country";
-import { getCatalog, getProductHistory, getSealedCatalog, getSealedDetail } from "@/lib/data";
+import {
+  getCatalog,
+  getProductHistory,
+  getSealedCatalog,
+  getSealedDetail,
+} from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
+import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: { slug: string } };
@@ -25,27 +31,53 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: t.length <= 60 ? t : `${s.name.slice(0, 50)} Price` },
     description: `${s.name}: live One Piece Card Game sealed prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${s.marketUsd ? `. TCGplayer market price ${usd(s.marketUsd)}` : ""}.`,
     alternates: { canonical: `/sealed/${s.slug}` },
-    openGraph: { title: `${s.name} — ${SITE_NAME}`, images: s.imageUrl ? [{ url: s.imageUrl }] : undefined },
+    // No `images`: the sibling opengraph-image.tsx draws the 1200×630 share card.
+    openGraph: pageOgOwnImage(`/sealed/${s.slug}`, {
+      title: `${s.name} | ${SITE_NAME}`,
+    }),
   };
 }
 
 export default async function SealedDetailPage({ params }: Props) {
   const country = getCountry();
   const co = COUNTRIES[country];
-  const [s, cat, all] = await Promise.all([getSealedDetail(params.slug), getCatalog(), getSealedCatalog()]);
+  const [s, cat, all] = await Promise.all([
+    getSealedDetail(params.slug),
+    getCatalog(),
+    getSealedCatalog(),
+  ]);
   if (!s) notFound();
   const history = await getProductHistory(s.id);
   const lite = all.find((x) => x.id === s.id);
-  const h = lite ? headline(lite, country) : { kind: "none" as const, cents: null, stores: 0 };
+  const h = lite
+    ? headline(lite, country)
+    : { kind: "none" as const, cents: null, stores: 0 };
   const set = s.setId ? cat.setById.get(s.setId) : undefined;
   const inMarket = s.offers.filter((o) => o.market === country && o.inStock);
-  const perPack = s.packCount && s.packCount > 1 && h.cents != null ? Math.round(h.cents / s.packCount) : null;
-  const sameSet = all.filter((x) => x.setId === s.setId && x.id !== s.id && x.kind !== "Promo Pack").slice(0, 6);
+  const perPack =
+    s.packCount && s.packCount > 1 && h.cents != null
+      ? Math.round(h.cents / s.packCount)
+      : null;
+  const sameSet = all
+    .filter(
+      (x) => x.setId === s.setId && x.id !== s.id && x.kind !== "Promo Pack",
+    )
+    .slice(0, 6);
   const sameKind = all
     .filter((x) => x.kind === s.kind && x.id !== s.id && x.setId !== s.setId)
-    .sort((a, b) => (b.releasedOn ?? cat.setById.get(b.setId ?? 0)?.releasedOn ?? "").localeCompare(a.releasedOn ?? cat.setById.get(a.setId ?? 0)?.releasedOn ?? ""))
+    .sort((a, b) =>
+      (
+        b.releasedOn ??
+        cat.setById.get(b.setId ?? 0)?.releasedOn ??
+        ""
+      ).localeCompare(
+        a.releasedOn ?? cat.setById.get(a.setId ?? 0)?.releasedOn ?? "",
+      ),
+    )
     .slice(0, 6);
-  const ebayQ = onePieceEbayQuery(`${s.name.replace(/\s+-\s+/, " ")} English`).replace(/\bbooster box\b/i, "booster (box,display)");
+  const ebayQ = onePieceEbayQuery(
+    `${s.name.replace(/\s+-\s+/, " ")} English`,
+  ).replace(/\bbooster box\b/i, "booster (box,display)");
 
   return (
     <div className="container-app py-6">
@@ -62,64 +94,136 @@ export default async function SealedDetailPage({ params }: Props) {
                 offers: {
                   "@type": "AggregateOffer",
                   priceCurrency: co.currency,
-                  lowPrice: (Math.min(...inMarket.map((o) => o.priceCents)) / 100).toFixed(2),
-                  highPrice: (Math.max(...inMarket.map((o) => o.priceCents)) / 100).toFixed(2),
+                  lowPrice: (
+                    Math.min(...inMarket.map((o) => o.priceCents)) / 100
+                  ).toFixed(2),
+                  highPrice: (
+                    Math.max(...inMarket.map((o) => o.priceCents)) / 100
+                  ).toFixed(2),
                   offerCount: inMarket.length,
                 },
               }
             : {}),
         }}
       />
-      <Breadcrumbs items={[{ href: "/sealed", label: "Sealed" }, ...(set ? [{ href: `/sets/${set.slug}`, label: set.name }] : []), { label: s.name }]} />
+      <Breadcrumbs
+        items={[
+          { href: "/sealed", label: "Sealed" },
+          ...(set ? [{ href: `/sets/${set.slug}`, label: set.name }] : []),
+          { label: s.name },
+        ]}
+      />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="card-surface h-fit bg-white/95 p-4">
           {s.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={s.imageUrl} alt={`${s.name} — One Piece Card Game sealed product`} className="mx-auto aspect-square w-full object-contain" />
+            <img
+              src={s.imageUrl}
+              alt={`${s.name} — One Piece Card Game sealed product`}
+              className="mx-auto aspect-square w-full object-contain"
+            />
           ) : (
-            <div className="grid aspect-square place-items-center text-sm text-slate-500">No image yet</div>
+            <div className="grid aspect-square place-items-center text-sm text-slate-500">
+              No image yet
+            </div>
           )}
         </div>
         <div className="min-w-0 space-y-6">
           <div className="card-surface p-5">
             <div className="flex flex-wrap gap-2">
-              <span className="chip border border-ink-700 bg-ink-850 font-semibold text-slate-200">{s.kind}</span>
-              {set ? <span className="chip border border-ink-700 bg-ink-850 text-slate-300">{set.code}</span> : null}
-              {s.presale ? <span className="chip bg-straw-500/20 font-semibold text-straw">Pre-order</span> : null}
+              <span className="chip border border-ink-700 bg-ink-850 font-semibold text-slate-200">
+                {s.kind}
+              </span>
+              {set ? (
+                <span className="chip border border-ink-700 bg-ink-850 text-slate-300">
+                  {set.code}
+                </span>
+              ) : null}
+              {s.presale ? (
+                <span className="chip bg-straw-500/20 font-semibold text-straw">
+                  Pre-order
+                </span>
+              ) : null}
             </div>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="text-3xl leading-tight text-white sm:text-4xl">{s.name}</h1>
+                <h1 className="text-3xl leading-tight text-white sm:text-4xl">
+                  {s.name}
+                </h1>
                 <p className="mt-1 text-sm text-slate-400">
-                  {set ? <Link href={`/sets/${set.slug}`} className="hover:text-white">{set.name}</Link> : "One Piece Card Game"}
-                  {s.releasedOn || set?.releasedOn ? ` · released ${longDate(s.releasedOn ?? set?.releasedOn)}` : ""}
+                  {set ? (
+                    <Link
+                      href={`/sets/${set.slug}`}
+                      className="hover:text-white"
+                    >
+                      {set.name}
+                    </Link>
+                  ) : (
+                    "One Piece Card Game"
+                  )}
+                  {s.releasedOn || set?.releasedOn
+                    ? ` · released ${longDate(s.releasedOn ?? set?.releasedOn)}`
+                    : ""}
                 </p>
               </div>
               <div className="flex gap-2">
-                <WatchButton slug={s.slug} kind="sealed" name={s.name} variant="button" />
+                <WatchButton
+                  slug={s.slug}
+                  kind="sealed"
+                  name={s.name}
+                  variant="button"
+                />
                 <ShareButton title={`${s.name} — ${SITE_NAME}`} />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
-                <p className="num mt-1 text-xl font-bold text-accent">{h.kind === "listing" ? money(h.cents, country) : h.kind === "reference" ? `≈ ${money(h.cents, country)}` : "—"}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Cheapest · {co.place}
+                </p>
+                <p className="num mt-1 text-xl font-bold text-accent">
+                  {h.kind === "listing"
+                    ? money(h.cents, country)
+                    : h.kind === "reference"
+                      ? `≈ ${money(h.cents, country)}`
+                      : "—"}
+                </p>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">In stock at · {co.code}</p>
-                <p className="num mt-1 text-xl font-bold text-white">{inMarket.length} {inMarket.length === 1 ? "store" : "stores"}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  In stock at · {co.code}
+                </p>
+                <p className="num mt-1 text-xl font-bold text-white">
+                  {inMarket.length} {inMarket.length === 1 ? "store" : "stores"}
+                </p>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Per pack</p>
-                <p className="num mt-1 text-xl font-bold text-white">{perPack ? money(perPack, country) : "—"}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Per pack
+                </p>
+                <p className="num mt-1 text-xl font-bold text-white">
+                  {perPack ? money(perPack, country) : "—"}
+                </p>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">TCGplayer market</p>
-                <p className="num mt-1 text-xl font-bold text-white">{s.marketUsd ? usd(s.marketUsd) : "—"}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  TCGplayer market
+                </p>
+                <p className="num mt-1 text-xl font-bold text-white">
+                  {s.marketUsd ? usd(s.marketUsd) : "—"}
+                </p>
               </div>
             </div>
           </div>
-          <PriceBoard offers={s.offers} country={country} marketUsd={s.marketUsd} ebayQuery={ebayQ} page="sealed" noun="product" />
+          <PriceBoard
+            productId={s.id}
+            offers={s.offers}
+            country={country}
+            marketUsd={s.marketUsd}
+            ebayQuery={ebayQ}
+            page="sealed"
+            noun="product"
+          />
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-lg text-white">Price history</h2>
@@ -127,8 +231,17 @@ export default async function SealedDetailPage({ params }: Props) {
             </div>
             <LineChart
               series={[
-                { label: "TCGplayer market", color: "#e9b73a", points: history.map((p) => ({ x: p.day, y: p.marketUsd })) },
-                { label: "Cheapest US listing", color: "#ff6b6b", points: history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
+                {
+                  label: "TCGplayer market",
+                  color: "#e9b73a",
+                  points: history.map((p) => ({ x: p.day, y: p.marketUsd })),
+                },
+                {
+                  label: "Cheapest US listing",
+                  color: "#ff6b6b",
+                  points: history.map((p) => ({ x: p.day, y: p.lowUsd })),
+                  dashed: true,
+                },
               ]}
               format={(v) => usd(Math.round(v))}
               empty="The chart draws once there are two days of prices."
@@ -141,17 +254,30 @@ export default async function SealedDetailPage({ params }: Props) {
           <SectionHeader title={`More ${set?.code ?? ""} sealed`} />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {sameSet.map((x) => (
-              <SealedTile key={x.id} s={x} country={country} setCode={set?.code} />
+              <SealedTile
+                key={x.id}
+                s={x}
+                country={country}
+                setCode={set?.code}
+              />
             ))}
           </div>
         </section>
       ) : null}
       {sameKind.length ? (
         <section className="mt-10">
-          <SectionHeader title={`Other ${s.kind.toLowerCase()}s`} sub="The same product type from other sets, newest first." />
+          <SectionHeader
+            title={`Other ${s.kind.toLowerCase()}s`}
+            sub="The same product type from other sets, newest first."
+          />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {sameKind.map((x) => (
-              <SealedTile key={x.id} s={x} country={country} setCode={x.setId ? cat.setById.get(x.setId)?.code : null} />
+              <SealedTile
+                key={x.id}
+                s={x}
+                country={country}
+                setCode={x.setId ? cat.setById.get(x.setId)?.code : null}
+              />
             ))}
           </div>
         </section>
@@ -163,11 +289,18 @@ export default async function SealedDetailPage({ params }: Props) {
             {
               q: `How much is ${s.name}?`,
               a: `${h.kind === "listing" ? `The cheapest in-stock offer we track in ${co.place} is ${money(h.cents, country)}` : `No ${co.adjective} store we track has it in stock right now`}${
-                s.marketUsd ? `; TCGplayer's market price is ${usd(s.marketUsd)}` : ""
+                s.marketUsd
+                  ? `; TCGplayer's market price is ${usd(s.marketUsd)}`
+                  : ""
               }. Postage is added at each store's checkout.`,
             },
             ...(s.packCount && s.packCount > 1
-              ? [{ q: "How many packs are inside?", a: `${s.packCount} booster packs.${perPack ? ` At the cheapest ${co.adjective} price that is ${money(perPack, country)} a pack.` : ""}` }]
+              ? [
+                  {
+                    q: "How many packs are inside?",
+                    a: `${s.packCount} booster packs.${perPack ? ` At the cheapest ${co.adjective} price that is ${money(perPack, country)} a pack.` : ""}`,
+                  },
+                ]
               : []),
           ]}
         />

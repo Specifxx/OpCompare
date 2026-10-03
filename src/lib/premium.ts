@@ -1,7 +1,9 @@
 // Who is entitled to what. Entitlement is a DATE (User.premiumUntil) and a tier
 // (User.premiumTier, from the Stripe Price) — reading it never calls Stripe.
-// The webhook and the daily reconcile are the only writers, and they only ever
-// extend the date (lib/stripe-entitlement.ts, extendedPremiumUntil).
+// The webhook, the daily reconcile and the admin grant/revoke routes
+// (lib/admin-billing.ts, admin session only, audited) are the only writers.
+// They only ever extend the date (lib/stripe-entitlement.ts,
+// extendedPremiumUntil), except an explicit admin revoke.
 import { prisma } from "./db";
 import { TIER_RANK, isTier, type Tier } from "./plans";
 import { customerIdOf, entitledUntilFromSubscription, extendedPremiumUntil, isOurSubscription, tierOfSubscription, userIdFromSubscription } from "./stripe-entitlement";

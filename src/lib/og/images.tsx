@@ -1,0 +1,147 @@
+// Load + draw for every share image. The routes in src/app/**/opengraph-image.tsx
+// are one-liners over these, so scripts and tests can render exactly what a
+// route serves. Data comes only from the cached loaders in lib/data (no new DB
+// read; no getCardDetail / getSealedDetail, which each run an Offer query), the
+// market is fixed at US (an OG PNG has no visitor), and any failure draws
+// FallbackImage: an unfurl must produce an image, never a 500. Every image is
+// sent with OG_CACHED, every fallback with OG_AFTER_ERROR (see respond.ts).
+import type { ImageResponse } from "next/og";
+import { PRINTINGS, SET_KINDS, rarityLabel } from "../constants";
+import { getCatalog, getSealedCatalog, getSiteStats } from "../data";
+import { cardImage } from "../images";
+import { postBySlug } from "../blog";
+import { postContext } from "../blog/context";
+import { ogArt, withThumbs } from "./art";
+import { BlogImage, CardImage, FallbackImage, GuideImage, SealedImage, SetImage, type GuideVariant } from "./compose";
+import { OG_AFTER_ERROR, OG_CACHED, ogResponse } from "./respond";
+import { ogDate } from "./theme";
+import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, setPreviewCards, setTopRows, storesTracked } from "./select";
+
+function warn(where: string, err: unknown) {
+  console.error(`[og] ${where} fell back:`, err instanceof Error ? err.message : err);
+}
+
+export const fallbackOg = () => ogResponse(<FallbackImage />, OG_AFTER_ERROR);
+
+/** (a) the site default and (b) /price-guide. */
+export async function guideOg(variant: GuideVariant): Promise<ImageResponse> {
+  try {
+    const [cat, stats] = await Promise.all([getCatalog(), getSiteStats().catch(() => null)]);
+    const rows = pickGuideRows(cat, "US", 5);
+    if (rows.length < 3) return fallbackOg();
+    return ogResponse(<GuideImage rows={await withThumbs(rows)} cards={cat.cards.length} stores={storesTracked(stats)} variant={variant} />, OG_CACHED);
+  } catch (err) {
+    warn(`guide(${variant})`, err);
+    return fallbackOg();
+  }
+}
+
+/** (c) /sets/[slug]: the set's own mini price guide, or its art when unpriced. */
+export async function setOg(slug: string): Promise<ImageResponse> {
+  try {
+    const cat = await getCatalog();
+    const set = cat.setBySlug.get(slug);
+    if (!set) return fallbackOg();
+    const cards = cat.cards.filter((c) => c.setId === set.id);
+    const rows = setTopRows(cat, set, 5);
+    const priced = rows.length >= 3;
+    const preview = priced ? [] : await withThumbs(setPreviewCards(cat, set, 4), "tile");
+    // No card art yet (an upcoming set): its booster box, from the cached sealed catalogue.
+    const boxArt = priced || preview.some((r) => r.art) ? null : await ogArt(setBoxImage(await getSealedCatalog().catch(() => []), set.id));
+    const today = new Date().toISOString().slice(0, 10);
+    return ogResponse(
+      <SetImage
+        code={set.code}
+        name={set.name}
+        kindLabel={SET_KINDS[set.kind]?.label ?? "Set"}
+        printings={cards.length}
+        topCard={rows[0]?.marketUsd ?? null}
+        released={ogDate(set.releasedOn)}
+        upcoming={!!set.releasedOn && set.releasedOn > today}
+        rows={priced ? await withThumbs(rows) : []}
+        preview={preview.filter((r) => r.art)}
+        boxArt={boxArt}
+      />,
+      OG_CACHED,
+    );
+  } catch (err) {
+    warn(`set(${slug})`, err);
+    return fallbackOg();
+  }
+}
+
+/** (c) /sealed/[slug]: the product on a white plate with its price. */
+export async function sealedOg(slug: string): Promise<ImageResponse> {
+  try {
+    const [all, cat] = await Promise.all([getSealedCatalog(), getCatalog()]);
+    const s = findSealed(all, slug);
+    if (!s) return fallbackOg();
+    const { head, others } = ogPriceLines(s, 4);
+    return ogResponse(
+      <SealedImage
+        name={s.name}
+        kindLabel={s.kind}
+        setCode={s.setId ? (cat.setById.get(s.setId)?.code ?? null) : null}
+        art={await ogArt(s.imageUrl)}
+        marketUsd={s.marketUsd}
+        packCount={s.packCount}
+        head={head}
+        others={others}
+      />,
+      OG_CACHED,
+    );
+  } catch (err) {
+    warn(`sealed(${slug})`, err);
+    return fallbackOg();
+  }
+}
+
+/** (d) /card/[slug]: art, printing, rarity and the cheapest price per market. */
+export async function cardOg(slug: string): Promise<ImageResponse> {
+  try {
+    const cat = await getCatalog();
+    const c = cat.bySlug.get(slug);
+    if (!c) return fallbackOg();
+    const { head, others } = ogPriceLines(c, 5);
+    return ogResponse(
+      <CardImage
+        name={c.name}
+        variant={c.variant}
+        printing={c.printing}
+        printingLabel={PRINTINGS[c.printing]?.label ?? "Standard"}
+        rarity={c.rarity}
+        rarityLabel={c.rarity ? rarityLabel(c.rarity) : null}
+        number={c.number}
+        setName={cat.setById.get(c.setId)?.name ?? ""}
+        art={c.hasImage ? await ogArt(cardImage.tile(c.id)) : null}
+        marketUsd={c.marketUsd}
+        head={head}
+        others={others}
+      />,
+      OG_CACHED,
+    );
+  } catch (err) {
+    warn(`card(${slug})`, err);
+    return fallbackOg();
+  }
+}
+
+/** (d) /blog/[slug]: the post title beside its three hero cards. */
+export async function blogOg(slug: string): Promise<ImageResponse> {
+  const post = postBySlug(slug);
+  if (!post) return fallbackOg();
+  try {
+    const ctx = await postContext("US");
+    const title = post.title(ctx);
+    const ids = post
+      .build(ctx)
+      .heroCards.filter((c) => c.hasImage)
+      .slice(0, 3)
+      .map((c) => c.id);
+    const arts = await Promise.all(ids.map((id) => ogArt(cardImage.tile(id))));
+    return ogResponse(<BlogImage title={title} arts={arts} />, OG_CACHED);
+  } catch (err) {
+    warn(`blog(${slug})`, err);
+    return fallbackOg();
+  }
+}
