@@ -27,7 +27,7 @@ export default async function BlogIndex() {
     hero: p.build(ctx).heroCards,
   }));
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Blog" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Blog</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -39,25 +39,25 @@ export default async function BlogIndex() {
         </p>
         <p>
           Who writes them and how is on the{" "}
-          <Link href="/authors" className="link">
+          <Link href="/authors" className="text-brand-400 hover:underline">
             authors page
           </Link>{" "}
           and in our{" "}
-          <Link href="/editorial-policy" className="link">
+          <Link href="/editorial-policy" className="text-brand-400 hover:underline">
             editorial policy
           </Link>
           ;{" "}
-          <Link href="/methodology" className="link">
+          <Link href="/methodology" className="text-brand-400 hover:underline">
             the methodology
           </Link>{" "}
           explains how prices are collected. Prefer a feed?{" "}
-          <a href="/feed.xml" className="link">
+          <a href="/feed.xml" className="text-brand-400 hover:underline">
             RSS
           </a>
           .
         </p>
       </div>
-      <p className="mt-8 flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-[0.12em] text-white">
+      <p className="rb-eyebrow mt-8 flex items-center gap-2 text-slate-500">
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
         Latest{" "}
         <span className="font-sans text-xs font-normal text-slate-500">
@@ -73,7 +73,6 @@ export default async function BlogIndex() {
           >
             <div
               className="grid h-44 grid-cols-3 gap-1 bg-ink-850 p-2"
-              style={{ backgroundImage: "var(--hero-sea)" }}
             >
               {hero.slice(0, 3).map((c) =>
                 c.hasImage ? (

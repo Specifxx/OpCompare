@@ -60,6 +60,12 @@ Accounts and billing are the one exception, and a narrow one: `src/lib/auth.ts`
 from account pages and `/api/*` routes — never from the root layout, which must
 not read the session (the header asks `/api/me`, and only when the `oc_auth`
 hint cookie exists). Gated rows are limited in the QUERY, never hidden with CSS.
+The wave-2 member libraries join that exception on the same terms
+(per-user or per-request, uncached, `select`-limited, called only from `/api/*`
+routes and account pages — `/watching`, `/dashboard`, `/profile`,
+`/portfolio/**`, `/c/[token]` — never from the root layout or a public page):
+`src/lib/{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server}.ts`.
+Nothing under `src/app` imports `@/lib/db` (`tests/app-no-db-import.test.ts`).
 Admin pages read through uncached `src/lib/admin*.ts`; public forms write
 through `src/lib/inbox.ts`. Share images read only `src/lib/data.ts` loaders
 (see "Share images").

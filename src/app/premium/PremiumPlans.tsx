@@ -49,7 +49,7 @@ function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; 
   return (
     <div className="mx-auto max-w-3xl" data-member-view>
       <section className="card-surface p-5 sm:p-6">
-        <p className="eyebrow">Your subscription</p>
+        <p className="rb-eyebrow text-slate-500">Your subscription</p>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-2xl font-extrabold text-white">{TIER_NAMES[shownTier]}</h2>
           {sub?.interval ? (

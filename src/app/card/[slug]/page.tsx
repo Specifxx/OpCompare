@@ -117,7 +117,7 @@ export default async function CardPage({ params }: Props) {
   const ebayQuery = cardEbayQuery(card);
   const cardText = card.effect ? (
     <div className="card-surface p-4">
-      <p className="eyebrow mb-2">Card text</p>
+      <p className="rb-eyebrow text-slate-500 mb-2">Card text</p>
       {card.effect.split("\n").map((l, i) => (
         <p
           key={i}
@@ -131,7 +131,7 @@ export default async function CardPage({ params }: Props) {
 
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -285,7 +285,7 @@ export default async function CardPage({ params }: Props) {
           <p className="text-right text-xs text-slate-400">
             Cheapest first by item price; postage is added at each store&apos;s
             checkout.{" "}
-            <Link href="/methodology" className="link">
+            <Link href="/methodology" className="text-brand-400 hover:underline">
               How we compare prices →
             </Link>
           </p>

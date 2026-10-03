@@ -702,3 +702,35 @@ export async function getSparklines(ids: number[], days = 30): Promise<Record<nu
   }
   return out;
 }
+
+// ── wave2:foundation ──
+// EMAIL STATUS. Every send is script-side (GitHub Actions) and happens only
+// when RESEND_API_KEY and EMAIL_FROM are both set there (isEmailEnabled()); the
+// site never holds those secrets, so the alert workflow records what it found
+// in Meta key "email" ("on" | "off"). Pages decide what to promise from this:
+// while it is "off", no copy promises email and no email field renders, and
+// alerts arrive as in-app notifications. Cached like getHistoryRef (tag
+// "prices", same TTL): one 1-row read per TTL, never per request. A missing
+// key, any other value or a read error is "off" — the safe answer is never to
+// promise an email nobody will send. The error is caught OUTSIDE the cache so
+// a transient failure is not stored for a whole TTL.
+export type EmailStatus = "on" | "off";
+
+const getEmailMeta = unstable_cache(
+  async (): Promise<string | null> => (await prisma.meta.findUnique({ where: { key: "email" }, select: { value: true } }))?.value ?? null,
+  ["email-status-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+export function emailStatusFrom(value: string | null | undefined): EmailStatus {
+  return value?.trim().toLowerCase() === "on" ? "on" : "off";
+}
+
+export async function getEmailStatus(): Promise<EmailStatus> {
+  try {
+    return emailStatusFrom(await getEmailMeta());
+  } catch {
+    return "off";
+  }
+}
+// ── end wave2:foundation ──

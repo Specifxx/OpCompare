@@ -16,10 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <AdminNoAnalytics />
-      <div className="border-b border-ink-700 bg-ink-900">
-        <div className="container-app">
-          <AdminNav />
-        </div>
+      {/* Inside the root layout's container now (wave 2): a hairline bar at
+          the top of the content column rather than a full-bleed band. */}
+      <div className="-mt-6 mb-6 border-b border-ink-700">
+        <AdminNav />
       </div>
       {children}
     </>

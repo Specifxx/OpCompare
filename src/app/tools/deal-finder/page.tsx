@@ -153,7 +153,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
   const ebayAvailable = EBAY_FEED[country] === "own" && stats.ebayLive;
 
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd
         data={[
           {
@@ -226,7 +226,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
                     {params.buy !== null ? (
                       <>
                         {" "}
-                        <Link href={hrefFor(params, { buy: null, page: 1 })} className="link">
+                        <Link href={hrefFor(params, { buy: null, page: 1 })} className="text-brand-400 hover:underline">
                           Try every store
                         </Link>
                         .
@@ -336,7 +336,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         <p className="mt-6 text-xs text-slate-500">
           Looking for cards that cost less in another market?{" "}
           {/* ?market= is this page's market: /market/records reads its market from the URL. */}
-          <Link href={`/market/records?market=${country}#gaps`} className="link">
+          <Link href={`/market/records?market=${country}#gaps`} className="text-brand-400 hover:underline">
             The cross-market board
           </Link>{" "}
           ranks the biggest price gaps between the markets we track, free.
@@ -461,7 +461,7 @@ function Locked({ country }: { country: Country }) {
         </ul>
         <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 p-4">
           <div className="mx-auto max-w-sm rounded-lg border border-ink-700 bg-ink-900 p-5 text-center">
-            <Icon name="lock" className="mx-auto h-5 w-5 text-straw" />
+            <Icon name="lock" className="mx-auto h-5 w-5 text-gold" />
             <h3 className="mt-1 text-base font-bold text-white">See today&apos;s top {FREE_DEAL_ROWS} deals, free</h3>
             <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
               A free account shows the top three cards on this list. {PLUS_GATE_LINE}

@@ -42,7 +42,7 @@ export function TierComparisonTable({ compact = false }: { compact?: boolean }) 
           <th scope="col" className={`${pad} text-center font-medium`}>
             Plus
           </th>
-          <th scope="col" className={`${pad} text-center font-semibold text-straw`}>
+          <th scope="col" className={`${pad} text-center font-semibold text-gold`}>
             Premium
           </th>
         </tr>

@@ -136,7 +136,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
   ];
 
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd
         data={[
           {
@@ -194,7 +194,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
               <>
                 Informational: international postage, customs and whether an overseas store ships to you are not included, and can easily
                 exceed the gap. For cards selling below TCGplayer market at stores in your own market, see{" "}
-                <Link href="/tools/deal-finder" className="link">
+                <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">
                   Deal Finder
                 </Link>
                 .
@@ -250,7 +250,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
             <p className="mt-1 text-sm text-slate-400">
               Not enough recorded price history yet. A card needs at least a month of daily TCGplayer market prices before it can hold a record,
               and we would rather show nothing than call a price seen once a high.{" "}
-              <Link href="/movers" className="link">
+              <Link href="/movers" className="text-brand-400 hover:underline">
                 This week&apos;s movers
               </Link>{" "}
               work from a shorter window.

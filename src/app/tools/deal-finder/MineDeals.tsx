@@ -75,7 +75,7 @@ export function MineDeals({ params, country, buy }: { params: DealFinderParams; 
           <>None of your {res.watched.toLocaleString("en-US")} watched cards is {what} right now.</>
         )}{" "}
         {params.buy !== null && view === "tcg" ? (
-          <Link href={hrefFor(params, { buy: null, page: 1 })} className="link">
+          <Link href={hrefFor(params, { buy: null, page: 1 })} className="text-brand-400 hover:underline">
             Try every store.
           </Link>
         ) : null}

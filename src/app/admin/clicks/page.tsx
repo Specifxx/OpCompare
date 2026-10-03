@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EmptyState, StatTile } from "@/components/ui";
+import { StatTile } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { CLICK_RETENTION_DAYS, RECENT_CLICKS, loadClicks, retailerLabel, type ClicksReport } from "@/lib/admin-clicks";
 import { ago, int } from "@/lib/format";
@@ -44,7 +45,7 @@ export default async function AdminClicks() {
   }
   const sum = (k: "d7" | "d30" | "d90") => (data ? data.rows.reduce((s, r) => s + r[k], 0) : 0);
   return (
-    <div className="container-app space-y-6 py-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl text-white">Outbound clicks</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">
@@ -52,16 +53,16 @@ export default async function AdminClicks() {
         </p>
       </div>
       {error ? (
-        <EmptyState title="Couldn't load clicks">{error}</EmptyState>
+        <EmptyState title="Couldn't load clicks" body={error} />
       ) : !data || data.rows.length === 0 ? (
-        <EmptyState title="No clicks recorded yet">They appear here as soon as someone clicks a shop link.</EmptyState>
+        <EmptyState title="No clicks recorded yet" body="They appear here as soon as someone clicks a shop link." />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatTile label="Clicks · 7 days" value={int(sum("d7"))} />
             <StatTile label="Clicks · 30 days" value={int(sum("d30"))} />
             <StatTile label={`Clicks · ${CLICK_RETENTION_DAYS} days`} value={int(sum("d90"))} />
-            <StatTile label="Signed in · 30 days" value={int(data.signedIn30)} tone="text-straw" />
+            <StatTile label="Signed in · 30 days" value={int(data.signedIn30)} tone="text-gold" />
           </div>
           <div className="overflow-x-auto rounded-lg border border-ink-800 bg-ink-900">
             <table className="w-full min-w-[480px] text-sm">
@@ -94,7 +95,7 @@ export default async function AdminClicks() {
               title="Top cards and products · 30 days"
               items={data.topSlugs}
               label={(k) => (
-                <Link href={data?.topSlugs.find((t) => t.k === k)?.href ?? `/card/${k}`} className="link">
+                <Link href={data?.topSlugs.find((t) => t.k === k)?.href ?? `/card/${k}`} className="text-brand-400 hover:underline">
                   {k}
                 </Link>
               )}

@@ -76,7 +76,7 @@ export function CardTile({ card, setCode, country, priority = false }: { card: C
         <CardArt id={card.id} hasImage={card.hasImage} alt={`${card.name}${card.variant ? ` (${card.variant})` : ""} ${card.number ?? ""} One Piece card`} className={priority ? "" : ""} />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 font-display text-[15px] font-extrabold leading-snug text-white group-hover:text-brand-400">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white">
           {card.name}
           {card.variant && card.printing === "don" ? <span className="font-sans text-xs font-medium text-slate-400"> · {card.variant}</span> : null}
         </h3>

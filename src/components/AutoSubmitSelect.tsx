@@ -10,7 +10,7 @@ export function AutoSubmitSelect({ name, value, options, label, form }: { name: 
         form={form}
         defaultValue={value}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500"
+        className="h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/50"
       >
         {options.map(([v, l]) => (
           <option key={v} value={v}>

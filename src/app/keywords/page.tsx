@@ -24,7 +24,7 @@ export default async function KeywordsHub() {
     { title: "Timings", sub: "When an effect can be used or applies.", list: KEYWORDS.filter((k) => k.kind === "timing") },
   ];
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Keywords", path: "/keywords" }])} />
       <JsonLd data={itemListLd("One Piece Card Game keywords", "/keywords", KEYWORDS.map((k) => ({ name: k.name, path: `/keywords/${k.slug}` })))} />
       <Breadcrumbs items={[{ label: "Keywords" }]} />

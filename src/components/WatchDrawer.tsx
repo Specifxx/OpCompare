@@ -115,7 +115,7 @@ export function WatchDrawerButton({ className = "" }: { className?: string }) {
               >
                 <style>{`@keyframes watch-in{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}`}</style>
                 <div className="flex items-center justify-between gap-3 border-b border-ink-800 px-4 py-3 sm:px-5">
-                  <h2 id="watch-drawer-title" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
+                  <h2 id="watch-drawer-title" className="flex items-center gap-2 text-lg font-extrabold text-white">
                     <Icon name="heart" className="h-5 w-5 shrink-0 text-brand-400" />
                     <span>My watchlist</span>
                     {count ? <span className="num text-sm font-semibold text-slate-500">({count})</span> : null}
@@ -131,7 +131,7 @@ export function WatchDrawerButton({ className = "" }: { className?: string }) {
                   <WatchlistView layout="list" onNavigate={() => setOpen(false)} />
                 </div>
                 <div className="border-t border-ink-800 px-4 py-3 sm:px-5">
-                  <Link href="/watchlist" onClick={() => setOpen(false)} className="link text-sm">
+                  <Link href="/watchlist" onClick={() => setOpen(false)} className="text-brand-400 hover:underline text-sm">
                     Open the full watchlist page →
                   </Link>
                 </div>

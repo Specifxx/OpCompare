@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter, JetBrains_Mono, Luckiest_Guy } from "next/font/google";
+import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
@@ -17,17 +17,31 @@ import { AnnualSwitchNudge } from "@/components/AnnualSwitchNudge";
 import { stripeEnabled } from "@/lib/stripe";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
-// Inter for UI, JetBrains Mono for prices (RiftCompare's pairing), Archivo at
-// 800-900 for headings and Luckiest Guy for the hero headline — the bold,
-// rounded adventure-comic voice of One Piece, used sparingly.
+// RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
+// everything needs to be the same"). Headings — Fraunces: a sharp,
+// high-contrast, slightly flared serif at a heavy weight. Body/UI — Inter.
+// Prices — JetBrains Mono. Exposed as CSS vars on <html>, wired into Tailwind.
+// display: "swap" — the brand fonts ALWAYS render rather than "optional", which
+// silently keeps the system fallback whenever the font misses the ~100ms
+// first-paint window; adjustFontFallback size-matches the fallback so the
+// swap-in causes negligible layout shift. The homepage alone adds Archivo as
+// --font-riftbound (its `.rb-display-sans` wrapper, globals.css).
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
-const archivo = Archivo({ subsets: ["latin"], variable: "--font-display", display: "swap", weight: ["700", "800", "900"] });
-const brand = Luckiest_Guy({ subsets: ["latin"], variable: "--font-brand", display: "swap", weight: "400", preload: false });
+// preload: false — the mono face only dresses numbers, never the H1 that is the
+// LCP, so it arrives with the stylesheet and swaps in. Inter (body) and
+// Fraunces (the H1) stay preloaded.
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700", "900"],
+  style: ["normal"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -53,31 +67,32 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#070c16" },
-    { media: "(prefers-color-scheme: light)", color: "#f7f3eb" },
-  ],
-  width: "device-width",
-  initialScale: 1,
-};
+// Brand chrome colour for the browser UI / installed-PWA theme: the light
+// palette's page colour (THEME_COLOR.light), since light is OP Compare's
+// default (DECISIONS "Light theme is the default"). ThemeToggle re-stamps the
+// meta for a dark-theme visitor.
+export const viewport: Viewport = { themeColor: "#f4f6f8" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const country = getCountry();
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="light" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
       </head>
-      <body className={`${inter.variable} ${mono.variable} ${archivo.variable} ${brand.variable} min-h-screen`}>
+      <body className="min-h-screen bg-ink-950">
+        {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
+            to content. Visually hidden until focused (WCAG 2.4.1 Level A). */}
         <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-modal focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400"
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
         >
-          Skip to content
+          Skip to main content
         </a>
-        <NextTopLoader color="#d92b33" height={2} showSpinner={false} />
+        {/* Route-change progress bar: the dark brand-400 red, 2px, no spinner.
+            zIndex 200 matches the skip link — it wins over every overlay. */}
+        <NextTopLoader color="#ff6b6b" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <CountryProvider initial={country}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
           <QuickViewProvider>
@@ -88,10 +103,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <OutboundBeacon />
           <SideNav />
           <Navbar />
-          <main id="main" style={{ paddingLeft: "var(--sidenav-w)" }}>
-            {children}
+          {/* RiftCompare's shell: the rail reservation on an OUTER wrapper, the
+              content container on <main> (a pl-* and container-app's px-* on
+              one element fight over padding-left). Pages never add their own
+              outer container-app or py-*. */}
+          <div className="pl-[var(--sidenav-w)]">
+            <main id="main-content" className="container-app min-w-0 py-6">
+              {children}
+            </main>
+          </div>
+          {/* The ad zone needs the same rail reservation as <main>. */}
+          <div className="pl-[var(--sidenav-w)]">
             <FooterAds />
-          </main>
+          </div>
           <Footer />
           <PremiumSlideIn />
           <AnnualSwitchNudge />

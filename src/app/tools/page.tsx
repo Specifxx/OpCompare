@@ -101,13 +101,13 @@ const FAQS = [
 const BADGE_CLASS: Record<Badge, string> = {
   Free: "bg-brand-500/15 text-brand-300",
   Plus: "bg-slate-500/20 text-slate-200",
-  Premium: "bg-straw/20 text-straw",
+  Premium: "bg-gold/20 text-gold",
 };
 
 export default function ToolsHub() {
   const all = GROUPS.flatMap((g) => g.tools);
   return (
-    <div className="container-app max-w-5xl py-6">
+    <div className="mx-auto max-w-5xl">
       <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }])} />
       <JsonLd data={itemListLd("OP Compare tools", "/tools", all.map((t) => ({ name: t.title, path: t.href })))} />
       <JsonLd data={faqLd(FAQS)} />
@@ -116,7 +116,7 @@ export default function ToolsHub() {
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         Every OP Compare tool in one place. Price a deck, check whether a box is worth opening, work out what you keep when you sell, and find the
         cheapest way to buy a list. Most need no sign-up; a free account adds the top Deal Finder deals and your Buy List total, Plus shows every deal
-        with no ads, and <span className="text-straw">Premium</span> plans which stores to buy a whole list from.
+        with no ads, and <span className="text-gold">Premium</span> plans which stores to buy a whole list from.
       </p>
       {GROUPS.map((g) => (
         <section key={g.label} className="mt-8">

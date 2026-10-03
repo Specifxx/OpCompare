@@ -157,12 +157,12 @@ export function PremiumSlideIn() {
       role="region"
       aria-label="OP Compare Plus and Premium offer"
       data-nudge="slidein"
-      className={`fixed z-overlay w-[calc(100%-2rem)] transition-[opacity,transform] duration-300 ease-out ${details ? "max-w-[23rem]" : "max-w-[20rem]"} ${entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"}`}
+      className={`fixed z-[70] w-[calc(100%-2rem)] transition-[opacity,transform] duration-slow ease-out ${details ? "max-w-[23rem]" : "max-w-[20rem]"} ${entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"}`}
       style={{ left: "calc(var(--sidenav-w) + 1rem)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
     >
-      <div className="relative max-h-[min(80dvh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-straw/50 bg-ink-900 shadow-2xl">
+      <div className="relative max-h-[min(80dvh,calc(100dvh-6rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center gap-2 bg-ink-900 py-1 pl-4 pr-1">
-          <span className="rounded border border-straw/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-straw">{TIER_NAMES[tier]}</span>
+          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">{TIER_NAMES[tier]}</span>
           <span className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-slate-100">{heading}</span>
           <button type="button" onClick={dismiss} aria-label="Dismiss" className="tap-icon shrink-0 self-start rounded-lg text-slate-400 hover:bg-ink-800 hover:text-white">
             <Icon name="x" className="h-4 w-4" />

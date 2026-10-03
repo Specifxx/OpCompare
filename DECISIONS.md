@@ -1049,6 +1049,162 @@ mechanical:
 - **Header "Pricing" stays a link to /premium**, as RiftCompare's is; opening
   the plan dialog there instead is the owner's call.
 
+## 2026-10-03 — Wave-2 schema: watch/alert/collection/deck/support/eBay-panel tables, additive
+
+Wave 2 makes OP Compare a one-to-one copy of RiftCompare's member features,
+and every track codes against one schema, landed first and then frozen (the
+foundation track owns `prisma/schema.prisma` for the whole wave).
+
+- **Added, all additive** (`prisma db push`, no backfill): `PriceAlert`,
+  `AlertMute`, `SealedWatch`, `DeckWatch`, `Notification`, `CollectionCard`,
+  `Counter`, `NewsletterSubscriber`, `SetReleaseAlert`, `PublishedDeck`,
+  `RisingSnapshot`, `SupportTicket`, `EbayListing`, `EbayGradedListing`; on
+  `User` the activity, country, signup-source, share-id, basket-prefs and
+  welcome-email columns and the relations; on `Card` `searchCount`,
+  `viewCount`, `lastViewedAt`; `ClickEvent.entry`, `PremiumClick.source`,
+  `Feedback.email`.
+- **RiftCompare's shapes with OP's ids.** `Card.id` and `Sealed.id` are Int
+  TCGplayer product ids, `User.id` a cuid, the default market `"US"`. A sealed
+  watch keys on `Sealed.id` (RiftCompare: a group key), a published deck on a
+  leader card id plus a `leaderSlug` of name and number.
+- **`PriceAlert.userId` is nullable** so the anonymous (email-only) watch can be
+  enabled later; a signed-in watch carries the account's email. The unique key
+  is RiftCompare's `(email, cardId, market)`.
+- **Email is off until configured, and the schema says what was delivered.**
+  `lastNotifiedAt` is set only when an email was actually sent;
+  `lastFlaggedAt` when an in-app `Notification` was written instead;
+  `confirmSentAt` is the outbox stamp for a confirmation.
+- **`Feedback.email` reverses "keeps no email" for Feedback only.** It is an
+  optional reply address the visitor types, never shown publicly (RiftCompare
+  has it). Price reports and store suggestions still keep none;
+  `tests/inbox.test.ts` pins both halves.
+- **Card view/search counters are a per-request write** — one `UPDATE` per
+  counted view — the documented exception to "no per-request writes", for
+  RiftCompare's popularity ranking. The tools track owns the counting and its
+  throttle.
+- **Still no history in Prisma.** Price, demand and rising history stay files
+  on the `data` branch. Not added (deferred): trial columns,
+  `UserDigestOptOut`, `AnnouncementOptOut`, `EbayAuctionListing`.
+- The eBay panel tables are written ONLY by `scripts/ebay.ts` after a
+  completed search (CLAUDE.md, eBay); pages read them through `data.ts`.
+
+## 2026-10-03 — Wave-2 design tokens, fonts and the main container (RiftCompare parity)
+
+Owner: "the font and everything needs to be the same". OP Compare now carries
+RiftCompare's design system byte for byte, with one deliberate difference.
+
+- **Fonts are RiftCompare's.** Inter (body, preloaded), JetBrains Mono
+  (numerals, not preloaded) and Fraunces 600/700/900 for h1–h3 and
+  `.rb-eyebrow`, as next/font variables on `<html>`; `<body>` is
+  `min-h-screen bg-ink-950`. Archivo (as `--font-riftbound`, RiftCompare's
+  variable name, kept so the CSS stays one diff) is the homepage's own import
+  under `.rb-display-sans` (the design track adds it). Luckiest Guy and the
+  `font-brand` family are gone from the site; they stay only in the share-image
+  fonts (`src/lib/og/fonts`, pinned by CLAUDE.md).
+- **Tokens are RiftCompare's.** `tailwind.config.ts` and `globals.css` are
+  copies of RiftCompare's: graphite ink neutrals, the #f4f6f8 light theme, gold
+  #caa85a, up/down, every chromatic shade, the motion tokens
+  (`src/lib/motion-tokens.ts`: 120/200/320/150 ms, one ease-out curve, the z
+  scale with menu 95 and modal 120), the `.pg-*` price-guide classes, the
+  coarse-pointer 48px floor and the reduced-motion block kept last.
+- **The one difference: the brand ramp stays Straw Hat red** (500 #d92b33, 600
+  #b11f27, 400 themed 255 107 107 / 176 22 30). Red takes WHITE ink (white on
+  #d92b33 is 4.8:1, near-black about 4.4:1), so `.btn-primary` is
+  `bg-brand-500 text-[#ffffff] hover:bg-brand-600` (RiftCompare: dark ink,
+  hovering lighter), the light-mode dark-ink and hover overrides for it are
+  dropped, and an unlayered `.bg-brand-500.text-ink-950 { color: #fff }` lets
+  RiftCompare markup that writes dark ink on a brand fill (the current page
+  cell, an active menu link) be copied verbatim. The owner may still choose
+  RiftCompare green; then this paragraph and the brand hexes are the whole diff.
+- **Retired OP-only vocabulary.** The `straw` token became RiftCompare's `gold`
+  (RiftCompare uses gold for its Plus/Premium surfaces as well as foil), and
+  `.eyebrow` → `.rb-eyebrow text-slate-500`, `.link` → `text-brand-400
+  hover:underline`, `.prose-op` → RiftCompare's article and about-page classes
+  (`src/components/prose.ts`), `.data-table` → RiftCompare's plain table
+  classes, `.btn-straw`, `--hero-sea`, `.sea-grid` and `animate-bob` deleted.
+  `brand-300` stays undefined, as on RiftCompare.
+- **Theme: RiftCompare's cookie.** `src/lib/theme-shared.ts` (a `theme` cookie,
+  one year, Lax; the boot script always stamps `data-theme`) replaces
+  `src/lib/theme.ts`; the boot script moves an old `op:theme` localStorage value
+  into the cookie once and removes it. `ThemeToggle` is RiftCompare's (icon and
+  row variants, an `oc:theme` event, the theme-color meta kept in step). The
+  default is LIGHT, not RiftCompare's dark (see "Light theme is the default"
+  below): `<html data-theme="light">`, `resolveThemeMode` falls back to light,
+  dark only from the cookie or a migrated `op:theme` of `dark`, and
+  `viewport.themeColor` is the light page colour #f4f6f8.
+- **ui primitives are RiftCompare's** (`src/components/ui/{Dialog,EmptyState,
+  SegmentedTabs,Skeleton,Toast,Tooltip}.tsx`), with OP's `data-oc-dialog` body
+  flag. Wave 1's `components/Dialog.tsx` is a thin re-export (default z
+  `overlay`, as QuickView sits on RiftCompare), and PlanDialog uses the shared
+  refcounted scroll lock, modal flag and topmost-only Escape, so a plan dialog
+  opened over QuickView releases neither early.
+- **The layout owns the container.** RiftCompare's shell: a "Skip to main
+  content" link, `<div class="pl-[var(--sidenav-w)]"><main id="main-content"
+  class="container-app min-w-0 py-6">`, and the footer ad zone in its own rail
+  wrapper. Every page dropped its outer `container-app` and `py-*`; a full-bleed
+  band uses RiftCompare's CinematicHero breakout (`left-1/2 -mt-6 w-screen
+  translate-x-[calc(-50%-var(--sidenav-w)/2)]` with the rail reserved inside).
+  The admin bar became a hairline at the top of the content column.
+- **Not done here, on purpose:** the header, rail, phone menu, footer, logo,
+  CardTile, homepage and 404 bodies are the design track's. The root layout
+  still reads the country cookie (`getCountry()`) until that track moves the
+  market to the client as RiftCompare does.
+
+## 2026-10-03 — Wave-2 free limits, shared limit modules and the watchlist store
+
+- **Free limits: 10 watched cards, 50 portfolio cards.** This REVERSES "The
+  watchlist stays in the browser for everyone, so there are no free limits to
+  enforce" (Plus & Premium entry above), because the owner asked for
+  RiftCompare parity ("all the premium features"). The numbers and the rules are
+  RiftCompare's (`src/lib/free-limits.ts`): only adding a NEW card is refused at
+  the limit, nothing held is ever lost (grandfathering), any paid tier is
+  unlimited and never counted, and the refusal is a structured 402. The
+  enforcement lands with the member and collection tracks' routes. Flagged for
+  the owner.
+- **One home for tier numbers.** `src/lib/tier-limits.ts` holds every tier
+  constant another wave-2 track enforces (`FREE_RISING_ROWS` 3,
+  `FREE_DEMAND_ROWS` 10, `PREMIUM_DEMAND_ROWS` 25, `FREE_BASKET_TOTALS_PER_DAY`
+  5, `SET_GAP_CHUNK` 200) and re-exports `FREE_DEAL_ROWS` and the free-limit and
+  alert numbers (`src/lib/alert-limits.ts`: 25 Plus targets, 10 Premium deck
+  watches, 10 Plus sealed watches with a hard cap of 200). No other module
+  redeclares them.
+- **Sealed watches are checked "twice a day"** (OP's import cadence, not
+  RiftCompare's four reads) and **no market has an at-RRP alert**
+  (`SEALED_RRP_MARKETS = []`) until OP Compare has an MSRP table.
+- **`src/lib/use-watchlist.ts`** is RiftCompare's module-level store (one
+  shared promise, subscribers, optimistic watch/unwatch with rollback, the
+  free-limit 402 handed to `onLimit`, `invalidateWatchlist`) with OP's ids
+  (numbers) and a second, signed-out branch: the watched set is the card items
+  of localStorage `op:watchlist` (WatchButton's format), written by
+  watch/unwatch with no request at all. A card counts as watched by id or, for
+  older local items that carry none, by slug. Signed in, it reads
+  `/api/alerts/watchlist?ids=1` (the member track's route; until then a 404 is
+  an empty list). The merge of the local list into the account is the member
+  track's. Unlike RiftCompare's, a subscribed store also follows `oc:me`
+  (fired by `invalidateMe()` on sign-in, sign-out and plan changes): it drops
+  its state and loads again, so the header count and every heart switch
+  between the local and the account list without a reload, even where a caller
+  forgets `invalidateWatchlist()` (the account menu's sign-out did).
+- **`trackEvent` sends to GA4 only** (`src/lib/analytics.ts`) and is a no-op
+  without `NEXT_PUBLIC_GA_ID`; RiftCompare also mirrors to Vercel Analytics,
+  whose custom events are billed.
+- **`getEmailStatus()`** (`data.ts`, block `wave2:foundation`) reads Meta key
+  `email`, cached like `getHistoryRef`; anything but `"on"`, and any read error
+  (caught outside the cache), is `"off"`. Pages decide what to promise from it.
+
+## 2026-10-03 — Egress: the wave-2 per-user libraries
+
+The accounts exception in CLAUDE.md now names
+`src/lib/{watchlist-server,collection-server,collection-share,set-owned,
+notifications,sealed-watch,deck-watch,published-decks-server}.ts`: per-user or
+per-request, uncached, `select`-limited, called only from `/api/*` routes and
+account pages (`/watching`, `/dashboard`, `/profile`, `/portfolio/**`,
+`/c/[token]`), never from the root layout or a public page. The rule that made
+the exception safe still holds: nothing under `src/app` imports `@/lib/db`.
+`tests/app-no-db-import.test.ts` now checks every import shape (alias,
+relative path, re-export, dynamic `import()`, `require`) and that the root
+layout imports none of the per-user libraries.
+
 ## 2026-10-03 — Light theme is the default
 
 **Decision.** OP Compare now opens in the light theme. The root layout renders
@@ -1059,6 +1215,11 @@ supported.
 **Why.** The owner asked for light by default. This departs from RiftCompare,
 which defaults to dark; the wave-2 design port (RC's `theme-shared.ts`) must
 keep light as the default when it replaces `src/lib/theme.ts`.
+
+Kept through the wave-2 theme port (2026-10-03): RiftCompare's
+`src/lib/theme-shared.ts` replaced `src/lib/theme.ts`, and its default was
+flipped to light (`DEFAULT_THEME`); `tests/theme.test.ts` pins the light
+fallback, the server-rendered attribute and the light theme-colour.
 
 ## 2026-10-03 — "N stores" counts TCGplayer again (never eBay)
 

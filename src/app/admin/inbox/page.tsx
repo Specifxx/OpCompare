@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyText, StatusButtons, type StatusOption } from "@/components/admin/InboxActions";
-import { EmptyState } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { loadInbox } from "@/lib/admin-inbox";
 import { ago, moneyCode } from "@/lib/format";
@@ -41,7 +41,7 @@ function Section({ id, title, count, open, children }: { id: string; title: stri
   );
 }
 
-const Failed = ({ error }: { error: string }) => <EmptyState title="Couldn't load this list">{error}</EmptyState>;
+const Failed = ({ error }: { error: string }) => <EmptyState title="Couldn't load this list" body={error} />;
 
 export default async function AdminInbox() {
   await requireAdminPage();
@@ -51,20 +51,20 @@ export default async function AdminInbox() {
   return (
     // "calt" off: the site font's contextual alternates draw the x in "6x0" as
     // a multiplication sign, and this page is mostly user-typed URLs and codes.
-    <div className="container-app space-y-10 py-6" style={{ fontFeatureSettings: '"calt" 0' }}>
+    <div className="space-y-10" style={{ fontFeatureSettings: '"calt" 0' }}>
       <div>
         <h1 className="text-3xl text-white">Inbox</h1>
         <p className="mt-1 flex flex-wrap gap-4 text-sm">
-          <a href="#reports" className="link">
+          <a href="#reports" className="text-brand-400 hover:underline">
             Wrong-price reports
           </a>
-          <a href="#suggestions" className="link">
+          <a href="#suggestions" className="text-brand-400 hover:underline">
             Store suggestions
           </a>
-          <a href="#feedback" className="link">
+          <a href="#feedback" className="text-brand-400 hover:underline">
             Feedback
           </a>
-          <a href="#messages" className="link">
+          <a href="#messages" className="text-brand-400 hover:underline">
             Messages
           </a>
         </p>
@@ -122,7 +122,7 @@ export default async function AdminInbox() {
                     <>
                       {" "}
                       ·{" "}
-                      <a href={r.listingUrl} target="_blank" rel="nofollow noopener noreferrer" className="link">
+                      <a href={r.listingUrl} target="_blank" rel="nofollow noopener noreferrer" className="text-brand-400 hover:underline">
                         listing
                       </a>
                     </>
@@ -204,7 +204,7 @@ export default async function AdminInbox() {
               <li key={f.id} className="card-surface space-y-2 p-4">
                 <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   {f.rating ? (
-                    <span className="text-straw" aria-label={`${f.rating} of 5 stars`}>
+                    <span className="text-gold" aria-label={`${f.rating} of 5 stars`}>
                       {"★".repeat(f.rating)}
                       <span className="text-slate-600">{"★".repeat(5 - f.rating)}</span>
                     </span>
@@ -266,7 +266,7 @@ export default async function AdminInbox() {
                 <p className="whitespace-pre-wrap text-sm text-slate-200">{m.message}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   {replyMailto(m.email, m.subject) ? (
-                    <a href={replyMailto(m.email, m.subject)!} className="link text-sm">
+                    <a href={replyMailto(m.email, m.subject)!} className="text-brand-400 hover:underline text-sm">
                       Reply
                     </a>
                   ) : (

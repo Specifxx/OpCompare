@@ -47,7 +47,7 @@ const FAQ = [
 export default function Premium() {
   const open = stripeEnabled();
   return (
-    <div className="container-app py-5 sm:py-8">
+    <div>
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -94,7 +94,7 @@ export default function Premium() {
                 <span className="text-lg font-bold text-white">{TIER_NAMES[t]}</span>
                 <span className="num text-sm text-slate-400">{planPrice(t, "month")}/mo</span>
               </p>
-              <p className="mt-0.5 text-sm text-straw">{PLAN_PITCH[t]}</p>
+              <p className="mt-0.5 text-sm text-gold">{PLAN_PITCH[t]}</p>
               <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[15px] text-slate-300">
                 {PLAN_FEATURES[t].map((f) => (
                   <li key={f}>{f}</li>

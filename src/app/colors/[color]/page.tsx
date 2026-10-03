@@ -45,7 +45,7 @@ export default async function ColorPage({ params, searchParams }: Props) {
     pages,
   );
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs
         items={[{ href: "/colors", label: "Colours" }, { label: k }]}
       />
@@ -61,7 +61,7 @@ export default async function ColorPage({ params, searchParams }: Props) {
         {COLORS[k].tagline.toLowerCase()} is the colour&apos;s usual identity.
         Prices are the cheapest in-stock listing in {COUNTRIES[country].place}.
         Narrow it by set, rarity or printing in the{" "}
-        <Link href={`/browse?color=${COLORS[k].slug}`} className="link">
+        <Link href={`/browse?color=${COLORS[k].slug}`} className="text-brand-400 hover:underline">
           card database
         </Link>
         .
@@ -72,7 +72,7 @@ export default async function ColorPage({ params, searchParams }: Props) {
           {leaders.slice(0, 12).map((l, i) => (
             <span key={l.id}>
               {i ? ", " : ""}
-              <CardQuickLink slug={l.slug} className="link">
+              <CardQuickLink slug={l.slug} className="text-brand-400 hover:underline">
                 {l.name}
               </CardQuickLink>
             </span>

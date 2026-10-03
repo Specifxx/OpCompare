@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function ColorsPage() {
   const cat = await getCatalog();
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Colours" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece cards by colour

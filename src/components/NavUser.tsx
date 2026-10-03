@@ -47,13 +47,13 @@ export function NavUser() {
         ) : (
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">{me.user.name.slice(0, 1).toUpperCase()}</span>
         )}
-        {me.tier ? <Icon name="crown" className="mr-1 hidden h-3.5 w-3.5 text-straw sm:block" /> : null}
+        {me.tier ? <Icon name="crown" className="mr-1 hidden h-3.5 w-3.5 text-gold sm:block" /> : null}
       </button>
       {open ? (
         <div role="menu" className="absolute right-0 top-full z-menu mt-2 w-56 rounded-lg border border-ink-700 bg-ink-900 p-1.5 shadow-xl">
           <p className="truncate px-3 py-2 text-xs text-slate-400">
             {me.user.email}
-            {me.tier ? <span className="mt-0.5 block font-semibold text-straw">{TIER_NAMES[me.tier]} member</span> : null}
+            {me.tier ? <span className="mt-0.5 block font-semibold text-gold">{TIER_NAMES[me.tier]} member</span> : null}
           </p>
           <Link role="menuitem" href="/account" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
             Your account
@@ -71,7 +71,7 @@ export function NavUser() {
               Buy List Planner
             </Link>
           ) : (
-            <PricingLink role="menuitem" surface="nav:account-menu" className="block rounded-md px-3 py-2 text-sm font-semibold text-straw hover:bg-ink-800">
+            <PricingLink role="menuitem" surface="nav:account-menu" className="block rounded-md px-3 py-2 text-sm font-semibold text-gold hover:bg-ink-800">
               {me.tier ? "Upgrade to Premium" : "Pricing"}
             </PricingLink>
           )}

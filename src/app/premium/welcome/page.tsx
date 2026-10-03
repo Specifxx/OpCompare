@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "Welcome", robots: { index: false, fo
 
 export default function Welcome() {
   return (
-    <div className="container-app flex justify-center py-16">
+    <div className="flex justify-center">
       <div className="max-w-md text-center">
         <WelcomePoller />
       </div>

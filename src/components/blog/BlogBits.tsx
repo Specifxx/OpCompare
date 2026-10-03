@@ -4,13 +4,14 @@ import type { CardLite, SetLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
+import { DATA_TABLE } from "@/components/prose";
 
 // Building blocks the posts share.
 
 export function CardTable({ cards, setById, country, showMarket = true, caption }: { cards: CardLite[]; setById: Map<number, SetLite>; country: Country; showMarket?: boolean; caption?: string }) {
   return (
     <div className="not-prose my-5 overflow-x-auto rounded-lg border border-ink-800">
-      <table className="data-table min-w-[560px]">
+      <table className={`${DATA_TABLE} min-w-[560px]`}>
         {caption ? <caption className="px-3 pt-3 text-left text-xs text-slate-400">{caption}</caption> : null}
         <thead>
           <tr>
@@ -58,7 +59,7 @@ export function CardTable({ cards, setById, country, showMarket = true, caption 
 export function SimpleTable({ head, rows, align }: { head: string[]; rows: React.ReactNode[][]; align?: ("l" | "r")[] }) {
   return (
     <div className="not-prose my-5 overflow-x-auto rounded-lg border border-ink-800">
-      <table className="data-table min-w-[520px]">
+      <table className={`${DATA_TABLE} min-w-[520px]`}>
         <thead>
           <tr>
             {head.map((h, i) => (
@@ -86,8 +87,8 @@ export function SimpleTable({ head, rows, align }: { head: string[]; rows: React
 
 export function Callout({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="not-prose my-6 rounded-lg border border-straw/30 bg-straw/[0.05] p-4">
-      <p className="eyebrow mb-1">{title}</p>
+    <div className="not-prose my-6 rounded-lg border border-gold/30 bg-gold/[0.05] p-4">
+      <p className="rb-eyebrow text-slate-500 mb-1">{title}</p>
       <div className="text-[15px] leading-relaxed text-slate-200">{children}</div>
     </div>
   );

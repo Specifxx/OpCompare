@@ -31,7 +31,7 @@ export default async function AllCardsPage() {
     (letters.get(L) ?? letters.set(L, []).get(L)!).push(e);
   }
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs
         items={[{ href: "/cards", label: "Cards" }, { label: "A–Z" }]}
       />

@@ -80,8 +80,8 @@ function DealRow({ deal, country, kind }: { deal: HomeDeal; country: TopDeals["c
 function LockedTeaser({ count }: { count: number }) {
   return (
     <li className="flex flex-1 flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
-      <Icon name="lock" className="h-5 w-5 text-straw" />
-      <PlanButton surface="gate:home-deals" tier="plus" className="inline-flex min-h-11 items-center text-sm font-bold text-straw hover:underline">
+      <Icon name="lock" className="h-5 w-5 text-gold" />
+      <PlanButton surface="gate:home-deals" tier="plus" className="inline-flex min-h-11 items-center text-sm font-bold text-gold hover:underline">
         Unlock {count.toLocaleString("en-US")} more with Plus →
       </PlanButton>
     </li>
@@ -130,7 +130,7 @@ export function TodaysTopDeals({ deals }: { deals: TopDeals }) {
 
       {all.length === 0 ? (
         <div className="card-surface p-6 text-center text-sm text-slate-400">
-          No deals in {info.place} right now. <Link href="/tools/deal-finder" className="link">Deal Finder</Link> explains how a card makes the list.
+          No deals in {info.place} right now. <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">Deal Finder</Link> explains how a card makes the list.
         </div>
       ) : (
         <>

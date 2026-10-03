@@ -193,10 +193,14 @@ test("the inbox tables have no IP column and no foreign key to User", () => {
     assert.doesNotMatch(m![1]!, /^\s*ip\w*\s/im, `${model} has no ip field`);
     assert.doesNotMatch(m![1]!, /@relation|\bUser\b/, `${model} has no relation to User`);
   }
-  for (const model of ["PriceReport", "StoreSuggestion", "Feedback"]) {
+  for (const model of ["PriceReport", "StoreSuggestion"]) {
     const m = schema.match(new RegExp(`model ${model} \\{([\\s\\S]*?)\\n\\}`))!;
     assert.doesNotMatch(m[1]!, /^\s*email\s/m, `${model} keeps no email`);
   }
+  // Wave 2 (RiftCompare parity, DECISIONS "Wave-2 schema"): Feedback may carry
+  // an OPTIONAL reply address the visitor typed — nullable, never public.
+  const fb = schema.match(/model Feedback \{([\s\S]*?)\n\}/)![1]!;
+  assert.match(fb, /^\s*email\s+String\?\s/m, "Feedback's reply address is optional");
 });
 
 test("admin moderation: approve needs consent; every inbox route is gated", () => {

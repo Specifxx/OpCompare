@@ -37,7 +37,7 @@ function SetCard({
       className="card-surface group flex flex-col p-4 hover:border-ink-600"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">
+        <span className="rb-eyebrow text-slate-500">
           {s.code}
         </span>
         <span className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
@@ -96,7 +96,7 @@ export default async function SetsPage() {
   const boosters = released.filter((s) => s.kind === "booster").length;
 
   return (
-    <div className="container-app py-6">
+    <div>
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <Breadcrumbs items={[{ label: "Sets" }]} />
         <h1 className="text-3xl text-white sm:text-4xl">
@@ -114,7 +114,7 @@ export default async function SetsPage() {
             Prices on every set page are the cheapest in-stock listing we track
             for each card in your market — {c.place} for you, in {c.currency} —
             read twice a day. Sealed product for each set is priced on the{" "}
-            <Link href="/sealed" className="link">
+            <Link href="/sealed" className="text-brand-400 hover:underline">
               sealed products page
             </Link>
             .
@@ -147,7 +147,7 @@ export default async function SetsPage() {
                 className="card-surface flex items-center justify-between gap-3 p-4 hover:border-ink-600"
               >
                 <span>
-                  <span className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">
+                  <span className="rb-eyebrow text-slate-500">
                     {s.code}
                   </span>
                   <span className="block text-base font-bold text-white">

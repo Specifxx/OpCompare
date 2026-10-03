@@ -46,7 +46,7 @@ export default async function KeywordPage({ params, searchParams }: Props) {
   for (const c of cards) if (c.cardType) types.set(c.cardType, (types.get(c.cardType) ?? 0) + 1);
   const path = `/keywords/${k.slug}`;
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Keywords", path: "/keywords" }, { name: k.name, path }])} />
       <JsonLd data={faqLd([{ q: `What does [${k.name}] do in the One Piece Card Game?`, a: [k.summary, ...k.body].join(" ") }])} />
       <Breadcrumbs items={[{ href: "/keywords", label: "Keywords" }, { label: k.name }]} />

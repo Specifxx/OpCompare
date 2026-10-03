@@ -29,7 +29,7 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
   const list = (Array.isArray(searchParams.list) ? searchParams.list[0] : searchParams.list) ?? "";
   const next = `/tools/buy-list${list ? `?list=${encodeURIComponent(list)}` : ""}`;
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Buy List Planner", path: "/tools/buy-list" }])} />
       <Breadcrumbs
         items={[
@@ -53,8 +53,8 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
         <>
           <BuyListPlanner place={c.place} premium={premium} initialList={list.slice(0, 6000)} />
           {!premium ? (
-            <div className="mt-6 flex flex-col items-center rounded-xl border border-straw/30 bg-straw/[0.05] p-6 text-center">
-              <Icon name="crown" className="h-7 w-7 text-straw" />
+            <div className="mt-6 flex flex-col items-center rounded-xl border border-gold/30 bg-gold/[0.05] p-6 text-center">
+              <Icon name="crown" className="h-7 w-7 text-gold" />
               <p className="mt-2 text-lg font-bold text-white">See which stores to buy from</p>
               <p className="mt-1 max-w-md text-sm text-slate-300">
                 {tier === "plus"
@@ -77,7 +77,7 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
         </>
       ) : (
         <div className="mt-6 flex flex-col items-center rounded-xl border border-ink-700 bg-ink-900 p-8 text-center">
-          <Icon name="crown" className="h-7 w-7 text-straw" />
+          <Icon name="crown" className="h-7 w-7 text-gold" />
           <p className="mt-2 text-xl font-bold text-white">Log in to plan your list</p>
           <p className="mt-1 max-w-md text-sm text-slate-300">
             A free account shows what your list costs in {c.place}. Premium ({planPrice("premium", "month")}/mo) adds which stores to buy it from.
@@ -93,7 +93,7 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
           {list ? (
             <p className="mt-4 text-xs text-slate-400">
               Just want the price?{" "}
-              <Link href={`/deck?list=${encodeURIComponent(list)}`} className="link">
+              <Link href={`/deck?list=${encodeURIComponent(list)}`} className="text-brand-400 hover:underline">
                 Price this list free in the deck calculator
               </Link>
               .

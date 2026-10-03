@@ -68,7 +68,7 @@ const FAQS = [
 export default function DeckPage({ searchParams }: { searchParams: { list?: string | string[] } }) {
   const c = COUNTRIES[getCountry()];
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Deck Price Calculator", path: "/deck" }])} />
       <JsonLd
         data={{
@@ -90,7 +90,7 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
           Paste any One Piece decklist and every card is matched to its exact printing and priced at the cheapest in-stock store in {c.place}, with a
           total, a link to each store and the same list priced in all six markets. Switch any line to its Parallel or Manga print, copy a link that loads
           your list, or send it to the{" "}
-          <Link href="/tools/buy-list" className="link">
+          <Link href="/tools/buy-list" className="text-brand-400 hover:underline">
             Buy List Planner
           </Link>
           .

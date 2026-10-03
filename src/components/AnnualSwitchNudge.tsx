@@ -140,12 +140,12 @@ export function AnnualSwitchNudge() {
       role="region"
       aria-label={`Switch to yearly ${name}`}
       data-nudge="annual"
-      className="fixed z-overlay w-[calc(100%-2rem)] max-w-sm"
+      className="fixed z-[70] w-[calc(100%-2rem)] max-w-sm"
       style={{ left: "calc(var(--sidenav-w) + 1rem)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
     >
-      <div className="overflow-hidden rounded-xl border border-straw/40 bg-ink-900 shadow-2xl">
+      <div className="overflow-hidden rounded-xl border border-gold/40 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 py-1 pl-4 pr-1">
-          <span className="rounded border border-straw/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-straw">{name}</span>
+          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">{name}</span>
           <span className="min-w-0 flex-1 text-xs font-semibold text-slate-200">{phase === "done" ? "You're on yearly billing" : "Save on your subscription"}</span>
           {phase === "offer" ? (
             <button type="button" onClick={dismiss} aria-label="Dismiss" className="tap-icon shrink-0 rounded-lg text-slate-400 hover:bg-ink-800 hover:text-white">
@@ -173,7 +173,7 @@ export function AnnualSwitchNudge() {
           ) : (
             <>
               <p className="text-xs leading-relaxed text-slate-400">
-                You&apos;re on the monthly plan. Switch to <span className="font-semibold text-slate-200">yearly</span> and save <span className="font-semibold text-straw">{annualSavingPct(tier)}%</span>: <span className="font-semibold text-slate-200">{planPrice(tier, "year")}/yr</span>. You&apos;re billed for the year now, with credit for the rest of this month.
+                You&apos;re on the monthly plan. Switch to <span className="font-semibold text-slate-200">yearly</span> and save <span className="font-semibold text-gold">{annualSavingPct(tier)}%</span>: <span className="font-semibold text-slate-200">{planPrice(tier, "year")}/yr</span>. You&apos;re billed for the year now, with credit for the rest of this month.
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <button type="button" onClick={doSwitch} disabled={phase === "working"} className="btn-primary min-h-10 flex-1 px-3 text-xs">

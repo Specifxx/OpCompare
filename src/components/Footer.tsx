@@ -41,7 +41,7 @@ export function Footer() {
             <Link href="/terms" className="tap-link hover:text-slate-300">Terms of service</Link>
             <Link href="/methodology" className="tap-link hover:text-slate-300">How we compare</Link>
             <Link href="/feedback" className="tap-link hover:text-slate-300">Feedback</Link>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-straw hover:underline">{CONTACT_EMAIL}</a>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </p>
           <p>
             Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, {SITE_NAME} earns from qualifying purchases — at no extra cost to you.

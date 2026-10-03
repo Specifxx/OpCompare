@@ -11,6 +11,7 @@ import type { DeckPriceResult, DeckLineOut } from "@/lib/deck-price";
 import { money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { usdCentsToCountry } from "@/lib/fx";
+import { DATA_TABLE } from "@/components/prose";
 
 // The free deck & list pricer (RiftCompare's DeckBuilder, for One Piece). The
 // paste box is the list: pricing resolves it on the server (/api/deck/price)
@@ -250,7 +251,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                       <CardQuickLink slug={l.card.slug} className="font-semibold text-white hover:text-brand-400">
                         {l.card.name}
                       </CardQuickLink>
-                      {l.leader ? <span className="chip ml-2 border border-straw/40 text-[10px] text-straw">Leader</span> : null}
+                      {l.leader ? <span className="chip ml-2 border border-gold/40 text-[10px] text-gold">Leader</span> : null}
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400">
                         {l.options.length > 1 ? (
                           <>
@@ -278,7 +279,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                           </span>
                         )}
                         {l.how === "name" ? (
-                          <span className="text-straw" title={`Matched by name from “${l.raw}”`}>
+                          <span className="text-gold" title={`Matched by name from “${l.raw}”`}>
                             {l.ambiguous ? "matched by name: check the printing" : "matched by name"}
                           </span>
                         ) : null}
@@ -326,7 +327,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
 
             {result.unmatched.length ? (
               <section className="card-surface p-4">
-                <p className="text-sm font-semibold text-straw">
+                <p className="text-sm font-semibold text-gold">
                   {result.unmatched.length} line{result.unmatched.length === 1 ? "" : "s"} couldn&apos;t be matched, so {result.unmatched.length === 1 ? "it is" : "they are"} not in the total
                 </p>
                 <ul className="mt-2 space-y-1">
@@ -382,7 +383,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
               {result.split.missing.length ? <p className="mt-3 text-xs text-slate-500">Not in stock anywhere in {c.place}: {result.split.missing.join(", ")}.</p> : null}
               <p className="mt-3 text-xs text-slate-500">
                 Stores publish whether a card is in stock, not how many copies, so check each store has the quantity. The{" "}
-                <Link href={`/tools/buy-list?list=${listParam}`} className="link">
+                <Link href={`/tools/buy-list?list=${listParam}`} className="text-brand-400 hover:underline">
                   Buy List Planner
                 </Link>{" "}
                 (Premium) adds the best single-store orders and a minimum condition.
@@ -393,7 +394,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
               <h2 id="markets-h" className="text-lg text-white">
                 This list in every market
               </h2>
-              <table className="data-table mt-3 min-w-[420px]">
+              <table className={`${DATA_TABLE} mt-3 min-w-[420px]`}>
                 <thead>
                   <tr>
                     <th>Market</th>
