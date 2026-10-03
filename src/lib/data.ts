@@ -197,6 +197,7 @@ export interface OfferRow {
   url: string;
   inStock: boolean;
   condition: string | null;
+  shippingCents: number | null; // eBay only: first shipping option; null = unknown (postage at checkout)
   updatedAt: string;
 }
 
@@ -236,9 +237,14 @@ export interface HistoryPoint {
 
 // An offer not refreshed for 72 hours (its store failed to read since) is shown
 // as sold out rather than as a live price — the same rule the aggregates use.
+// A stale eBay row is DROPPED instead: an eBay "sold out" means nothing.
 const STALE_MS = 72 * 3600 * 1000;
-function freshOffer(o: { source: string; market: string; priceCents: number; currency: string; url: string; inStock: boolean; condition: string | null; updatedAt: Date }): OfferRow {
+type OfferDbRow = { source: string; market: string; priceCents: number; currency: string; url: string; inStock: boolean; condition: string | null; shippingCents: number | null; updatedAt: Date };
+function freshOffer(o: OfferDbRow): OfferRow {
   return { ...o, inStock: o.inStock && Date.now() - o.updatedAt.getTime() < STALE_MS, updatedAt: o.updatedAt.toISOString() };
+}
+function freshOffers(rows: OfferDbRow[]): OfferRow[] {
+  return rows.map(freshOffer).filter((o) => o.inStock || !o.source.startsWith("ebay"));
 }
 
 export const getCardDetail = unstable_cache(
@@ -255,16 +261,16 @@ export const getCardDetail = unstable_cache(
     if (!c) return null;
     const offers = await prisma.offer.findMany({
       where: { productId: c.id },
-      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
+      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
       orderBy: { priceCents: "asc" },
     });
     return {
       ...c,
       set: { ...c.set, releasedOn: c.set.releasedOn ? c.set.releasedOn.toISOString().slice(0, 10) : null },
-      offers: offers.map(freshOffer),
+      offers: freshOffers(offers),
     };
   },
-  ["card-detail-v2"],
+  ["card-detail-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -324,16 +330,16 @@ export const getSealedDetail = unstable_cache(
     if (!s) return null;
     const offers = await prisma.offer.findMany({
       where: { productId: s.id },
-      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
+      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
       orderBy: { priceCents: "asc" },
     });
     return {
       ...s,
       releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
-      offers: offers.map(freshOffer),
+      offers: freshOffers(offers),
     };
   },
-  ["sealed-detail-v2"],
+  ["sealed-detail-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -341,13 +347,26 @@ export const getSealedDetail = unstable_cache(
 export interface SiteStats {
   lastImportAt: string | null;
   storeOffers: { source: string; market: string; offers: number; inStock: number }[];
+  /**
+   * The eBay pass has run successfully in the last EBAY_LIVE_DAYS. Copy that
+   * says we collect eBay prices is shown only then; with no eBay secrets the
+   * site reads exactly as it did before the eBay API.
+   */
+  ebayLive: boolean;
 }
+
+const EBAY_LIVE_DAYS = 3;
 
 export const getSiteStats = unstable_cache(
   async (): Promise<SiteStats> => {
-    const [run, groups] = await Promise.all([
-      prisma.importRun.findFirst({ where: { ok: true }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
-      prisma.offer.groupBy({ by: ["source", "market", "inStock"], _count: { _all: true } }),
+    const [run, groups, ebayRun] = await Promise.all([
+      prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
+      // eBay is not a store: never in store counts or homepage stats.
+      prisma.offer.groupBy({ by: ["source", "market", "inStock"], where: { NOT: { source: { startsWith: "ebay" } } }, _count: { _all: true } }),
+      prisma.importRun.findFirst({
+        where: { kind: "ebay", ok: true, finishedAt: { gte: new Date(Date.now() - EBAY_LIVE_DAYS * 86_400_000) } },
+        select: { id: true },
+      }),
     ]);
     const map = new Map<string, { source: string; market: string; offers: number; inStock: number }>();
     for (const g of groups) {
@@ -357,9 +376,9 @@ export const getSiteStats = unstable_cache(
       if (g.inStock) row.inStock += g._count._all;
       map.set(k, row);
     }
-    return { lastImportAt: run?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()] };
+    return { lastImportAt: run?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
   },
-  ["site-stats-v1"],
+  ["site-stats-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 

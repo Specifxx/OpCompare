@@ -2,8 +2,10 @@
 // aggregates, daily history and the index. Run by scripts/import.ts from
 // .github/workflows/import-prices.yml twice a day. Writes ONLY to DATABASE_URL.
 //
-// NO eBay API calls — see lib/affiliate.ts. eBay appears on the site only as a
-// search link we build ourselves.
+// The store import never calls eBay. eBay listing prices come from the separate
+// eBay pass (scripts/ebay.ts, lib/ebay-import.ts, ebay-prices.yml), which writes
+// `ebay` / `ebay_us` Offer rows that aggregate() folds into low<M> (never into
+// stores<M>: eBay is not a store).
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "./db";
@@ -370,6 +372,8 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
 }
 
 // ── Aggregates, history, index ───────────────────────────────────────────────
+// low<M> includes eBay rows (the cheapest ask anywhere); stores<M> counts real
+// stores only. The registry cleanup touches `store:` rows only, never `ebay*`.
 /** An offer not refreshed for this long no longer counts as in stock (RiftCompare's 72h rule). */
 export const STALE_HOURS = 72;
 
@@ -384,7 +388,7 @@ export async function aggregate(log: Log): Promise<void> {
     for (const m of MARKETS) {
       await prisma.$executeRawUnsafe(
         `UPDATE "${table}" t SET "low${m}" = a.low, "stores${m}" = a.n
-         FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*)::int AS n FROM "Offer"
+         FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*) FILTER (WHERE source NOT LIKE 'ebay%')::int AS n FROM "Offer"
                WHERE market = $1 AND "inStock" AND "updatedAt" > now() - make_interval(hours => $2::int) GROUP BY "productId") a
          WHERE a."productId" = t.id`,
         m,

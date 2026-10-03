@@ -126,14 +126,15 @@ model Sealed {
 model Offer {
   id         String   @id @default(cuid())
   productId  Int
-  source     String // "tcgplayer" | "store:<key>"
+  source     String // "tcgplayer" | "store:<key>" | "ebay" | "ebay_us" (CA rows derived from the US eBay search)
   market     String // US AU UK SG CA EU
-  priceCents Int // in `currency`
+  priceCents Int // in `currency` (eBay: the ITEM price, postage separate)
   currency   String
   url        String
   inStock    Boolean
   condition  String?
   title      String? // the store's own listing title, kept for audits
+  shippingCents Int? // eBay only: first shipping option in `currency`; null = unknown / at checkout
   updatedAt  DateTime
 
   @@unique([productId, source, market])
@@ -141,11 +142,23 @@ model Offer {
   @@index([source])
 }
 
+// One row per (product, market) the eBay pass (scripts/ebay.ts) has searched.
+// Drives "due": a pair with no row has never been searched. Written only after
+// a COMPLETED search, so a run cut short leaves the pairs it missed due.
+model EbayCheck {
+  productId Int
+  market    String
+  checkedAt DateTime
+  matched   Boolean
+
+  @@id([productId, market])
+  @@index([checkedAt])
+}
 
 
 model ImportRun {
   id         Int       @id @default(autoincrement())
-  kind       String // "full" | "catalog" | "stores"
+  kind       String // "full" | "catalog" | "stores" | "ebay"
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
   ok         Boolean   @default(false)

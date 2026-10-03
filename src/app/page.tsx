@@ -228,8 +228,15 @@ export default async function HomePage() {
                 a: (
                   <>
                     From the public product listings of the stores on <Link href="/stores" className="link">our stores page</Link>, read twice a day, and from
-                    TCGplayer (the cheapest listing in the US, plus its market price as a reference everywhere). We never call eBay&apos;s API; the eBay button on a
-                    card searches your own eBay for it.
+                    TCGplayer (the cheapest listing in the US, plus its market price as a reference everywhere).{" "}
+                    {stats.ebayLive ? (
+                      <>
+                        Twice a day we also look up the cheapest matching eBay Buy It Now listing for cards worth US$20 or more and sealed worth US$30 or more,
+                        shown as an asking price among the stores; the eBay button on a card searches your own eBay for more.
+                      </>
+                    ) : (
+                      <>The eBay button on a card searches your own eBay for it.</>
+                    )}
                   </>
                 ),
               },

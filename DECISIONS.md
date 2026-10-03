@@ -32,6 +32,9 @@ most of them. OP Compare shows eBay only as a tagged search link on the
 visitor's own eBay (`ebaySearchUrl`), which costs no quota, and a test fails if
 any API host or credential appears in the code.
 
+Superseded by "2026-10-03 — eBay Browse API with OP Compare's own keyset" (below):
+OP Compare now has its own eBay application and quota.
+
 ## 2026-10-03 — Printings are told apart by tokens, event stamps and set
 
 TCGplayer names a printing with parenthesised tokens ("(Parallel)", "(Manga)",
@@ -341,3 +344,148 @@ week of history exists, about 2026-10-10), `/premium`, `/stores` and `/market`
 renderer script. Known limits: TCGplayer serves "SAMPLE"-watermarked art for
 recent sets (the site shows the same), and platforms cache thumbnails
 themselves (Reddit forever per post), so check the live image before posting.
+
+## 2026-10-03 — eBay Browse API with OP Compare's own keyset (reverses 'No eBay API at all')
+
+The owner: "I'm planning to create a new eBay API for opcompare so when that
+variable is set we have a new 5000 API quota which we can split by region and
+allocate based on card price like riftcompare".
+
+- **A separate eBay application.** Browse quota is per application, so OP
+  Compare's own app has its own 5,000 calls a day and nothing is shared with
+  RiftCompare. The secret names are RiftCompare's (`EBAY_CLIENT_ID`,
+  `EBAY_CLIENT_SECRET`) but live only as GitHub secrets on `Specifxx/OpCompare`.
+  Pasting RiftCompare's keys would fail silently, so each run compares eBay's
+  used count with our own last-24h spend and warns ("another app is spending
+  this keyset") when the gap exceeds 300. Everything is off — a green no-op —
+  until both secrets exist; keys set but refused fail the run red after zero
+  Browse calls, so a revoked keyset can't hide behind green runs.
+- **Budget.** Each run spends `min(EBAY_MAX_CALLS = 2200, liveRemaining −
+  EBAY_QUOTA_RESERVE = 600)`; two runs (05:37, 17:37 UTC) is at most 4,400 a
+  day, leaving the reserve whatever time eBay's day resets — when the live
+  count was read. When it can't be (Developer Analytics fails), the run
+  assumes `dailyLimit − our own last-24h spend` remains (see "eBay pass review
+  fixes" below), so a third run in one eBay day can't pass the limit either. `spendable` starts
+  at 0 (RiftCompare's `Infinity` left un-primed callers unmetered). Numeric
+  variables go through `envInt`, so an empty GitHub variable is unset, not 0.
+- **Value tiers and floors.** TCGplayer's market price decides: singles of
+  US$100+ every 24h, singles from US$20 (US$50 in the EU) every 48h, sealed of
+  US$30+ every 48h (kinds `matchSealedTitle` can recognise, never loose packs),
+  unpriced products only in a 60-day launch window. RiftCompare's US$5 floor
+  would cost ~2,490 calls a day per market. Modelled (×1.25 retry for singles):
+  US/UK/AU 910 + 120 sealed each, EU 654 + 120, CA 120 sealed, SG 0 — 3,984 a
+  day against 4,400 spendable (`tests/ebay-plan.test.ts` pins it; re-counted
+  from the OP Compare database: 388 / 409 + 199 / 76 unpriced / ~140 sealed).
+- **Region split.** Fixed shares of each run: US 26%, UK 26%, AU 26%, EU (eBay
+  Spain; no pan-EU marketplace) 19%, CA 3%. A market's unused share spills to
+  the next-highest-priority pairs anywhere, and the market execution order
+  rotates daily so no market is always last when eBay's count runs out.
+- **Per-pair writes, not RiftCompare's wholesale replace.** A completed search
+  upserts (match) or deletes (no match) that pair's `Offer` row and stamps
+  `EbayCheck`; anything else touches nothing, so the pair stays due. A run cut
+  short can't remove a live price, which is why ~90% of the quota can be
+  planned (RiftCompare needs half its quota as headroom because a truncated
+  market is discarded). The alarm is S2 slipping past 60h; the fix is a higher
+  `EBAY_MIN_VALUE_CENTS`.
+- **CA derived, SG 0%.** A native EBAY_CA singles programme would cost ~910 a
+  day; CA singles copy the US listing (`ebay_us`, converted to CAD, postage
+  unknown) only when the seller is in the US or Canada. EPN has no Singapore
+  programme, so SG keeps its search link.
+- **Wider seller-location filter than RiftCompare's.** CN, HK, TW, KR and JP
+  sellers are rejected: Japanese One Piece dominates eBay and is often titled in
+  English. Count the English listings this costs on the first runs.
+- **Matching.** Identity is `matchCardTitle` over the FULL index (or
+  `matchSealedTitle`), then plausibility, then RiftCompare's cheap-outlier prune;
+  the eBay-only filters (junk words, number ranges, sealed words on a single
+  unless its own printing or set names them — Judge Pack, Box Topper, Premium
+  Booster) live in `ebay-match.ts`. Queries are the number and one name word,
+  with a server-side price floor 5% under our plausibility floor in the market
+  currency.
+- **Aggregation and UI.** `low<M>` includes eBay; `stores<M>`, homepage stats,
+  the Buy List Planner and "hot store" inbox flags don't. A stale eBay row is
+  dropped, not shown as sold out. eBay rows rank by item price among the stores,
+  with an eBay button, the postage eBay states ("postage at checkout" when
+  unknown, never "delivered") and the EPN tag `oc-<mkt>-ebay-<page>-product`.
+- **History step.** `lowUS` in the history series steps down on the day eBay
+  starts, as RiftCompare's did.
+- **Setup order.** The schema sync (`Offer.shippingCents`, `EbayCheck`) runs
+  by hand before the release that carries this code: the card and sealed
+  loaders select the new column even with eBay off, and only the store import
+  syncs the schema while the eBay workflow is gated off. The Marketplace
+  Account Deletion route ships first; its two Vercel variables must be set
+  before the release that carries it; then the eBay app, its notification
+  test, the production keys as GitHub secrets, and a `only_market=US
+  max_calls=50` smoke run (docs/SETUP.md §6a). The route must stay deployed
+  while the keyset exists.
+
+## 2026-10-03 — eBay pass review fixes (before the keys exist)
+
+A review of the eBay pass (the entry above) found ways to spend the quota for
+nothing and ways to show a wrong price. Fixed before any key exists:
+
+- **A failure breaker.** A search that fails without a 429 (4xx, 5xx,
+  timeout, network) is charged and its pair stays due, so one broken thing (an
+  outage, a keyset not approved for Browse, a filter eBay rejects) would have
+  spent the whole 2,200-call budget twice a day on a green run. Ten failed
+  searches in a row, or more than half of 50+, now stop the run, which goes
+  red (`FailureBreaker`, `ebayRunVerdict` in `lib/ebay-plan.ts`). So does a run
+  that spent calls and completed nothing.
+- **Spend is always recorded.** A run that throws records `spent` too, and a
+  running pass saves it every 100 pairs, so a timeout kill can't hide spend
+  from the next run's foreign-spend check.
+- **Bounds on the variables.** A negative `EBAY_QUOTA_RESERVE` is 0. An
+  `EBAY_MAX_CALLS` above `(liveLimit − reserve) / 2` is lowered to it, so the
+  first run after eBay's reset can't take the second run's share. With the
+  live count unknown, the budget is `min(cap, dailyLimit − reserve − our
+  last-24h spend)`: eBay's current day began less than 24h ago, so our spend
+  in it is in that window. This can skip a run when Analytics fails right
+  after two full runs; that is the safe direction.
+- **Foreign spend is loud.** The warning is a GitHub `::warning` annotation,
+  and such a run spends at most 50 calls. It still cannot fire before
+  RiftCompare's own pass has spent that day.
+- **The plan's real shape.** Simulated over two weeks, the 24h and 48h tiers
+  settle into a 4-run cycle of 2,200 / 2,200 / 2,200 / ~800 modelled calls
+  (`tests/ebay-plan.test.ts`, "steady state"). The daily average fits, but
+  three runs in four plan exactly the cap, so if the real retry rate is above
+  25% S1/S2/P1 pairs slip in those runs before the model says. Expected in
+  week one; the alarm stays S2 past 60h.
+- **Unpriced products need a reference.** With no TCGplayer market price, a
+  launch-window product had no price guard at all: a US$3 "Orica" was the
+  eBay price of an unpriced OP18 Manga. Now it is searched only when a non-eBay
+  offer exists (the cheapest in any market, in USD — RiftCompare's
+  `trustedRef`) at or above the tier's floor; that reference sets the server
+  floor and the 0.3× (singles) / 0.5× (sealed) guard, and at least 3 listings
+  must survive, with a head under half their median dropped.
+- **Sibling sets.** A Premium Booster "Manga" or "Alternate Art" has the same
+  printing keys as the original set's, so a title naming neither set went to
+  the number's home set — and on eBay that is often the cheaper reprint
+  (US$1,300 for a US$3,999 OP01-120 Manga). eBay titles must now name the
+  target's set when a same-tag printing exists in another set. 53 of the 996
+  searched singles are affected; their canonical titles still match.
+- **Delivered price.** A US$4.50 item with US$25 postage was "Cheapest" at
+  US$4.50. A listing is rejected when postage exceeds max(item price, US$15)
+  or the delivered price fails the plausibility ceiling. On equal delivered
+  prices, known postage wins.
+- **eBay-only wording filters** (`lib/ebay-match.ts`; `match.ts` unchanged):
+  country names (Japan, China, Korea, Thai), French (VF, FR, Version
+  Française), fakes (Orica, Fan Art, Reproduction, Metal Card, Unofficial);
+  slabs without a space or from other graders (PSA10, BGS9.5, ARS 10, ACE 10)
+  and eBay's "Graded" condition; lots and quantities; "U Pick"/"Choose";
+  damaged, creased, signed and misprinted copies. A word the product's own
+  name, printing or set carries is allowed, which is what lets the 12 Wanted
+  Posters match at all.
+- **Never search what can't match.** A printing whose own canonical title
+  ("One Piece {name} {number} ({printing}) {set} {code}") fails the eBay
+  screen is skipped at plan time and counted in the log: the Japanese-version
+  anniversary promos, Playmat/Binder/PSA Magazine promos and same-tag twins in
+  one set (52 printings, ~200 calls a day across four markets).
+- **Copy follows the data.** The eBay sentences on the methodology, home FAQ,
+  about and editorial pages appear only after a successful eBay run in the
+  last 3 days (`getSiteStats().ebayLive`), and the price board's only when it
+  shows an eBay row. With no keys the site reads as it did before.
+- **Workflow.** The gate is its own job outside the import's concurrency
+  group, so an unconfigured run never enters it; the secrets are on the two
+  steps that need them, not the job (`npm ci` never sees one).
+- **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
+  and `SECURITY-APPNAME`, and fails on any import of an eBay module from
+  outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).

@@ -5,7 +5,8 @@ name: Import prices
 #   19:00 UTC — after TCGCSV's daily TCGplayer refresh (~20:00 UTC the day before
 #               is already in; this run picks up the stores' afternoon changes)
 # It writes ONLY to the OP Compare database (secret DATABASE_URL) and never calls
-# the eBay API. Without the secret it is a no-op, so the repo can be pushed
+# eBay: the eBay pass is ebay-prices.yml (05:37 / 17:37), whose rows this import
+# aggregates. This job never holds the eBay credentials. Without the secret it is a no-op, so the repo can be pushed
 # before the database exists.
 on:
   schedule:

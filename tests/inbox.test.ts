@@ -35,8 +35,10 @@ test("price report: valid input passes", () => {
 
 test("price report: product, source, market and issue are checked", () => {
   for (const bad of [0, -1, 1.5, "123", null]) assert.equal(parsePriceReport(report({ productId: bad })).ok, false, `productId ${bad}`);
-  for (const bad of ["ebay", "store:", "store:Bad_Key", `store:${s(61)}`, "tcgplayer2"]) assert.equal(parsePriceReport(report({ source: bad })).ok, false, `source ${bad}`);
+  for (const bad of ["ebay_uk", "ebay2", "store:", "store:Bad_Key", `store:${s(61)}`, "tcgplayer2"]) assert.equal(parsePriceReport(report({ source: bad })).ok, false, `source ${bad}`);
   assert.ok(parsePriceReport(report({ source: `store:${s(60)}` })).ok);
+  // eBay rows (the eBay pass) can be reported like any row.
+  for (const ok of ["ebay", "ebay_us"]) assert.ok(parsePriceReport(report({ source: ok })).ok, ok);
   assert.equal(parsePriceReport(report({ market: "JP" })).ok, false, "an unknown market is rejected, not defaulted");
   assert.equal(parsePriceReport(report({ market: "us" })).ok, false);
   assert.equal(parsePriceReport(report({ issue: "BAD" })).ok, false, "an unknown issue is rejected");

@@ -36,6 +36,16 @@ export interface BuyPlan {
   unavailable: string[]; // item names no store in the market has in stock
 }
 
+/**
+ * Offers a basket can be built from: real stores and TCGplayer. eBay rows are
+ * excluded — every eBay row shares source "ebay", so the planner would offer
+ * "buy all 12 from eBay" as one basket when they are 12 sellers with 12 postage
+ * charges (RiftCompare's Best Basket prices real-store listings only).
+ */
+export function isBasketSource(source: string): boolean {
+  return !source.startsWith("ebay");
+}
+
 export function planBuyList(items: PlanItem[], topStores = 5): BuyPlan {
   const byStore = new Map<string, Map<string, PlanPick>>();
   const split = new Map<string, StoreBasket>();

@@ -78,6 +78,8 @@ time. You need two:
    - `CRON_SECRET` = a random secret (keep it for step 3)
    - `GSC_SA_KEY` = added in step 9
    - `STRIPE_SECRET_KEY` = added in step 6
+   - `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` = optional, added in step 11a
+     from OP Compare's OWN new eBay application (never RiftCompare's values)
 4. **Variables.** Same page → **Variables**:
    - `SITE_URL` = `https://opcompare.app`
    - `GSC_PROPERTY` = `sc-domain:opcompare.app`
@@ -113,7 +115,11 @@ time. You need two:
      `NEXT_PUBLIC_USD_TO_SGD`, `NEXT_PUBLIC_USD_TO_CAD`,
      `NEXT_PUBLIC_USD_TO_EUR`
 
-   Do NOT copy any of these: `EBAY_CLIENT_*`, `RM*`, `RH*`,
+   Never copy RiftCompare's `EBAY_CLIENT_*` values: create OP Compare's own
+   eBay application and keys (section 11a; GitHub secrets only, never Vercel).
+   `EBAY_VERIFICATION_TOKEN` and `EBAY_DELETION_ENDPOINT` are new values for
+   OP Compare too, set in section 11a. Do NOT copy any of
+   these either: `RM*`, `RH*`,
    `HISTORY_DATABASE_URL*`, `AUTH_SECRET`, `STRIPE_*`, `*_PRICE_ID`, Google or
    Discord OAuth, Resend, Brevo, AdSense.
 3. **Production branch.** Settings → Git → Production Branch = **`main`**.
@@ -307,6 +313,46 @@ me.
 - eBay Partner Network: nothing required (OP Compare's clicks are tagged
   `oc-…`). Optionally add `https://opcompare.app` as a traffic source.
 
+## 11a. eBay developer portal — a new application for OP Compare (ask me first)
+
+OP Compare searches eBay's Browse API with its OWN eBay application, which has
+its own 5,000 calls a day. Rules for this section:
+- **Ask me before accepting any eBay agreement or submitting a Growth Check.**
+- **Never open or copy the RiftCompare app's keys.** Using them would silently
+  spend RiftCompare's quota.
+- Never echo the App ID, Cert ID or verification token in the chat or the report.
+
+1. **Confirm the deletion endpoint is live.** Run, or open in the browser:
+   `https://opcompare.app/api/ebay/marketplace-deletion?challenge_code=test`.
+   It must return `{"challengeResponse":"<64 hex characters>"}`. If it returns
+   500, the two Vercel variables below are missing from the live deployment.
+2. **Token and Vercel variables.** Generate a 48-character token of
+   `[A-Za-z0-9_-]` (random.org strings as above, letters and digits only). In
+   Vercel → OP Compare → Settings → Environment Variables (Production), set, if
+   they aren't set yet:
+   - `EBAY_VERIFICATION_TOKEN` = that token;
+   - `EBAY_DELETION_ENDPOINT` = `https://opcompare.app/api/ebay/marketplace-deletion`
+     (exactly: apex host, no trailing slash, no query).
+
+   If you only just set them, **stop here and tell me**: Vercel applies them
+   at the next production release (08:00 UTC daily), and step 1 must pass first.
+3. **The portal** (developer.ebay.com, my existing account). Create a **new
+   application** named "OP Compare". Then Application Keys → that app →
+   **Notifications** → Alerts and Notifications → Marketplace Account Deletion:
+   enter an alert email (ask me which), the endpoint URL and the token exactly as
+   in step 2, click **Save** (eBay sends the challenge), then **Send Test
+   Notification** — it should succeed (HTTP 200).
+4. **Production keys.** Enable the **Production** keyset for the new app. Copy
+   the App ID and the Cert ID into GitHub → `Specifxx/OpCompare` → Settings →
+   Secrets and variables → Actions → **secrets** `EBAY_CLIENT_ID` and
+   `EBAY_CLIENT_SECRET`. Not Vercel. Check that no organisation-level secret of
+   the same name exists.
+5. **Smoke test.** GitHub → Actions → **eBay prices** → Run workflow with
+   `only_market` = `US` and `max_calls` = `50`, **not** between 07:00–08:10 or
+   19:00–20:10 UTC (it can cancel a waiting import). Report the
+   `eBay quota: …` line, the `eBay US: due …` funnel line, the `eBay rejects:`
+   line and whether `⚠ another app is spending this keyset` appeared.
+
 ## 12. Report
 Give me:
 - the live URL, and whether `www` redirects;
@@ -322,6 +368,8 @@ Give me:
 - the results of the Import / Stripe setup / Production deploy / Search
   Console / IndexNow runs, of the sign-in test, of the `/admin` check, and
   of the share-image checks (which testers showed the price-guide image);
+- the eBay section: app created (yes/no), notification test result, secrets
+  set (names only), and the smoke-test lines;
 - anything you could not finish, and why.
 
 ---

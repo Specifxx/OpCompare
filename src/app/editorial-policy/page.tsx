@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
+import { getSiteStats } from "@/lib/data";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
   openGraph: pageOg("/editorial-policy"),
 };
 
-export default function EditorialPolicy() {
+export default async function EditorialPolicy() {
+  const ebayLive = (await getSiteStats().catch(() => null))?.ebayLive ?? false;
   return (
     <StaticPage title="Editorial policy" crumb="Editorial policy">
       <h2>Figures come from data, not from the draft</h2>
@@ -37,6 +39,12 @@ export default function EditorialPolicy() {
         OP Compare earns from some eBay and TCGplayer links (labelled). That
         never changes a ranking: comparisons are cheapest first, and posts name
         stores by the data. No store pays to be mentioned.
+        {ebayLive ? (
+          <>
+            {" "}eBay listing prices (we are an eBay Partner Network affiliate) are
+            ranked by item price like any store&apos;s.
+          </>
+        ) : null}
       </p>
       <h2>Corrections</h2>
       <p>

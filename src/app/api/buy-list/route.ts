@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { planBuyList, type PlanItem } from "@/lib/buy-list";
+import { isBasketSource, planBuyList, type PlanItem } from "@/lib/buy-list";
 import { getCardDetail, getSealedDetail } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
 import { isPremium } from "@/lib/premium";
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       const d = w.kind === "sealed" ? await getSealedDetail(w.slug) : await getCardDetail(w.slug);
       if (!d) return null;
       const name = "number" in d && d.number ? `${d.name} ${d.number}${d.variant ? ` (${d.variant})` : ""}` : d.name;
-      return { slug: d.slug, name, offers: d.offers.filter((o) => o.market === market).map((o) => ({ source: o.source, priceCents: o.priceCents, url: o.url, inStock: o.inStock })) };
+      return { slug: d.slug, name, offers: d.offers.filter((o) => o.market === market && isBasketSource(o.source)).map((o) => ({ source: o.source, priceCents: o.priceCents, url: o.url, inStock: o.inStock })) };
     }),
   );
   const items = loaded.filter((x): x is PlanItem => x != null);

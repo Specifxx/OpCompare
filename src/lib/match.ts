@@ -284,6 +284,16 @@ export function matchCardTitle(title: string, idx: CardIndex): { id: number } | 
   return fits.length === 1 ? accept(fits[0]) : { miss: "ambiguous" };
 }
 
+/**
+ * Does a title name this set, by code ("OP-01", "PRB01") or by name ("Romance
+ * Dawn")? The card number's own prefix ("OP01-120") is not a set code. The
+ * same test matchCardTitle uses; exported for lib/ebay-match.ts.
+ */
+export function titleNamesSet(title: string, setCode: string | null | undefined, setName: string | null | undefined): boolean {
+  const flat = title.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ");
+  return setCodesIn(title).some((tc) => codeNamesSet(tc, setCode)) || nameInTitle(flat, setName);
+}
+
 /** Does the title (flattened to "a z 0 9" words) name this set? */
 function nameInTitle(flat: string, setName: string | null | undefined): boolean {
   const n = (setName ?? "").toLowerCase().normalize("NFKD").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();

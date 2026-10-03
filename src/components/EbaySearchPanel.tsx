@@ -8,7 +8,7 @@ export interface EbayLink {
 }
 
 // A titled block of eBay searches (RiftCompare's EbaySearchPanel). Each button
-// is an EPN-tagged search on the visitor's own eBay — no API, no quota.
+// is an EPN-tagged search on the visitor's own eBay — no API call, no quota.
 export function EbaySearchPanel({ heading, sub, links, country, page }: { heading: string; sub?: string; links: EbayLink[]; country: Country; page: string }) {
   if (!links.length) return null;
   return (

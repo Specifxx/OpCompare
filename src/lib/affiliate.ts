@@ -2,11 +2,12 @@
 // RiftCompare's lib/affiliate.ts. The ids are PUBLIC by design (they appear in
 // every outbound URL) and are the owner's existing accounts, env-overridable.
 //
-// ── NO eBay API, ANYWHERE ON THIS SITE ───────────────────────────────────────
-// RiftCompare spends the app's 5,000 Browse API calls a day. OP Compare never
-// calls the API: every eBay link here is a SEARCH link we build ourselves, which
-// costs no quota. tests/no-ebay-api.test.ts fails if anything in src/ or
-// scripts/ names an eBay API host or OAuth endpoint.
+// ── eBay: search links everywhere, API prices from the script side only ─────
+// Every eBay link built HERE is a SEARCH link, which costs no quota. eBay
+// listing prices come from OP Compare's own eBay application (not RiftCompare's)
+// through the twice-daily eBay pass (scripts/ebay.ts, lib/ebay*.ts), which runs
+// only in GitHub Actions. This file never calls eBay. tests/no-ebay-api.test.ts
+// fails if an eBay API host or credential appears outside src/lib/ebay*.ts.
 //
 // ── ATTRIBUTION ──────────────────────────────────────────────────────────────
 // EPN's `customid` and Impact's `sharedid` carry `oc-<market>-<source>`, so OP
@@ -58,11 +59,19 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
     const u = new URL(url);
     const m = ebayMarket(u.hostname);
     if (!m) return url;
-    if (u.hostname.replace(/^www\./i, "").toLowerCase() !== m.realHost) u.hostname = `www.${m.realHost}`;
+    const rerouted = u.hostname.replace(/^www\./i, "").toLowerCase() !== m.realHost;
+    if (rerouted) u.hostname = `www.${m.realHost}`;
+    // A URL eBay built itself (the Browse API's itemAffiliateWebUrl) already
+    // carries the right rotation for its marketplace: keep its mkrid/siteid and
+    // add only what eBay can't know (campaign, sub-id). Not when rerouted — an
+    // ebay.com.sg rotation means nothing on ebay.com (RiftCompare's rule).
+    const preTagged = !rerouted && u.searchParams.get("mkevt") === "1" && !!u.searchParams.get("mkrid");
     u.searchParams.set("mkevt", "1");
     u.searchParams.set("mkcid", "1");
-    u.searchParams.set("mkrid", process.env[`EBAY_MKRID_${m.code}`] || m.mkrid);
-    u.searchParams.set("siteid", process.env[`EBAY_SITEID_${m.code}`] || m.siteid);
+    if (!preTagged) {
+      u.searchParams.set("mkrid", process.env[`EBAY_MKRID_${m.code}`] || m.mkrid);
+      u.searchParams.set("siteid", process.env[`EBAY_SITEID_${m.code}`] || m.siteid);
+    }
     u.searchParams.set("campid", EBAY_CAMPAIGN_ID);
     u.searchParams.set("toolid", "10001");
     const shape = /\/itm\//.test(u.pathname) ? "product" : /\/sch\//.test(u.pathname) ? "search" : null;

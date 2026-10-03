@@ -12,11 +12,39 @@ lands one a day at 08:00 UTC. "Push to prod" means land it on `main` and ride th
 daily release. Add `[deploy]` only when the owner says a release is urgent, and
 say so. A commit BODY may discuss the marker; it does not deploy.
 
-## Never call the eBay API
+## The eBay API: OP Compare's own keyset, script-side only
 
-The eBay Browse API quota belongs to RiftCompare. eBay appears here only as
-search links built in `src/lib/affiliate.ts`. `tests/no-ebay-api.test.ts` fails
-if any file names an eBay API host, OAuth endpoint or `EBAY_CLIENT_*` credential.
+- It runs only from `scripts/ebay.ts`, via `.github/workflows/ebay-prices.yml`
+  (05:37 and 17:37 UTC). No page, route, Vercel cron or the store import calls
+  or imports it.
+- eBay API hosts appear only in `src/lib/ebay*.ts`; the `EBAY_CLIENT_*`
+  credentials only there and in `ebay-prices.yml` (`tests/no-ebay-api.test.ts`).
+  `scripts/ebay.ts` asks `isEbayEnabled()` and never names them.
+- Never RiftCompare's keyset (it would spend RiftCompare's quota silently), and
+  never on Vercel: the credentials are GitHub Actions secrets only.
+- eBay is off until both secrets exist (a green no-op run); keys set but
+  refused fail the run red.
+- The budget is `min(EBAY_MAX_CALLS, remaining − EBAY_QUOTA_RESERVE)` per run
+  (unknown `remaining` → daily limit minus our last-24h spend; the cap is at
+  most half the spendable day); `spendable` starts at 0 and every Browse call
+  goes through `spend()`. Searches failing without a 429 trip the breaker and
+  fail the run red; every run records `spent`, even when it throws.
+- Writes are per (product, market) pair, after a COMPLETED search only: a
+  failed, 429'd or budget-refused search touches nothing.
+- Never loosen the matcher to raise eBay matches; eBay-only rules live in
+  `src/lib/ebay-match.ts`, each with a real title in `tests/ebay-match.test.ts`.
+  No eBay price is trusted without a reference: TCGplayer's market price, or
+  for an unpriced launch product the cheapest non-eBay offer.
+- eBay rows are never re-ranked (item price, like every row), never in alerts
+  or the Buy List Planner's baskets, never counted as a store, and never
+  "delivered" without known postage. No "money back"/"buyer protection" copy.
+- The Marketplace Account Deletion route
+  (`src/app/api/ebay/marketplace-deletion`) must stay deployed while the keyset
+  exists.
+- Changing a floor, share or interval in `src/lib/ebay-plan.ts` updates
+  `tests/ebay-plan.test.ts`, the methodology copy and DECISIONS.
+- Never dispatch *eBay prices* within 07:00–08:10 or 19:00–20:10 UTC: it shares
+  the import's concurrency group and can cancel a pending import.
 
 ## Egress
 

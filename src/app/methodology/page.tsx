@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
+import { getSiteStats } from "@/lib/data";
 import { USD_TO } from "@/lib/fx";
 import { pageOg } from "@/lib/og/meta";
 
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
   openGraph: pageOg("/methodology"),
 };
 
-export default function Methodology() {
+export default async function Methodology() {
+  // eBay copy follows the data: until the eBay pass has run, the page reads as before it existed.
+  const ebayLive = (await getSiteStats().catch(() => null))?.ebayLive ?? false;
   return (
     <StaticPage title="How we compare prices" crumb="Methodology">
       <h2>Where prices come from</h2>
@@ -28,11 +31,23 @@ export default function Methodology() {
           as a US offer, and the market price, shown everywhere as a reference.
           Read daily from TCGCSV&apos;s public mirror of TCGplayer&apos;s data.
         </li>
-        <li>
-          <strong>eBay.</strong> A search of your own eBay for the card — we
-          build the search link; we never call eBay&apos;s API and never show an
-          eBay price we have not seen.
-        </li>
+        {ebayLive ? (
+          <li>
+            <strong>eBay.</strong> Twice a day we search eBay (US, UK, Australia,
+            Spain for EU, and Canada for sealed) for cards worth US$20 or more on
+            TCGplayer (US$50 in the EU) and sealed products worth US$30 or more;
+            cards of US$100 and up daily, the rest every two days. We show the
+            cheapest matching Buy It Now listing as an asking price, never
+            re-ranked: it sits among the stores by item price. Canadian card rows
+            are the US listing, shipped from the US. Every market also gets a
+            search link to its own eBay. We are an eBay Partner Network affiliate.
+          </li>
+        ) : (
+          <li>
+            <strong>eBay.</strong> A search of your own eBay for the card — we
+            build the search link, and never show an eBay price we have not seen.
+          </li>
+        )}
       </ul>
       <h2>Matching a listing to a printing</h2>
       <p>
@@ -52,7 +67,14 @@ export default function Methodology() {
       <h2>Ranking</h2>
       <p>
         Offers are ranked cheapest first by item price. Postage is added at each
-        store&apos;s checkout and is not included. A listing&apos;s condition is
+        store&apos;s checkout and is not included
+        {ebayLive ? (
+          <>
+            ; an eBay row shows the postage eBay states, and says &ldquo;postage
+            at checkout&rdquo; when it doesn&apos;t
+          </>
+        ) : null}
+        . A listing&apos;s condition is
         the best condition the store has in stock (Near Mint first). Sold-out
         listings are folded below the comparison and never set a headline price.
       </p>

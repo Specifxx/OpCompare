@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
+import { getSiteStats } from "@/lib/data";
 import { CONTACT_EMAIL, SISTER_SITE, SITE_NAME } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
   openGraph: pageOg("/about"),
 };
 
-export default function About() {
+export default async function About() {
+  const ebayLive = (await getSiteStats().catch(() => null))?.ebayLive ?? false;
   return (
     <StaticPage title={`About ${SITE_NAME}`} crumb="About">
       <p>
@@ -41,6 +43,14 @@ export default function About() {
         TCGplayer link, {SITE_NAME} may earn a commission at no extra cost to
         you. Affiliate status never changes the order of a price comparison — it
         is always cheapest first. Rows that are paid links are labelled.
+        {ebayLive ? (
+          <>
+            {" "}eBay prices are the cheapest matching Buy It Now listing we found,
+            shown as an asking price among the stores — never moved up or down
+            because they are eBay. {SITE_NAME} is an eBay Partner Network
+            affiliate.
+          </>
+        ) : null}
       </p>
       <h2>Not affiliated with Bandai</h2>
       <p>

@@ -1,3 +1,4 @@
+import { ebayJsonLdOffers } from "@/lib/board";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui";
 import { cardEbayQuery } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, isoCountry } from "@/lib/country";
 import { getCardDetail, getCatalog, getProductHistory } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
@@ -107,6 +108,7 @@ export default async function CardPage({ params }: Props) {
     </div>
   ) : null;
 
+  const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
     <div className="container-app py-6">
       <JsonLd
@@ -132,6 +134,7 @@ export default async function CardPage({ params }: Props) {
                   ).toFixed(2),
                   offerCount: inMarket.length,
                   availability: "https://schema.org/InStock",
+                  ...(ebayLd.length ? { offers: ebayLd } : {}),
                 },
               }
             : {}),

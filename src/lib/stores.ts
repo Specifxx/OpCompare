@@ -274,7 +274,16 @@ export function storeForSource(source: string): StoreInfo | null {
   return source.startsWith("store:") ? STORE_BY_KEY[source.slice(6)] ?? null : null;
 }
 
-export function sourceLabel(source: string): string {
+/** eBay rows: `ebay` is the market's own eBay; `ebay_us` is a CA row derived from the US search. */
+export function isEbaySource(source: string): boolean {
+  return source === "ebay" || source === "ebay_us";
+}
+
+const EBAY_SITE_LABEL: Record<Country, string> = { US: "eBay", AU: "eBay Australia", UK: "eBay UK", SG: "eBay", CA: "eBay Canada", EU: "eBay Spain" };
+
+export function sourceLabel(source: string, market?: string): string {
   if (source === "tcgplayer") return "TCGplayer";
+  if (source === "ebay_us") return "eBay US";
+  if (source === "ebay") return EBAY_SITE_LABEL[market as Country] ?? "eBay";
   return storeForSource(source)?.name ?? source.replace(/^store:/, "");
 }

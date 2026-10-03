@@ -19,7 +19,7 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 |---|---|
 | `/` | Hero search, trending cards, market switch, today's top deals, newest set's chase cards, booster boxes, colours, FAQ. Share image: the price guide (see below) |
 | `/browse` | The card database: search, filters (price, set, colour, rarity, type, printing), sorts, pagination |
-| `/card/[slug]` | One printing: every store's price in your market cheapest first, eBay search, TCGplayer reference, price history, card text and details, other printings, "Report a wrong price". Share image: art, printing and rarity, price per market |
+| `/card/[slug]` | One printing: every store's price (and the cheapest matching eBay listing) in your market cheapest first, eBay search, TCGplayer reference, price history, card text and details, other printings, "Report a wrong price". Share image: art, printing and rarity, price per market |
 | `/sets`, `/sets/[slug]` | Every set by type, each with its card list, stats and sealed products. Share image: the set's five most valuable cards |
 | `/sealed`, `/sealed/[slug]` | Booster boxes, cases, packs, starter decks, double packs, collections — filters, per-pack prices, price board. Share image: the product and its price |
 | `/price-guide` | Every printing in one sortable table, prices by set. Share image: the price guide |
@@ -71,7 +71,7 @@ lets scripts call `/api/admin/*` with an `Authorization: Bearer` header.
 |---|---|---|
 | **TCGplayer** via [TCGCSV](https://tcgcsv.com) (category 68) | The whole catalogue (87 groups, ~7,300 printings, ~420 sealed), card text and stats; the cheapest listing (a US offer) and the market price (a reference everywhere, "≈" outside the US) | US + reference |
 | **Shopify stores** (`src/lib/stores.ts`) | Each store's One Piece collections, read with Shopify Markets pricing for its own country; every listing matched to one exact printing (`src/lib/match.ts`) | US AU UK SG CA EU |
-| **eBay** | *Search links* on your own eBay (card and sealed pages, eBay panels, the footer ad), tagged with the EPN campaign. **No eBay API calls, ever** — RiftCompare's 5,000/day Browse quota is untouched. `tests/no-ebay-api.test.ts` fails if anything names an eBay API host or credential. | all six |
+| **eBay** | **Listing prices** from OP Compare's *own* eBay application (Browse API, its own 5,000 calls a day), searched twice a day by `scripts/ebay.ts` (`ebay-prices.yml`): singles of US$100+ daily, US$20+ (US$50+ in the EU) and sealed of US$30+ every two days; the cheapest matching Buy It Now listing, ranked among the stores by item price, never re-ranked. Off until the GitHub secrets exist. Plus EPN-tagged *search links* on your own eBay everywhere. API hosts and credentials live only in `src/lib/ebay*.ts` (`tests/no-ebay-api.test.ts`). | US UK AU EU (Spain); CA sealed + US-derived singles; SG links only |
 
 Matching follows RiftCompare's rule: *understated, never wrong*. A listing is
 matched only when exactly one printing fits its card number (or TCGplayer's exact

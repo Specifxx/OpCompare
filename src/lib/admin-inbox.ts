@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import type { FeedbackAction, ReportStatus, SuggestionStatus, ContactStatus } from "./inbox-rules";
 import { shouldNotifyReporter } from "./inbox-rules";
 import type { StoreAppearance } from "./store-health";
-import { sourceLabel } from "./stores";
+import { isEbaySource, sourceLabel } from "./stores";
 
 export const INBOX_CAPS = { contact: 500, suggestions: 500, feedback: 500, reports: 300 } as const;
 /** A store with this many NEW/CONFIRMED reports in HOT_DAYS gets the red banner. */
@@ -41,7 +41,9 @@ async function loadHotStores(now = new Date()): Promise<{ source: string; name: 
     where: { status: { in: ["NEW", "CONFIRMED"] }, createdAt: { gte: new Date(now.getTime() - HOT_DAYS * 86_400_000) } },
     _count: { _all: true },
   });
-  const hot = groups.filter((g) => g._count._all >= HOT_REPORTS).sort((a, b) => b._count._all - a._count._all);
+  // eBay rows are listings found by the eBay pass, not a store scraper: their
+  // reports stay in the inbox but never flag a "hot store".
+  const hot = groups.filter((g) => g._count._all >= HOT_REPORTS && !isEbaySource(g.source)).sort((a, b) => b._count._all - a._count._all);
   if (!hot.length) return [];
   // The store's last read, so a broken scraper is easy to tell from a real price change.
   const appearances = await loadAppearances().catch(() => new Map<string, StoreAppearance[]>());

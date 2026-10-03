@@ -9,7 +9,8 @@
 //
 // Writes today's prices to DATABASE_URL and the price history to HISTORY_DIR
 // (default .data/history; the workflow commits it to the `data` branch — see
-// lib/history.ts). Never calls the eBay API.
+// lib/history.ts). The store import never calls eBay: the eBay pass is
+// scripts/ebay.ts (ebay-prices.yml), and this import aggregates its rows.
 import fs from "node:fs";
 import { prisma } from "../src/lib/db";
 import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";

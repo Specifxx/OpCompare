@@ -1,3 +1,4 @@
+import { ebayJsonLdOffers } from "@/lib/board";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,7 +9,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { WatchButton } from "@/components/WatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { onePieceEbayQuery } from "@/lib/affiliate";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, isoCountry } from "@/lib/country";
 import {
   getCatalog,
   getProductHistory,
@@ -79,6 +80,7 @@ export default async function SealedDetailPage({ params }: Props) {
     `${s.name.replace(/\s+-\s+/, " ")} English`,
   ).replace(/\bbooster box\b/i, "booster (box,display)");
 
+  const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
     <div className="container-app py-6">
       <JsonLd
@@ -101,6 +103,7 @@ export default async function SealedDetailPage({ params }: Props) {
                     Math.max(...inMarket.map((o) => o.priceCents)) / 100
                   ).toFixed(2),
                   offerCount: inMarket.length,
+                  ...(ebayLd.length ? { offers: ebayLd } : {}),
                 },
               }
             : {}),

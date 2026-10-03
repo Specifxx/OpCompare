@@ -6,7 +6,8 @@ import { useCountry } from "./CountryProvider";
 
 // RiftCompare's footer ad zone: an eBay box and a TCGplayer box above the
 // footer, labelled "Ad", with one disclosure line. Both are affiliate SEARCH /
-// category links — no eBay API call is involved. Not shown on the policy pages,
+// category links — no eBay API call is involved (API prices come only from the
+// script-side eBay pass, scripts/ebay.ts). Not shown on the policy pages,
 // nor to Plus and Premium members (data-ad-placement, lib/ad-free.ts).
 const BANNER_FREE = ["/about", "/authors", "/contact", "/editorial-policy", "/methodology", "/privacy", "/terms"];
 

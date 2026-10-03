@@ -44,6 +44,9 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Secret | `CRON_SECRET` | A long random string (same value as in Vercel) | New |
 | Secret | `GSC_SA_KEY` | The Search Console service-account JSON key | **Reuse** the same service account. GitHub secrets can't be read back, so create a new JSON key for it (Google Cloud → IAM → Service accounts → Keys) |
 | Secret | `STRIPE_SECRET_KEY` | OP Compare's Stripe secret key (`sk_live_…`), used by the *Stripe setup* workflow | **New** account (see 6) |
+| Secret | `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` | Optional. The Production App ID and Cert ID of OP Compare's **own** eBay application, used only by *eBay prices*. Never Vercel | **New** app (see 6a), never RiftCompare's |
+| Secret | `EBAY_AFFILIATE_CAMPAIGN` | Optional. The EPN campaign id (defaults to RiftCompare's) | **Reuse** (optional) |
+| Variable | `EBAY_QUOTA_RESERVE` / `EBAY_MAX_CALLS` / `EBAY_MIN_VALUE_CENTS` | Optional eBay tuning; defaults `600` / `2200` / `2000` (see 6a) | New |
 | Variable | `SITE_URL` | `https://opcompare.app` (also the workflows' default) | New |
 | Variable | `GSC_PROPERTY` | `sc-domain:opcompare.app` (the default), or `https://opcompare.app/` for a URL-prefix property | New |
 | Variable | `INDEXNOW_KEY` | `43ac93dd97a44d4894bedf52d621c57c` | **Reuse**: RiftCompare's public key (keys are verified per host) |
@@ -56,6 +59,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
+| eBay prices | 05:37 and 17:37 UTC, or Run workflow (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
 
 Each workflow is a no-op until its values exist.
 
@@ -90,12 +94,15 @@ Each workflow is a no-op until its values exist.
 | `GOOGLE_SITE_VERIFICATION` | Only for a URL-prefix Search Console property: the HTML tag's `content` | New |
 | `BING_SITE_VERIFICATION` | Optional. Bing's `msvalidate.01` value; import from Search Console instead | New |
 | `EBAY_AFFILIATE_CAMPAIGN` | Optional. The EPN campaign id; the code defaults to RiftCompare's | **Reuse** (optional) |
+| `EBAY_VERIFICATION_TOKEN` | Production. A **new** random 32–80 characters of `[A-Za-z0-9_-]`, also typed into the eBay portal, for the Marketplace Account Deletion route (see 6a) | **New**, never RiftCompare's |
+| `EBAY_DELETION_ENDPOINT` | Production. Exactly `https://opcompare.app/api/ebay/marketplace-deletion` | **New** |
 | `TCGPLAYER_IMPACT_LINK` | Optional. The Impact link base; the code defaults to RiftCompare's | **Reuse** (optional) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Optional public contact address | Optional |
 | `NEXT_PUBLIC_USD_TO_AUD` … `_EUR` | Optional FX overrides | **Reuse** if set there |
 
-Do not copy any of these: `EBAY_CLIENT_*` (OP Compare never calls the eBay
-API), `RM*`, `RH*`, `HISTORY_DATABASE_URL*`, RiftCompare's `AUTH_SECRET`,
+Never copy RiftCompare's `EBAY_CLIENT_*` values (and never put any
+`EBAY_CLIENT_*` in Vercel): create OP Compare's own eBay application and keys
+(section 6a). Do not copy any of these either: `RM*`, `RH*`, `HISTORY_DATABASE_URL*`, RiftCompare's `AUTH_SECRET`,
 `STRIPE_*` or `*_PRICE_ID`, Resend, Brevo, Discord bot, or AdSense.
 
 ## 4. Google Analytics 4
@@ -166,6 +173,78 @@ A provider's button shows only when both of its values are set.
 re-run *Stripe setup*. New subscribers pay the new price; existing ones keep
 theirs.
 
+## 6a. eBay Browse API (optional)
+
+eBay listing prices come from OP Compare's **own** eBay application (its own
+5,000 Browse calls a day), searched twice a day by *eBay prices*
+(`.github/workflows/ebay-prices.yml` → `scripts/ebay.ts`). Everything is off,
+and the workflow is a green no-op, until both GitHub secrets exist. **Do not
+reuse RiftCompare's App ID/Cert ID**: OP Compare would spend RiftCompare's
+quota. The only signal is a `::warning` on the run ("another app is spending
+this keyset"), and only once RiftCompare has spent today; such a run then
+spends at most 50 calls, but it stays green.
+
+| Variable | Where | Default | Meaning |
+|---|---|---|---|
+| `EBAY_CLIENT_ID` | **GitHub secret** (repo). Never Vercel | none → eBay off | Production App ID of OP Compare's eBay app |
+| `EBAY_CLIENT_SECRET` | **GitHub secret**. Never Vercel | none → eBay off | That app's Production Cert ID |
+| `EBAY_VERIFICATION_TOKEN` | **Vercel**, Production | `""` → the deletion route answers 500 | New random 32–80 chars `[A-Za-z0-9_-]`, also typed into the eBay portal. Not RiftCompare's |
+| `EBAY_DELETION_ENDPOINT` | **Vercel**, Production | `""` → 500 | Exactly `https://opcompare.app/api/ebay/marketplace-deletion` |
+| `EBAY_AFFILIATE_CAMPAIGN` | Optional, GitHub secret and Vercel | `5339155912` | EPN campaign (search links and the Browse `affiliateCampaignId`) |
+| `EBAY_QUOTA_RESERVE` | Optional GitHub **variable** | `600` | Calls never spent today (a negative value is 0) |
+| `EBAY_MAX_CALLS` | Optional GitHub variable | `2200` | Per-run cap; never more than half of (eBay's live daily limit − reserve), so one run can't take both runs' share. Raise it only after a Growth Check raises the limit |
+| `EBAY_MIN_VALUE_CENTS` | Optional GitHub variable | `2000` | Singles floor (US/UK/AU; EU uses at least 5000) |
+| `force` / `only_market` / `max_calls` | *eBay prices* dispatch inputs | off / all / none | `EBAY_FORCE=1` (after a matching change), one market, a lower budget |
+
+Each run spends `min(EBAY_MAX_CALLS, liveRemaining − EBAY_QUOTA_RESERVE)`,
+split US 26% · UK 26% · AU 26% · EU (eBay Spain) 19% · CA 3% (sealed; CA
+singles are derived from the US search) · SG 0%. When eBay's live count can't
+be read, `liveRemaining` is taken as the daily limit minus our own spend over
+the last 24h (from the eBay `ImportRun` rows). Searches that fail without a 429
+(an outage, a 401/403 from a keyset not approved for Browse) stop the run after
+10 in a row, or when over half of 50+ fail, and the run goes red.
+
+**Order (the deletion endpoint must be live before production keys):**
+1. Land the code on `main` (no `[deploy]`); it rides the next 08:00 UTC release.
+   **Before that release, sync the schema:** the card and sealed pages select
+   the new `Offer.shippingCents` column whether eBay is on or not, and only
+   *Import prices* (07:07/19:07 UTC) syncs the schema while eBay is off. Run
+   *Import prices* by hand (or `npx prisma db push` against production) after
+   the code is on `main`, and confirm `Offer.shippingCents` and the `EbayCheck`
+   table exist before the 08:00 release (or before a manual *Production
+   deploy*). A release that beats the sync fails every card and sealed page.
+2. **Before that release**, set `EBAY_VERIFICATION_TOKEN` and
+   `EBAY_DELETION_ENDPOINT` in Vercel (Production). Vercel applies variables
+   per deployment, so ones set after the release wait for the next one. Set
+   them as **project** variables on OP Compare, not as team Shared Environment
+   Variables linked from RiftCompare (the names are the same; RiftCompare's
+   token or endpoint here would fail eBay's endpoint validation).
+3. After the release:
+   `curl -s "https://opcompare.app/api/ebay/marketplace-deletion?challenge_code=test"`
+   must return `{"challengeResponse":"<64 hex>"}` (500 = the variables are
+   missing from this deployment).
+4. developer.ebay.com: create a **new application** "OP Compare" → Notifications
+   → Marketplace Account Deletion: alert email, the endpoint URL and the token,
+   **Save**, **Send Test Notification** (200). Enable the **Production** keyset.
+5. GitHub → Secrets and variables → Actions: **repository** secrets
+   `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` holding the new app's keys;
+   optionally the three variables. `Specifxx` is a personal account, so there
+   are no organisation-level secrets: the repository secrets are the only
+   source. Never paste the values from RiftCompare's repository.
+6. Run *eBay prices* by hand with `only_market=US` and `max_calls=50`. Read the
+   `eBay quota:` line, the funnel and any foreign-spend warning (a yellow
+   *eBay keyset* annotation on the run page). The 05:37 and 17:37 UTC schedules
+   take over. The site's eBay copy (methodology, home FAQ, about, editorial
+   policy) switches on by itself after the first successful run.
+7. Read eBay's current API License Agreement (call limits; storing and
+   refreshing eBay content — we re-search within 48h and expire rows at 72h)
+   before switching production keys on.
+
+**Never dispatch *eBay prices* within 07:00–08:10 or 19:00–20:10 UTC.** It
+shares the *Import prices* concurrency group; a newly queued run cancels a
+pending one, so it could cancel an import waiting behind a late eBay run. The
+deletion route must stay deployed for as long as the eBay keyset exists.
+
 ## 7. Google Search Console and Bing
 
 1. *Add property → Domain* `opcompare.app` and verify with the DNS TXT record.
@@ -200,6 +279,15 @@ theirs.
 4. GitHub → run *Search Console* and *IndexNow submit*.
 
 ## Limits to watch
+
+- **eBay Browse (5,000 calls/day, OP Compare's own app):** each *eBay prices*
+  run logs `eBay quota: R/5000 remaining → budget B`, a per-market funnel with
+  the oldest S2 pair, and `spent N calls (modelled M)`. Expect the first week's
+  runs to plan at the cap three runs in four (the 24h and 48h tiers fall into a
+  2,200 / 2,200 / 2,200 / ~800 cycle), so S2 can slip in those runs before it
+  settles. If the oldest S2 pair passes 60h or real spend runs above the
+  model, raise `EBAY_MIN_VALUE_CENTS`
+  (a GitHub variable, no deploy) and update `tests/ebay-plan.test.ts`.
 
 - **Neon storage (0.5 GB):** only today's prices and accounts, so it stays
   small. History is not in Postgres.

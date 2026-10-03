@@ -26,7 +26,7 @@ export async function createPriceReport(v: PriceReportInput, userId: string | nu
       kind: card ? "card" : "sealed",
       source: v.source,
       market: v.market,
-      storeName: sourceLabel(v.source),
+      storeName: sourceLabel(v.source, v.market),
       shownPriceCents: offer?.priceCents ?? null,
       currency: offer?.currency ?? null,
       listingTitle: offer?.title ?? null,

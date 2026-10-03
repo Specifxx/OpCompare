@@ -4,13 +4,16 @@ import type { OfferRow } from "@/lib/data";
 import { affiliateUrl, ebayLabel, ebaySearchUrl, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
-import { sourceLabel } from "@/lib/stores";
+import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "@/lib/board";
+import { isEbaySource, sourceLabel } from "@/lib/stores";
 import { ReportPriceButton } from "./ReportPriceButton";
 
 // The price comparison (RiftCompare's card-page board): every open offer in the
 // visitor's market, cheapest first by ITEM price; sold-out stores folded below;
-// eBay as a search of the visitor's own eBay (no API); TCGplayer's market
-// price as a reference under the comparison, never in it.
+// eBay listings (the eBay pass, lib/ebay-import.ts) beside the stores, ranked by
+// item price like every row and never moved because they are eBay; a search of
+// the visitor's own eBay under it; TCGplayer's market price as a reference
+// under the comparison, never in it.
 export function PriceBoard({
   productId,
   offers,
@@ -32,7 +35,8 @@ export function PriceBoard({
 }) {
   const c = COUNTRIES[country];
   const here = offers.filter((o) => o.market === country && o.currency === c.currency);
-  const open = here.filter((o) => o.inStock).sort((a, b) => a.priceCents - b.priceCents);
+  const open = here.filter((o) => o.inStock).sort(compareBoardRows);
+  const hasEbayRow = open.some((o) => isEbaySource(o.source));
   const sold = here.filter((o) => !o.inStock).sort((a, b) => a.priceCents - b.priceCents);
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
   const elsewhere = MARKETS.filter((m) => m !== country)
@@ -54,33 +58,39 @@ export function PriceBoard({
       {open.length ? (
         <ol className="divide-y divide-ink-800">
           {open.map((o, i) => {
-            const href = affiliateUrl(o.url, o.source === "tcgplayer" ? "tcgplayer" : o.source.replace("store:", ""), page);
+            const href = affiliateUrl(o.url, retailerSubId(o.source), page);
             const tcg = o.source === "tcgplayer";
+            const isEbay = isEbaySource(o.source);
+            const label = sourceLabel(o.source, country);
+            const retailer = isEbay ? ebayRetailer(o.source, country) : retailerSubId(o.source);
             return (
               <li key={`${o.source}-${o.market}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-[15px] font-semibold text-white">{sourceLabel(o.source)}</span>
+                    <span className="truncate text-[15px] font-semibold text-white">{label}</span>
                     {i === 0 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
                   </p>
+                  {isEbay ? <p className="mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
                     {o.condition ? <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{o.condition}</span> : null}
                     {tcg ? <span>lowest listing</span> : null}
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      In stock
-                    </span>
-                    <span>postage at checkout</span>
+                    {isEbay ? null : (
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        In stock
+                      </span>
+                    )}
+                    <span>{postageLine(o, country)}</span>
                     <span>updated {ago(o.updatedAt)}</span>
                     {isPaidLink(o.url) ? <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span> : null}
                   </p>
                 </div>
                 <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(o.priceCents, country)}</span>
-                <a href={href} target="_blank" rel={outboundRel()} data-retailer={o.source.replace("store:", "")} data-page={page} className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
-                  {tcg ? "Buy on TCGplayer →" : "View deal →"}
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} className={`${isEbay ? "btn-ebay" : "btn-primary"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
+                  {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={href} target="_blank" rel={outboundRel()} data-retailer={o.source.replace("store:", "")} data-page={page} className="btn-primary shrink-0 px-3 sm:hidden" aria-label={`Buy at ${sourceLabel(o.source)}`}>
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} className={`${isEbay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${label}` : `Buy at ${label}`}>
                   →
                 </a>
               </li>
@@ -105,16 +115,16 @@ export function PriceBoard({
       )}
       {open.length ? (
         <div className="border-t border-ink-800">
-          <ReportPriceButton productId={productId} market={country} offers={open.map((o) => ({ source: o.source, label: sourceLabel(o.source) }))} />
+          <ReportPriceButton productId={productId} market={country} offers={open.map((o) => ({ source: o.source, label: sourceLabel(o.source, country) }))} />
         </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3 border-t border-ink-800 bg-ink-850/50 px-4 py-3 sm:px-5">
         <span className="flex-1 text-sm text-slate-300">
-          <span className="font-semibold text-white">{ebayLabel(country)}</span> — search live listings for this {noun}
+          <span className="font-semibold text-white">{ebayLabel(country)}</span> — {hasEbayRow ? "more live listings" : "search live listings"} for this {noun}
         </span>
         <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page={page} className="btn-ebay-ghost min-h-10">
-          Search {ebayLabel(country)} →
+          {hasEbayRow ? `More listings on ${ebayLabel(country)} →` : `Search ${ebayLabel(country)} →`}
         </a>
       </div>
 
@@ -126,9 +136,9 @@ export function PriceBoard({
           <ul className="divide-y divide-ink-800 border-t border-ink-800">
             {sold.map((o) => (
               <li key={`${o.source}-sold`} className="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-400">
-                <span className="flex-1 truncate">{sourceLabel(o.source)}</span>
+                <span className="flex-1 truncate">{sourceLabel(o.source, country)}</span>
                 <span className="text-xs">sold out · last {money(o.priceCents, country)}</span>
-                <a href={affiliateUrl(o.url, o.source.replace("store:", ""), page)} target="_blank" rel={outboundRel()} className="text-xs font-semibold text-brand-400 hover:underline">
+                <a href={affiliateUrl(o.url, retailerSubId(o.source), page)} target="_blank" rel={outboundRel()} className="text-xs font-semibold text-brand-400 hover:underline">
                   View →
                 </a>
               </li>
@@ -148,7 +158,10 @@ export function PriceBoard({
           </p>
         ) : null}
         <p>
-          Prices are collected from public store listings and may change. <Link href="/methodology" className="underline hover:text-slate-300">How we compare prices</Link>
+          {hasEbayRow
+            ? <>Prices are collected from public store listings and eBay&apos;s Buy It Now listings, and may change. eBay prices are sellers&apos; asking prices. </>
+            : <>Prices are collected from public store listings and may change. </>}
+          <Link href="/methodology" className="underline hover:text-slate-300">How we compare prices</Link>
         </p>
         <p>Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, OP Compare earns from qualifying purchases — at no extra cost to you.</p>
       </div>

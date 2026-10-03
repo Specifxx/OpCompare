@@ -57,7 +57,7 @@ export const LIMITS = {
   contactMessageMax: 4000,
 } as const;
 
-export const SOURCE_RE = /^(tcgplayer|store:[a-z0-9-]{1,60})$/;
+export const SOURCE_RE = /^(tcgplayer|ebay|ebay_us|store:[a-z0-9-]{1,60})$/;
 // Letters, digits and `._+'-` before the @, a plain host after it. Deliberately
 // narrower than RFC 5322: the address is shown to the owner and becomes a
 // mailto: link, so `? & = % / , ; : < >` (which would smuggle cc/bcc/body
