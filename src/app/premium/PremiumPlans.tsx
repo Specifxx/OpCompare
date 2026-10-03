@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import PlanButton from "@/components/PlanButton";
 import { ManageSubscriptionButton, PricingCards } from "@/components/PricingCards";
-import { TIER_NAMES, planPrice, type Interval, type Tier } from "@/lib/plans";
-import { useMe } from "@/lib/use-me";
+import { TIER_NAMES, annualSavingPct, planPrice, type Interval, type Tier } from "@/lib/plans";
+import { firePlanClick } from "@/lib/nudge-surface";
+import { invalidateMe, useMe } from "@/lib/use-me";
 
 // The top of /premium: the pricing cards for everyone who is not a member,
 // and, once /api/me says the visitor IS Plus or Premium, their subscription
@@ -17,6 +18,7 @@ interface Sub {
   status: string;
   periodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  annualAvailable?: boolean;
 }
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
@@ -30,6 +32,7 @@ export function PremiumPlans({ checkoutOpen }: { checkoutOpen: boolean }) {
 function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; admin: boolean }) {
   const [sub, setSub] = useState<Sub | null>(null);
   const [settled, setSettled] = useState(false);
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     let live = true;
     fetch("/api/premium/subscription", { cache: "no-store" })
@@ -40,7 +43,7 @@ function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; 
     return () => {
       live = false;
     };
-  }, []);
+  }, [reload]);
 
   const shownTier = sub?.tier ?? tier;
   return (
@@ -73,15 +76,35 @@ function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; 
           ) : null}
         </p>
         <div className="mt-4 flex flex-wrap items-start gap-3">
+          {sub?.cancelAtPeriodEnd ? (
+            <SubAction endpoint="/api/premium/resume" label={`Keep ${TIER_NAMES[shownTier]}`} busyLabel="Turning renewal back on…" doneLabel="Renewal is back on." onDone={() => setReload((n) => n + 1)} />
+          ) : null}
+          {sub?.interval === "month" && !sub.cancelAtPeriodEnd && sub.status === "active" && sub.annualAvailable ? (
+            <SubAction
+              endpoint="/api/premium/switch-to-annual"
+              surface="annual-switch"
+              tier={shownTier}
+              label={`Switch to yearly · save ${annualSavingPct(shownTier)}%`}
+              busyLabel="Switching…"
+              doneLabel={`Switched to yearly, ${planPrice(shownTier, "year")}/yr.`}
+              onDone={() => setReload((n) => n + 1)}
+            />
+          ) : null}
           {sub ? <ManageSubscriptionButton label="Manage billing" /> : null}
-          {shownTier === "plus" ? (
+          {/* Plus → Premium is a prorated switch in the billing portal, so only
+              for a Stripe subscription (not an admin grant, not while closed). */}
+          {shownTier === "plus" && sub ? (
             <PlanButton surface="nav:premium-member" tier="premium" className="btn-primary text-sm">
               Upgrade to Premium
             </PlanButton>
           ) : null}
         </div>
         {sub?.interval === "month" && !sub.cancelAtPeriodEnd ? (
-          <p className="mt-3 text-xs text-slate-500">Yearly costs {planPrice(shownTier, "year")} a year; switch from Manage billing, prorated.</p>
+          <p className="mt-3 text-xs text-slate-500">
+            Yearly costs {planPrice(shownTier, "year")} a year. Switching bills the year now, with credit for the rest of this month.
+          </p>
+        ) : sub?.cancelAtPeriodEnd ? (
+          <p className="mt-3 text-xs text-slate-500">Keeping it turns renewal back on. Nothing is charged now, and the renewal date stays the same.</p>
         ) : null}
       </section>
       <nav aria-label="Your tools" className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -98,6 +121,63 @@ function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; 
           <span className="mt-0.5 block text-xs text-slate-400">The cards you&apos;ve hearted</span>
         </Link>
       </nav>
+    </div>
+  );
+}
+
+// One-click subscription change from the member card (Keep, Switch to yearly):
+// POST to the route, show its error in place, and re-read the subscription when
+// it worked. The route changes Stripe only; entitlement follows the webhook.
+function SubAction({
+  endpoint,
+  label,
+  busyLabel,
+  doneLabel,
+  onDone,
+  surface,
+  tier,
+}: {
+  endpoint: string;
+  label: string;
+  busyLabel: string;
+  doneLabel: string;
+  onDone: () => void;
+  surface?: string;
+  tier?: Tier;
+}) {
+  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const run = async () => {
+    setState("busy");
+    setError(null);
+    if (surface) firePlanClick(surface, tier);
+    try {
+      const r = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const j = (await r.json().catch(() => ({}))) as { error?: string };
+      if (!r.ok) {
+        setError(j.error ?? "That didn't work. Please try again, or use Manage billing.");
+        setState("idle");
+        return;
+      }
+      setState("done");
+      invalidateMe();
+      onDone();
+    } catch {
+      setError("That didn't work. Please try again, or use Manage billing.");
+      setState("idle");
+    }
+  };
+  if (state === "done") return <p role="status" className="py-2.5 text-sm font-semibold text-emerald-400">{doneLabel}</p>;
+  return (
+    <div>
+      <button type="button" onClick={run} disabled={state === "busy"} className="btn-primary text-sm disabled:opacity-60">
+        {state === "busy" ? busyLabel : label}
+      </button>
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-red-300">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

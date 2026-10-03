@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ANNUAL_MIN_VIEWS, annualOfferEligible, capsAllow } from "@/lib/nudge-gate";
+import { ANNUAL_MIN_VIEWS, annualOfferEligible, capsAllow, pathSkipped } from "@/lib/nudge-gate";
 import { armNudge, readStoredNum, useSessionViews } from "@/lib/nudge-runtime";
 import { firePlanClick } from "@/lib/nudge-surface";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS } from "@/lib/nudge-timing";
@@ -24,6 +24,7 @@ const PV_KEY = "oc_annual_nudge_pv";
 const DISMISS_COUNT = "oc_annual_nudge_dismisses";
 const SNOOZE_UNTIL = "oc_annual_nudge_until";
 const SNOOZE_AFTER_DISMISS_MS = 30 * 864e5;
+const ANNUAL_SKIP_PATHS = ["/premium", "/account", "/login", "/admin"] as const;
 
 export function AnnualSwitchNudge() {
   const { me, loaded } = useMe();
@@ -31,13 +32,20 @@ export function AnnualSwitchNudge() {
   const pathname = usePathname();
   const member = loaded && !!me.tier && !me.admin && Boolean(dialog?.checkoutOpen);
   const views = useSessionViews(PV_KEY, pathname, member);
+  // Not over /premium and /account, which carry the same switch in the page,
+  // nor on sign-in or admin pages.
+  const skipped = pathSkipped(pathname, ANNUAL_SKIP_PATHS);
+  // The effect depends on this BOOLEAN, not on `views`: it runs once when the
+  // 2nd view arrives, and a later navigation does not cancel its pending timer
+  // (the one-fetch guard below would then never re-arm it).
+  const pastFirstPage = views >= ANNUAL_MIN_VIEWS;
   const [phase, setPhase] = useState<"hidden" | "offer" | "working" | "done" | "error">("hidden");
   const [tier, setTier] = useState<Tier>("plus");
   const [error, setError] = useState<string | null>(null);
   const checked = useRef(false);
 
   useEffect(() => {
-    if (!member || views < ANNUAL_MIN_VIEWS || checked.current) return;
+    if (!member || skipped || !pastFirstPage || checked.current) return;
     let ls: Storage | null = null;
     let ss: Storage | null = null;
     try {
@@ -58,7 +66,7 @@ export function AnnualSwitchNudge() {
     let stop: (() => void) | undefined;
     fetch("/api/premium/subscription", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { subscription?: { tier: Tier; interval: string | null; monthsActive: number; annualAvailable: boolean } | null } | null) => {
+      .then((d: { subscription?: { tier: Tier; interval: string | null; monthsActive: number; annualAvailable: boolean; cancelAtPeriodEnd: boolean; status: string } | null } | null) => {
         const sub = d?.subscription;
         if (cancelled || !sub || !annualOfferEligible(sub)) return;
         stop = armNudge({
@@ -79,7 +87,7 @@ export function AnnualSwitchNudge() {
       cancelled = true;
       stop?.();
     };
-  }, [member, views]);
+  }, [member, skipped, pastFirstPage]);
 
   const hide = useCallback(() => setPhase("hidden"), []);
   const dismiss = useCallback(() => {

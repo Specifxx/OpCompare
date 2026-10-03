@@ -10,12 +10,13 @@ import { WatchButton } from "./WatchButton";
 // pointer to Deal Finder. OP Compare's watchlist lives in the browser and
 // sends no email yet, so the copy promises only what it does: the card joins
 // the watchlist page and the Buy List Planner. Hidden for Plus/Premium members
-// (who have the tools already, and the heart beside the title).
+// (who have the tools already, and the heart beside the title); a returning
+// member's oc_adfree hint hides it at first paint (data-ad-placement).
 export function CardConversionCta({ slug, name }: { slug: string; name: string }) {
   const { me } = useMe();
   if (me.tier) return null;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-700 bg-ink-850 p-4" data-card-cta>
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-700 bg-ink-850 p-4" data-card-cta data-ad-placement="card-cta">
       <div className="min-w-0 flex-[1_1_16rem]">
         <p className="flex items-center gap-1.5 text-sm font-bold text-white">
           <Icon name="heart" className="h-4 w-4 text-brand-400" />

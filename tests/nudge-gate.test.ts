@@ -86,6 +86,10 @@ test("annual offer: monthly, yearly Price available, at least two months in", ()
   assert.equal(annualOfferEligible({ interval: "year", monthsActive: 5, annualAvailable: true }), false);
   assert.equal(annualOfferEligible({ interval: "month", monthsActive: 5, annualAvailable: false }), false);
   assert.equal(annualOfferEligible(null), false);
+  // A plan set to end, or not active (past_due), is never offered a year up front.
+  assert.equal(annualOfferEligible({ interval: "month", monthsActive: 5, annualAvailable: true, cancelAtPeriodEnd: true }), false);
+  assert.equal(annualOfferEligible({ interval: "month", monthsActive: 5, annualAvailable: true, status: "past_due" }), false);
+  assert.equal(annualOfferEligible({ interval: "month", monthsActive: 5, annualAvailable: true, status: "active", cancelAtPeriodEnd: false }), true);
 });
 
 test("quietWaitMs: never over a dialog, mid-scroll, while typing or in a field", () => {

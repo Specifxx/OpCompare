@@ -551,3 +551,29 @@ very top". Ported, adapted to One Piece:
   account id if signed in — never an IP, URL or user agent. Both routes are
   rate-limited per hashed IP, validate against fixed patterns
   (`lib/click-event.ts`, `lib/nudge-surface.ts`) and always answer 204.
+
+## 2026-10-03 — Plus/Premium review: Keep, yearly switch in the member card, no year billed to a leaver
+
+A review of the Plus/Premium parity work against RiftCompare changed:
+
+- **The member card on /premium gets RiftCompare's one-click actions.** A
+  subscription set to end shows "Keep Plus/Premium" (`/api/premium/resume`:
+  same-origin POST, clears `cancel_at_period_end`/`cancel_at`, charges nothing,
+  never writes entitlement — the webhook does). An active monthly one with the
+  yearly Price set up shows "Switch to yearly" (the existing
+  `/api/premium/switch-to-annual`). RiftCompare's intro-coupon branch on Keep
+  is not ported: OP Compare has no intro offer.
+- **A year is never billed to someone who chose to leave.** The annual offer
+  (`annualOfferEligible`) now needs an ACTIVE subscription that is not set to
+  end, and `switch-to-annual` answers 409 for one that is. Before, a monthly
+  member who had cancelled could be nudged into paying twelve months up front.
+- **The annual nudge keeps its timer across navigation** (it depends on "past
+  the 1st page", not the view count, as in RiftCompare), and skips /premium
+  and /account, which carry the same switch in the page.
+- **"Upgrade to Premium" for a Plus member only where it can work:** the
+  member card shows it only for a Stripe subscription, and the dialog's Plus
+  branch says "Plan changes open when subscriptions do" while Stripe is not
+  configured, instead of a billing-portal button that can only fail.
+- **/browse gets the signed-out InlineSignupPrompt** (RiftCompare has one on
+  its card list), after the pagination; the card page's conversion box is
+  hidden at first paint for a returning member (the `oc_adfree` hint).

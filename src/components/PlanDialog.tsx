@@ -35,7 +35,9 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.body.dataset.ocDialog = "1";
-    panel.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    // Focus the primary action, or the panel itself while /api/me is still
+    // answering (no action rendered yet): focus must never stay behind the modal.
+    (panel.current?.querySelector<HTMLElement>("[data-autofocus]") ?? panel.current)?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key !== "Tab" || !panel.current) return;
@@ -77,7 +79,7 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
     <div className="fixed inset-0 z-modal overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-dialog-title">
       <button type="button" tabIndex={-1} aria-label="Close" className="fixed inset-0 h-full w-full cursor-default bg-black/70" onClick={onClose} />
       <div className="pointer-events-none relative flex min-h-full items-center justify-center p-3 sm:p-6">
-        <div ref={panel} className="pointer-events-auto relative w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+        <div ref={panel} tabIndex={-1} className="pointer-events-auto relative outline-none w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 py-1 pl-5 pr-2">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">OP Compare</span>
@@ -108,10 +110,16 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                   <p className="text-sm font-semibold text-straw">You&apos;re on {TIER_NAMES[me.tier]}</p>
                   {me.tier === "plus" ? (
                     <>
-                      <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Switch plans in the billing portal; the difference is prorated.</p>
-                      <div className="mt-3 flex justify-center">
-                        <ManageSubscriptionButton label="Switch to Premium" />
-                      </div>
+                      {checkoutOpen ? (
+                        <>
+                          <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Switch plans in the billing portal; the difference is prorated.</p>
+                          <div className="mt-3 flex justify-center">
+                            <ManageSubscriptionButton label="Switch to Premium" />
+                          </div>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Plan changes open when subscriptions do.</p>
+                      )}
                     </>
                   ) : (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">

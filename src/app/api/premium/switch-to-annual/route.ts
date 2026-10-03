@@ -26,6 +26,8 @@ export async function POST(req: Request) {
   try {
     const sub = await ourSubscription(user.stripeCustomerId);
     if (!sub || sub.status !== "active") return json(400, { error: "No active subscription to switch." });
+    // Never bill a year up front to a subscription set to end.
+    if (sub.cancel_at_period_end || sub.cancel_at != null) return json(409, { error: "Your plan is set to end. Keep it first, then switch to yearly." });
     const item = sub.items.data[0];
     if (!item) return json(400, { error: "The subscription has no plan to switch." });
     if (item.price.recurring?.interval === "year") return json(200, { ok: true, already: true });

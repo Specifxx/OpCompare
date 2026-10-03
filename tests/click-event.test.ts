@@ -117,3 +117,15 @@ test("switch-to-annual never writes entitlement", () => {
   assert.match(src, /proration_behavior: "always_invoice"/);
   assert.match(src, /stripeEnabled\(\)/);
 });
+
+test("resume (Keep) and switch-to-annual: same-origin POST, never write entitlement", () => {
+  for (const p of ["src/app/api/premium/resume/route.ts", "src/app/api/premium/switch-to-annual/route.ts"]) {
+    const src = fs.readFileSync(path.resolve(__dirname, "..", p), "utf8");
+    assert.match(src, /sameOrigin\(req\)/, p);
+    assert.match(src, /stripeEnabled\(\)/, p);
+    assert.doesNotMatch(src, /premiumUntil|premiumTier|stampFromSubscription|@\/lib\/db"/, p);
+    assert.doesNotMatch(src, /export async function GET/, p);
+  }
+  const annual = fs.readFileSync(path.resolve(__dirname, "../src/app/api/premium/switch-to-annual/route.ts"), "utf8");
+  assert.match(annual, /cancel_at_period_end/, "a plan set to end is never billed a year");
+});

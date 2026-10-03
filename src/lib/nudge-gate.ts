@@ -58,8 +58,13 @@ export const ANNUAL_MIN_VIEWS = 2;
 /** Let a monthly subscription prove it is sticking before pitching a year up front. */
 export const ANNUAL_MIN_MONTHS = 2;
 
-export function annualOfferEligible(sub: { interval: string | null; monthsActive?: number | null; annualAvailable?: boolean } | null | undefined): boolean {
-  return Boolean(sub && sub.interval === "month" && sub.annualAvailable && (sub.monthsActive ?? 0) >= ANNUAL_MIN_MONTHS);
+/**
+ * A subscription set to end (cancelAtPeriodEnd) is never offered a year up
+ * front: the switch would bill twelve months to someone who chose to leave.
+ */
+export function annualOfferEligible(sub: { interval: string | null; monthsActive?: number | null; annualAvailable?: boolean; cancelAtPeriodEnd?: boolean; status?: string } | null | undefined): boolean {
+  if (!sub || sub.cancelAtPeriodEnd || (sub.status != null && sub.status !== "active")) return false;
+  return sub.interval === "month" && sub.annualAvailable === true && (sub.monthsActive ?? 0) >= ANNUAL_MIN_MONTHS;
 }
 
 // ── The caps, as one pure decision (storage is read by the component) ───────
