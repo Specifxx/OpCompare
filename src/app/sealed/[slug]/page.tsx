@@ -174,7 +174,7 @@ export default async function SealedDetailPage({ params }: Props) {
                     : ""}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-start gap-2">
                 <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="max-w-xs" />
                 <ShareButton title={`${s.name} — ${SITE_NAME}`} />
               </div>

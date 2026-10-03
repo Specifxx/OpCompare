@@ -470,18 +470,34 @@ export function LocalSealedSection() {
   const all = useLocalItems();
   if (!all?.some((i) => i.kind === "sealed")) return null;
   return (
-    <section aria-labelledby="local-sealed-h" className="card-surface mt-8 p-5" data-local-sealed>
-      <h2 id="local-sealed-h" className="font-display text-lg font-bold text-white">
-        Sealed — saved in this browser
-      </h2>
-      <p className="mb-3 mt-1 text-xs text-slate-500">Kept on this device. Sealed watches that follow you and alert on a restock are part of Plus.</p>
-      <LocalWatchlist kinds={["sealed"]} />
-    </section>
+    <LocalWatchlist
+      kinds={["sealed"]}
+      wrap={(list) => (
+        <section aria-labelledby="local-sealed-h" className="card-surface mt-8 p-5" data-local-sealed>
+          <h2 id="local-sealed-h" className="font-display text-lg font-bold text-white">
+            Sealed — saved in this browser
+          </h2>
+          <p className="mb-3 mt-1 text-xs text-slate-500">Kept on this device. Sealed watches that follow you and alert on a restock are part of Plus.</p>
+          {list}
+        </section>
+      )}
+    />
   );
 }
 
 /** The signed-out (localStorage) list — cards and sealed products — as rows. */
-export function LocalWatchlist({ layout = "list", onNavigate, kinds = ["card", "sealed"] }: { layout?: "grid" | "list"; onNavigate?: () => void; kinds?: ("card" | "sealed")[] }) {
+export function LocalWatchlist({
+  layout = "list",
+  onNavigate,
+  kinds = ["card", "sealed"],
+  wrap,
+}: {
+  layout?: "grid" | "list";
+  onNavigate?: () => void;
+  kinds?: ("card" | "sealed")[];
+  /** Render only when something resolved, inside this frame (no empty state). */
+  wrap?: (list: React.ReactNode) => React.ReactNode;
+}) {
   const all = useLocalItems();
   const items = all?.filter((i) => kinds.includes(i.kind)) ?? null;
   const [rows, setRows] = useState<LocalRow[] | null>(null);
@@ -514,6 +530,7 @@ export function LocalWatchlist({ layout = "list", onNavigate, kinds = ["card", "
 
   const shown = rows?.filter((r) => items?.some((w) => w.slug === r.slug && w.kind === r.kind)) ?? null;
   if (failed && !shown?.length) return <p className="text-sm text-slate-400">Couldn&apos;t load prices just now. Try again in a moment.</p>;
+  if (wrap && !shown?.length) return null;
   if (shown == null) return <WatchlistSkeleton layout="list" />;
   if (!shown.length) {
     return (
@@ -534,7 +551,7 @@ export function LocalWatchlist({ layout = "list", onNavigate, kinds = ["card", "
     writeLocalItems(readLocalItems().filter((w) => !(w.slug === r.slug && w.kind === r.kind)));
   };
 
-  return (
+  const list = (
     <ul className={`flex flex-col gap-3 ${layout === "grid" ? "sm:grid sm:grid-cols-2" : ""}`}>
       {shown.map((r) => {
         const body = (
@@ -591,4 +608,5 @@ export function LocalWatchlist({ layout = "list", onNavigate, kinds = ["card", "
       })}
     </ul>
   );
+  return wrap ? <>{wrap(list)}</> : list;
 }

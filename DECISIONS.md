@@ -1233,3 +1233,136 @@ comparison while the header said "1 store". RiftCompare's `computeMarket`
 counts every in-stock retailer in the comparison, TCGplayer included. This
 reverses the stores-only count from "Store matching: SKU numbers, …" earlier
 today; eBay stays out per CLAUDE.md ("never counted as a store").
+
+## 2026-10-03 — The watchlist moves into the account (wave 2, member track)
+
+**Decision.** A signed-in visitor's watchlist is RiftCompare's: one
+`PriceAlert` row per (card, market) written by `/api/alerts/watchlist`
+(`src/lib/watchlist-server.ts`), shown at `/watching` and in the header
+heart's right-hand drawer. The free limit (10 distinct cards) is enforced
+there: a NEW card on a free account at the limit is a 402 that opens the
+upgrade panel beside the heart that was tapped. Target prices ("Notify me at
+$__") are Plus (25) and Premium (unlimited). Sealed watches are Plus (10) and
+Premium (hard cap 200), keyed by `Sealed.id`.
+
+- **Signed out keeps its hearts.** RiftCompare's signed-out heart asks for an
+  email; OP Compare cannot honour one (no mailer), so a signed-out heart saves
+  in this browser (`op:watchlist`) with a toast, and the drawer shows that list
+  under "Sign in to sync and get alerts".
+- **The merge on sign-in.** On the first signed-in load, `use-watchlist.ts`
+  posts the local CARD items to `/api/alerts/watchlist/merge`, which resolves
+  them through the cached catalogue (unknown slugs skipped), imports at most
+  200 and GRANDFATHERS them — no free-limit check on the import, so nobody
+  loses a heart by signing up; the limit applies to adds after it. On success
+  the card items leave localStorage and `op:watchlist-merged` records the
+  account; a failed merge leaves them for the next load. Any later local card
+  items (a sign-out and back in) are merged the same way rather than stranded.
+  Sealed items stay local for a free account (sealed watches are Plus) and are
+  listed under "Sealed — saved in this browser" on `/watching`.
+- **The start price is never eBay.** `startPriceCents` is seeded from the
+  cheapest in-stock, fresh (36 h) `store:%` or `tcgplayer` Offer for the pair —
+  never `Card.low*`, which includes eBay (`src/lib/watch-baseline.ts`,
+  `baselineWhere`). To be replaced by the collection-alerts track's
+  `alert-price` helper at integration if it lands.
+- **Deal Finder "only my cards" and the basket's watchlist source** read the
+  account's watches server-side (as RiftCompare's `readUserCardIds` does), plus
+  any slugs still in the browser.
+- `/watchlist` and `/account` are NON-permanent (307) redirects to `/watching`
+  and `/profile`; robots.txt no longer disallows them — the personal pages carry
+  a noindex meta instead, which a Disallow would hide.
+
+## 2026-10-03 — Alerts are in-app until a mailer exists; the heart wears a dot
+
+**Decision.** Every member surface promises an email only when
+`getEmailStatus()` is "on" (`/api/me` carries it as `emailOn`; the card page
+reads it directly). While it is off: the drawer says "we'll flag it here", the
+target field says "We'll flag it on your watchlist when a store has it at $X or
+less", `/watching` shows live "At your target" and "New low since you started"
+chips (computed from the cached price the row shows), the pause banner and
+snooze chips are hidden, the price-drop CTA says "Watch this price — we'll flag
+it on your watchlist when it drops (Plus: at your own price)" and offers no
+email-only door. The alert run's `notify()` rows are the delivery: a "Recent
+alerts" panel on `/dashboard` (last 10, mark read) and a small brand dot on the
+header heart while any is unread.
+
+**Why.** RiftCompare delivers by email and removed its notification bell; with
+email off, OP Compare's notifications are the only delivery, so they need a
+surface. The dot is an OP divergence, flagged for the owner. The unread count
+rides `/api/me` (one indexed count, signed in only) and refreshes on window
+focus — never a 60-second poll.
+
+## 2026-10-03 — Plan changes happen in the app; the portal keeps its switch
+
+**Decision.** `/premium`'s member card is RiftCompare's SubscriptionActions:
+"Upgrade to Premium" (`/api/premium/upgrade`, `proration_behavior:
+always_invoice` — the prorated difference is billed now and the tools unlock at
+once), "Switch down to Plus" (`/api/premium/downgrade`, `create_prorations` —
+the unused part is credited to the next invoice; takes effect now), "Switch to
+annual" and "Keep <Tier>" (`/api/premium/resume`). Each route acts only on the
+caller's own active OP Compare subscription (`ourSubscription()` refuses
+anything not `site=opcompare`), is idempotent on the tier read from the live
+Price, keeps the subscriber's interval, and never writes `premiumUntil`: the
+webhook restamps it from `customer.subscription.updated`. The quoted price
+follows the interval (`plan-switch-price.ts`, from `/api/me`'s `interval`,
+one memoised, time-boxed Stripe read per Plus customer, `billing-state.ts`).
+
+**The portal.** RiftCompare turned plan switching OFF in its portal because a
+portal switch skipped its intro coupon and ended trials. OP Compare has neither,
+so `scripts/stripe-setup.ts` leaves `subscription_update` on for self-service.
+One difference to know: the portal prorates an upgrade with
+`create_prorations`, so an upgrade made THERE unlocks Premium at once but bills
+the difference at renewal, whereas the in-app button bills it now. Owner's call
+whether to turn the portal switch off.
+
+## 2026-10-03 — Sign-in is a step inside checkout; checkout is attributed
+
+**Decision.** Every signed-out "Get Plus/Premium" (the cards, the Plan dialog)
+goes to `/premium/start?tier=&plan=&src=&back=`, which IS the sign-in step
+(provider buttons with `next=` itself) and, signed in, opens Stripe through
+`/api/premium/checkout` (CheckoutLauncher, one session per mount). Old
+`/premium?go=plus-year` links forward there. The checkout route accepts the
+surface that sent the buyer (validated by `isPlanClickSurface`, remembered in
+sessionStorage across the OAuth round trip, `src/lib/premium-surface.ts`) and a
+`back` path (`sanitizeBackPath`, with funnel loop guards), stamps both on the
+Session and subscription metadata, returns to `back` on cancel, and records a
+`PremiumClick{source:"checkout"}` row — `/admin/premium` shows "Started
+checkout by surface". `/premium/welcome` checks `metadata.kind === "oc_premium"`
+and the owner before confirming, lists "Just unlocked" from TIER_COMPARISON and
+sends the member to `/dashboard` (the new sign-in fallback) or back.
+
+## 2026-10-03 — The tier table is RiftCompare's eighteen rows
+
+**Decision.** `TIER_COMPARISON` (`src/lib/plans.ts`) is RiftCompare's
+`TierRow[]` with all eighteen rows, every number the enforced constant from
+`src/lib/tier-limits.ts` (now the home of `FREE_DEAL_ROWS`, re-exported by
+plans.ts, so the table can import the constants without an import cycle), and
+the pricing cards carry RiftCompare's four bullets each. Prices are unchanged.
+OP wording: "OP Compare Index"; the sealed row promises restock and price
+alerts "checked twice a day" with no at-RRP claim (no MSRP table); the deck
+watch "alerts" rather than "emails".
+
+**Caveat for the owner.** Several rows describe tools other wave-2 tracks are
+building in parallel (portfolio and set tracker, Rising Cards, Best Basket's
+plan, Demand Finder, the deck watch). The plan put all eighteen rows in now for
+parity; until each track merges, those rows describe features that are not yet
+live on this branch.
+
+## 2026-10-03 — Attribution, activity and the referral capture (reward off)
+
+- **Sign-up source.** `?src=` on a sign-in link (and RiftCompare's
+  `markSignupSource` click cookie, `oc_signup_src`, 30 minutes) is whitelisted
+  (`signup-source-shared.ts`) and stamped as `User.signupSource` on a NEW
+  account only. `/admin/accounts` shows sign-ups by source.
+- **Entry bucket.** The tab's first-touch traffic bucket (reddit, search,
+  email…; `utm_source` wins) rides every outbound click as `ClickEvent.entry`;
+  `/admin/clicks` breaks clicks down by it. Reddit is the owner's channel.
+- **Activity.** `lastActiveAt` / `activeDays` are stamped from `/api/me` and the
+  account pages, at most once per 30 minutes or on a new UTC day, never awaited
+  (RiftCompare buckets by Sydney day; OP is UTC throughout).
+- **Referral.** `?ref=<userId>` is captured (`oc_ref`, 30 days) and applied on a
+  new account, but `REFERRAL_PREMIUM_DAYS` defaults to **0**: a referral grant is
+  an entitlement write, and CLAUDE.md allows only the webhook, the reconcile and
+  the admin routes to make one. Turning it on needs the owner's approval AND a
+  CLAUDE.md amendment; the grant is then extend-only (`grantedUntil`) and
+  logged like an admin grant. The "Invite a friend" card on `/profile` stays
+  hidden at 0.
