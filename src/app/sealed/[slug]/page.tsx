@@ -87,7 +87,7 @@ export default async function SealedDetailPage({ params }: Props) {
 
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -148,7 +148,7 @@ export default async function SealedDetailPage({ params }: Props) {
                 </span>
               ) : null}
               {s.presale ? (
-                <span className="chip bg-straw-500/20 font-semibold text-straw">
+                <span className="chip bg-gold/20 font-semibold text-gold">
                   Pre-order
                 </span>
               ) : null}

@@ -11,7 +11,8 @@ import { cardEbayQuery } from "@/lib/affiliate";
 import { mostValuable, newestBoosterSet } from "@/lib/selectors";
 import { Pagination } from "@/components/Pagination";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { Breadcrumbs, EmptyState } from "@/components/ui";
+import { Breadcrumbs } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   SORTS,
   browseHref,
@@ -66,7 +67,7 @@ export default async function BrowsePage({
     q.max != null;
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Card database" }]} />
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-w-0">
@@ -104,7 +105,7 @@ export default async function BrowsePage({
               converted to {c.currency} where no {c.adjective} store has it.
               Prices are read twice a day. Open a card for every store&apos;s
               price, cheapest first. For every card in one table, see the{" "}
-              <Link href="/price-guide" className="link">
+              <Link href="/price-guide" className="text-brand-400 hover:underline">
                 One Piece price guide
               </Link>
               .
@@ -123,7 +124,7 @@ export default async function BrowsePage({
               {filtered ? (
                 <>
                   {" · "}
-                  <Link href="/browse" className="link">
+                  <Link href="/browse" className="text-brand-400 hover:underline">
                     Clear filters
                   </Link>
                 </>
@@ -194,13 +195,7 @@ export default async function BrowsePage({
             </div>
           ) : (
             <div className="mt-6">
-              <EmptyState title="No cards match those filters">
-                Try fewer filters, or{" "}
-                <Link href="/browse" className="link">
-                  start over
-                </Link>
-                .
-              </EmptyState>
+              <EmptyState icon="browse" title="No cards match those filters" body="Try fewer filters, or start over." primary={{ href: "/browse", label: "Start over" }} />
               {/* A search we have no card for (a typo, a set not loaded yet, a
                   product that is not a single) can still be on eBay. */}
               <EbayBuyCta

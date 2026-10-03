@@ -24,21 +24,21 @@ export default async function AdminHome() {
   const user = await requireAdminPage();
   const counts = await getAdminHomeCounts();
   return (
-    <div className="container-app py-6">
+    <div>
       <h1 className="text-3xl text-white">Admin</h1>
       <p className="mt-1 text-sm text-slate-400">Signed in as {user.email}</p>
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label="Accounts" value={n(counts.accounts)} />
-        <StatTile label="Paying now" value={n(counts.paying)} tone="text-straw" />
+        <StatTile label="Paying now" value={n(counts.paying)} tone="text-gold" />
         <StatTile label="New inbox items" value={n(counts.inboxNew)} />
         <Link href="/admin/store-health#needs" className="block rounded-xl hover:opacity-90">
-          <StatTile label="Stores whose last read failed" value={n(counts.storesFailed)} tone={counts.storesFailed ? "text-straw" : undefined} />
+          <StatTile label="Stores whose last read failed" value={n(counts.storesFailed)} tone={counts.storesFailed ? "text-gold" : undefined} />
         </Link>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         {TOOLS.map((t) => (
           <Link key={t.href} href={t.href} className="card-surface flex items-start gap-3 p-5 hover:border-ink-600">
-            <Icon name={t.icon} className="mt-0.5 h-5 w-5 shrink-0 text-straw" />
+            <Icon name={t.icon} className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2 font-semibold text-white">
                 {t.title}
@@ -50,13 +50,13 @@ export default async function AdminHome() {
         ))}
       </div>
       <p className="mt-6 flex flex-wrap gap-4 text-sm">
-        <Link href="/price-guide" className="link">
+        <Link href="/price-guide" className="text-brand-400 hover:underline">
           Price guide
         </Link>
-        <Link href="/stores" className="link">
+        <Link href="/stores" className="text-brand-400 hover:underline">
           Stores
         </Link>
-        <Link href="/" className="link">
+        <Link href="/" className="text-brand-400 hover:underline">
           Home
         </Link>
       </p>

@@ -87,7 +87,7 @@ export function SectionHeader({ title, sub, action }: { title: string; sub?: Rea
 export function InShort({ children }: { children: React.ReactNode }) {
   return (
     <div className="card-surface border-l-2 border-l-brand-500 p-5">
-      <p className="eyebrow mb-2">In short</p>
+      <p className="rb-eyebrow text-slate-500 mb-2">In short</p>
       <div className="max-w-3xl text-[15px] leading-relaxed text-slate-200">{children}</div>
     </div>
   );
@@ -126,11 +126,3 @@ export function Delta({ v, className = "" }: { v: number | null | undefined; cla
   );
 }
 
-export function EmptyState({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <div className="card-surface px-6 py-10 text-center">
-      <p className="text-lg font-semibold text-white">{title}</p>
-      {children ? <div className="mx-auto mt-2 max-w-xl text-sm text-slate-400">{children}</div> : null}
-    </div>
-  );
-}

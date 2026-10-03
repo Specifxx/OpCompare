@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function FeedbackPage() {
   return (
-    <div className="container-app max-w-2xl py-6">
+    <div className="mx-auto max-w-2xl">
       <Breadcrumbs items={[{ label: "Feedback" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Feedback</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-slate-300">

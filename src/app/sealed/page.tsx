@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { FormCleaner } from "@/components/FormCleaner";
 import { SealedTile } from "@/components/SealedTile";
-import { Breadcrumbs, EmptyState } from "@/components/ui";
+import { Breadcrumbs } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SEALED_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog, type SealedLite } from "@/lib/data";
@@ -105,7 +106,7 @@ export default async function SealedPage({
     .sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? ""));
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Sealed" }]} />
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <h1 className="text-3xl text-white sm:text-4xl">Sealed Products</h1>
@@ -123,7 +124,7 @@ export default async function SealedPage({
             where no {c.adjective} store lists the product. Per-pack prices
             appear only where the pack count is certain. After particular cards?
             Singles are usually cheaper than opening product for them — the{" "}
-            <Link href="/tools/box-value" className="link">
+            <Link href="/tools/box-value" className="text-brand-400 hover:underline">
               box value calculator
             </Link>{" "}
             weighs a box against its cards.
@@ -158,7 +159,7 @@ export default async function SealedPage({
           method="get"
           className="card-surface h-fit p-4"
         >
-          <p className="mb-3 font-display text-sm font-extrabold uppercase tracking-[0.12em] text-white">
+          <p className="rb-eyebrow mb-3 text-slate-500">
             Filters
           </p>
           <label className="flex items-center gap-2.5 text-[15px] text-slate-200">
@@ -259,11 +260,7 @@ export default async function SealedPage({
               ))}
             </div>
           ) : (
-            <EmptyState title="No sealed products match">
-              <Link href="/sealed" className="link">
-                Clear filters
-              </Link>
-            </EmptyState>
+            <EmptyState icon="browse" title="No sealed products match" body="Try another set or product type." primary={{ href: "/sealed", label: "Clear filters" }} />
           )}
           {rows.length > 120 ? (
             <p className="mt-4 text-sm text-slate-400">

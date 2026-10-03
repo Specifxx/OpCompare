@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function SuggestStorePage() {
   return (
-    <div className="container-app max-w-3xl py-6">
+    <div className="mx-auto max-w-3xl">
       <Breadcrumbs items={[{ href: "/stores", label: "Stores we track" }, { label: "Suggest a store" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Suggest a store</h1>
       <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -22,7 +22,7 @@ export default function SuggestStorePage() {
           <li>It prices in its own market&apos;s currency: US dollars, Australian dollars, pounds, Singapore dollars, Canadian dollars or euros.</li>
         </ul>
         <p>
-          Check <Link href="/stores" className="link">the stores we already compare</Link> first.
+          Check <Link href="/stores" className="text-brand-400 hover:underline">the stores we already compare</Link> first.
         </p>
       </div>
       <div className="mt-6">

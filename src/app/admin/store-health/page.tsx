@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EmptyState, StatTile } from "@/components/ui";
+import { StatTile } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { failedRunsSince, loadStoreHealthInputs, type RunRow } from "@/lib/admin-health";
 import { MARKETS, isCountry } from "@/lib/country";
 import { ago, int, shortDate } from "@/lib/format";
 import { computeStoreHealth, isMildAlert, type StoreHealth } from "@/lib/store-health";
 import { STORES } from "@/lib/stores";
+import { DATA_TABLE } from "@/components/prose";
 
 export const dynamic = "force-dynamic";
 export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: "Store health" });
@@ -67,10 +69,10 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
     [inputs, failed7] = await Promise.all([loadStoreHealthInputs(), failedRunsSince(7).catch(() => null)]);
   } catch (e) {
     return (
-      <div className="container-app py-6">
+      <div>
         <h1 className="text-3xl text-white">Store health</h1>
         <div className="mt-6">
-          <EmptyState title="Couldn't load the import history">{e instanceof Error ? e.message.slice(0, 200) : null}</EmptyState>
+          <EmptyState title="Couldn't load the import history" body={e instanceof Error ? e.message.slice(0, 200) : undefined} />
         </div>
       </div>
     );
@@ -84,7 +86,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
   const shown = market ? health.filter((h) => h.country === market) : health;
 
   return (
-    <div className="container-app space-y-6 py-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl text-white">Store health</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">
@@ -94,7 +96,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatTile label="Stores tracked" value={int(STORES.length)} />
-        <StatTile label="Stores alerting" value={int(alerting.length)} tone={alerting.length ? "text-straw" : undefined} />
+        <StatTile label="Stores alerting" value={int(alerting.length)} tone={alerting.length ? "text-gold" : undefined} />
         <StatTile label="Total alerts" value={int(totalAlerts)} />
         <StatTile label="Last full run" value={lastFull ? ago(lastFull.finishedAt ?? lastFull.startedAt) : "–"} />
         <StatTile label="Failed runs · 7d" value={failed7 == null ? "–" : int(failed7)} />
@@ -123,7 +125,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
               ))}
             </ul>
             <div className="card-surface hidden overflow-x-auto sm:block">
-              <table className="data-table min-w-[56rem]">
+              <table className={`${DATA_TABLE} min-w-[56rem]`}>
                 <thead>
                   <tr>
                     <th>Store</th>
@@ -180,7 +182,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="data-table min-w-[48rem]">
+          <table className={`${DATA_TABLE} min-w-[48rem]`}>
             <thead>
               <tr>
                 <th>Store</th>
@@ -225,7 +227,7 @@ export default async function AdminStoreHealth({ searchParams }: { searchParams:
       <section>
         <h2 className="mb-3 text-xl text-white">Recent runs</h2>
         <div className="card-surface overflow-x-auto">
-          <table className="data-table min-w-[56rem]">
+          <table className={`${DATA_TABLE} min-w-[56rem]`}>
             <thead>
               <tr>
                 <th>Run</th>

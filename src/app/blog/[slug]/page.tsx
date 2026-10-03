@@ -15,6 +15,7 @@ import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { ARTICLE_PROSE } from "@/components/prose";
 
 type Props = { params: { slug: string } };
 
@@ -64,7 +65,7 @@ export default async function PostPage({ params }: Props) {
     .filter((x): x is NonNullable<typeof x> => Boolean(x))
     .slice(0, shopCards.length ? 2 : 4);
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd
         data={[
           {
@@ -141,8 +142,7 @@ export default async function PostPage({ params }: Props) {
 
         {body.heroCards.length ? (
           <div
-            className="mt-6 grid grid-cols-3 gap-3 rounded-lg border border-ink-800 p-4"
-            style={{ backgroundImage: "var(--hero-sea)" }}
+            className="mt-6 grid grid-cols-3 gap-3 rounded-lg border border-ink-800 bg-ink-850 p-4"
           >
             {body.heroCards.map((c) => (
               <CardQuickLink key={c.id} slug={c.slug} className="block">
@@ -161,7 +161,7 @@ export default async function PostPage({ params }: Props) {
 
         {body.summary.length ? (
           <div className="card-surface mt-6 border-l-2 border-l-brand-500 p-5">
-            <p className="eyebrow mb-2">The short version</p>
+            <p className="rb-eyebrow text-slate-500 mb-2">The short version</p>
             <ul className="list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-200 marker:text-brand-400">
               {body.summary.map((s, i) => (
                 <li key={i}>{s}</li>
@@ -190,7 +190,7 @@ export default async function PostPage({ params }: Props) {
           </nav>
         ) : null}
 
-        <div className="prose-op mt-8 text-[16px] [&_p]:text-[16px]">
+        <div className={`mt-8 ${ARTICLE_PROSE}`}>
           {body.lede}
           {body.sections.map((s) => (
             <section key={s.id} id={s.id} className="scroll-mt-24">
@@ -235,7 +235,7 @@ export default async function PostPage({ params }: Props) {
             <p className="mt-1 text-sm leading-relaxed text-slate-400">
               {AUTHOR.bio} Prices refresh twice a day, so the tables above
               always match the price pages. Spotted a mistake?{" "}
-              <Link href="/contact" className="link">
+              <Link href="/contact" className="text-brand-400 hover:underline">
                 Tell us
               </Link>
               .

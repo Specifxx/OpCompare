@@ -82,7 +82,7 @@ export function WatchlistView({ layout = "page", onNavigate }: { layout?: "page"
         <p className="text-lg font-semibold text-white">Nothing watched yet</p>
         <p className="max-w-xs text-sm text-slate-400 sm:max-w-none">
           Tap the heart on any card or product to keep it here, with today&apos;s cheapest price.{" "}
-          <Link href="/browse" className="link" onClick={onNavigate}>
+          <Link href="/browse" className="text-brand-400 hover:underline" onClick={onNavigate}>
             Browse cards →
           </Link>
         </p>

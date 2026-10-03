@@ -27,7 +27,7 @@ export function LockedPreview({
         ))}
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-ink-950/60 p-6 text-center">
-        <Icon name="lock" className="h-6 w-6 text-straw" />
+        <Icon name="lock" className="h-6 w-6 text-gold" />
         <p className="mt-2 text-xl font-bold text-white">{title}</p>
         <p className="mt-1 max-w-md text-sm text-slate-300">{children}</p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -62,8 +62,8 @@ export function MoreWithPlan({
   tier?: "plus" | "premium";
 }) {
   return (
-    <div className="mt-6 flex flex-col items-center gap-3 rounded-xl border border-straw/30 bg-straw/[0.05] p-5 text-center sm:flex-row sm:text-left">
-      <Icon name="crown" className="h-6 w-6 shrink-0 text-straw" />
+    <div className="mt-6 flex flex-col items-center gap-3 rounded-xl border border-gold/30 bg-gold/[0.05] p-5 text-center sm:flex-row sm:text-left">
+      <Icon name="crown" className="h-6 w-6 shrink-0 text-gold" />
       <div className="flex-1">
         {more != null && more > 0 ? (
           <p className="text-sm font-bold text-white">

@@ -7,6 +7,7 @@ import { useMe } from "@/lib/use-me";
 import { Icon } from "./Icon";
 import { ManageSubscriptionButton, startCheckout } from "./PricingCards";
 import { TierComparisonTable } from "./TierComparisonTable";
+import { useEscapeLayer, useModalFlag, useScrollLock } from "./ui/Dialog";
 
 // The Plus/Premium dialog (RiftCompare's PremiumDialog), opened from any wall
 // through PlanProvider. Tier toggle (opens on the LOWEST tier that unlocks the
@@ -28,18 +29,19 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
   const [error, setError] = useState<string | null>(null);
   const panel = useRef<HTMLDivElement>(null);
 
-  // Modal manners: scroll lock, Escape, focus in and back out, and the
-  // body[data-oc-dialog] flag the corner nudges yield to (lib/nudge-runtime.ts).
+  // Modal manners: the shared, refcounted scroll lock, body[data-oc-dialog]
+  // flag (the corner nudges yield to it, lib/nudge-runtime.ts) and topmost-only
+  // Escape from ui/Dialog, so a plan dialog opened over QuickView releases
+  // neither early; plus focus in, a Tab trap and focus back out.
+  useScrollLock(true);
+  useModalFlag(true);
+  useEscapeLayer(true, onClose);
   useEffect(() => {
     const prevFocus = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.body.dataset.ocDialog = "1";
     // Focus the primary action, or the panel itself while /api/me is still
     // answering (no action rendered yet): focus must never stay behind the modal.
     (panel.current?.querySelector<HTMLElement>("[data-autofocus]") ?? panel.current)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
       if (e.key !== "Tab" || !panel.current) return;
       const f = panel.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])');
       if (!f.length) return;
@@ -56,11 +58,9 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      delete document.body.dataset.ocDialog;
       prevFocus?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   const checkout = async () => {
     setBusy(true);
@@ -79,11 +79,11 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
     <div className="fixed inset-0 z-modal overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-dialog-title">
       <button type="button" tabIndex={-1} aria-label="Close" className="fixed inset-0 h-full w-full cursor-default bg-black/70" onClick={onClose} />
       <div className="pointer-events-none relative flex min-h-full items-center justify-center p-3 sm:p-6">
-        <div ref={panel} tabIndex={-1} className="pointer-events-auto relative outline-none w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+        <div ref={panel} tabIndex={-1} className="pointer-events-auto relative w-full outline-none focus-visible:outline-none max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 py-1 pl-5 pr-2">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">OP Compare</span>
-              <span className="rounded border border-straw/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-straw">{TIER_NAMES[tier]}</span>
+              <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">{TIER_NAMES[tier]}</span>
             </div>
             <button type="button" onClick={onClose} aria-label="Close" className="tap-icon rounded-lg text-slate-400 hover:bg-ink-800 hover:text-white">
               <Icon name="x" className="h-4 w-4" />
@@ -107,7 +107,7 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                 <div className="h-28 animate-pulse rounded-lg bg-ink-800" />
               ) : me.tier ? (
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-straw">You&apos;re on {TIER_NAMES[me.tier]}</p>
+                  <p className="text-sm font-semibold text-gold">You&apos;re on {TIER_NAMES[me.tier]}</p>
                   {me.tier === "plus" ? (
                     <>
                       {checkoutOpen ? (

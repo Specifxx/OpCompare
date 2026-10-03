@@ -59,11 +59,11 @@ export default async function SetPage({ params, searchParams }: Props) {
     set.releasedOn && set.releasedOn > new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs
         items={[{ href: "/sets", label: "Sets" }, { label: set.name }]}
       />
-      <p className="eyebrow">
+      <p className="rb-eyebrow text-slate-500">
         {set.code} · {kind}
       </p>
       <h1 className="mt-1 text-3xl text-white sm:text-4xl">
@@ -111,7 +111,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           value={top?.marketUsd ? money(top.marketUsd, "US") : "—"}
           sub={
             top ? (
-              <CardQuickLink slug={top.slug} className="link">
+              <CardQuickLink slug={top.slug} className="text-brand-400 hover:underline">
                 {top.name}
                 {top.variant ? ` (${top.variant})` : ""}
               </CardQuickLink>
@@ -218,7 +218,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         </div>
         <p className="mt-6 text-sm text-slate-400">
           Filter this set by colour, rarity or printing in the{" "}
-          <Link href={`/browse?set=${set.slug}`} className="link">
+          <Link href={`/browse?set=${set.slug}`} className="text-brand-400 hover:underline">
             card database
           </Link>
           .

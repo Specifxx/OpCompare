@@ -14,6 +14,7 @@ import { headline, sortPrice } from "@/lib/price";
 import { median, releasedSets } from "@/lib/selectors";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { GuideBuyLinks } from "./GuideBuyLinks";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece Price Guide — Every Card's Price in One Table",
@@ -76,7 +77,7 @@ export default async function PriceGuidePage({
   };
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Price guide" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece Price Guide</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -92,7 +93,7 @@ export default async function PriceGuidePage({
           The 7-day column is TCGplayer&apos;s market price against seven days
           earlier. It stays blank until a card has a week of history. For why
           printings of one card are priced so differently, see{" "}
-          <Link href="/cards" className="link">
+          <Link href="/cards" className="text-brand-400 hover:underline">
             cards by type &amp; rarity
           </Link>
           .
@@ -124,7 +125,7 @@ export default async function PriceGuidePage({
           value={dearest ? money(dearest.low[country], country) : "—"}
           sub={
             dearest ? (
-              <CardQuickLink slug={dearest.slug} className="link">
+              <CardQuickLink slug={dearest.slug} className="text-brand-400 hover:underline">
                 {dearest.name}
                 {dearest.variant ? ` (${dearest.variant})` : ""}{" "}
                 {dearest.number}
@@ -143,7 +144,7 @@ export default async function PriceGuidePage({
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="data-table min-w-[640px]">
+          <table className={`${DATA_TABLE} min-w-[640px]`}>
             <thead>
               <tr>
                 <th>Set</th>
@@ -211,7 +212,7 @@ export default async function PriceGuidePage({
               {set ? (
                 <>
                   {" · "}
-                  <Link href="/price-guide" className="link">
+                  <Link href="/price-guide" className="text-brand-400 hover:underline">
                     All sets
                   </Link>
                 </>
@@ -240,7 +241,7 @@ export default async function PriceGuidePage({
             Card · Price (7-day under it) · Buy; the rest join as room allows.
             A plain click on a card opens its QuickView. */}
         <div>
-          <table className="data-table table-fixed">
+          <table className={`${DATA_TABLE} table-fixed`}>
             <thead>
               <tr>
                 <th>Card</th>

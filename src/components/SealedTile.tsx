@@ -23,7 +23,7 @@ export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Co
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 font-display text-[15px] font-extrabold leading-snug text-white group-hover:text-brand-400">{s.name}</h3>
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white">{s.name}</h3>
         <p className="text-xs text-slate-400">
           {setCode ?? "One Piece"}
           {s.presale ? " · pre-order" : ""}

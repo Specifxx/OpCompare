@@ -5,6 +5,7 @@ import { COUNTRY_LIST } from "@/lib/country";
 import { getSiteStats } from "@/lib/data";
 import { int } from "@/lib/format";
 import { STORES } from "@/lib/stores";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece Card Stores We Track — US, AU, UK, SG, CA, EU",
@@ -19,7 +20,7 @@ export default async function StoresPage() {
     stats.storeOffers.map((s) => [`${s.source}|${s.market}`, s]),
   );
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Stores we track" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Stores we track</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
@@ -33,7 +34,7 @@ export default async function StoresPage() {
         <InShort>
           Want your store listed? Stores on Shopify with card numbers in their
           product titles can usually be added in a day —{" "}
-          <Link href="/stores/suggest" className="link">
+          <Link href="/stores/suggest" className="text-brand-400 hover:underline">
             suggest a store
           </Link>
           .
@@ -53,7 +54,7 @@ export default async function StoresPage() {
               </span>
             </h2>
             <div className="card-surface overflow-x-auto">
-              <table className="data-table min-w-[520px]">
+              <table className={`${DATA_TABLE} min-w-[520px]`}>
                 <thead>
                   <tr>
                     <th>Store</th>

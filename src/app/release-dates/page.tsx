@@ -5,6 +5,7 @@ import { SET_KINDS } from "@/lib/constants";
 import { getCatalog } from "@/lib/data";
 import { int, longDate } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece TCG Release Dates — Next Set & Every Past Set",
@@ -34,7 +35,7 @@ export default async function ReleaseDates() {
     .sort((a, b) => b.releasedOn!.localeCompare(a.releasedOn!));
   const next = upcoming[0];
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Release dates" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece TCG release dates
@@ -49,7 +50,7 @@ export default async function ReleaseDates() {
         <div className="mt-6">
           <InShort>
             The next set is{" "}
-            <Link href={`/sets/${next.slug}`} className="link">
+            <Link href={`/sets/${next.slug}`} className="text-brand-400 hover:underline">
               {next.name}
             </Link>{" "}
             ({next.code}), out {longDate(next.releasedOn)} —{" "}
@@ -67,7 +68,7 @@ export default async function ReleaseDates() {
                 href={`/sets/${s.slug}`}
                 className="card-surface p-4 hover:border-ink-600"
               >
-                <p className="font-display text-xs font-extrabold uppercase tracking-[0.12em] text-straw">
+                <p className="rb-eyebrow text-slate-500">
                   {s.code} · {SET_KINDS[s.kind]?.label}
                 </p>
                 <p className="mt-1 text-lg font-bold text-white">{s.name}</p>
@@ -83,7 +84,7 @@ export default async function ReleaseDates() {
       <section className="mt-10">
         <SectionHeader title="Released" />
         <div className="card-surface overflow-x-auto">
-          <table className="data-table min-w-[560px]">
+          <table className={`${DATA_TABLE} min-w-[560px]`}>
             <thead>
               <tr>
                 <th>Released</th>

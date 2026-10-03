@@ -130,7 +130,7 @@ export function SideNav() {
         {/* Hidden for Plus/Premium members (first paint: the oc_adfree hint). */}
         {!me.tier ? (
           <PricingLink surface="nav:rail" memberHint className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800">
-            <Icon name="crown" className="h-4 w-4 text-straw" />
+            <Icon name="crown" className="h-4 w-4 text-gold" />
             Pricing
           </PricingLink>
         ) : null}

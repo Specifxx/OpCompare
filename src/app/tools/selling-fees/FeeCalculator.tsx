@@ -87,7 +87,7 @@ export function FeeCalculator() {
         <p className="mb-4 text-sm leading-relaxed text-slate-300">
           {s.note}{" "}
           {s.source.url ? (
-            <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="link">
+            <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">
               {s.source.label}
             </a>
           ) : null}
@@ -114,12 +114,12 @@ export function FeeCalculator() {
           <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Your payout</p>
           {calc.complete ? (
             <>
-              <p className="num font-display text-4xl font-extrabold leading-none text-white sm:text-5xl">{fmt(calc.net)}</p>
+              <p className="num text-4xl font-extrabold leading-none text-white sm:text-5xl">{fmt(calc.net)}</p>
               <p className="mt-1 text-xs text-slate-400">{calc.effectiveFeePct.toFixed(1)}% of the sale price went to fees and your own postage</p>
             </>
           ) : (
             <>
-              <p className="font-display text-2xl font-extrabold text-white sm:text-3xl">Enter your commission</p>
+              <p className="text-2xl font-extrabold text-white sm:text-3xl">Enter your commission</p>
               <p className="mt-1 text-xs text-slate-400">No payout is shown until the marketplace&apos;s largest fee is in. Use the rate from your seller account.</p>
             </>
           )}

@@ -10,6 +10,7 @@ import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
 import { boosterBoxes } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece Booster Box Value — Is a Box Worth Opening?",
@@ -45,7 +46,7 @@ export default async function BoxValue({
   const top10 = sorted.slice(0, 10).reduce((a, x) => a + x.marketUsd!, 0);
   const h = box ? headline(box, country) : null;
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs
         items={[
           { href: "/tools", label: "Tools" },
@@ -83,7 +84,7 @@ export default async function BoxValue({
                   : "—"
               }
               sub={
-                <Link href={`/sealed/${box.slug}`} className="link">
+                <Link href={`/sealed/${box.slug}`} className="text-brand-400 hover:underline">
                   Every offer →
                 </Link>
               }
@@ -126,7 +127,7 @@ export default async function BoxValue({
             </InShort>
           </div>
           <section className="card-surface mt-6 overflow-x-auto">
-            <table className="data-table min-w-[520px]">
+            <table className={`${DATA_TABLE} min-w-[520px]`}>
               <thead>
                 <tr>
                   <th>Top cards in {set.code}</th>

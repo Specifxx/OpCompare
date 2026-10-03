@@ -45,15 +45,19 @@ export default async function HomePage() {
         }}
       />
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden border-b border-ink-800" style={{ backgroundImage: "var(--hero-sea)" }}>
-        <div className="sea-grid pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className="container-app relative flex flex-col items-center py-12 text-center sm:py-16">
+      {/* Full-bleed hero inside the layout's container: RiftCompare's
+          CinematicHero breakout (left-1/2 + w-screen, shifted back by half the
+          rail so it starts at x=0), with the rail reserved again inside. The
+          wave-2 design track replaces this hero with CinematicHero itself. */}
+      <section className="relative left-1/2 -mt-6 w-screen translate-x-[calc(-50%-var(--sidenav-w)/2)] overflow-hidden border-b border-ink-800 bg-ink-950">
+        <div className="w-full pl-[var(--sidenav-w)]">
+        <div className="container-app relative flex flex-col items-center py-5 text-center sm:py-10">
           <Link href="/" className="mb-5 flex items-center gap-2" aria-label={SITE_NAME}>
-            <HatMark size={40} className="animate-bob" />
+            <HatMark size={40} />
             <Wordmark className="text-xl" />
           </Link>
-          <h1 className="font-brand text-[42px] font-normal uppercase leading-[1.05] text-white sm:text-[68px]">
-            <span className="bg-gradient-to-b from-[#ff5a60] to-[#d92b33] bg-clip-text text-transparent">One Piece</span> Card Prices
+          <h1 className="mx-auto max-w-4xl text-2xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <span className="text-brand-400">One Piece</span> Card Prices
           </h1>
           <p className="mt-4 text-lg font-semibold text-white sm:text-xl">Buy One Piece cards at the best price</p>
           <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-slate-300 sm:text-base">
@@ -90,9 +94,10 @@ export default async function HomePage() {
             <MarketPills />
           </div>
         </div>
+        </div>
       </section>
 
-      <div className="container-app space-y-14 py-10">
+      <div className="mt-10 space-y-14">
         {/* ── Deals: Today's Top Deals (lib/top-deals.ts; the Plus rows come from /api/top-deals/savings) ── */}
         <TodaysTopDeals deals={deals} />
 
@@ -145,7 +150,7 @@ export default async function HomePage() {
               return (
                 <Link key={k} href={`/colors/${COLORS[k].slug}`} className="card-surface group relative overflow-hidden p-4 hover:border-ink-600">
                   <span className="absolute inset-x-0 top-0 h-1" style={{ background: COLORS[k].hex }} />
-                  <p className="font-display text-lg font-extrabold text-white group-hover:text-brand-400">{k}</p>
+                  <p className="text-lg font-bold text-white group-hover:text-brand-400">{k}</p>
                   <p className="text-xs text-slate-400">{COLORS[k].tagline}</p>
                   <p className="num mt-2 text-xs text-slate-500">{int(n)} printings</p>
                 </Link>
@@ -153,7 +158,7 @@ export default async function HomePage() {
             })}
           </div>
           <p className="mt-3 text-sm text-slate-400">
-            Building around a Leader? <Link href="/leaders" className="link">Every Leader card, priced</Link>.
+            Building around a Leader? <Link href="/leaders" className="text-brand-400 hover:underline">Every Leader card, priced</Link>.
           </p>
         </section>
 
@@ -186,7 +191,7 @@ export default async function HomePage() {
                 q: "Where do the prices come from?",
                 a: (
                   <>
-                    From the public product listings of the stores on <Link href="/stores" className="link">our stores page</Link>, read twice a day, and from
+                    From the public product listings of the stores on <Link href="/stores" className="text-brand-400 hover:underline">our stores page</Link>, read twice a day, and from
                     TCGplayer (the cheapest listing in the US, plus its market price as a reference everywhere).{" "}
                     {stats.ebayLive ? (
                       <>

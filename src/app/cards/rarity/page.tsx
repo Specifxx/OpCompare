@@ -9,6 +9,7 @@ import { int, money } from "@/lib/format";
 import { breadcrumbLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { median } from "@/lib/selectors";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece Card Rarities — Every Rarity, Priced",
@@ -27,14 +28,14 @@ export default async function RarityHub() {
     return { f, n: cs.length, med: median(prices), top };
   });
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "By type & rarity", path: "/cards" }, { name: "Rarities", path: "/cards/rarity" }])} />
       <Breadcrumbs items={[{ href: "/cards", label: "By type & rarity" }, { label: "Rarities" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece card rarities</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         The rarity is the letter printed on the card. It says how often a card is pulled, but the printing (Parallel, Manga, SP) often moves the price
         more: see the{" "}
-        <Link href="/cards" className="link">
+        <Link href="/cards" className="text-brand-400 hover:underline">
           printings
         </Link>{" "}
         too.
@@ -43,7 +44,7 @@ export default async function RarityHub() {
         <InShort>Medians are TCGplayer market prices in US dollars across every printing of that rarity, so they read the same in every market.</InShort>
       </div>
       <div className="card-surface mt-8 overflow-x-auto">
-        <table className="data-table min-w-[560px]">
+        <table className={`${DATA_TABLE} min-w-[560px]`}>
           <thead>
             <tr>
               <th>Rarity</th>

@@ -56,7 +56,7 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
         {!me.tier ? (
           <div className="border-t border-ink-800 p-3">
             <PricingLink surface="nav:menu" memberHint onClick={onClose} className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[15px] font-semibold text-slate-200 hover:bg-ink-800">
-              <Icon name="crown" className="h-4 w-4 text-straw" />
+              <Icon name="crown" className="h-4 w-4 text-gold" />
               Pricing
             </PricingLink>
           </div>

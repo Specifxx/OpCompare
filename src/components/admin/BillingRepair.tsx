@@ -80,7 +80,7 @@ export function BillingRepair() {
         {l.ok ? "✓" : "✗"} {l.text}
       </p>
       {l.notes?.map((n) => (
-        <p key={n} className="mt-1 text-xs text-straw">
+        <p key={n} className="mt-1 text-xs text-gold">
           {n}
         </p>
       ))}

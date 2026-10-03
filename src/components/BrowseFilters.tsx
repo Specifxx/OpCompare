@@ -116,7 +116,7 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
       }}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="font-display text-sm font-extrabold uppercase tracking-[0.12em] text-white">Filters</p>
+        <p className="rb-eyebrow text-slate-500">Filters</p>
         {activeCount > 0 ? (
           <button type="button" onClick={() => go(clearFilters(sp))} className="text-xs font-medium text-brand-400 hover:underline">
             Clear ({activeCount})

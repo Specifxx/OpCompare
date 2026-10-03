@@ -34,7 +34,7 @@ export default async function Account({
   const tier = tierOf(user);
   const lapsed = !tier && user.premiumUntil != null;
   return (
-    <div className="container-app max-w-3xl py-6">
+    <div className="mx-auto max-w-3xl">
       <Breadcrumbs items={[{ label: "Your account" }]} />
       {searchParams.welcome ? (
         <p className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-300">
@@ -58,7 +58,7 @@ export default async function Account({
         {tier ? (
           <>
             <p className="mt-1 text-slate-200">
-              <span className="font-semibold text-straw">
+              <span className="font-semibold text-gold">
                 {TIER_NAMES[tier]}
               </span>
               {user.isAdmin

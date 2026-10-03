@@ -16,6 +16,7 @@ import { breadcrumbLd } from "@/lib/jsonld";
 import { KEYWORD_BY_SLUG } from "@/lib/keywords";
 import { pageOg } from "@/lib/og/meta";
 import { headline } from "@/lib/price";
+import { DATA_TABLE } from "@/components/prose";
 
 // /leaders/[slug] — one One Piece Leader (RiftCompare's /champions/[slug]):
 // every printing priced, the base print in all six markets, and the cards that
@@ -72,7 +73,7 @@ export default async function LeaderPage({ params }: Props) {
   const deckLink = `/deck?list=${encodeDeckParam(`Leader\n1x${base.number}`)}`;
 
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Leaders", path: "/leaders" }, { name: `${base.name} ${base.number}`, path: `/leaders/${slug}` }])} />
       <Breadcrumbs items={[{ href: "/leaders", label: "Leaders" }, { label: `${base.name} ${base.number}` }]} />
       <div className="grid gap-6 md:grid-cols-[240px_1fr]">
@@ -113,7 +114,7 @@ export default async function LeaderPage({ params }: Props) {
               {keywords.map((k, i) => (
                 <span key={k.slug}>
                   {i ? ", " : ""}
-                  <Link href={`/keywords/${k.slug}`} className="link">
+                  <Link href={`/keywords/${k.slug}`} className="text-brand-400 hover:underline">
                     {k.name}
                   </Link>
                 </span>
@@ -134,7 +135,7 @@ export default async function LeaderPage({ params }: Props) {
       <section className="mt-10">
         <SectionHeader title="Every printing" sub={`cheapest in-stock listing in ${c.place}, and TCGplayer's market price`} />
         <div className="card-surface overflow-x-auto">
-          <table className="data-table min-w-[560px]">
+          <table className={`${DATA_TABLE} min-w-[560px]`}>
             <thead>
               <tr>
                 <th>Printing</th>
@@ -205,7 +206,7 @@ export default async function LeaderPage({ params }: Props) {
         <InShort>
           A One Piece deck is one Leader and 50 cards in its colours. The cards above share a type with {base.name}, which many of its effects ask for;
           they are a starting point, not a decklist. Paste a full list into the{" "}
-          <Link href={deckLink} className="link">
+          <Link href={deckLink} className="text-brand-400 hover:underline">
             deck price calculator
           </Link>{" "}
           to price it.

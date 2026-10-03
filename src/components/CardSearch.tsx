@@ -313,7 +313,7 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
             aria-controls={listId}
             aria-autocomplete="list"
             aria-activedescendant={active >= 0 ? optionId(active) : undefined}
-            className={`w-full rounded-md border border-ink-700 bg-ink-900 text-slate-100 outline-none placeholder:text-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/40 ${
+            className={`w-full rounded-md border border-ink-700 bg-ink-900 text-slate-100 outline-none placeholder:text-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/40 focus-visible:border-brand-500 ${
               big ? "h-14 pl-12 pr-12 text-lg" : "h-11 pl-9 pr-11 text-base sm:text-sm"
             }`}
           />

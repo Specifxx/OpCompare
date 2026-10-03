@@ -49,7 +49,7 @@ export default async function LeadersPage() {
     },
   ];
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Leaders" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece Leader cards

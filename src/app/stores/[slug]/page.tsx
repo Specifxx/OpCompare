@@ -98,14 +98,14 @@ export default async function StorePage({ params }: Props) {
   };
 
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Stores we track", path: "/stores" }, { name: s.name, path: page }])} />
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Store", name: s.name, url: s.base, areaServed: place.label }} />
       <Breadcrumbs items={[{ href: "/stores", label: "Stores we track" }, { label: s.name }]} />
       <h1 className="text-3xl text-white sm:text-4xl">{s.name}</h1>
       <p className="mt-2 text-sm text-slate-400">
         {place.label} · prices in {s.currency ?? place.currency} ·{" "}
-        <a href={out(s.base)} target="_blank" rel={outboundRel()} data-retailer={s.key} data-page="stores" className="link">
+        <a href={out(s.base)} target="_blank" rel={outboundRel()} data-retailer={s.key} data-page="stores" className="text-brand-400 hover:underline">
           {s.base.replace(/^https?:\/\/(www\.)?/, "")}
         </a>
       </p>

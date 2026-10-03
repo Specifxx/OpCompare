@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
 import { BillingRepair } from "@/components/admin/BillingRepair";
 import { FormCleaner } from "@/components/FormCleaner";
-import { EmptyState, StatTile } from "@/components/ui";
+import { StatTile } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import {
   ACCOUNT_FILTERS,
@@ -18,6 +19,7 @@ import {
   type AccountStats,
 } from "@/lib/admin-accounts";
 import { ago, int, shortDate } from "@/lib/format";
+import { DATA_TABLE } from "@/components/prose";
 
 export const dynamic = "force-dynamic";
 export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: "Accounts" });
@@ -33,7 +35,7 @@ function hrefFor(f: AccountFilter, q: string) {
 function Plan({ r }: { r: AccountRow }) {
   if (r.tier)
     return (
-      <span className="text-straw">
+      <span className="text-gold">
         {r.tier === "plus" ? "Plus" : "Premium"} until {shortDate(r.premiumUntil)}
       </span>
     );
@@ -86,7 +88,7 @@ export default async function AdminAccounts({ searchParams }: { searchParams: { 
   }));
 
   return (
-    <div className="container-app space-y-6 py-6">
+    <div className="space-y-6">
       <h1 className="text-3xl text-white">Accounts</h1>
       {stats ? (
         <>
@@ -94,7 +96,7 @@ export default async function AdminAccounts({ searchParams }: { searchParams: { 
             <StatTile label="Total" value={int(stats.total)} />
             <StatTile label="Email-verified" value={int(stats.verified)} />
             <StatTile label="Plus active" value={int(stats.plusActive)} />
-            <StatTile label="Premium active" value={int(stats.premiumActive)} tone="text-straw" />
+            <StatTile label="Premium active" value={int(stats.premiumActive)} tone="text-gold" />
             <StatTile label="Signed in · 7d" value={int(stats.signedIn7d)} />
           </div>
           <Signups stats={stats} />
@@ -130,10 +132,10 @@ export default async function AdminAccounts({ searchParams }: { searchParams: { 
       {list ? (
         <>
           <AccountsExport rows={exportRows} />
-          {list.capped ? <p className="text-sm text-straw">Showing the newest {MAX_ACCOUNT_ROWS} — narrow with search.</p> : null}
+          {list.capped ? <p className="text-sm text-gold">Showing the newest {MAX_ACCOUNT_ROWS} — narrow with search.</p> : null}
           {list.rows.length ? (
             <div className="card-surface overflow-x-auto">
-              <table className="data-table min-w-[56rem]">
+              <table className={`${DATA_TABLE} min-w-[56rem]`}>
                 <thead>
                   <tr>
                     <th>User</th>
@@ -166,7 +168,7 @@ export default async function AdminAccounts({ searchParams }: { searchParams: { 
                       </td>
                       <td className="px-3 py-2">
                         {r.admin ? (
-                          <span className="chip bg-straw-500/15 text-straw" title="Premium everywhere on the site, whatever the Plan column says">
+                          <span className="chip bg-gold/15 text-gold" title="Premium everywhere on the site, whatever the Plan column says">
                             Admin
                           </span>
                         ) : null}

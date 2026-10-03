@@ -47,7 +47,7 @@ export default async function SinglesPage() {
   const topNow = [...singles].filter((c) => c.marketUsd != null).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0)).slice(0, 8);
   const sets = [...cat.sets].filter((s) => s.kind === "booster" || s.kind === "extra").sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")).slice(0, 8);
   return (
-    <div className="container-app py-6">
+    <div>
       <JsonLd data={breadcrumbLd([{ name: "Singles", path: "/singles" }])} />
       <JsonLd data={faqLd(FAQS)} />
       <Breadcrumbs items={[{ label: "Singles" }]} />
@@ -55,7 +55,7 @@ export default async function SinglesPage() {
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {int(singles.length)} One Piece Card Game printings, each priced at the cheapest in-stock listing among {int(STORES.length)} stores in six
         markets, plus TCGplayer in the US. Find a card by name in the{" "}
-        <Link href="/browse" className="link">
+        <Link href="/browse" className="text-brand-400 hover:underline">
           card database
         </Link>
         , or start from a set, a colour, a rarity or a printing below.
@@ -63,7 +63,7 @@ export default async function SinglesPage() {
       <div className="mt-6">
         <InShort>
           Building a deck? Paste the list into the{" "}
-          <Link href="/deck" className="link">
+          <Link href="/deck" className="text-brand-400 hover:underline">
             deck price calculator
           </Link>{" "}
           and every card is priced at once.
@@ -84,7 +84,7 @@ export default async function SinglesPage() {
       </section>
 
       <section className="mt-8">
-        <SectionHeader title="The most valuable singles" action={<Link href="/price-guide" className="link text-sm">Full price guide →</Link>} />
+        <SectionHeader title="The most valuable singles" action={<Link href="/price-guide" className="text-brand-400 hover:underline text-sm">Full price guide →</Link>} />
         <ol className="grid gap-2 sm:grid-cols-2">
           {topNow.map((c, i) => (
             <li key={c.id} className="card-surface flex items-center justify-between gap-3 p-3">

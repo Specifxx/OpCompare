@@ -51,7 +51,7 @@ export function FeedbackForm() {
               aria-checked={rating === n}
               aria-label={`${n} star${n === 1 ? "" : "s"}`}
               onClick={() => setRating(rating === n ? null : n)}
-              className={`text-3xl leading-none ${rating != null && n <= rating ? "text-straw" : "text-slate-600 hover:text-slate-400"}`}
+              className={`text-3xl leading-none ${rating != null && n <= rating ? "text-gold" : "text-slate-600 hover:text-slate-400"}`}
             >
               ★
             </button>

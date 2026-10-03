@@ -6,6 +6,7 @@ import { pageOg } from "@/lib/og/meta";
 import { FEE_SCHEDULES, FEES_CHECKED } from "@/lib/selling-fees";
 import { SITE_URL } from "@/lib/site";
 import { FeeCalculator } from "./FeeCalculator";
+import { DATA_TABLE } from "@/components/prose";
 
 // /tools/selling-fees — what a seller keeps (RiftCompare's selling fee
 // calculator). Pure: no data reads. The schedules live in lib/selling-fees.ts,
@@ -39,7 +40,7 @@ const FAQS = [
 
 export default function SellingFeesPage() {
   return (
-    <div className="container-app max-w-4xl py-6">
+    <div className="mx-auto max-w-4xl">
       <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Selling Fee Calculator", path: "/tools/selling-fees" }])} />
       <JsonLd
         data={{
@@ -64,7 +65,7 @@ export default function SellingFeesPage() {
         <InShort>
           Fee schedules change. Each rate above links to the marketplace page it came from, checked on {FEES_CHECKED}; confirm yours in your seller
           account before you price a listing. Before you list, check the going price on the{" "}
-          <Link href="/price-guide" className="link">
+          <Link href="/price-guide" className="text-brand-400 hover:underline">
             price guide
           </Link>
           .
@@ -72,7 +73,7 @@ export default function SellingFeesPage() {
       </div>
       <section className="card-surface mt-6 overflow-x-auto p-5">
         <h2 className="text-lg text-white">The schedules, and where they come from</h2>
-        <table className="data-table mt-3 min-w-[560px]">
+        <table className={`${DATA_TABLE} mt-3 min-w-[560px]`}>
           <thead>
             <tr>
               <th>Marketplace</th>
@@ -90,7 +91,7 @@ export default function SellingFeesPage() {
                 <td className="num text-right text-slate-200">{s.processingPct ? `${s.processingPct}%` : "—"}</td>
                 <td className="num text-right text-slate-200">{s.fixedFee ? s.fixedFee.toFixed(2) : "—"}</td>
                 <td>
-                  <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="link text-xs">
+                  <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline text-xs">
                     {s.source.label}
                   </a>
                 </td>

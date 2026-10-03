@@ -36,12 +36,11 @@ export function HatMark({ size = 36, className = "", title = "OP Compare" }: { s
   );
 }
 
-/** "OP" in Straw Hat red + "Compare" — RiftCompare's two-tone wordmark, recoloured. */
+/** "OP" + "Compare" in the brand link shade — RiftCompare's two-tone wordmark ("Rift" + "Compare"), in Inter. */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`font-display font-black tracking-tight ${className}`}>
-      <span className="text-[#ff4d55]">OP</span>
-      <span className="text-white">Compare</span>
+    <span className={`font-extrabold tracking-tight text-white ${className}`}>
+      OP<span className="text-brand-400">Compare</span>
     </span>
   );
 }

@@ -25,7 +25,7 @@ export default async function Login({
   if (await getCurrentUser()) redirect(next ?? POST_SIGN_IN_FALLBACK);
   const toCheckout = next?.startsWith("/premium");
   return (
-    <div className="container-app flex justify-center py-12">
+    <div className="flex justify-center">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <HatMark size={48} />

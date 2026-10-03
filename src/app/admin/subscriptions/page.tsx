@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { EmptyState, StatTile } from "@/components/ui";
+import { StatTile } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { entitledInDbCount, fetchSubscriptionRows } from "@/lib/admin-subscriptions";
 import { int, moneyCode } from "@/lib/format";
 import { stripeEnabled } from "@/lib/stripe";
 import { computeSubscriptionMetrics, type SubscriptionMetrics } from "@/lib/subscription-metrics";
+import { DATA_TABLE } from "@/components/prose";
 
 export const dynamic = "force-dynamic";
 export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: "Subscriptions" });
@@ -19,7 +21,7 @@ function Bar({ label, a, b, aLabel, bLabel }: { label: string; a: number; b: num
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
       <div className="mt-1.5 flex h-3 overflow-hidden rounded bg-ink-800">
         <div className="bg-brand-500" style={{ width: `${share}%` }} />
-        <div className="bg-straw-500" style={{ width: `${total ? 100 - share : 0}%` }} />
+        <div className="bg-gold" style={{ width: `${total ? 100 - share : 0}%` }} />
       </div>
       <p className="mt-1 text-xs text-slate-400">
         <span className="text-slate-200">{aLabel}</span> {int(a)} · <span className="text-slate-200">{bLabel}</span> {int(b)}
@@ -33,7 +35,7 @@ function Metrics({ m, entitled, capped }: { m: SubscriptionMetrics; entitled: nu
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="MRR" value={moneyCode(m.mrrCents, cur)} tone="text-straw" />
+        <StatTile label="MRR" value={moneyCode(m.mrrCents, cur)} tone="text-gold" />
         <StatTile label="ARR" value={moneyCode(m.arrCents, cur)} />
         <StatTile label="Active" value={int(m.active)} sub={m.pastDue ? `${m.pastDue} past due` : undefined} />
         <StatTile label="ARPU" value={moneyCode(m.arpuCents, cur)} sub="per month" />
@@ -60,7 +62,7 @@ function Metrics({ m, entitled, capped }: { m: SubscriptionMetrics; entitled: nu
       <section className="card-surface overflow-x-auto">
         <h2 className="px-4 pt-4 text-lg text-white">Cohorts</h2>
         {m.cohorts.length ? (
-          <table className="data-table mt-2 min-w-[32rem]">
+          <table className={`${DATA_TABLE} mt-2 min-w-[32rem]`}>
             <thead>
               <tr>
                 <th>Month</th>
@@ -106,7 +108,7 @@ export default async function AdminSubscriptions() {
   await requireAdminPage();
   let body: React.ReactNode;
   if (!stripeEnabled()) {
-    body = <EmptyState title="Stripe isn't configured">Set STRIPE_SECRET_KEY to see subscription metrics.</EmptyState>;
+    body = <EmptyState title="Stripe isn't configured" body="Set STRIPE_SECRET_KEY to see subscription metrics." />;
   } else {
     try {
       const [{ rows, capped }, entitled] = await Promise.all([fetchSubscriptionRows(), entitledInDbCount().catch(() => null)]);
@@ -116,11 +118,11 @@ export default async function AdminSubscriptions() {
         <EmptyState title="No subscriptions yet" />
       );
     } catch (e) {
-      body = <EmptyState title="Couldn't load">{e instanceof Error ? e.message : "Stripe request failed"}</EmptyState>;
+      body = <EmptyState title="Couldn't load" body={e instanceof Error ? e.message : "Stripe request failed"} />;
     }
   }
   return (
-    <div className="container-app space-y-6 py-6">
+    <div className="space-y-6">
       <h1 className="text-3xl text-white">Subscriptions</h1>
       {body}
     </div>

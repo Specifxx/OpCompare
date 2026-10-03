@@ -31,7 +31,7 @@ export default async function MoversPage() {
   const noHistory = !up.length && !down.length;
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Price movers" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece price movers — this week
@@ -48,7 +48,7 @@ export default async function MoversPage() {
           A single week is a short window: a tournament result or a new
           set&apos;s reveal can spike a card that settles once the meta adjusts.
           The{" "}
-          <Link href="/market" className="link">
+          <Link href="/market" className="text-brand-400 hover:underline">
             OP Compare Index
           </Link>{" "}
           shows whether the whole market moved or one card did.
@@ -99,7 +99,7 @@ export default async function MoversPage() {
         />
         <MoverList
           title="Best value right now"
-          tone="text-straw"
+          tone="text-gold"
           sub="Largest discount off 90-day high"
           rows={value.map(({ card, off }) => ({
             card,

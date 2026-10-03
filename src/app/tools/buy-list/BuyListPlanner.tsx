@@ -148,7 +148,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
             />
             <p className="mt-1 text-xs text-slate-400">
               The same formats as the{" "}
-              <Link href="/deck" className="link">
+              <Link href="/deck" className="text-brand-400 hover:underline">
                 deck price calculator
               </Link>
               . Cards only; plan sealed products from your watchlist.
@@ -157,18 +157,18 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
         ) : list.length ? (
           <p className="mt-3 text-sm text-slate-300">
             {list.length} watched item{list.length === 1 ? "" : "s"}.{" "}
-            <Link href="/watchlist" className="link">
+            <Link href="/watchlist" className="text-brand-400 hover:underline">
               Edit watchlist
             </Link>
           </p>
         ) : (
           <p className="mt-3 text-sm text-slate-300">
             Your watchlist is empty. Tap the heart on any{" "}
-            <Link href="/browse" className="link">
+            <Link href="/browse" className="text-brand-400 hover:underline">
               card
             </Link>{" "}
             or{" "}
-            <Link href="/sealed" className="link">
+            <Link href="/sealed" className="text-brand-400 hover:underline">
               sealed product
             </Link>{" "}
             to add it, or paste a list instead.
@@ -192,7 +192,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
                   }
                   if (plan) run(m);
                 }}
-                className={`chip min-h-9 px-3 disabled:cursor-not-allowed disabled:opacity-50 ${floor === m ? "bg-straw text-[#1a1203]" : "border border-ink-700 bg-ink-850 text-slate-300 hover:border-ink-600"}`}
+                className={`chip min-h-9 px-3 disabled:cursor-not-allowed disabled:opacity-50 ${floor === m ? "bg-gold text-ink-950" : "border border-ink-700 bg-ink-850 text-slate-300 hover:border-ink-600"}`}
               >
                 {MIN_CONDITION_LABEL[m]}
               </button>
@@ -206,13 +206,13 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
       </div>
       {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
       {plan?.unmatched.length ? (
-        <p className="mt-3 text-sm text-straw">
+        <p className="mt-3 text-sm text-gold">
           Not matched, so not planned: <span className="font-mono text-xs text-slate-300">{plan.unmatched.join(" · ")}</span>
         </p>
       ) : null}
       {plan?.mode === "total" ? (
         <section className="card-surface mt-6 p-5" aria-label="Your total">
-          <p className="eyebrow">Your total</p>
+          <p className="rb-eyebrow text-slate-500">Your total</p>
           <p className="num mt-1 text-4xl font-extrabold text-accent">{money(plan.splitTotalCents, country)}</p>
           <p className="mt-1 text-sm text-slate-300">
             {plan.priced} of {plan.count} item{plan.count === 1 ? "" : "s"} at the cheapest in-stock listing in {place} ({MIN_CONDITION_PHRASE[plan.minCondition]}), across{" "}
@@ -220,7 +220,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
             {plan.unavailable ? ` ${plan.unavailable} not in stock anywhere in ${place} at this condition.` : ""}
           </p>
           {plan.played || plan.unknown ? (
-            <p className="mt-1 text-sm text-straw">
+            <p className="mt-1 text-sm text-gold">
               {[
                 plan.played ? `${plan.played} of the cheapest copies ${plan.played === 1 ? "is" : "are"} played (LP or worse)` : null,
                 plan.unknown ? `${plan.unknown} ${plan.unknown === 1 ? "is" : "are"} TCGplayer's cheapest listing, which can be any condition` : null,

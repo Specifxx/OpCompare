@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EmptyState, StatTile } from "@/components/ui";
+import { StatTile } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { CLICK_RETENTION_DAYS, PLAN_CLICK_SAMPLE, loadPlanInterest, type PlanInterestReport } from "@/lib/admin-clicks";
 import { int, shortDate } from "@/lib/format";
@@ -23,27 +24,27 @@ export default async function AdminPremiumInterest() {
     error = (e as Error).message;
   }
   return (
-    <div className="container-app space-y-6 py-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl text-white">Plus &amp; Premium interest</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">
           Every click on a Plus or Premium call to action, and where it was. &ldquo;checkout&rdquo; is a press of a buy button that went on to Stripe. See{" "}
-          <Link href="/admin/subscriptions" className="link">
+          <Link href="/admin/subscriptions" className="text-brand-400 hover:underline">
             Subscriptions
           </Link>{" "}
           for who actually paid.
         </p>
       </div>
       {error ? (
-        <EmptyState title="Couldn't load interest">{error}</EmptyState>
+        <EmptyState title="Couldn't load interest" body={error} />
       ) : !data || data.totals.d90 === 0 ? (
-        <EmptyState title="No clicks recorded yet">They appear as soon as someone opens the plan dialog or a Pricing link.</EmptyState>
+        <EmptyState title="No clicks recorded yet" body="They appear as soon as someone opens the plan dialog or a Pricing link." />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <StatTile label={`Clicks · ${CLICK_RETENTION_DAYS} days`} value={int(data.totals.d90)} />
             <StatTile label="Clicks · 30 days" value={int(data.totals.d30)} sub={`${int(data.totals.d7)} in 7 days`} />
-            <StatTile label="Checkout · 30 days" value={int(data.totals.checkout30)} tone="text-straw" />
+            <StatTile label="Checkout · 30 days" value={int(data.totals.checkout30)} tone="text-gold" />
             <StatTile label="Signed-out clicks" value={int(data.anon)} sub="in the sample" />
             <StatTile label="Interested → member" value={int(data.converted)} sub={`of ${int(data.users.length)} signed in`} />
           </div>
@@ -90,7 +91,7 @@ export default async function AdminPremiumInterest() {
                         <td className="px-3 py-2">
                           <span className="flex flex-wrap gap-1">
                             {u.surfaces.map((s) => (
-                              <span key={s} className={`chip ${s === "checkout" ? "bg-straw/20 text-straw" : "bg-ink-800 text-slate-400"}`}>
+                              <span key={s} className={`chip ${s === "checkout" ? "bg-gold/20 text-gold" : "bg-ink-800 text-slate-400"}`}>
                                 {s}
                               </span>
                             ))}

@@ -49,7 +49,7 @@ export default async function CardsHub() {
     };
   };
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "By type & rarity" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece cards by type, rarity &amp; printing
@@ -140,7 +140,7 @@ export default async function CardsHub() {
       </section>
       <p className="mt-8 text-sm text-slate-400">
         Want the whole list on one page?{" "}
-        <Link href="/cards/all" className="link">
+        <Link href="/cards/all" className="text-brand-400 hover:underline">
           Every card, A–Z
         </Link>
         .

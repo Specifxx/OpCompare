@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function WatchlistPage() {
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "My watchlist" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">My watchlist</h1>
       <p className="mt-3 max-w-3xl text-[15px] text-slate-300">

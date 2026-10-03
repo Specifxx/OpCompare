@@ -12,6 +12,7 @@ import { getCatalog, getIndexSeries } from "@/lib/data";
 import { int, longDate, money } from "@/lib/format";
 import { releasedSets } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
+import { DATA_TABLE } from "@/components/prose";
 
 export const metadata: Metadata = {
   title: "One Piece Card Market Index — Is the Market Up or Down?",
@@ -51,7 +52,7 @@ export default async function MarketPage() {
   );
 
   return (
-    <div className="container-app py-6">
+    <div>
       <Breadcrumbs items={[{ label: "Market index" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">The OP Compare Index</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -64,11 +65,11 @@ export default async function MarketPage() {
         </p>
         <p>
           A card that moves a lot on its own shows up on{" "}
-          <Link href="/movers" className="link">
+          <Link href="/movers" className="text-brand-400 hover:underline">
             this week&apos;s movers
           </Link>
           ; the index tells you whether the market moved with it.{" "}
-          <Link href="/market/records" className="link">
+          <Link href="/market/records" className="text-brand-400 hover:underline">
             Price records and cross-market gaps
           </Link>{" "}
           show where the same card costs less in another market.
@@ -118,7 +119,7 @@ export default async function MarketPage() {
           sub="Every printing in each released booster set at TCGplayer's market price, and its value-weighted 7-day move."
         />
         <div className="card-surface overflow-x-auto">
-          <table className="data-table min-w-[560px]">
+          <table className={`${DATA_TABLE} min-w-[560px]`}>
             <thead>
               <tr>
                 <th>Set</th>

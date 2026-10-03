@@ -25,7 +25,7 @@ export function CardLinkGrid({ cards, cat, country, note }: { cards: CardLite[];
               <CardArt id={card.id} hasImage={card.hasImage} alt={`${card.name}${card.variant ? ` (${card.variant})` : ""} ${card.number ?? ""} One Piece card`} />
             </div>
             <div className="flex flex-1 flex-col gap-1 p-3">
-              <h3 className="line-clamp-2 font-display text-[15px] font-extrabold leading-snug text-white group-hover:text-brand-400">{card.name}</h3>
+              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white">{card.name}</h3>
               <p className="text-xs text-slate-400">
                 {cat.setById.get(card.setId)?.code ?? ""}
                 {card.number ? ` · ${card.number}` : ""}
