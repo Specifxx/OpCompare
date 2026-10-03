@@ -156,7 +156,11 @@ test("indexing: robots disallows /admin, the sitemap never lists it, headers say
 
 test("analytics never records an /admin page view", () => {
   const ga = read("src/components/GoogleAnalytics.tsx");
-  assert.match(ga, /location\.pathname\.indexOf\('\/admin'\)!==0\)\{gtag\('config'/);
+  // Page views come only from GAPageViewTracker (config has send_page_view:false),
+  // which skips /admin; a hard load of /admin also sets the ga-disable flag.
+  assert.match(ga, /location\.pathname\.indexOf\('\/admin'\)===0\)\{window\['ga-disable-/);
+  assert.match(ga, /send_page_view:false/);
+  assert.match(read("src/components/GAPageViewTracker.tsx"), /pathname === "\/admin" \|\| pathname\.startsWith\("\/admin\/"\)\) return;/);
   assert.match(read("src/components/admin/AdminNoAnalytics.tsx"), /ga-disable-/);
   assert.match(read("src/app/admin/layout.tsx"), /<AdminNoAnalytics \/>/);
 });

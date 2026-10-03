@@ -1,4 +1,5 @@
-// The OP Compare mark: a straw hat — gold crown, Straw Hat red band — drawn as
+// The OP Compare mark: a straw hat (full colour — the blog byline, the share
+// images and the icons; the chrome uses BrandLogo's one-colour mask) — gold crown, Straw Hat red band — drawn as
 // one inline SVG so it stays crisp from the 16px favicon to the hero. The same
 // geometry is written to src/app/icon.svg and the PNG icons by
 // scripts/gen-icons.ts; change both together.
@@ -33,26 +34,5 @@ export function HatMark({ size = 36, className = "", title = "OP Compare" }: { s
       <path d={HAT_PATHS.band} fill="#d92b33" stroke="#6e1016" strokeWidth="1.2" />
       <path d={HAT_PATHS.shine} stroke="#fff6cf" strokeWidth="1.6" fill="none" opacity="0.75" strokeLinecap="round" />
     </svg>
-  );
-}
-
-/** "OP" + "Compare" in the brand link shade — RiftCompare's two-tone wordmark ("Rift" + "Compare"), in Inter. */
-export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`font-extrabold tracking-tight text-white ${className}`}>
-      OP<span className="text-brand-400">Compare</span>
-    </span>
-  );
-}
-
-export function BrandLockup({ size = 34, sub }: { size?: number; sub?: string }) {
-  return (
-    <span className="flex items-center gap-2.5">
-      <HatMark size={size} className="shrink-0 drop-shadow-[0_2px_6px_rgba(217,43,51,0.25)]" />
-      <span className="flex min-w-0 flex-col leading-tight">
-        <Wordmark className="text-[15px]" />
-        {sub ? <span className="truncate text-[11px] text-slate-400">{sub}</span> : null}
-      </span>
-    </span>
   );
 }

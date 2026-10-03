@@ -20,6 +20,7 @@ import { SITE_URL } from "@/lib/site";
 // account strip or welcome-back band, and the partners strip, plus the
 // ItemList JSON-LD for the carousel's lists.
 const NEW_DAYS = 45;
+const SET_TILES = 12;
 
 export function HomeSections({ data, storeCount, ebayPicks = null }: { data: HomeData; storeCount: number; ebayPicks?: React.ReactNode }) {
   const { cat } = data;
@@ -29,7 +30,10 @@ export function HomeSections({ data, storeCount, ebayPicks = null }: { data: Hom
   const newCutoff = new Date(now - NEW_DAYS * 86_400_000).toISOString().slice(0, 10);
   const sets = cat.sets
     .filter((s) => (s.kind === "booster" || s.kind === "extra") && s.releasedOn)
-    .sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? ""));
+    .sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? ""))
+    // Two rows of six on a desktop: the newest boosters, upcoming ones first.
+    // Every older set is one click away ("Every set, starter deck and promo").
+    .slice(0, SET_TILES);
   const colorCounts = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0])) as Record<string, number>;
   for (const c of cat.cards) for (const k of c.colors) if (k in colorCounts) colorCounts[k]++;
 
@@ -46,7 +50,7 @@ export function HomeSections({ data, storeCount, ebayPicks = null }: { data: Hom
         storeWord={storeWord}
       />
       <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
-        <ReturnVisitCards newestSetName={data.newestSetName} />
+        <ReturnVisitCards newestSetCode={data.newestSetCode} />
       </Reveal>
       <HowItWorks totalCards={cat.cards.length} />
       <section>

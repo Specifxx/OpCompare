@@ -193,6 +193,8 @@ export interface FeedbackInput {
   displayName: string | null;
   page: string | null;
   source: "page" | "widget";
+  /** Optional reply address (the feedback widget's "only if you want a reply"); never public. */
+  email: string | null;
 }
 
 export function parseFeedback(body: unknown): Parsed<FeedbackInput> {
@@ -214,7 +216,16 @@ export function parseFeedback(body: unknown): Parsed<FeedbackInput> {
   const page = optPage(b.page);
   if (!page.ok) return page;
   const source = b.source === "widget" ? "widget" : "page";
-  return { ok: true, value: { rating, message, consentPublic, displayName: consentPublic ? name.value : null, page: page.value, source } };
+  let email: string | null = null;
+  if (b.email != null && b.email !== "") {
+    if (typeof b.email !== "string") return fail("Enter a valid email address");
+    const e = b.email.trim();
+    if (e) {
+      if (e.length > LIMITS.contactEmail || !EMAIL_RE.test(e)) return fail("Enter a valid email address");
+      email = e;
+    }
+  }
+  return { ok: true, value: { rating, message, consentPublic, displayName: consentPublic ? name.value : null, page: page.value, source, email } };
 }
 
 // ── Contact message ─────────────────────────────────────────────────────────

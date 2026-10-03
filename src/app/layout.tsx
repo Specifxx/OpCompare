@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import dynamic from "next/dynamic";
 import { FooterAds } from "@/components/AffiliateAds";
 import { CountryProvider } from "@/components/CountryProvider";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { GAPageViewTracker } from "@/components/GAPageViewTracker";
+import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import QuickViewProvider from "@/components/QuickViewProvider";
@@ -17,6 +18,7 @@ import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { stripeEnabled } from "@/lib/stripe";
 import { DEFAULT_COUNTRY } from "@/lib/country";
+import { enabledProviders } from "@/lib/oauth";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { OG_BASE } from "@/lib/og/meta";
@@ -41,6 +43,9 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 // JS off the first paint without changing the HTML.
 const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), { ssr: false });
 const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), { ssr: false });
+// The feedback launcher: never auto-opens, works signed out, hides over the
+// hero and the footer ad zone (#op-hero, #op-ad-zone).
+const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), { ssr: false });
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -90,6 +95,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
+        {/* GA4 + Consent Mode defaults, before anything else measures. */}
+        <GoogleAnalytics />
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
@@ -107,7 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             PremiumProvider + PremiumDialogProvider). checkoutOpen is an
             environment read (is Stripe configured?), not a session read: who
             the visitor is comes from /api/me, client-side. */}
-        <PlanProvider checkoutOpen={stripeEnabled()}>
+        <PlanProvider checkoutOpen={stripeEnabled()} providers={enabledProviders()}>
         <CountryProvider initial={DEFAULT_COUNTRY}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
           <QuickViewProvider>
@@ -127,19 +134,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <PremiumSlideIn />
                 <AnnualSwitchNudge />
+                <FeedbackWidget />
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </QuickViewProvider>
           {/* The ad zone needs the same rail reservation as <main>. It reads the
               market from CountryProvider, so it sits inside it. */}
-          <div className="pl-[var(--sidenav-w)]">
+          <div id="op-ad-zone" className="pl-[var(--sidenav-w)]">
             <FooterAds />
           </div>
         </CountryProvider>
         <Footer />
         </PlanProvider>
-        <Analytics />
-        <GoogleAnalytics />
+        {/* Vercel Analytics behind the consent signal (RiftCompare's
+            ConsentGatedAnalytics); GA4 with explicit page views. */}
+        <ConsentGatedAnalytics />
+        <GAPageViewTracker />
       </body>
     </html>
   );

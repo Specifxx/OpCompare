@@ -110,6 +110,18 @@ test("feedback: the display name is kept only with consent", () => {
   assert.ok(src.ok && src.value.source === "page");
 });
 
+test("feedback: the widget's optional reply address is validated, never required", () => {
+  const none = parseFeedback({ rating: 2, source: "widget" });
+  assert.ok(none.ok && none.value.email === null && none.value.source === "widget");
+  const blank = parseFeedback({ rating: 2, email: "  " });
+  assert.ok(blank.ok && blank.value.email === null);
+  const ok = parseFeedback({ rating: 2, email: " luffy@example.com " });
+  assert.ok(ok.ok && ok.value.email === "luffy@example.com");
+  assert.equal(parseFeedback({ rating: 2, email: "not-an-email" }).ok, false);
+  assert.equal(parseFeedback({ rating: 2, email: 42 }).ok, false);
+  assert.equal(parseFeedback({ rating: 2, email: `${"a".repeat(200)}@example.com` }).ok, false);
+});
+
 // ── Contact ─────────────────────────────────────────────────────────────────
 const contact = (p: Record<string, unknown> = {}) => ({ name: "Nami", email: "nami@example.com", message: "My payment failed twice.", ...p });
 

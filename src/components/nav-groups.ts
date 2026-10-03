@@ -17,6 +17,11 @@ import type { NavIconName } from "./NavIcon";
 export interface NavGroupLink {
   href: string;
   label: string;
+  /**
+   * An off-site link (Discord). Every renderer branches on it (FooterNav,
+   * CinematicNavMenu, CommandLauncher, SideNav): next/link is for routes, and
+   * the launcher's router.push would break on an https:// URL.
+   */
   external?: boolean;
   keywords?: string[];
   hideInFooter?: boolean;

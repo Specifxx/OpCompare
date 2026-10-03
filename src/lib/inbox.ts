@@ -68,7 +68,7 @@ export async function createStoreSuggestion(
 
 export async function createFeedback(v: FeedbackInput, userId: string | null): Promise<{ ok: true }> {
   await prisma.feedback.create({
-    data: { userId, rating: v.rating, message: v.message, displayName: v.consentPublic ? v.displayName : null, consentPublic: v.consentPublic, page: v.page, source: v.source },
+    data: { userId, rating: v.rating, message: v.message, displayName: v.consentPublic ? v.displayName : null, consentPublic: v.consentPublic, page: v.page, source: v.source, email: v.email },
   });
   return { ok: true };
 }

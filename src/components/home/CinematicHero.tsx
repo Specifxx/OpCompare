@@ -60,6 +60,9 @@ export function CinematicHero({
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="absolute inset-0 border-b border-ink-800 bg-ink-950" />
       </div>
+      {/* Foreground content: its own rail reservation (the band is full-bleed,
+          so container-app would otherwise centre under the fixed rail), and
+          w-full because it is the flex row's only in-flow item. */}
       <div className="w-full pl-[var(--sidenav-w)]">
         <div className="container-app relative z-10 w-full py-5 text-center sm:py-10">
           <div className="animate-fade-in [animation-delay:80ms] hidden items-center justify-center gap-2 sm:flex">

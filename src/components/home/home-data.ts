@@ -22,6 +22,7 @@ export interface HomeData {
   dealsByCountry: Record<Country, TopDeals>;
   nextSet: { name: string; code: string; slug: string; releasedOn: string | null } | null;
   newestSetName?: string;
+  newestSetCode?: string;
 }
 
 /** A tile's payload: only the fields CardTile reads, so the client props stay small. */
@@ -63,5 +64,6 @@ export async function loadHomeData(): Promise<HomeData> {
     dealsByCountry: Object.fromEntries(MARKETS.map((m, i) => [m, deals[i]])) as Record<Country, TopDeals>,
     nextSet: next ? { name: next.name, code: next.code, slug: next.slug, releasedOn: next.releasedOn } : null,
     newestSetName: newest?.name,
+    newestSetCode: newest?.code,
   };
 }

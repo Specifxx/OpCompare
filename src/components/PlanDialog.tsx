@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { INTERVALS, PLAN_PITCH, TIERS, TIER_NAMES, annualSavingPct, perMonth, planPrice, type Interval, type Tier } from "@/lib/plans";
 import { useMe } from "@/lib/use-me";
+import type { OAuthProvider } from "@/lib/oauth";
+import { AuthForm } from "./AuthForm";
 import { Icon } from "./Icon";
 import { ManageSubscriptionButton, startCheckout } from "./PricingCards";
 import { TierComparisonTable } from "./TierComparisonTable";
@@ -21,7 +23,7 @@ import { useEscapeLayer, useModalFlag, useScrollLock } from "./ui/Dialog";
 //   signed in         → straight to Stripe Checkout (PricingCards' startCheckout)
 const toggle = (on: boolean) => `flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${on ? "bg-ink-700 text-white" : "text-slate-400 hover:text-white"}`;
 
-export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { initialTier: Tier; surface: string; checkoutOpen: boolean; onClose: () => void }) {
+export function PlanDialog({ initialTier, surface, checkoutOpen, providers = [], onClose }: { initialTier: Tier; surface: string; checkoutOpen: boolean; providers?: OAuthProvider[]; onClose: () => void }) {
   const { me, loaded } = useMe();
   const [tier, setTier] = useState<Tier>(initialTier);
   const [interval, setInterval] = useState<Interval>("month");
@@ -175,9 +177,10 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                     </>
                   ) : !me.user ? (
                     <>
-                      <Link data-autofocus href={`/login?next=${encodeURIComponent(next)}`} rel="nofollow" className="btn-primary w-full">
-                        Sign in to continue to checkout
-                      </Link>
+                      {/* RiftCompare's PremiumDialog: sign in right here (AuthForm),
+                          then land back on the checkout this dialog was opening. */}
+                      <p className="mb-2 text-center text-xs font-semibold text-slate-200">Sign in to continue to checkout</p>
+                      <AuthForm providers={providers} compact bare next={next} source="plan-dialog" />
                       <p className="mt-2 text-center text-[11px] text-slate-500">Your account is free and needs no card · cancel your subscription anytime.</p>
                     </>
                   ) : (
