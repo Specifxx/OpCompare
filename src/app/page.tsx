@@ -93,7 +93,7 @@ export default async function HomePage() {
       </section>
 
       <div className="container-app space-y-14 py-10">
-        {/* ── Deals: Today's Top Deals (lib/top-deals.ts; Plus gate decided in the browser) ── */}
+        {/* ── Deals: Today's Top Deals (lib/top-deals.ts; the Plus rows come from /api/top-deals/savings) ── */}
         <TodaysTopDeals deals={deals} />
 
         {/* ── Newest set ── */}

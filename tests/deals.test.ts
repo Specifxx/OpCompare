@@ -418,3 +418,15 @@ test("the old Card.low<M> deal ranking is retired", () => {
   assert.match(read("src/app/page.tsx"), /<TodaysTopDeals deals=\{deals\} \/>/);
   assert.match(read("src/components/TodaysTopDeals.tsx"), /PlanButton surface="gate:home-deals" tier="plus"/);
 });
+
+test("the homepage's Plus savings rows are limited on the server, never hidden in the browser", () => {
+  const lib = read("src/lib/top-deals.ts");
+  assert.match(lib, /export const FREE_SAVINGS_ROWS = 1;/);
+  assert.match(lib, /savings: savingsRows\(cat, ranked, FREE_SAVINGS_ROWS\)/);
+  const route = read("src/app/api/top-deals/savings/route.ts");
+  assert.match(route, /if \(!isPremium\(user\)\) return NextResponse\.json/);
+  assert.match(route, /getMemberSavings\(country\)/);
+  const ui = read("src/components/TodaysTopDeals.tsx");
+  assert.doesNotMatch(ui, /items\.slice\(0, 1\)/, "no client-side hiding of rows the server sent");
+  assert.match(ui, /\/api\/top-deals\/savings/);
+});

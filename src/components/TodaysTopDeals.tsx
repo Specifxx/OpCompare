@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { COUNTRIES } from "@/lib/country";
 import { TIER_THRESHOLDS, inTier, mixByTier, type BudgetTier } from "@/lib/deal-ui";
 import { money } from "@/lib/format";
@@ -14,11 +14,12 @@ import PlanButton from "./PlanButton";
 
 // Homepage "Today's Top Deals" (RiftCompare's TodaysTopDeals). Up to three
 // columns, one per signal, empty ones dropped and the grid sized to the rest:
-//   Biggest savings (Plus) — Deal Finder's default list sorted by %. Non-members
-//     see its single best row and "Unlock N more with Plus", N the REAL count of
-//     the list (not the 4 rows sent); members see all 4. Decided here with
-//     useMe(), so the cached page HTML is the same for everyone; `member`
-//     defaults false until /api/me answers (the safe direction to flash).
+//   Biggest savings (Plus) — Deal Finder's default list sorted by %. The page
+//     carries only its single best row (the gate is in the query, never CSS),
+//     so non-members see that row and "Unlock N more with Plus", N the REAL
+//     count of the list. A member's browser fetches the other rows from
+//     /api/top-deals/savings, which checks the tier on the server; until it
+//     answers a member sees the one row and no teaser.
 //   Price drops, Biggest 7-day climbs (free).
 // Budget tabs filter every column by price with per-market thresholds; "All"
 // interleaves cheap and pricey. Rows open QuickView through CardQuickLink.
@@ -92,11 +93,25 @@ export function TodaysTopDeals({ deals }: { deals: TopDeals }) {
   const info = COUNTRIES[country];
   const { me } = useMe();
   const member = me.tier != null;
+  const [memberSavings, setMemberSavings] = useState<HomeDeal[] | null>(null);
+  useEffect(() => {
+    if (!member) return;
+    let live = true;
+    fetch("/api/top-deals/savings", { cache: "no-store" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ country: string; savings: HomeDeal[] }>) : null))
+      .then((j) => {
+        if (live && j && j.country === country && Array.isArray(j.savings) && j.savings.length) setMemberSavings(j.savings);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [member, country]);
   const thresholds = TIER_THRESHOLDS[country];
   const [tier, setTier] = useState<BudgetTier>("all");
   const fmt = (c: number) => money(c, country);
 
-  const all = COLUMNS.map((def) => ({ def, items: deals[def.key] })).filter((c) => c.items.length > 0);
+  const all = COLUMNS.map((def) => ({ def, items: def.key === "savings" && member && memberSavings ? memberSavings : deals[def.key] })).filter((c) => c.items.length > 0);
   const columns = all
     .map(({ def, items }) => ({ def, items: tier === "all" ? mixByTier(items, thresholds.mid) : items.filter((d) => inTier(d.priceCents, tier, thresholds)) }))
     .filter((c) => c.items.length > 0);
@@ -143,7 +158,7 @@ export function TodaysTopDeals({ deals }: { deals: TopDeals }) {
             <div className={`grid grid-cols-1 items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
               {columns.map(({ def, items }) => {
                 const gated = def.gated && !member;
-                const shown = gated ? items.slice(0, 1) : items;
+                const shown = items;
                 const total = def.key === "savings" ? deals.savingsTotal : items.length;
                 const locked = gated ? Math.max(0, total - shown.length) : 0;
                 return (

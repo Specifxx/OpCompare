@@ -803,7 +803,9 @@ ceiling. Ported RiftCompare's Deal Finder (its `lib/arbitrage.ts` rules) instead
   filter applied before paging.
 - **Homepage** "Today's Top Deals" is RiftCompare's: Biggest savings (the
   default ranking sorted by %, 4 rows + the real total; non-members see 1 and
-  "Unlock N more with Plus", decided in the browser by `useMe()`), Price drops
+  "Unlock N more with Plus"; the page carries only that one row and members
+  fetch the rest from `/api/top-deals/savings`, see "Fixes after the parity
+  integration" below), Price drops
   and — with no demand signal to build Rising Cards from — "Biggest 7-day
   climbs", free. Budget tabs use RiftCompare's per-market thresholds.
 - **/market/records** is the free cross-market board: cheapest in-stock STORE
