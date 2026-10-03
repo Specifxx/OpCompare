@@ -1,4 +1,4 @@
-import Link from "next/link";
+import CardQuickLink from "../CardQuickLink";
 import type { Country } from "@/lib/country";
 import type { CardLite, SetLite } from "@/lib/data";
 import { money } from "@/lib/format";
@@ -28,7 +28,7 @@ export function CardTable({ cards, setById, country, showMarket = true, caption 
               <tr key={c.id}>
                 <td className="num text-slate-500">{i + 1}</td>
                 <td>
-                  <Link href={`/card/${c.slug}`} className="group flex items-center gap-3">
+                  <CardQuickLink slug={c.slug} className="group flex items-center gap-3">
                     {c.hasImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={cardImage.thumb(c.id)} alt="" loading="lazy" className="h-12 w-9 shrink-0 rounded-sm bg-ink-800 object-cover" />
@@ -37,7 +37,7 @@ export function CardTable({ cards, setById, country, showMarket = true, caption 
                       <span className="block font-semibold text-slate-100 group-hover:text-brand-400 group-hover:underline">{c.name}</span>
                       {c.variant ? <span className="block text-xs text-slate-500">{c.variant}</span> : null}
                     </span>
-                  </Link>
+                  </CardQuickLink>
                 </td>
                 <td className="num whitespace-nowrap text-xs text-slate-400">
                   {setById.get(c.setId)?.code} · {c.number ?? "DON!!"}
@@ -95,10 +95,10 @@ export function Callout({ title, children }: { title: string; children: React.Re
 
 export function CardLink({ c }: { c: CardLite }) {
   return (
-    <Link href={`/card/${c.slug}`}>
+    <CardQuickLink slug={c.slug}>
       {c.name}
       {c.variant ? ` (${c.variant})` : ""}
-    </Link>
+    </CardQuickLink>
   );
 }
 

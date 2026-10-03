@@ -39,6 +39,13 @@ export function CardStickyBuyBar({
   useEffect(() => {
     bar.current?.toggleAttribute("inert", !show);
   }, [show]);
+  // While shown, the page gets bottom room (globals.css, below lg) so the bar
+  // never covers the footer's last lines (RiftCompare's data-rc-buybar).
+  useEffect(() => {
+    if (!show) return;
+    document.body.setAttribute("data-oc-buybar", "");
+    return () => document.body.removeAttribute("data-oc-buybar");
+  }, [show]);
 
   useEffect(() => {
     const board = document.getElementById(boardId);

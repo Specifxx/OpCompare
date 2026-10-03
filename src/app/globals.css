@@ -288,3 +288,11 @@ h1 {
 html[data-adfree] [data-ad-placement] {
   display: none !important;
 }
+
+/* The card page's phone buy bar (CardStickyBuyBar) is showing: room under the
+   footer so the bar never covers its last lines. */
+@media (max-width: 1023.98px) {
+  body[data-oc-buybar] {
+    padding-bottom: 4.5rem;
+  }
+}

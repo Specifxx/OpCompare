@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import type { CardDetail, OfferRow } from "../src/lib/data";
-import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
+import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
 import { tagPlanLinks, planBuyList } from "../src/lib/buy-list";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -156,6 +156,11 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
     "src/app/price-guide/page.tsx",
     "src/app/sets/[slug]/page.tsx",
     "src/app/cards/all/page.tsx",
+    "src/app/colors/[color]/page.tsx",
+    "src/app/leaders/page.tsx",
+    "src/app/tools/box-value/page.tsx",
+    "src/app/blog/[slug]/page.tsx",
+    "src/components/blog/BlogBits.tsx",
   ]) {
     const src = read(f);
     assert.match(src, /<CardQuickLink/, f);
@@ -166,7 +171,7 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
 test("outbound links on the card page carry affiliate tagging and the click attributes", () => {
   const page = read("src/app/card/[slug]/page.tsx");
   assert.doesNotMatch(page, /href=\{card\.tcgplayerUrl\}/, "the card-details TCGplayer link goes through affiliateUrl");
-  for (const f of ["src/components/TcgMarketPrice.tsx", "src/components/EbayCardBanner.tsx", "src/components/CardTopBuy.tsx", "src/components/CardStickyBuyBar.tsx", "src/components/QuickView.tsx", "src/components/EbayBuyCta.tsx", "src/app/price-guide/GuideBuyLinks.tsx"]) {
+  for (const f of ["src/components/TcgMarketPrice.tsx", "src/components/EbayCardBanner.tsx", "src/components/CardTopBuy.tsx", "src/components/CardStickyBuyBar.tsx", "src/components/QuickView.tsx", "src/components/EbayBuyCta.tsx", "src/app/price-guide/GuideBuyLinks.tsx", "src/components/TcgplayerBanner.tsx"]) {
     const src = read(f);
     const anchors = src.match(/<a\s[^>]*target="_blank"[^>]*>/gs) ?? [];
     assert.ok(anchors.length > 0, f);
@@ -178,4 +183,38 @@ test("outbound links on the card page carry affiliate tagging and the click attr
   }
   assert.match(read("src/components/EbayCardBanner.tsx"), /data-ad-placement/);
   assert.match(read("src/components/EbayCardBanner.tsx"), />Ad</);
+});
+
+test("quickViewHistory: the last 90 days, no-data days dropped", () => {
+  const h = [
+    { day: "2026-06-01", marketUsd: 100, lowUsd: 90 },
+    { day: "2026-07-05", marketUsd: 110, lowUsd: null },
+    { day: "2026-07-06", marketUsd: null, lowUsd: null },
+    { day: "2026-10-02", marketUsd: null, lowUsd: 95 },
+  ];
+  assert.deepEqual(quickViewHistory(h, "2026-10-03").map((p) => p.day), ["2026-07-05", "2026-10-02"]);
+  assert.deepEqual(quickViewHistory(h, "2026-10-03", 1).map((p) => p.day), ["2026-10-02"]);
+  assert.deepEqual(quickViewHistory([], "2026-10-03"), []);
+});
+
+test("the payload carries the trimmed history, and none when the loader gave none", () => {
+  const c = card([]);
+  assert.deepEqual(quickViewPayload(c, "2026-10-03").history, []);
+  const p = quickViewPayload(c, "2026-10-03", [
+    { day: "2025-01-01", marketUsd: 1, lowUsd: 1 },
+    { day: "2026-10-01", marketUsd: 9999, lowUsd: 9000 },
+  ]);
+  assert.deepEqual(p.history, [{ day: "2026-10-01", marketUsd: 9999, lowUsd: 9000 }]);
+  assert.match(read("src/app/api/card/[slug]/route.ts"), /getProductHistory/);
+});
+
+test("card search opens a card hit in the QuickView; the TCGplayer banner is an ad members never see", () => {
+  const search = read("src/components/CardSearch.tsx");
+  assert.match(search, /useQuickView\(\)/);
+  assert.match(search, /qv\.open\(h\.slug/);
+  const banner = read("src/components/TcgplayerBanner.tsx");
+  assert.match(banner, /data-ad-placement/);
+  assert.match(banner, />Ad</);
+  assert.match(banner, /affiliateUrl\(/);
+  assert.match(read("src/app/card/[slug]/page.tsx"), /<TcgplayerBanner/);
 });

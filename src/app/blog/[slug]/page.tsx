@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { notFound } from "next/navigation";
 import { ShareRow } from "@/components/blog/ShareRow";
 import { HatMark } from "@/components/Logo";
@@ -130,7 +131,7 @@ export default async function PostPage({ params }: Props) {
             style={{ backgroundImage: "var(--hero-sea)" }}
           >
             {body.heroCards.map((c) => (
-              <Link key={c.id} href={`/card/${c.slug}`} className="block">
+              <CardQuickLink key={c.id} slug={c.slug} className="block">
                 {c.hasImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -139,7 +140,7 @@ export default async function PostPage({ params }: Props) {
                     className="w-full rounded-md"
                   />
                 ) : null}
-              </Link>
+              </CardQuickLink>
             ))}
           </div>
         ) : null}

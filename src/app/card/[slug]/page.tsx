@@ -8,6 +8,7 @@ import { CardTopBuy } from "@/components/CardTopBuy";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { EbayCardBanner } from "@/components/EbayCardBanner";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
+import { TcgplayerBanner } from "@/components/TcgplayerBanner";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { ShareButton } from "@/components/ShareButton";
@@ -291,9 +292,10 @@ export default async function CardPage({ params }: Props) {
           />
           {/* Under the comparison, never in it: TCGplayer's market price as a
               reference with its affiliate button, then the card's eBay banner
-              (an ad: hidden for Plus and Premium members). */}
+              and TCGplayer's (ads: hidden for Plus and Premium members). */}
           <TcgMarketPrice marketUsd={card.marketUsd} country={country} href={tcgHref} page="card" card={card.slug} />
           <EbayCardBanner country={country} query={ebayQuery} name={title} page="card" card={card.slug} />
+          <TcgplayerBanner country={country} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <section className="card-surface p-5">

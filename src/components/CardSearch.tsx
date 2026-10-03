@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
+import { useQuickView } from "./QuickViewProvider";
 
 interface Hit {
   slug: string;
@@ -17,13 +18,17 @@ interface Hit {
 }
 
 // Typeahead over the cached catalogue (/api/search). Enter opens the full
-// results on /browse. "/" focuses it from anywhere, as on RiftCompare.
+// results on /browse. "/" focuses it from anywhere, as on RiftCompare. A card
+// hit opens the card's QuickView (RiftCompare's search does the same: the
+// visitor keeps the page they were on); modifier clicks and sealed hits
+// navigate as links.
 export function CardSearch({ size = "md", placeholder = "Search for cards", autoFocus = false }: { size?: "md" | "lg"; placeholder?: string; autoFocus?: boolean }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const router = useRouter();
+  const qv = useQuickView();
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
 
@@ -74,7 +79,10 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
 
   const go = (h?: Hit) => {
     setOpen(false);
-    if (h) router.push(h.kind === "card" ? `/card/${h.slug}` : `/sealed/${h.slug}`);
+    if (h?.kind === "card" && qv) {
+      setActive(-1);
+      qv.open(h.slug, { thumb: h.img, label: h.name });
+    } else if (h) router.push(h.kind === "card" ? `/card/${h.slug}` : `/sealed/${h.slug}`);
     else if (q.trim()) router.push(`/browse?q=${encodeURIComponent(q.trim())}`);
   };
 
@@ -126,7 +134,14 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
                 <li key={`${h.kind}-${h.slug}`}>
                   <Link
                     href={h.kind === "card" ? `/card/${h.slug}` : `/sealed/${h.slug}`}
-                    onClick={() => setOpen(false)}
+                    onClick={(e) => {
+                      setOpen(false);
+                      if (h.kind !== "card" || !qv || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      setActive(-1);
+                      qv.open(h.slug, { thumb: h.img, label: h.name });
+                    }}
+                    onPointerEnter={h.kind === "card" && qv ? () => qv.prefetch(h.slug) : undefined}
                     className={`flex items-center gap-3 px-3 py-2 ${i === active ? "bg-ink-800" : "hover:bg-ink-800"}`}
                   >
                     {h.img ? (

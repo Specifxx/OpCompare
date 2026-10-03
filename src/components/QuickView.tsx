@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { COUNTRIES, MARKETS } from "@/lib/country";
 import { ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
-import { ago, money } from "@/lib/format";
+import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
 import type { QuickViewPayload } from "@/lib/quick-view";
 import { ColorDots, Delta, PrintingBadge, RarityBadge } from "./ui";
 import { useCountry } from "./CountryProvider";
 import { Icon } from "./Icon";
+import { LineChart } from "./LineChart";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { WatchButton } from "./WatchButton";
@@ -178,7 +179,13 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
                     {best ? money(best.priceCents, country) : data.marketUsd != null ? `≈ ${money(usdCentsToCountry(data.marketUsd, country), country)}` : "—"}
                   </p>
                   <p className="truncate text-xs text-slate-400">
-                    {best ? `at ${best.label} · ${m.count} ${m.count === 1 ? "listing" : "listings"} in stock` : data.marketUsd != null ? "TCGplayer market price, converted — no store we track has it" : "No price yet"}
+                    {best
+                      ? `at ${best.label} · ${m.count} ${m.count === 1 ? "listing" : "listings"} in stock`
+                      : data.marketUsd != null
+                        ? country === "US"
+                          ? "TCGplayer market price — no store we track has it in stock"
+                          : "TCGplayer market price, converted — no store we track has it"
+                        : "No price yet"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -303,6 +310,25 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
 
               <div className="mt-4">
                 <TcgMarketPrice marketUsd={data.marketUsd} country={country} href={data.tcgHref} page={PAGE} card={data.slug} compact disclosure={false} />
+              </div>
+
+              {/* Price history, right in the preview (RiftCompare): the card
+                  page's own series, last 90 days, US dollars. */}
+              <div className="mt-4">
+                <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Price history · 90 days</p>
+                  <p className="text-[11px] text-slate-500">US$ · TCGplayer market and cheapest US listing</p>
+                </div>
+                <LineChart
+                  height={220}
+                  width={520}
+                  series={[
+                    { label: "TCGplayer market", color: "#e9b73a", points: (data.history ?? []).map((p) => ({ x: p.day, y: p.marketUsd })) },
+                    { label: "Cheapest US listing", color: "#ff6b6b", points: (data.history ?? []).map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
+                  ]}
+                  format={(v) => usd(Math.round(v))}
+                  empty="Not enough price history yet — the chart draws once there are two days of prices."
+                />
               </div>
 
               <p className="mt-3 text-[11px] leading-snug text-slate-500">

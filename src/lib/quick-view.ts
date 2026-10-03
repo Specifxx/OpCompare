@@ -11,7 +11,7 @@
 import { affiliateUrl, cardEbayQuery, ebaySearchUrl } from "./affiliate";
 import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
-import type { CardDetail, OfferRow } from "./data";
+import type { CardDetail, HistoryPoint, OfferRow } from "./data";
 import { isEbaySource, sourceLabel } from "./stores";
 
 /** Rows per market in the popup; the full page lists the rest ("See all N"). */
@@ -96,6 +96,20 @@ export interface QuickViewPayload {
   /** Affiliate-tagged TCGplayer product page. */
   tcgHref: string;
   markets: Record<Country, QuickViewMarket>;
+  /** The last QUICKVIEW_HISTORY_DAYS of the card's US price history (the card page's chart series). */
+  history: HistoryPoint[];
+}
+
+/** Days of price history the popup's chart shows (the card page shows a year). */
+export const QUICKVIEW_HISTORY_DAYS = 90;
+
+/**
+ * The tail of a card's history for the popup: points on or after `today` minus
+ * `days`, with no-data days dropped, so the JSON stays a few KB.
+ */
+export function quickViewHistory(history: HistoryPoint[], today: string, days = QUICKVIEW_HISTORY_DAYS): HistoryPoint[] {
+  const from = new Date(Date.parse(`${today}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+  return history.filter((p) => p.day >= from && (p.marketUsd != null || p.lowUsd != null));
 }
 
 /** Is a set (YYYY-MM-DD) still unreleased on `today` (YYYY-MM-DD)? */
@@ -104,7 +118,11 @@ export function isPreRelease(releasedOn: string | null, today: string): boolean 
 }
 
 /** Shape a card's detail into the popup's small, market-independent JSON. */
-export function quickViewPayload(c: CardDetail, today: string = new Date().toISOString().slice(0, 10)): QuickViewPayload {
+export function quickViewPayload(
+  c: CardDetail,
+  today: string = new Date().toISOString().slice(0, 10),
+  history: HistoryPoint[] = [],
+): QuickViewPayload {
   const loc = `/card/${c.slug}`;
   const query = cardEbayQuery(c);
   const markets = {} as Record<Country, QuickViewMarket>;
@@ -134,6 +152,7 @@ export function quickViewPayload(c: CardDetail, today: string = new Date().toISO
     change7d: c.change7d,
     tcgHref: affiliateUrl(c.tcgplayerUrl, "tcgplayer", loc),
     markets,
+    history: quickViewHistory(history, today),
   };
 }
 

@@ -7,14 +7,29 @@ export interface Series {
   dashed?: boolean;
 }
 
-export function LineChart({ series, format, height = 240, empty }: { series: Series[]; format: (v: number) => string; height?: number; empty?: string }) {
+export function LineChart({
+  series,
+  format,
+  height = 240,
+  width = 800,
+  empty,
+}: {
+  series: Series[];
+  format: (v: number) => string;
+  height?: number;
+  /** viewBox width: a narrower box draws the 11px labels larger in a small container (the QuickView). */
+  width?: number;
+  empty?: string;
+}) {
   const xs = [...new Set(series.flatMap((s) => s.points.map((p) => p.x)))].sort();
   const ys = series.flatMap((s) => s.points.map((p) => p.y)).filter((y): y is number => y != null);
   if (xs.length < 2 || !ys.length) {
     return <div className="grid h-40 place-items-center rounded-md border border-dashed border-ink-700 text-sm text-slate-500">{empty ?? "Not enough history yet."}</div>;
   }
-  const W = 800;
+  const W = width;
   const H = height;
+  // The left gutter fits the longest y label (11px mono ≈ 6.7px a character),
+  // so a four-figure "US$52,960" is not clipped at the edge.
   const pad = { l: 64, r: 16, t: 14, b: 28 };
   let lo = Math.min(...ys);
   let hi = Math.max(...ys);
@@ -29,7 +44,9 @@ export function LineChart({ series, format, height = 240, empty }: { series: Ser
   const X = (x: string) => pad.l + ((xi.get(x) ?? 0) / (xs.length - 1)) * (W - pad.l - pad.r);
   const Y = (y: number) => pad.t + (1 - (y - lo) / (hi - lo)) * (H - pad.t - pad.b);
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => lo + (hi - lo) * f);
-  const labelIdx = [0, Math.floor((xs.length - 1) / 2), xs.length - 1];
+  pad.l = Math.max(64, Math.ceil(Math.max(...ticks.map((t) => format(t).length)) * 6.7) + 14);
+  // Deduped: with two days the middle label IS the first (one label, one key).
+  const labelIdx = [...new Set([0, Math.floor((xs.length - 1) / 2), xs.length - 1])];
   const path = (pts: Series["points"]) => {
     let d = "";
     let pen = false;

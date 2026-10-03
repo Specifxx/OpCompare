@@ -556,8 +556,27 @@ link, and sent the card-details TCGplayer link out untagged (no commission).
   `buy_click` beacon now sends `card` and `surface` too. The Buy List
   Planner's links are tagged on the way out (`tagPlanLinks`), so its TCGplayer
   picks earn like the board's.
+- **Price history in the popup** (RiftCompare shows it there too): the API
+  adds the card's last 90 days from `getProductHistory` — the card page's own
+  series, read from the GitHub history file through the fetch cache, so no
+  database — trimmed by `quickViewHistory` to a few hundred bytes. The shared
+  `LineChart` gained a `width` (a narrower viewBox draws its labels legibly
+  in the popup) and a left gutter sized to its longest label (four-figure
+  US$ values were clipped), and stops keying two x labels alike when there
+  are only two days (a React duplicate-key warning).
+- **Search opens the popup, like RiftCompare's.** A card hit in `CardSearch`
+  (click or ArrowDown + Enter) opens its QuickView, so the visitor keeps the
+  page and the results; modifier clicks and sealed hits stay links. Card
+  links on the leaders, colour, Box Value and blog pages go through
+  `CardQuickLink` too.
+- **TCGplayer banner** (RiftCompare's `TcgplayerAd`) under the eBay banner on
+  the card page: "Shop One Piece singles & sealed" through Impact, labelled
+  Ad, `data-ad-placement`. While the phone buy bar shows, `body[data-oc-buybar]`
+  adds bottom room so the bar never covers the footer's last lines.
 - **Not ported:** RiftCompare's live eBay listing carousel and Graded tab
   (OP's eBay pass stores one listing per pair; more would cost Browse calls
-  from OP's own quota — the owner's decision), the in-popup price chart,
-  "Add to collection" (OP has no collection), and a sealed QuickView.
+  from OP's own quota — the owner's decision), RiftCompare's one-click
+  price-drop alert in the popup (OP has no server-side alerts; the popup's
+  Watch button is OP's equivalent), "Add to collection" (OP has no
+  collection), and a sealed QuickView.
   `tests/quick-view.test.ts` pins the payload, the ranking and the wiring.
