@@ -215,6 +215,11 @@ test("card search opens a card hit in the QuickView; the TCGplayer banner is an 
   // card hit opens QuickView whenever the provider is mounted.
   assert.match(search, /<CardQuickLink slug=\{h\.slug\}/);
   assert.match(search, /querySelector\("a"\)/);
+  // A mouse click must reach CardQuickLink's onClick: closing a list in the
+  // CAPTURE phase unmounts it first and the browser follows the href instead.
+  for (const f of ["src/components/CardSearch.tsx", "src/components/RecentlyViewed.tsx", "src/components/WatchlistView.tsx"]) {
+    assert.doesNotMatch(read(f), /onClickCapture/, `${f} closes in the capture phase`);
+  }
   const banner = read("src/components/TcgplayerBanner.tsx");
   assert.match(banner, /data-ad-placement/);
   assert.match(banner, />Ad</);

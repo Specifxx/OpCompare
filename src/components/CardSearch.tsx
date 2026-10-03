@@ -450,7 +450,11 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
                 return (
                   <li key={`${h.kind}-${h.slug}`} role="presentation">
                     {firstSealed ? <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sealed products</p> : null}
-                    <div id={optionId(i)} role="option" aria-selected={active === i} onClickCapture={close}>
+                    {/* Close in the bubble phase, after the row's own link has handled the
+                        click: a capture-phase close unmounts the list before
+                        CardQuickLink's onClick runs, and the browser then
+                        follows the href instead of opening QuickView. */}
+                    <div id={optionId(i)} role="option" aria-selected={active === i} onClick={close}>
                       {h.kind === "card" ? (
                         <CardQuickLink slug={h.slug} className={rowCls(active === i)}>
                           {inner}

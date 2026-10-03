@@ -114,7 +114,7 @@ export function WatchlistView({ layout = "page", onNavigate }: { layout?: "page"
         );
         const cls = "group flex min-w-0 flex-1 items-center gap-3";
         return (
-          <li key={`${r.kind}-${r.slug}`} className={`flex items-center gap-3 py-3 ${compact ? "px-4 sm:px-5" : "px-4"}`} onClickCapture={(e) => (e.target as HTMLElement).closest("a") && onNavigate?.()}>
+          <li key={`${r.kind}-${r.slug}`} className={`flex items-center gap-3 py-3 ${compact ? "px-4 sm:px-5" : "px-4"}`} onClick={(e) => (e.target as HTMLElement).closest("a") && onNavigate?.()}>
             {r.kind === "card" ? (
               <CardQuickLink slug={r.slug} className={cls}>
                 {body}

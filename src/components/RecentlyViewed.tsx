@@ -39,7 +39,7 @@ export function RecentlyViewed({
       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
       <ul className="mt-2 flex flex-wrap gap-1.5">
         {recent.slice(0, max).map((c) => (
-          <li key={c.slug} className="min-w-0 max-w-full" onClickCapture={onNavigate}>
+          <li key={c.slug} className="min-w-0 max-w-full" onClick={onNavigate}>
             <CardQuickLink
               slug={c.slug}
               title={`${c.name}${c.variant ? ` (${c.variant})` : ""} · ${c.setCode}${c.number ? ` · ${c.number}` : ""}`}
