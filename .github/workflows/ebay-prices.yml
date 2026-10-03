@@ -97,7 +97,7 @@ jobs:
       - name: Sync schema
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma db push --skip-generate && npx prisma generate
+        run: bash scripts/db-push-safe.sh && npx prisma generate
       - name: eBay pass
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

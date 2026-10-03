@@ -1233,3 +1233,17 @@ comparison while the header said "1 store". RiftCompare's `computeMarket`
 counts every in-stock retailer in the comparison, TCGplayer included. This
 reverses the stores-only count from "Store matching: SKU numbers, …" earlier
 today; eBay stays out per CLAUDE.md ("never counted as a store").
+
+## 2026-10-03 — Workflows push the schema through `scripts/db-push-safe.sh`
+
+**Decision.** The import and eBay workflows run `scripts/db-push-safe.sh`
+instead of a bare `prisma db push`. It retries with `--accept-data-loss` only
+when every warning Prisma prints is "A unique constraint covering the columns …
+will be added"; any other warning (a dropped column or table, a type change) still
+fails the run.
+
+**Why.** The wave-2 schema adds `User.collectionShareId @unique`, a new nullable
+column whose rows are all NULL. Postgres lets any number of NULLs share a
+unique index, so nothing can be lost, but Prisma still demands the flag, and the
+first import after the merge failed before touching the database. Passing the
+flag unconditionally would also let a real drop through unattended.
