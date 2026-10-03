@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { isOAuthProvider, isProviderEnabled, providerConfig, redirectUri } from "@/lib/oauth";
 import { sanitizeNextPath } from "@/lib/next-param";
+import { parseSignupSource, SIGNUP_SOURCE_COOKIE } from "@/lib/signup-source-shared";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,11 @@ export async function GET(req: Request, { params }: { params: { provider: string
   const opts = { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/", maxAge: 600 };
   cookies().set(`oauth_state_${provider}`, state, opts);
   if (next) cookies().set(`oauth_next_${provider}`, next, opts);
+  // Wave 2: ?src= names the sign-up surface (whitelisted); the callback stamps
+  // it on a NEW account as User.signupSource. A source a click already stashed
+  // (lib/signup-source.ts) is kept when the link carries none.
+  const src = parseSignupSource(new URL(req.url).searchParams.get("src"));
+  if (src) cookies().set(SIGNUP_SOURCE_COOKIE, src, { ...opts, httpOnly: false, maxAge: 1800 });
   const url = new URL(cfg.authUrl);
   url.searchParams.set("client_id", cfg.clientId!);
   url.searchParams.set("redirect_uri", redirectUri(provider));

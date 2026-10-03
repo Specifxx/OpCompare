@@ -104,6 +104,10 @@ export interface AccountStats {
   signups30: { day: string; n: number }[]; // 30 UTC days, oldest first, zero-filled
   new7: number;
   new30: number;
+  /** New accounts in 30 days by User.signupSource (wave 2; "—" = not recorded). */
+  bySource30: { k: string; n: number }[];
+  /** Accounts active in the last 7 days (User.lastActiveAt, lib/activity.ts). */
+  active7d: number;
 }
 
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -122,13 +126,15 @@ export function bucketSignups(dates: Date[], now: Date): { day: string; n: numbe
 
 export async function accountStats(now = new Date()): Promise<AccountStats> {
   const since30 = new Date(now.getTime() - 30 * DAY);
-  const [total, verified, plusActive, premiumActive, signedIn7d, recent] = await Promise.all([
+  const [total, verified, plusActive, premiumActive, signedIn7d, recent, sources, active7d] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { emailVerified: { not: null } } }),
     prisma.user.count({ where: { premiumUntil: { gt: now }, premiumTier: "plus" } }),
     prisma.user.count({ where: { premiumUntil: { gt: now }, premiumTier: { not: "plus" } } }),
     prisma.user.count({ where: { lastLoginAt: { gte: new Date(now.getTime() - 7 * DAY) } } }),
     prisma.user.findMany({ where: { createdAt: { gte: since30 } }, select: { createdAt: true } }),
+    prisma.user.groupBy({ by: ["signupSource"], _count: { _all: true }, where: { createdAt: { gte: since30 } } }),
+    prisma.user.count({ where: { lastActiveAt: { gte: new Date(now.getTime() - 7 * DAY) } } }),
   ]);
   const dates = recent.map((r) => r.createdAt);
   return {
@@ -140,6 +146,8 @@ export async function accountStats(now = new Date()): Promise<AccountStats> {
     signups30: bucketSignups(dates, now),
     new7: dates.filter((d) => now.getTime() - d.getTime() <= 7 * DAY).length,
     new30: dates.length,
+    bySource30: sources.map((r) => ({ k: r.signupSource ?? "—", n: r._count._all })).sort((a, b) => b.n - a.n),
+    active7d,
   };
 }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { readWatchlist, type WatchItem } from "@/components/WatchButton";
+import { useWatchedIds } from "@/lib/use-watchlist";
 import { useCountry } from "@/components/CountryProvider";
 import { money } from "@/lib/format";
 import { outboundRel } from "@/lib/affiliate";
@@ -53,7 +54,11 @@ type Source = "paste" | "watchlist";
 
 export function BuyListPlanner({ place, premium, initialList }: { place: string; premium: boolean; initialList: string }) {
   const { country } = useCountry();
-  const [list, setList] = useState<WatchItem[] | null>(null);
+  const [local, setList] = useState<WatchItem[] | null>(null);
+  // Signed in, the watchlist is the account's (wave 2): its card ids join the
+  // items saved in this browser; the route resolves ids through the catalogue.
+  const watchedIds = useWatchedIds();
+  const list = local == null ? null : [...local, ...[...(watchedIds ?? [])].map((id) => ({ slug: "", id, kind: "card" as const, name: "", added: "" }))];
   const [source, setSource] = useState<Source>(initialList ? "paste" : "watchlist");
   const [text, setText] = useState(initialList);
   const [floor, setFloor] = useState<MinCondition>(premium ? "lp" : "any");
@@ -63,7 +68,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
   useEffect(() => {
     const w = readWatchlist();
     setList(w);
-    if (!initialList && !w.length) setSource("paste");
+    if (!initialList && !w.length && !document.cookie.includes("oc_auth=1")) setSource("paste");
     if (premium) {
       try {
         const saved = window.localStorage.getItem(FLOOR_KEY);
@@ -81,7 +86,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
     try {
       const body =
         source === "watchlist"
-          ? { source, minCondition: nextFloor, items: (list ?? []).map((w) => ({ slug: w.slug, kind: w.kind })) }
+          ? { source, minCondition: nextFloor, items: (list ?? []).map((w) => ("id" in w ? { id: w.id, kind: w.kind } : { slug: w.slug, kind: w.kind })) }
           : { source, minCondition: nextFloor, text };
       const r = await fetch("/api/buy-list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json();
@@ -157,7 +162,7 @@ export function BuyListPlanner({ place, premium, initialList }: { place: string;
         ) : list.length ? (
           <p className="mt-3 text-sm text-slate-300">
             {list.length} watched item{list.length === 1 ? "" : "s"}.{" "}
-            <Link href="/watchlist" className="text-brand-400 hover:underline">
+            <Link href="/watching" className="text-brand-400 hover:underline">
               Edit watchlist
             </Link>
           </p>

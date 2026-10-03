@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { TIER_NAMES } from "@/lib/plans";
 import { invalidateMe, useMe } from "@/lib/use-me";
+import { invalidateWatchlist } from "@/lib/use-watchlist";
 import { Icon } from "./Icon";
 import { PricingLink } from "./PlanButton";
 
@@ -36,6 +37,7 @@ export function NavUser() {
   const signOut = async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
     invalidateMe();
+    invalidateWatchlist();
     location.assign("/");
   };
   return (
@@ -55,22 +57,21 @@ export function NavUser() {
             {me.user.email}
             {me.tier ? <span className="mt-0.5 block font-semibold text-gold">{TIER_NAMES[me.tier]} member</span> : null}
           </p>
-          <Link role="menuitem" href="/account" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
-            Your account
+          <Link role="menuitem" href="/dashboard" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
+            Dashboard
+          </Link>
+          <Link role="menuitem" href="/profile" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
+            Profile
           </Link>
           {me.admin ? (
             <Link role="menuitem" href="/admin" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
               Admin
             </Link>
           ) : null}
-          <Link role="menuitem" href="/watchlist" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
-            Watchlist
+          <Link role="menuitem" href="/watching" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
+            My watchlist
           </Link>
-          {me.tier === "premium" ? (
-            <Link role="menuitem" href="/tools/buy-list" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
-              Buy List Planner
-            </Link>
-          ) : (
+          {me.tier === "premium" ? null : (
             <PricingLink role="menuitem" surface="nav:account-menu" className="block rounded-md px-3 py-2 text-sm font-semibold text-gold hover:bg-ink-800">
               {me.tier ? "Upgrade to Premium" : "Pricing"}
             </PricingLink>

@@ -3,7 +3,7 @@ import type { Country } from "@/lib/country";
 import type { SealedLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { headline } from "@/lib/price";
-import { WatchButton } from "./WatchButton";
+import { SealedWatchButton } from "./SealedWatchButton";
 
 export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Country; setCode?: string | null }) {
   const h = headline(s, country);
@@ -13,7 +13,7 @@ export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Co
       <div className="relative bg-white/95 p-3">
         <span className="absolute left-2 top-2 z-[1] rounded-sm bg-ink-950/85 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-100">{s.kind}</span>
         <span className="absolute right-2 top-2 z-[1]">
-          <WatchButton slug={s.slug} kind="sealed" name={s.name} />
+          <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} compact />
         </span>
         {s.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

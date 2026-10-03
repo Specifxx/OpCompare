@@ -57,6 +57,8 @@ export interface ClicksReport {
   rows: RetailerRow[];
   byCountry: { k: string; n: number }[];
   byPage: { k: string; n: number }[];
+  /** First-touch traffic bucket (ClickEvent.entry, wave 2; "—" before it was stamped). */
+  byEntry: { k: string; n: number }[];
   topSlugs: { k: string; n: number; href: string }[];
   signedIn30: number;
   recent: { retailer: string; page: string; slug: string | null; country: string; signedIn: boolean; createdAt: Date }[];
@@ -68,7 +70,7 @@ export async function loadClicks(now = Date.now()): Promise<ClicksReport> {
   const d90 = new Date(now - CLICK_RETENTION_DAYS * DAY);
   const counts = (g: { _count: { _all: number } }[], key: (r: never) => string | null) =>
     g.map((r) => ({ k: key(r as never) ?? "—", n: r._count._all })).sort((a, b) => b.n - a.n);
-  const [last90, last30, last7, country30, page30, slug30, signedIn30, recent] = await Promise.all([
+  const [last90, last30, last7, country30, page30, slug30, signedIn30, recent, entry30] = await Promise.all([
     prisma.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d90 } } }),
     prisma.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
     prisma.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d7 } } }),
@@ -77,6 +79,7 @@ export async function loadClicks(now = Date.now()): Promise<ClicksReport> {
     prisma.clickEvent.groupBy({ by: ["slug"], _count: { _all: true }, where: { createdAt: { gte: d30 }, slug: { not: null } }, orderBy: { _count: { slug: "desc" } }, take: 15 }),
     prisma.clickEvent.count({ where: { createdAt: { gte: d30 }, userId: { not: null } } }),
     prisma.clickEvent.findMany({ where: { createdAt: { gte: d90 } }, orderBy: { createdAt: "desc" }, take: RECENT_CLICKS, select: { retailer: true, page: true, slug: true, country: true, userId: true, createdAt: true } }),
+    prisma.clickEvent.groupBy({ by: ["entry"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
   ]);
   const byKey = (g: { retailer: string; _count: { _all: number } }[]) => g.map((r) => ({ k: r.retailer, n: r._count._all }));
   const topSlugs = counts(slug30, (r: { slug: string | null }) => r.slug);
@@ -88,6 +91,7 @@ export async function loadClicks(now = Date.now()): Promise<ClicksReport> {
     rows: mergeRetailerCounts(byKey(last90), byKey(last30), byKey(last7)),
     byCountry: counts(country30, (r: { country: string }) => r.country),
     byPage: counts(page30, (r: { page: string }) => r.page),
+    byEntry: counts(entry30, (r: { entry: string | null }) => r.entry),
     topSlugs: topSlugs.map((t) => ({ ...t, href: slugHref(t.k, sealed) })),
     signedIn30,
     recent: recent.map((r) => ({ retailer: r.retailer, page: r.page, slug: r.slug, country: r.country, signedIn: r.userId != null, createdAt: r.createdAt })),
@@ -125,6 +129,8 @@ export function foldPlanClicks(rows: { userId: string | null; surface: string; c
 export interface PlanInterestReport {
   totals: { d90: number; d7: number; d30: number; checkout30: number };
   bySurface30: { k: string; n: number }[];
+  /** Checkouts STARTED (PremiumClick source "checkout", wave 2), by the surface that sent the buyer. */
+  checkoutBySurface30: { k: string; n: number }[];
   users: InterestUser[];
   anon: number;
   converted: number;
@@ -135,13 +141,15 @@ export async function loadPlanInterest(now = Date.now()): Promise<PlanInterestRe
   const d7 = new Date(now - 7 * DAY);
   const d30 = new Date(now - 30 * DAY);
   const d90 = new Date(now - CLICK_RETENTION_DAYS * DAY);
-  const [e90, e7, e30, checkout30, surface30, recent] = await Promise.all([
+  const [e90, e7, e30, checkout30, surface30, recent, started30] = await Promise.all([
     prisma.premiumClick.count({ where: { createdAt: { gte: d90 } } }),
     prisma.premiumClick.count({ where: { createdAt: { gte: d7 } } }),
     prisma.premiumClick.count({ where: { createdAt: { gte: d30 } } }),
-    prisma.premiumClick.count({ where: { createdAt: { gte: d30 }, surface: "checkout" } }),
-    prisma.premiumClick.groupBy({ by: ["surface"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+    // A started checkout: the route's row (source "checkout"), or a wave-1 client "checkout" beacon.
+    prisma.premiumClick.count({ where: { createdAt: { gte: d30 }, OR: [{ source: "checkout" }, { surface: "checkout" }] } }),
+    prisma.premiumClick.groupBy({ by: ["surface"], _count: { _all: true }, where: { createdAt: { gte: d30 }, source: "click" } }),
     prisma.premiumClick.findMany({ where: { createdAt: { gte: d90 } }, orderBy: { createdAt: "desc" }, take: PLAN_CLICK_SAMPLE, select: { userId: true, surface: true, createdAt: true } }),
+    prisma.premiumClick.groupBy({ by: ["surface"], _count: { _all: true }, where: { createdAt: { gte: d30 }, source: "checkout" } }),
   ]);
   const { byUser, anon } = foldPlanClicks(recent);
   const ids = [...byUser.keys()];
@@ -157,6 +165,7 @@ export async function loadPlanInterest(now = Date.now()): Promise<PlanInterestRe
   return {
     totals: { d90: e90, d7: e7, d30: e30, checkout30 },
     bySurface30: surface30.map((r) => ({ k: r.surface, n: r._count._all })).sort((a, b) => b.n - a.n),
+    checkoutBySurface30: started30.map((r) => ({ k: r.surface, n: r._count._all })).sort((a, b) => b.n - a.n),
     users,
     anon,
     converted: users.filter((u) => u.tier != null).length,

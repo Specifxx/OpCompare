@@ -5,7 +5,7 @@ import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
 import { PRINTINGS } from "@/lib/constants";
 import CardQuickLink from "./CardQuickLink";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 
 export function CardArt({ id, hasImage, alt, size = "tile", className = "" }: { id: number; hasImage: boolean; alt: string; size?: "thumb" | "tile" | "large"; className?: string }) {
   if (!hasImage) {
@@ -71,7 +71,7 @@ export function CardTile({ card, setCode, country, priority = false }: { card: C
           </span>
         ) : null}
         <span className="absolute right-2 top-2 z-[1]">
-          <WatchButton slug={card.slug} kind="card" name={card.name} />
+          <PriceWatchButton cardId={card.id} slug={card.slug} name={card.name} />
         </span>
         <CardArt id={card.id} hasImage={card.hasImage} alt={`${card.name}${card.variant ? ` (${card.variant})` : ""} ${card.number ?? ""} One Piece card`} className={priority ? "" : ""} />
       </div>

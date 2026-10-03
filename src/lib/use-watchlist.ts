@@ -33,8 +33,8 @@ import { FREE_LIMIT_STATUS, parseFreeLimit, wouldHitFreeLimit, type FreeLimitBod
 // Card ids are numbers here (Card.id, the TCGplayer productId). watch() takes
 // the card's id, slug and name because the local branch stores all three.
 //
-// The localStorage → account merge on first sign-in is the member track's
-// (wave2-plan §4: "use-watchlist.ts — member: the merge hook").
+// The localStorage → account merge on first sign-in: mergeLocal() below
+// (member track, wave2-plan §4).
 
 /** localStorage key and change event of the signed-out list (components/WatchButton.tsx WATCH_KEY). */
 export const LOCAL_WATCHLIST_KEY = "op:watchlist";
@@ -144,6 +144,47 @@ function listenLocal() {
   window.addEventListener("storage", sync);
 }
 
+// ── The merge on first sign-in (member track, wave 2) ───────────────────────
+// A visitor who hearted cards while signed out keeps them when they make an
+// account or sign in: the card items of `op:watchlist` are posted to
+// /api/alerts/watchlist/merge, which resolves them through the cached
+// catalogue, imports at most 200 and GRANDFATHERS them (no free-limit check;
+// the limit applies to adds after the merge). On success the merged card
+// items leave localStorage and `op:watchlist-merged` records the account, so
+// nothing is posted twice. Sealed items stay local (sealed watches are Plus,
+// lib/use-sealed-watches.ts). A failed merge leaves the local list intact
+// for the next load.
+export const LOCAL_MERGED_KEY = "op:watchlist-merged";
+
+function cookieMarket(): string {
+  try {
+    const m = document.cookie.split("; ").find((c) => c.startsWith("country="));
+    return m ? decodeURIComponent(m.slice("country=".length)) : "US";
+  } catch {
+    return "US";
+  }
+}
+
+async function mergeLocal(userId: string | null): Promise<void> {
+  const cards = readLocal().filter((i) => i.kind === "card");
+  if (!cards.length) return;
+  const res = await fetch("/api/alerts/watchlist/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items: cards.map((i) => ({ slug: i.slug, id: i.id })), market: cookieMarket() }),
+  }).catch(() => null);
+  if (!res?.ok) return;
+  const merged = new Set(cards.map((i) => i.slug));
+  const rest = readLocal().filter((i) => !(i.kind === "card" && merged.has(i.slug)));
+  writeLocal(rest);
+  try {
+    if (userId) storage()?.setItem(LOCAL_MERGED_KEY, userId);
+  } catch {
+    /* blocked */
+  }
+  trackEvent("watchlist_merged", { cards: cards.length });
+}
+
 // ── Loading ─────────────────────────────────────────────────────────────────
 
 function load(): Promise<WatchlistState> {
@@ -158,6 +199,9 @@ function load(): Promise<WatchlistState> {
           listenLocal();
           return localState();
         }
+        // The signed-out list joins the account first (member track), so the
+        // ids fetch below already includes what was just merged.
+        await mergeLocal(me.userId ?? null);
         const d = await fetch("/api/alerts/watchlist?ids=1", { cache: "no-store" })
           .then((r) => (r.ok ? (r.json() as Promise<{ items?: { cardId: number | string }[] }>) : null))
           .catch(() => null);

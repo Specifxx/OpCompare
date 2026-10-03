@@ -1,24 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { INTERVALS, PLAN_FEATURES, PLAN_PITCH, TIERS, TIER_NAMES, annualSavingPct, perMonth, planPrice, type Interval, type Tier } from "@/lib/plans";
+import { useEffect, useState } from "react";
+import { INTERVALS, PLAN_FEATURES, PLAN_PITCH, TIER_NAMES, annualSavingPct, perMonth, planPrice, type Interval, type Tier } from "@/lib/plans";
 import { firePlanClick } from "@/lib/nudge-surface";
+import { goParamToStart, intervalPlan, premiumStartHref } from "@/lib/premium-start";
+import { recallPremiumSurface } from "@/lib/premium-surface";
+import { trackEvent } from "@/lib/analytics";
 import { useMe } from "@/lib/use-me";
-import { Icon } from "./Icon";
+import { ManageSubscriptionButton } from "./ManageSubscriptionButton";
+
+export { ManageSubscriptionButton };
 
 /**
  * Start Stripe Checkout for a signed-in visitor: on success the browser is
  * already on its way to Stripe and this resolves null; otherwise it resolves
- * the error to show. Shared by these cards and the Plan dialog (PlanDialog), so
- * there is one checkout path. Records a "checkout" premium-interest beacon
- * first, and the surface that got the visitor here.
+ * the error to show. Shared by these cards and the Plan dialog, so there is
+ * one checkout path. The surface that sent the visitor rides along
+ * (lib/premium-surface.ts) and the route records the start.
  */
-export async function startCheckout(tier: Tier, iv: Interval, surface: string): Promise<string | null> {
-  firePlanClick("checkout", tier);
+export async function startCheckout(tier: Tier, iv: Interval, surface: string, back?: string | null): Promise<string | null> {
   if (surface !== "checkout") firePlanClick(surface, tier);
+  trackEvent("premium_checkout_started", { plan: intervalPlan(iv), tier, source: surface });
   try {
-    const r = await fetch("/api/premium/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier, interval: iv }) });
+    const r = await fetch("/api/premium/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tier, interval: iv, surface: recallPremiumSurface(), back: back ?? null }),
+    });
     const j = (await r.json()) as { url?: string; error?: string };
     if (j.url) {
       window.location.href = j.url;
@@ -30,105 +39,56 @@ export async function startCheckout(tier: Tier, iv: Interval, surface: string): 
   }
 }
 
-// The two plans with a Monthly / Yearly switch (RiftCompare's PremiumPricingCards).
-// Signed out: the button goes to sign-in and back here with ?go=<tier>-<interval>,
-// which starts checkout on return. Signed in: straight to Stripe Checkout.
+// The /premium pricing cards — RiftCompare's PremiumPricingCards, ported in
+// wave 2 (2026-10-03): ONE billing-cycle toggle above two cards (Monthly the
+// default; "Annual" carries the saving), two columns at EVERY width so both
+// buy buttons sit in a phone's first screen, each card a name, the real price,
+// one tagline, four bullets and the button. Prices are lib/plans.ts's.
+//
+// Buttons: signed out → /premium/start (the sign-in step inside checkout,
+// lib/premium-start.ts); signed in → straight to Stripe; a member → their
+// plan (changes happen in place on the member card). The old wave-1
+// `/premium?go=plus-year` links now forward to the start step.
+const CTA_BTN = "btn-primary w-full py-3.5 text-center text-base leading-tight";
+
 export function PricingCards({ checkoutOpen }: { checkoutOpen: boolean }) {
-  const { me, loaded } = useMe();
-  const [interval, setInterval] = useState<Interval>("month");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const started = useRef(false);
+  const [cycle, setCycle] = useState<Interval>("month");
+  const save = annualSavingPct("premium");
 
-  const start = async (tier: Tier, iv: Interval) => {
-    setBusy(`${tier}-${iv}`);
-    setError(null);
-    const err = await startCheckout(tier, iv, "premium-page");
-    if (err) {
-      setError(err);
-      setBusy(null);
-    }
-  };
-
-  // Back from sign-in with ?go=plus-year: pick up where the visitor left off.
+  // Old links: /premium?go=plus-year → the start step.
   useEffect(() => {
-    if (!loaded || started.current) return;
-    const go = new URLSearchParams(window.location.search).get("go");
-    const m = go ? /^(plus|premium)-(month|year)$/.exec(go) : null;
-    if (!m) return;
-    setInterval(m[2] as Interval);
-    if (me.user && !me.tier && checkoutOpen) {
-      started.current = true;
-      void start(m[1] as Tier, m[2] as Interval);
-    }
-  }, [loaded, me.user, me.tier, checkoutOpen]);
+    const to = goParamToStart(new URLSearchParams(window.location.search).get("go"));
+    if (to && checkoutOpen) window.location.replace(to);
+  }, [checkoutOpen]);
 
   return (
     <div>
-      <div className="mx-auto flex w-fit rounded-full border border-ink-700 bg-ink-900 p-1" role="radiogroup" aria-label="Billing period">
+      <div role="tablist" aria-label="Billing cycle" className="mx-auto flex max-w-sm items-stretch gap-1 rounded-xl border border-ink-700 bg-ink-900/70 p-1">
         {INTERVALS.map((iv) => (
-          <button key={iv} type="button" role="radio" aria-checked={interval === iv} onClick={() => setInterval(iv)} className={`rounded-full px-3 py-1.5 text-sm font-semibold sm:px-4 ${interval === iv ? "bg-brand-500 text-white" : "text-slate-300 hover:text-white"}`}>
-            {iv === "month" ? "Monthly" : `Yearly · save ${annualSavingPct("premium")}%`}
+          <button
+            key={iv}
+            type="button"
+            role="tab"
+            aria-selected={cycle === iv}
+            onClick={() => setCycle(iv)}
+            className={`flex min-h-11 flex-1 flex-wrap items-center justify-center gap-x-1.5 rounded-lg px-3 text-center text-sm font-bold transition ${
+              cycle === iv ? "bg-ink-800 text-white shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
+            }`}
+          >
+            <span className="whitespace-nowrap">{iv === "month" ? "Monthly" : "Annual"}</span>
+            {iv === "year" && save > 0 && <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-brand-400">Save {save}%</span>}
           </button>
         ))}
       </div>
-      {error ? <p className="mx-auto mt-4 max-w-xl rounded-lg border border-red-400/40 bg-red-400/10 px-3 py-2 text-center text-sm text-red-300">{error}</p> : null}
-      {/* Two columns at EVERY width (RiftCompare's PremiumPricingCards): both
-          buttons sit in the first screen of a 390x844 phone, so the type and
-          padding shrink below sm instead of the Premium card dropping below. */}
-      <div className="mx-auto mt-4 grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4">
-        {TIERS.map((tier) => {
-          const featured = tier === "premium";
-          const current = me.tier === tier;
-          const next = `/premium?go=${tier}-${interval}`;
-          const btn = `block w-full rounded-lg px-2 py-2.5 text-center text-sm font-bold sm:px-4 sm:py-3 sm:text-base ${featured ? "bg-brand-500 text-white hover:bg-brand-600" : "bg-white/10 text-white hover:bg-white/15"}`;
-          return (
-            <div key={tier} className={`relative flex flex-col rounded-2xl border p-3 sm:p-6 ${featured ? "border-brand-500 bg-brand-500/[0.06]" : "border-ink-700 bg-ink-900"}`}>
-              {featured ? <span className="absolute -top-2.5 right-3 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-white sm:left-6 sm:right-auto sm:-top-3 sm:px-3 sm:text-xs">Recommended</span> : null}
-              <h2 className="text-lg font-extrabold text-white sm:text-2xl">{TIER_NAMES[tier]}</h2>
-              <p className="mt-0.5 text-xs leading-snug text-slate-300 sm:mt-1 sm:text-sm">{PLAN_PITCH[tier]}</p>
-              <p className="num mt-2 text-2xl font-extrabold text-white sm:mt-4 sm:text-4xl">
-                {planPrice(tier, interval)}
-                <span className="text-xs font-medium text-slate-400 sm:text-base">/{interval === "month" ? "mo" : "yr"}</span>
-              </p>
-              <p className="mt-0.5 min-h-4 text-[11px] leading-snug text-slate-400 sm:mt-1 sm:text-xs">{interval === "year" ? `${perMonth(tier)}/mo billed yearly` : `or ${planPrice(tier, "year")}/yr`}</p>
-              <ul className="mt-2.5 flex-1 space-y-1 sm:mt-5 sm:space-y-2">
-                {PLAN_FEATURES[tier].map((f) => (
-                  <li key={f} className="flex gap-1.5 text-xs leading-snug text-slate-200 sm:gap-2 sm:text-[15px]">
-                    <Icon name="check" className="mt-px h-3.5 w-3.5 shrink-0 text-emerald-400 sm:mt-0.5 sm:h-4 sm:w-4" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3 sm:mt-6">
-                {current ? (
-                  <Link href="/account" className="block rounded-lg border border-ink-600 px-2 py-2.5 text-center text-sm font-semibold text-white sm:px-4 sm:py-3">
-                    Your plan · manage it
-                  </Link>
-                ) : me.tier ? (
-                  <Link href="/account" className={btn}>
-                    Switch in your account
-                  </Link>
-                ) : !checkoutOpen ? (
-                  <span className="block rounded-lg border border-ink-700 px-2 py-2.5 text-center text-sm text-slate-400 sm:px-4 sm:py-3">Opening soon</span>
-                ) : me.user ? (
-                  <button type="button" disabled={busy != null} onClick={() => start(tier, interval)} className={`${btn} disabled:opacity-60`}>
-                    {busy === `${tier}-${interval}` ? "Opening checkout…" : `Get ${TIER_NAMES[tier]}`}
-                  </button>
-                ) : (
-                  <Link href={`/login?next=${encodeURIComponent(next)}`} rel="nofollow" onClick={() => firePlanClick("premium-page", tier)} className={btn}>
-                    Get {TIER_NAMES[tier]}
-                  </Link>
-                )}
-              </div>
-            </div>
-          );
-        })}
+
+      <div className="mx-auto mt-3 grid max-w-3xl grid-cols-2 gap-2.5 sm:gap-4">
+        <PaidTierCard tier="plus" tagline={PLAN_PITCH.plus} features={PLAN_FEATURES.plus} cycle={cycle} checkoutOpen={checkoutOpen} />
+        <PaidTierCard tier="premium" tagline={PLAN_PITCH.premium} features={PLAN_FEATURES.premium} highlight cycle={cycle} checkoutOpen={checkoutOpen} />
       </div>
       {checkoutOpen ? (
         <>
           <p className="mt-3 text-center text-xs font-semibold text-slate-300">Cancel anytime · secure checkout by Stripe</p>
-          <p className="mt-1 text-center text-[11px] text-slate-500">Prices in US dollars. Cancel from your account; you keep access to the end of the period you paid for.</p>
+          <p className="mt-1 text-center text-[11px] text-slate-500">Prices in US dollars. Cancel from the membership page; you keep access to the end of the period you paid for.</p>
         </>
       ) : (
         <p className="mt-3 text-center text-[11px] text-slate-500">Prices in US dollars. Checkout isn&apos;t open yet; nothing can be charged until it is.</p>
@@ -137,46 +97,107 @@ export function PricingCards({ checkoutOpen }: { checkoutOpen: boolean }) {
   );
 }
 
-export function ManageSubscriptionButton({ label = "Manage subscription" }: { label?: string }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const open = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const r = await fetch("/api/premium/portal", { method: "POST" });
-      const j = (await r.json()) as { url?: string; error?: string };
-      if (j.url) {
-        window.location.href = j.url;
-        return;
-      }
-      setError(j.error ?? "Please try again.");
-    } catch {
-      setError("Please try again.");
-    }
-    setBusy(false);
-  };
+function PaidTierCard({ tier, tagline, features, highlight = false, cycle, checkoutOpen }: { tier: Tier; tagline: string; features: string[]; highlight?: boolean; cycle: Interval; checkoutOpen: boolean }) {
+  const annual = cycle === "year";
+  const headline = annual ? perMonth(tier) : planPrice(tier, "month");
   return (
-    <div>
-      <button type="button" onClick={open} disabled={busy} className="rounded-lg bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60">
-        {busy ? "Opening…" : label}
-      </button>
-      {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
+    <div className={`card-surface relative flex flex-col overflow-hidden rounded-2xl ${highlight ? "border-2 border-gold/60 shadow-[0_8px_24px_rgba(0,0,0,0.35)]" : "border border-ink-700"}`}>
+      {highlight && (
+        <span className="absolute right-0 top-0 hidden rounded-bl-lg bg-gold px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-ink-950 sm:block">Recommended</span>
+      )}
+      <div className={`border-b border-ink-800 px-2.5 py-2.5 text-center sm:px-5 sm:py-4 ${highlight ? "bg-gold/10" : "bg-ink-900"}`}>
+        <div className={`text-base font-extrabold ${highlight ? "text-gold" : "text-white"}`}>{TIER_NAMES[tier]}</div>
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="num text-2xl font-extrabold text-white sm:text-3xl">{headline}</span>
+          <span className="text-sm text-slate-400">/mo</span>
+        </div>
+        <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{tagline}</p>
+        {annual && <p className="mt-0.5 text-[11px] font-semibold text-brand-400">Billed as {planPrice(tier, "year")}/year</p>}
+      </div>
+      <div className="flex flex-1 flex-col justify-between gap-2.5 px-2.5 py-2.5 sm:px-5 sm:py-4">
+        <ul className="space-y-1.5 text-left text-[12px] leading-snug text-slate-300 sm:text-[13px]">
+          {features.map((f) => (
+            <li key={f} className="flex items-start gap-1.5 [font-feature-settings:'lnum'_1]">
+              <span className={`font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+        <PlanCta tier={tier} interval={cycle} checkoutOpen={checkoutOpen} />
+      </div>
     </div>
   );
 }
 
-export function SignOutButton() {
+function PlanCta({ tier, interval, checkoutOpen }: { tier: Tier; interval: Interval; checkoutOpen: boolean }) {
+  const { me, loaded } = useMe();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const subscribe = async () => {
+    setBusy(true);
+    setError(null);
+    const err = await startCheckout(tier, interval, "premium-page");
+    if (err) {
+      setError(err);
+      setBusy(false);
+    }
+  };
+  if (me.tier) {
+    return (
+      <Link href="/premium#top-pricing" className="btn-ghost w-full text-center text-sm">
+        {me.tier === tier ? "Your plan" : "Change it on your plan"}
+      </Link>
+    );
+  }
+  if (!checkoutOpen) {
+    return <span className="block rounded-lg border border-ink-700 px-2 py-2.5 text-center text-sm text-slate-400 sm:px-4 sm:py-3">Opening soon</span>;
+  }
+  if (!loaded || !me.user) {
+    const startHref = premiumStartHref({ tier, plan: intervalPlan(interval), src: "premium-page" });
+    return (
+      <div className="w-full">
+        <Link
+          href={startHref}
+          rel="nofollow"
+          onClick={() => {
+            firePlanClick("premium-page", tier);
+            trackEvent("premium_signin_step", { tier, plan: intervalPlan(interval), source: "premium-page" });
+          }}
+          className={CTA_BTN}
+        >
+          Get {TIER_NAMES[tier]}&nbsp;→
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full">
+      <button type="button" onClick={subscribe} disabled={busy} className={CTA_BTN}>
+        {busy ? "Opening checkout…" : `Get ${TIER_NAMES[tier]} →`}
+      </button>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-rose-400">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function SignOutButton({ className = "rounded-lg border border-ink-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800", label = "Sign out" }: { className?: string; label?: string }) {
+  const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
+      disabled={busy}
       onClick={async () => {
+        setBusy(true);
         await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
         location.assign("/");
       }}
-      className="rounded-lg border border-ink-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800"
+      className={className}
     >
-      Sign out
+      {busy ? "Signing out…" : label}
     </button>
   );
 }

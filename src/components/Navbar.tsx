@@ -13,7 +13,7 @@ import { NavUser } from "./NavUser";
 import { PRIMARY_NAV } from "./nav-groups";
 import { PricingLink } from "./PlanButton";
 import { ThemeToggle } from "./ThemeToggle";
-import { WatchDrawerButton } from "./WatchDrawer";
+import { HeaderWatchButton } from "./HeaderWatchButton";
 
 // Below sm the logo is the hat mark alone: with the market picker, watchlist,
 // account and (from 400px) Pricing, the wordmark overflowed a 390px phone.
@@ -68,7 +68,7 @@ export function Navbar() {
             <HeaderPricing />
             <ThemeToggle />
             <CountrySelect />
-            <WatchDrawerButton />
+            <HeaderWatchButton className="hidden sm:inline-flex" />
             <NavUser />
           </div>
         </div>

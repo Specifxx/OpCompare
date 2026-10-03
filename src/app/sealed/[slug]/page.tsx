@@ -7,7 +7,7 @@ import { PriceBoard } from "@/components/PriceBoard";
 import { SealedTile } from "@/components/SealedTile";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
 import { ShareButton } from "@/components/ShareButton";
-import { WatchButton } from "@/components/WatchButton";
+import { SealedWatchButton } from "@/components/SealedWatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
@@ -175,12 +175,7 @@ export default async function SealedDetailPage({ params }: Props) {
                 </p>
               </div>
               <div className="flex gap-2">
-                <WatchButton
-                  slug={s.slug}
-                  kind="sealed"
-                  name={s.name}
-                  variant="button"
-                />
+                <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="max-w-xs" />
                 <ShareButton title={`${s.name} — ${SITE_NAME}`} />
               </div>
             </div>

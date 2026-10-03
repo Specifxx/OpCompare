@@ -28,7 +28,7 @@ export function pathSkipped(pathname: string | null | undefined, skips: readonly
  * (the tools' walls, the watchlist). Stacking a corner card on those is asking
  * twice for one thing.
  */
-export const PREMIUM_SKIP_PATHS = ["/login", "/premium", "/tools", "/watchlist", "/account", "/admin"] as const;
+export const PREMIUM_SKIP_PATHS = ["/login", "/premium", "/tools", "/watchlist", "/watching", "/account", "/admin"] as const;
 
 /** Milliseconds since `createdAt` (an ISO string or Date), or null when it is missing or unreadable. */
 export function accountAgeMs(createdAt: string | Date | null | undefined, now: number = Date.now()): number | null {

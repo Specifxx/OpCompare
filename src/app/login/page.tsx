@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default async function Login({
   searchParams,
 }: {
-  searchParams: { next?: string; error?: string };
+  searchParams: { next?: string; error?: string; src?: string };
 }) {
   const next = sanitizeNextPath(searchParams.next);
   if (await getCurrentUser()) redirect(next ?? POST_SIGN_IN_FALLBACK);
@@ -42,6 +42,7 @@ export default async function Login({
           providers={enabledProviders()}
           next={next}
           error={searchParams.error ?? null}
+          source={searchParams.src ?? null}
         />
       </div>
     </div>

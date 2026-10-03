@@ -14,7 +14,11 @@ import { PlanProvider } from "@/components/PlanProvider";
 import { OutboundBeacon } from "@/components/OutboundBeacon";
 import { PremiumSlideIn } from "@/components/PremiumSlideIn";
 import { AnnualSwitchNudge } from "@/components/AnnualSwitchNudge";
+import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
+import { SignupWelcome } from "@/components/SignupWelcome";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { stripeEnabled } from "@/lib/stripe";
+import { enabledProviders } from "@/lib/oauth";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
@@ -95,11 +99,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NextTopLoader color="#ff6b6b" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <CountryProvider initial={country}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
-          <QuickViewProvider>
+          <QuickViewProvider providers={enabledProviders()}>
           {/* The Plus/Premium dialog, the click beacon and the corner nudges.
               checkoutOpen is an environment read (is Stripe configured?), not
               a session read: who the visitor is comes from /api/me, client-side. */}
           <PlanProvider checkoutOpen={stripeEnabled()}>
+          {/* The watchlist drawer (the header heart's slide-over); client-only state. */}
+          <WatchlistDrawerProvider>
           <OutboundBeacon />
           <SideNav />
           <Navbar />
@@ -119,6 +125,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <PremiumSlideIn />
           <AnnualSwitchNudge />
+          {/* sign_up + "Your free account is ready" on ?welcome=, and a watch
+              stashed before OAuth (client-only; renders a toast at most). */}
+          <SignupWelcome />
+          {/* ?ref= and the first-touch traffic bucket (client-only, renders nothing). */}
+          <ReferralCapture />
+          </WatchlistDrawerProvider>
           </PlanProvider>
           </QuickViewProvider>
         </CountryProvider>

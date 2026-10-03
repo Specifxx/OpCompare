@@ -63,7 +63,7 @@ export default async function BuyList({ searchParams }: { searchParams: { list?:
               </p>
               <div className="mt-4">
                 {tier === "plus" ? (
-                  <Link href="/account" className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600">
+                  <Link href="/premium" className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600">
                     Switch to Premium
                   </Link>
                 ) : (

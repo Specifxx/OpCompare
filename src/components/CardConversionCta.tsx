@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { Icon } from "./Icon";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 
 // The card page's next step after the price table (RiftCompare's
 // CardConversionCta): watch this price, and, for anyone without a plan, a
@@ -12,7 +12,7 @@ import { WatchButton } from "./WatchButton";
 // the watchlist page and the Buy List Planner. Hidden for Plus/Premium members
 // (who have the tools already, and the heart beside the title); a returning
 // member's oc_adfree hint hides it at first paint (data-ad-placement).
-export function CardConversionCta({ slug, name }: { slug: string; name: string }) {
+export function CardConversionCta({ cardId, slug, name }: { cardId: number; slug: string; name: string }) {
   const { me } = useMe();
   if (me.tier) return null;
   return (
@@ -25,7 +25,7 @@ export function CardConversionCta({ slug, name }: { slug: string; name: string }
         <p className="mt-0.5 text-xs text-slate-400">Keep it on your watchlist to check its price in every store at a glance, free and with no account.</p>
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <WatchButton slug={slug} kind="card" name={name} variant="button" />
+        <PriceWatchButton cardId={cardId} slug={slug} name={name} variant="full" />
         <Link href="/tools/deal-finder" className="btn-ghost text-sm">
           See every card below TCGplayer market →
         </Link>

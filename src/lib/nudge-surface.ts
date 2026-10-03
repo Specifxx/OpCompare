@@ -7,9 +7,10 @@
 // before anything reaches the database, so a crafted body cannot write
 // arbitrary strings.
 import { isTier, type Tier } from "./plans";
+import { rememberPremiumSurface } from "./premium-surface";
 
 // Steps of the purchase itself, and the generic fallback.
-const FIXED = new Set(["dialog", "checkout", "premium-page", "slidein", "annual-switch"]);
+const FIXED = new Set(["dialog", "checkout", "premium-page", "slidein", "annual-switch", "checklist"]);
 
 // Scoped surfaces: `nav:header`, `gate:buy-list`, `tip:sealed` … The suffix
 // names the place; the prefix is the kind of surface.
@@ -17,7 +18,8 @@ const FIXED = new Set(["dialog", "checkout", "premium-page", "slidein", "annual-
 //   gate:  a wall in front of a paid tool (Deal Finder, Buy List Planner)
 //   nudge: an in-page pitch (movers, card page)
 //   tip:   a one-line DiscoveryTip where a paid feature lives
-const SCOPED = /^(nav|gate|nudge|tip):[a-z0-9-]{1,32}$/;
+//   limit: the free-limit panel, where an add hit the free cap (wave 2)
+const SCOPED = /^(nav|gate|nudge|tip|limit):[a-z0-9-]{1,32}$/;
 
 export function isPlanClickSurface(v: unknown): v is string {
   return typeof v === "string" && (FIXED.has(v) || SCOPED.test(v));
@@ -35,6 +37,8 @@ export function parsePlanClick(body: unknown): { surface: string; tier: Tier | n
  */
 export function firePlanClick(surface: string, tier?: Tier | null): void {
   if (typeof window === "undefined") return;
+  // Carried into checkout (lib/premium-surface.ts), stamped on the checkout row.
+  rememberPremiumSurface(surface);
   try {
     const body = JSON.stringify({ surface, tier: tier ?? null });
     const blob = new Blob([body], { type: "application/json" });

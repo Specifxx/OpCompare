@@ -40,7 +40,7 @@ export function MineDeals({ params, country, buy }: { params: DealFinderParams; 
         const j = await r.json().catch(() => ({}));
         if (!live) return;
         if (!r.ok) return setRes({ state: "error", message: j.error ?? "Couldn't load your cards." });
-        setRes({ state: "ok", watched: j.watched, slugs: slugs.length, view: j.view, list: j.list });
+        setRes({ state: "ok", watched: j.watched, slugs: Math.max(slugs.length, j.watched ?? 0), view: j.view, list: j.list });
       })
       .catch(() => live && setRes({ state: "error", message: "Couldn't load your cards — check your connection and try again." }));
     return () => {

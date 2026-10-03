@@ -63,6 +63,21 @@ export default async function AdminPremiumInterest() {
               </ul>
             )}
           </div>
+          <div className="card-surface p-4" data-checkout-by-surface>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Started checkout by surface · 30 days</p>
+            {data.checkoutBySurface30.length === 0 ? (
+              <p className="text-sm text-slate-500">–</p>
+            ) : (
+              <ul className="grid gap-x-8 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                {data.checkoutBySurface30.map((s) => (
+                  <li key={s.k} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-slate-300">{s.k === "checkout" ? "unknown (no surface)" : s.k}</span>
+                    <span className="num text-white">{int(s.n)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           {data.users.length ? (
             <section>
               <h2 className="mb-1 text-xl text-white">Signed-in people</h2>

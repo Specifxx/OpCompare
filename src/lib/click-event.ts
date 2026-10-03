@@ -5,12 +5,15 @@
 // carries (data-retailer / data-page), the card or sealed slug when the click
 // came from one, and the market. Never a URL, an IP, a user agent or free text.
 import { isCountry, type Country } from "./country";
+import { isEntrySource, type EntrySource } from "./entry-source";
 
 export interface ClickInput {
   retailer: string;
   page: string;
   slug: string | null;
   country: Country;
+  /** First-touch traffic bucket of the tab (lib/entry-source.ts), or null. */
+  entry?: EntrySource | null;
 }
 
 const RETAILER = /^[a-z0-9][a-z0-9_.:-]{0,47}$/;
@@ -26,7 +29,7 @@ export function parseClick(body: unknown): ClickInput | null {
   const slugRaw = typeof b.slug === "string" ? b.slug.trim().toLowerCase() : "";
   if (!RETAILER.test(retailer) || !PAGE.test(page)) return null;
   if (!isCountry(b.country)) return null;
-  return { retailer, page, slug: SLUG.test(slugRaw) ? slugRaw : null, country: b.country };
+  return { retailer, page, slug: SLUG.test(slugRaw) ? slugRaw : null, country: b.country, entry: isEntrySource(b.entry) ? b.entry : null };
 }
 
 /**

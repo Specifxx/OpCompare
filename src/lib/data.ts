@@ -734,3 +734,18 @@ export async function getEmailStatus(): Promise<EmailStatus> {
   }
 }
 // ── end wave2:foundation ──
+
+// ── wave2:member ──
+// DEAL FINDER RANK BY CARD ID, for the personal nudge (lib/premium-nudge.ts:
+// "4 cards you watch are underpriced right now"). The default "Underpriced vs
+// TCGplayer" ranking (lib/deal-pages.ts rankDefaultVsTcg), which reads only
+// self-cached loaders — NOT cached again here and never called from inside an
+// unstable_cache callback (CLAUDE.md, Egress). Dynamic import: deal-pages
+// imports this module. Ranks are 1-based; the nudge reveals only counts and
+// whether a card is in the free top 3, never a price or a rank beyond that.
+export async function getDealRankById(country: Country): Promise<Map<number, number>> {
+  const { rankDefaultVsTcg } = await import("./deal-pages");
+  const { ranked } = await rankDefaultVsTcg(country);
+  return new Map(ranked.map((r, i) => [r.id, i + 1]));
+}
+// ── end wave2:member ──

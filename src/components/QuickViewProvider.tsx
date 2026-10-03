@@ -44,7 +44,7 @@ interface Shown extends QuickViewOpen {
   n: number;
 }
 
-export default function QuickViewProvider({ children }: { children: React.ReactNode }) {
+export default function QuickViewProvider({ children, providers = [] }: { children: React.ReactNode; providers?: ("google" | "discord")[] }) {
   const [shown, setShown] = useState<Shown | null>(null);
   // Kept through a close so the exit transition still has content behind it.
   const last = useRef<Shown | null>(null);
@@ -143,7 +143,7 @@ export default function QuickViewProvider({ children }: { children: React.ReactN
     <QuickViewContext.Provider value={{ open, prefetch }}>
       {children}
       <Dialog open={!!shown} onClose={close} size="3xl" labelledBy="quickview-title">
-        {display ? <QuickView key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb ?? null} label={display.label ?? null} onClose={close} /> : null}
+        {display ? <QuickView key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb ?? null} label={display.label ?? null} onClose={close} providers={providers} /> : null}
       </Dialog>
     </QuickViewContext.Provider>
   );

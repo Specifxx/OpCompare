@@ -61,7 +61,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/box-value", label: "Box Value Calc", keywords: ["ev", "box value", "per pack", "is a box worth it"] },
       { href: "/tools/buy-list", label: "Buy List Planner", keywords: ["basket", "buy list", "cheapest store", "split order", "premium"] },
       { href: "/tools/selling-fees", label: "Selling Fees", keywords: ["fees", "selling", "tcgplayer fees", "ebay fees", "cardmarket", "payout"] },
-      { href: "/watchlist", label: "My Watchlist", keywords: ["watchlist", "saved", "favourites"] },
+      { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites"] },
       { href: "/premium", label: "Plus & Premium", keywords: ["premium", "plus", "pricing", "subscription", "no ads"] },
     ],
   },

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { upsertOAuthUser } from "@/lib/accounts";
+import { applyReferral } from "@/lib/referral";
+import { parseSignupSource, SIGNUP_SOURCE_COOKIE } from "@/lib/signup-source-shared";
 import { createSession } from "@/lib/auth";
 import { POST_SIGN_IN_FALLBACK, sanitizeNextPath } from "@/lib/next-param";
 import { isOAuthProvider, isProviderEnabled, normaliseProfile, providerConfig, redirectUri } from "@/lib/oauth";
@@ -51,9 +53,15 @@ export async function GET(req: Request, { params }: { params: { provider: string
 
   let isNew = false;
   try {
-    const user = await upsertOAuthUser(provider, p);
+    // Wave 2: the whitelisted sign-up surface (oc_signup_src), stamped on a
+    // NEW account only, and the referral cookie (a no-op while
+    // REFERRAL_PREMIUM_DAYS is 0, lib/referral.ts).
+    const signupSource = parseSignupSource(cookies().get(SIGNUP_SOURCE_COOKIE)?.value);
+    const user = await upsertOAuthUser(provider, p, { signupSource: signupSource ?? "login" });
     if (!user) return fail(req, "oauth_unverified");
     isNew = user.isNew;
+    if (signupSource) cookies().set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
+    if (isNew) await applyReferral(user.id);
     await createSession(user.id);
   } catch {
     return fail(req, "oauth_session");

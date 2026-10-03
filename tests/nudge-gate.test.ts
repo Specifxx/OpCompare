@@ -52,7 +52,7 @@ test("slide-in: skipped on sign-in, pricing, tools, watchlist, account and admin
   for (const p of ["/login", "/premium", "/premium/welcome", "/tools", "/tools/deal-finder", "/tools/buy-list", "/watchlist", "/account", "/admin", "/admin/clicks"]) {
     assert.equal(premiumSlideInEligible({ views: 5, accountAgeMs: old, pathname: p }), false, p);
   }
-  assert.deepEqual([...PREMIUM_SKIP_PATHS], ["/login", "/premium", "/tools", "/watchlist", "/account", "/admin"]);
+  assert.deepEqual([...PREMIUM_SKIP_PATHS], ["/login", "/premium", "/tools", "/watchlist", "/watching", "/account", "/admin"]);
 });
 
 test("pathSkipped matches whole path segments only", () => {

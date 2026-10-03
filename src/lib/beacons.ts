@@ -12,11 +12,21 @@ import type { Tier } from "./plans";
 export const CLICK_RETENTION_DAYS = 90;
 
 export async function recordClick(c: ClickInput, userId: string | null): Promise<void> {
-  await prisma.clickEvent.create({ data: { retailer: c.retailer, page: c.page, slug: c.slug, country: c.country, userId } });
+  await prisma.clickEvent.create({ data: { retailer: c.retailer, page: c.page, slug: c.slug, country: c.country, userId, entry: c.entry ?? null } });
 }
 
 export async function recordPlanClick(surface: string, tier: Tier | null, userId: string | null): Promise<void> {
   await prisma.premiumClick.create({ data: { surface, tier, userId } });
+}
+
+/**
+ * A STARTED CHECKOUT (wave 2): written by /api/premium/checkout once Stripe
+ * returned a session, with the surface that sent the buyer (or "checkout"
+ * when none is known). source "checkout" tells it apart from a click, for
+ * /admin/premium's "Started checkout by surface".
+ */
+export async function recordCheckoutStart(surface: string | null, tier: Tier, userId: string): Promise<void> {
+  await prisma.premiumClick.create({ data: { surface: surface ?? "checkout", tier, userId, source: "checkout" } });
 }
 
 /** Delete beacon rows older than the retention window. Both tables are indexed on createdAt. */

@@ -123,7 +123,7 @@ export function SideNav() {
         )}
       </nav>
       <div className="border-t border-ink-800 p-3">
-        <Link href="/watchlist" className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800">
+        <Link href="/watching" className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800">
           <Icon name="heart" className="h-4 w-4 text-brand-400" />
           My Watchlist
         </Link>

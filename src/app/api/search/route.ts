@@ -22,6 +22,7 @@ export async function GET(req: Request) {
     const h = headline(c, country);
     return {
       kind: "card" as const,
+      id: c.id,
       slug: c.slug,
       name: c.name,
       number: c.number,

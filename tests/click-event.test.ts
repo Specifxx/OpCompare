@@ -10,8 +10,8 @@ import { CLICK_RETENTION_DAYS, foldPlanClicks, mergeRetailerCounts, retailerLabe
 import { summarizeSubscription } from "../src/lib/plan-subscription";
 
 test("parseClick accepts what the links carry and normalises case", () => {
-  assert.deepEqual(parseClick({ retailer: "tcgplayer", page: "card", slug: "op01-120-shanks", country: "US" }), { retailer: "tcgplayer", page: "card", slug: "op01-120-shanks", country: "US" });
-  assert.deepEqual(parseClick({ retailer: "EBAY_AU", page: "Card", slug: null, country: "AU" }), { retailer: "ebay_au", page: "card", slug: null, country: "AU" });
+  assert.deepEqual(parseClick({ retailer: "tcgplayer", page: "card", slug: "op01-120-shanks", country: "US" }), { retailer: "tcgplayer", page: "card", slug: "op01-120-shanks", country: "US", entry: null });
+  assert.deepEqual(parseClick({ retailer: "EBAY_AU", page: "Card", slug: null, country: "AU" }), { retailer: "ebay_au", page: "card", slug: null, country: "AU", entry: null });
   assert.equal(parseClick({ retailer: "blackvaultgaming", country: "US" })?.page, "home", "a link without data-page counts as home");
 });
 
@@ -149,4 +149,10 @@ test("beacons: same-origin only, pruned after the retention window, the report b
   // A list page's link names its card: the beacon prefers data-card over the path.
   assert.match(read("src/components/OutboundBeacon.tsx"), /a\.getAttribute\("data-card"\) \|\| slugFromPath\(path\)/);
   for (const f of ["src/components/DealTable.tsx", "src/components/CheapestOnEbay.tsx"]) assert.match(read(f), /data-card=\{/, f);
+});
+
+test("parseClick keeps a known entry bucket and drops anything else (wave 2)", () => {
+  assert.equal(parseClick({ retailer: "tcgplayer", country: "US", entry: "reddit" })?.entry, "reddit");
+  assert.equal(parseClick({ retailer: "tcgplayer", country: "US", entry: "https://evil.example" })?.entry, null);
+  assert.equal(parseClick({ retailer: "tcgplayer", country: "US" })?.entry, null);
 });

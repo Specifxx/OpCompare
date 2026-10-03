@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { outboundRel } from "@/lib/affiliate";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 import { TOP_BUY_ATTR } from "./CardTopBuy";
 
 // The card page's phone buy path, bottom half (RiftCompare's CardStickyBuyBar):
@@ -20,7 +20,10 @@ export function CardStickyBuyBar({
   page,
   slug,
   name,
+  cardId,
 }: {
+  /** The card's id, for the watch heart (wave 2). */
+  cardId?: number;
   /** The price board's element id. */
   boardId: string;
   /** Formatted item price. */
@@ -86,7 +89,7 @@ export function CardStickyBuyBar({
           <span className="num font-bold text-white">{price}</span>
           <span className="text-slate-400"> at {store}</span>
         </p>
-        <WatchButton slug={slug} kind="card" name={name} />
+        {cardId != null ? <PriceWatchButton cardId={cardId} slug={slug} name={name} /> : null}
         <a
           href={href}
           target="_blank"
