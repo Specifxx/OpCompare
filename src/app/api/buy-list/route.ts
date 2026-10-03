@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { affiliateUrl } from "@/lib/affiliate";
 import { getCurrentUser } from "@/lib/auth";
-import { retailerSubId } from "@/lib/board";
-import { isBasketSource, planBuyList, type PlanItem, type PlanOffer } from "@/lib/buy-list";
+import { isBasketSource, planBuyList, tagPlanLinks, type PlanItem, type PlanOffer } from "@/lib/buy-list";
 import { cheapestGrades, meetsMinCondition, parseMinCondition, planTotal } from "@/lib/buy-list-condition";
 import { getCardDetail, getSealedDetail, type OfferRow } from "@/lib/data";
 import { mergeLines, parseDeckList, resolveDeck } from "@/lib/deck";
@@ -84,12 +82,10 @@ export async function POST(req: Request) {
     // link leaves the server for an account without Premium.
     return NextResponse.json({ mode: "total", market, minCondition: floor, count: items.length, unmatched, ...planTotal(plan), ...cheapestGrades(items) }, { headers });
   }
-  const page = "/tools/buy-list";
-  const tag = <B extends { source: string; picks: { url: string }[] }>(b: B) => ({
-    ...b,
-    store: sourceLabel(b.source, market),
-    picks: b.picks.map((p) => ({ ...p, url: affiliateUrl(p.url, retailerSubId(b.source), page) })),
-  });
+  // Links tagged by the planner's own helper (TCGplayer via Impact, eBay via
+  // EPN, stores unchanged); the route only adds each basket's store label.
+  const tagged = tagPlanLinks(plan);
+  const label = <B extends { source: string }>(b: B) => ({ ...b, store: sourceLabel(b.source, market) });
   return NextResponse.json(
     {
       mode: "plan",
@@ -97,9 +93,9 @@ export async function POST(req: Request) {
       minCondition: floor,
       count: items.length,
       unmatched,
-      ...plan,
-      split: plan.split.map(tag),
-      single: plan.single.map(tag),
+      ...tagged,
+      split: tagged.split.map(label),
+      single: tagged.single.map(label),
     },
     { headers },
   );

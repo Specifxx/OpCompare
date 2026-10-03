@@ -137,6 +137,8 @@ test("Buy List Planner links: TCGplayer through Impact, stores untouched", () =>
   assert.ok(urls.some((u) => /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=oc-tcgplayer-tools/.test(u)));
   assert.ok(urls.includes("https://x.example/p/b"));
   assert.ok(plan.single.every((b) => b.picks.every((p) => b.source !== "tcgplayer" || p.url.includes("partner.tcgplayer.com"))));
+  // The helper under test is the one the route ships.
+  assert.match(read("src/app/api/buy-list/route.ts"), /const tagged = tagPlanLinks\(plan\);/);
 });
 
 test("wiring: the provider sits in the root layout, which still reads no session", () => {

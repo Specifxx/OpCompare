@@ -999,7 +999,8 @@ keeping both sides of every conflict. The calls that were not mechanical:
 - **The chart** keeps the ux interactive chart (it already measures real
   pixels and sizes its gutter); QuickView's `width` is only the width drawn
   before the wrapper is measured.
-- **Buy List route** keeps the tools version (it tags links inline); its rows
+- **Buy List route** keeps the tools version (it tags links with the planner's
+  `tagPlanLinks` and adds each basket's store label); its rows
   carry quickview's `data-card`/`data-surface` and PlanButton's
   `gate:buy-list` surface.
 - **Premium proof:** `/api/premium/proof` answers `{country, deals, dealCount}`
