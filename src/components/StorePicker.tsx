@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buyLabel } from "@/lib/deal-ui";
 import type { DealSource } from "@/lib/deals";
 import { hrefFor, type DealFinderParams } from "@/lib/deal-finder-href";
@@ -30,9 +30,26 @@ export function StorePicker({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string[]>(buy);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const buyKey = buy.join(",");
   // A navigation (Back, a view tab) changes `buy` under an open picker.
   useEffect(() => setDraft(buyKey ? buyKey.split(",") : []), [buyKey]);
+
+  // Keyboard: focus moves into the panel when it opens, and Escape closes it
+  // (dropping the draft) and returns focus to the button.
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.querySelector<HTMLElement>("input,button")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setDraft(buyKey ? buyKey.split(",") : []);
+      setOpen(false);
+      buttonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, buyKey]);
 
   function apply(next: string[]) {
     setOpen(false);
@@ -50,6 +67,7 @@ export function StorePicker({
     <div className="relative">
       <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Buy from</div>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
@@ -62,7 +80,7 @@ export function StorePicker({
       {open ? (
         <>
           <button type="button" className="fixed inset-0 z-dropdown cursor-default" aria-hidden tabIndex={-1} onClick={() => setOpen(false)} />
-          <div role="dialog" aria-label="Choose stores" className="absolute left-0 z-overlay mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-ink-700 bg-ink-900 p-2 shadow-glow">
+          <div ref={panelRef} role="dialog" aria-label="Choose stores" className="absolute left-0 z-overlay mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-ink-700 bg-ink-900 p-2 shadow-glow">
             <div className="mb-1 flex items-center justify-between border-b border-ink-800 px-1 pb-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                 {draft.length} of {sources.length} sources

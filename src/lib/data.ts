@@ -530,6 +530,8 @@ export const getDealOffers = unstable_cache(
           OR: [{ source: { startsWith: "store:" } }, ...(ebaySource ? [{ source: ebaySource }] : [])],
         },
         select: { productId: true, source: true, priceCents: true, shippingCents: true, url: true, condition: true },
+        // Cheapest first, so if the cap ever bites it drops the dearest listings, never a row's own.
+        orderBy: { priceCents: "asc" },
         take: want.length * 80,
       }),
       prisma.card.findMany({ where: { id: { in: want } }, select: { id: true, tcgplayerUrl: true }, take: want.length }),
