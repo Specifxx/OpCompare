@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import CardQuickLink from "@/components/CardQuickLink";
 import { CardTile } from "@/components/CardTile";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { SealedTile } from "@/components/SealedTile";
@@ -109,10 +110,10 @@ export default async function SetPage({ params, searchParams }: Props) {
           value={top?.marketUsd ? money(top.marketUsd, "US") : "—"}
           sub={
             top ? (
-              <Link href={`/card/${top.slug}`} className="link">
+              <CardQuickLink slug={top.slug} className="link">
                 {top.name}
                 {top.variant ? ` (${top.variant})` : ""}
-              </Link>
+              </CardQuickLink>
             ) : undefined
           }
         />

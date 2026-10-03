@@ -3,39 +3,51 @@ import { COUNTRIES, MARKETS, type Country } from "@/lib/country";
 import type { OfferRow } from "@/lib/data";
 import { affiliateUrl, ebayLabel, ebaySearchUrl, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money } from "@/lib/format";
-import { usdCentsToCountry } from "@/lib/fx";
-import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "@/lib/board";
+import { ebayRetailer, postageLine, retailerSubId } from "@/lib/board";
 import { isEbaySource, sourceLabel } from "@/lib/stores";
+import { marketRows } from "@/lib/quick-view";
 import { ReportPriceButton } from "./ReportPriceButton";
 
 // The price comparison (RiftCompare's card-page board): every open offer in the
 // visitor's market, cheapest first by ITEM price; sold-out stores folded below;
 // eBay listings (the eBay pass, lib/ebay-import.ts) beside the stores, ranked by
-// item price like every row and never moved because they are eBay; a search of
-// the visitor's own eBay under it; TCGplayer's market price as a reference
-// under the comparison, never in it.
+// item price like every row and never moved because they are eBay. eBay search:
+// a "more listings" strip inside the board when an eBay row is there, else
+// RiftCompare's fallback block directly under the board ("Search eBay for
+// <card>"), so a thin market is never a dead end. TCGplayer's market price is
+// the page's TcgMarketPrice block under it — a reference, never a row.
 export function PriceBoard({
   productId,
   offers,
   country,
-  marketUsd,
   ebayQuery,
   page,
   title = "Price comparison",
   noun = "card",
+  id,
+  slug,
+  name,
+  preRelease = false,
 }: {
   productId: number;
   offers: OfferRow[];
   country: Country;
-  marketUsd: number | null;
   ebayQuery: string;
   page: string;
   title?: string;
   noun?: string;
+  /** Anchor id (the card page's sticky buy bar hides while this is on screen). */
+  id?: string;
+  /** data-card on every outbound link: the product's slug. */
+  slug?: string;
+  /** Display name for the eBay fallback block ("Search eBay for <name>"). */
+  name?: string;
+  /** The set has not released: the eBay copy says nothing ships yet. */
+  preRelease?: boolean;
 }) {
   const c = COUNTRIES[country];
   const here = offers.filter((o) => o.market === country && o.currency === c.currency);
-  const open = here.filter((o) => o.inStock).sort(compareBoardRows);
+  const open = marketRows(offers, country);
   const hasEbayRow = open.some((o) => isEbaySource(o.source));
   const sold = here.filter((o) => !o.inStock).sort((a, b) => a.priceCents - b.priceCents);
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
@@ -48,7 +60,8 @@ export function PriceBoard({
   const ebay = ebaySearchUrl(country, ebayQuery, `${page}-board`);
 
   return (
-    <section className="card-surface overflow-hidden" aria-label={title}>
+    <>
+    <section id={id} className="card-surface scroll-mt-20 overflow-hidden" aria-label={title}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink-800 px-4 py-3 sm:px-5">
         <h2 className="text-lg text-white">
           {title} <span className="font-sans text-sm font-normal text-slate-400">({open.length}) · {c.place}</span>
@@ -87,10 +100,10 @@ export function PriceBoard({
                   </p>
                 </div>
                 <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(o.priceCents, country)}</span>
-                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} className={`${isEbay ? "btn-ebay" : "btn-primary"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} data-card={slug} data-surface="board_row" className={`${isEbay ? "btn-ebay" : "btn-primary"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} className={`${isEbay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${label}` : `Buy at ${label}`}>
+                <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={page} data-card={slug} data-surface="board_row" className={`${isEbay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${label}` : `Buy at ${label}`}>
                   →
                 </a>
               </li>
@@ -119,14 +132,16 @@ export function PriceBoard({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-ink-800 bg-ink-850/50 px-4 py-3 sm:px-5">
-        <span className="flex-1 text-sm text-slate-300">
-          <span className="font-semibold text-white">{ebayLabel(country)}</span> — {hasEbayRow ? "more live listings" : "search live listings"} for this {noun}
-        </span>
-        <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page={page} className="btn-ebay-ghost min-h-10">
-          {hasEbayRow ? `More listings on ${ebayLabel(country)} →` : `Search ${ebayLabel(country)} →`}
-        </a>
-      </div>
+      {hasEbayRow ? (
+        <div className="flex flex-wrap items-center gap-3 border-t border-ink-800 bg-ink-850/50 px-4 py-3 sm:px-5">
+          <span className="flex-1 text-sm text-slate-300">
+            <span className="font-semibold text-white">{ebayLabel(country)}</span> — more live listings for this {noun}
+          </span>
+          <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page={page} data-card={slug} data-surface="ebay_more" className="btn-ebay-ghost min-h-10">
+            {`More listings on ${ebayLabel(country)} →`}
+          </a>
+        </div>
+      ) : null}
 
       {sold.length ? (
         <details className="border-t border-ink-800">
@@ -138,7 +153,7 @@ export function PriceBoard({
               <li key={`${o.source}-sold`} className="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-400">
                 <span className="flex-1 truncate">{sourceLabel(o.source, country)}</span>
                 <span className="text-xs">sold out · last {money(o.priceCents, country)}</span>
-                <a href={affiliateUrl(o.url, retailerSubId(o.source), page)} target="_blank" rel={outboundRel()} className="text-xs font-semibold text-brand-400 hover:underline">
+                <a href={affiliateUrl(o.url, retailerSubId(o.source), page)} target="_blank" rel={outboundRel()} data-retailer={isEbaySource(o.source) ? ebayRetailer(o.source, country) : retailerSubId(o.source)} data-page={page} data-card={slug} data-surface="board_sold_out" className="text-xs font-semibold text-brand-400 hover:underline">
                   View →
                 </a>
               </li>
@@ -148,15 +163,6 @@ export function PriceBoard({
       ) : null}
 
       <div className="space-y-1 border-t border-ink-800 px-5 py-4 text-center text-xs text-slate-500">
-        {marketUsd != null ? (
-          <p>
-            Reference: TCGplayer market price{" "}
-            <span className="num font-semibold text-slate-300">
-              {country === "US" ? money(marketUsd, "US") : `≈ ${money(usdCentsToCountry(marketUsd, country), country)}`}
-            </span>
-            {country === "US" ? "" : ` (US$${(marketUsd / 100).toFixed(2)} converted)`} — not a listing.
-          </p>
-        ) : null}
         <p>
           {hasEbayRow
             ? <>Prices are collected from public store listings and eBay&apos;s Buy It Now listings, and may change. eBay prices are sellers&apos; asking prices. </>
@@ -166,5 +172,30 @@ export function PriceBoard({
         <p>Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, OP Compare earns from qualifying purchases — at no extra cost to you.</p>
       </div>
     </section>
+
+    {/* eBay fallback, DIRECTLY UNDER the board whenever this market has no eBay
+        row (RiftCompare, "Pushing eBay clicks"): a search, never a row, so it
+        cannot outrank a store, and it claims no price or stock. eBay blue. */}
+    {hasEbayRow ? null : (
+      <div>
+        <div className="card-surface flex flex-wrap items-center justify-between gap-3 border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-4">
+          <div className="min-w-0 flex-1 basis-56">
+            <p className="text-sm font-semibold text-white">
+              Search {ebayLabel(country)} for {name ?? `this ${noun}`}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              {preRelease
+                ? "This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing."
+                : `We have no ${ebayLabel(country)} price on file for this ${noun} right now — eBay sellers may still list it.`}
+            </p>
+          </div>
+          <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-ebay shrink-0">
+            {`Search ${ebayLabel(country)} →`}
+          </a>
+        </div>
+        <p className="mt-1.5 text-[11px] text-slate-500">As an eBay Partner Network affiliate, OP Compare earns from qualifying purchases.</p>
+      </div>
+    )}
+    </>
   );
 }

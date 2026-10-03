@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
 import { Breadcrumbs, Delta, InShort } from "@/components/ui";
 import { getCatalog, getIndexSeries } from "@/lib/data";
@@ -108,6 +109,12 @@ export default async function MoversPage() {
           empty="Appears once a card has fallen from a recorded high."
         />
       </div>
+      {/* Straight after the lists (RiftCompare): a reader who has just seen a
+          card spike or drop has a card in mind, and this is where to shop for
+          it. A buy path, not an ad; it localises itself (useCountry). */}
+      {up.length || down.length || value.length ? (
+        <EbayBuyCta className="mt-6" source="movers" page="movers" />
+      ) : null}
     </div>
   );
 }

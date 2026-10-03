@@ -5,10 +5,11 @@ import { notFound } from "next/navigation";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { SealedTile } from "@/components/SealedTile";
+import { TcgMarketPrice } from "@/components/TcgMarketPrice";
 import { ShareButton } from "@/components/ShareButton";
 import { WatchButton } from "@/components/WatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
-import { onePieceEbayQuery } from "@/lib/affiliate";
+import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
 import {
   getCatalog,
@@ -20,6 +21,7 @@ import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
+import { isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: { slug: string } };
@@ -222,10 +224,27 @@ export default async function SealedDetailPage({ params }: Props) {
             productId={s.id}
             offers={s.offers}
             country={country}
-            marketUsd={s.marketUsd}
             ebayQuery={ebayQ}
             page="sealed"
             noun="product"
+            slug={s.slug}
+            name={s.name}
+            preRelease={
+              s.presale ||
+              isPreRelease(
+                s.releasedOn ?? set?.releasedOn ?? null,
+                new Date().toISOString().slice(0, 10),
+              )
+            }
+          />
+          {/* TCGplayer's market price: a reference under the comparison, with
+              its affiliate button — never a row in it. */}
+          <TcgMarketPrice
+            marketUsd={s.marketUsd}
+            country={country}
+            href={affiliateUrl(s.tcgplayerUrl, "tcgplayer", `/sealed/${s.slug}`)}
+            page="sealed"
+            card={s.slug}
           />
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

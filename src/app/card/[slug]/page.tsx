@@ -3,6 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardArt, CardTile } from "@/components/CardTile";
+import { CardStickyBuyBar } from "@/components/CardStickyBuyBar";
+import { CardTopBuy } from "@/components/CardTopBuy";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
+import { EbayCardBanner } from "@/components/EbayCardBanner";
+import { TcgMarketPrice } from "@/components/TcgMarketPrice";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { ShareButton } from "@/components/ShareButton";
@@ -17,7 +22,7 @@ import {
   SectionHeader,
   StatTile,
 } from "@/components/ui";
-import { cardEbayQuery } from "@/lib/affiliate";
+import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES, isoCountry } from "@/lib/country";
 import { getCardDetail, getCatalog, getProductHistory } from "@/lib/data";
@@ -26,6 +31,7 @@ import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
+import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: { slug: string } };
@@ -94,6 +100,14 @@ export default async function CardPage({ params }: Props) {
       value: `+${card.counter.toLocaleString("en-US")}`,
     });
   const inMarket = card.offers.filter((o) => o.market === country && o.inStock);
+  // The buy surfaces (top block, sticky bar, TCGplayer reference) tag their
+  // links with the card's own path, like the board's rows ("-card" sub-ids).
+  const loc = `/card/${card.slug}`;
+  const best = cheapestBuyRow(card.offers, country, loc);
+  const tcgHref = affiliateUrl(card.tcgplayerUrl, "tcgplayer", loc);
+  const preRelease = isPreRelease(card.set.releasedOn, new Date().toISOString().slice(0, 10));
+  const noListingAnywhere = !card.offers.some((o) => o.inStock);
+  const ebayQuery = cardEbayQuery(card);
   const cardText = card.effect ? (
     <div className="card-surface p-4">
       <p className="eyebrow mb-2">Card text</p>
@@ -207,6 +221,7 @@ export default async function CardPage({ params }: Props) {
                 <ShareButton title={`${title} — ${SITE_NAME}`} />
               </div>
             </div>
+            <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
@@ -241,6 +256,20 @@ export default async function CardPage({ params }: Props) {
             </div>
           </div>
 
+          {/* A card from an unreleased set, or one no market stocks: eBay's
+              search is the way to buy it (RiftCompare's EbayBuyCta). */}
+          {preRelease || noListingAnywhere ? (
+            <EbayBuyCta
+              query={ebayQuery}
+              name={title}
+              heading={preRelease ? undefined : `Search eBay for ${title}`}
+              preRelease={preRelease}
+              source={preRelease ? "card-prerelease" : "card-no-listing"}
+              page="card"
+              card={card.slug}
+            />
+          ) : null}
+
           <p className="text-right text-xs text-slate-400">
             Cheapest first by item price; postage is added at each store&apos;s
             checkout.{" "}
@@ -253,10 +282,18 @@ export default async function CardPage({ params }: Props) {
             productId={card.id}
             offers={card.offers}
             country={country}
-            marketUsd={card.marketUsd}
-            ebayQuery={cardEbayQuery(card)}
+            ebayQuery={ebayQuery}
             page="card"
+            id="price-comparison"
+            slug={card.slug}
+            name={title}
+            preRelease={preRelease}
           />
+          {/* Under the comparison, never in it: TCGplayer's market price as a
+              reference with its affiliate button, then the card's eBay banner
+              (an ad: hidden for Plus and Premium members). */}
+          <TcgMarketPrice marketUsd={card.marketUsd} country={country} href={tcgHref} page="card" card={card.slug} />
+          <EbayCardBanner country={country} query={ebayQuery} name={title} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <section className="card-surface p-5">
@@ -323,10 +360,14 @@ export default async function CardPage({ params }: Props) {
             <p className="mt-3 text-xs text-slate-500">
               TCGplayer listing:{" "}
               <a
-                href={card.tcgplayerUrl}
+                href={tcgHref}
                 className="underline hover:text-slate-300"
-                rel="nofollow noopener noreferrer"
+                rel={outboundRel()}
                 target="_blank"
+                data-retailer="tcgplayer"
+                data-page="card"
+                data-card={card.slug}
+                data-surface="card_details"
               >
                 {card.tcgName}
               </a>
@@ -411,6 +452,19 @@ export default async function CardPage({ params }: Props) {
           ]}
         />
       </section>
+      {best ? (
+        <CardStickyBuyBar
+          boardId="price-comparison"
+          price={money(best.priceCents, country)}
+          store={best.label}
+          href={best.href}
+          retailer={best.retailer}
+          ebay={best.ebay}
+          page="card"
+          slug={card.slug}
+          name={title}
+        />
+      ) : null}
     </div>
   );
 }

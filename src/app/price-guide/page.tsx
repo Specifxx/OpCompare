@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { Pagination } from "@/components/Pagination";
 import { Breadcrumbs, Delta, StatTile } from "@/components/ui";
 import { rarityLabel } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog } from "@/lib/data";
-import { int, money } from "@/lib/format";
+import { int, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { headline, sortPrice } from "@/lib/price";
 import { median, releasedSets } from "@/lib/selectors";
 import { pageOgOwnImage } from "@/lib/og/meta";
+import { GuideBuyLinks } from "./GuideBuyLinks";
 
 export const metadata: Metadata = {
   title: "One Piece Price Guide — Every Card's Price in One Table",
@@ -121,11 +123,11 @@ export default async function PriceGuidePage({
           value={dearest ? money(dearest.low[country], country) : "—"}
           sub={
             dearest ? (
-              <Link href={`/card/${dearest.slug}`} className="link">
+              <CardQuickLink slug={dearest.slug} className="link">
                 {dearest.name}
                 {dearest.variant ? ` (${dearest.variant})` : ""}{" "}
                 {dearest.number}
-              </Link>
+              </CardQuickLink>
             ) : undefined
           }
         />
@@ -175,13 +177,16 @@ export default async function PriceGuidePage({
                     </td>
                     <td className="truncate text-slate-200">
                       {top ? (
-                        <>
+                        <CardQuickLink
+                          slug={top.slug}
+                          className="hover:text-brand-400 hover:underline"
+                        >
                           {top.name}
                           {top.variant ? ` (${top.variant})` : ""}{" "}
                           <span className="num text-xs text-slate-400">
                             {money(top.low[country], country)}
                           </span>
-                        </>
+                        </CardQuickLink>
                       ) : (
                         "—"
                       )}
@@ -229,16 +234,21 @@ export default async function PriceGuidePage({
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="data-table min-w-[720px]">
+        {/* One table at every width, never a horizontal scroll: fixed layout,
+            so the Card column takes what is left and truncates. Phones show
+            Card · Price (7-day under it) · Buy; the rest join as room allows.
+            A plain click on a card opens its QuickView. */}
+        <div>
+          <table className="data-table table-fixed">
             <thead>
               <tr>
                 <th>Card</th>
-                <th>Set · No.</th>
-                <th>Rarity</th>
-                <th className="text-right">Price ({c.currency})</th>
-                <th className="text-right">Stores</th>
-                <th className="text-right">7 days</th>
+                <th className="hidden w-32 md:table-cell">Set · No.</th>
+                <th className="hidden w-28 xl:table-cell">Rarity</th>
+                <th className="w-[5.5rem] text-right sm:w-28">Price ({c.currency})</th>
+                <th className="hidden w-16 text-right sm:table-cell">Stores</th>
+                <th className="hidden w-20 text-right sm:table-cell">7 days</th>
+                <th className="w-[6.5rem] text-right sm:w-[12.5rem]">Buy</th>
               </tr>
             </thead>
             <tbody>
@@ -247,9 +257,9 @@ export default async function PriceGuidePage({
                 return (
                   <tr key={x.id}>
                     <td>
-                      <Link
-                        href={`/card/${x.slug}`}
-                        className="group flex items-center gap-3"
+                      <CardQuickLink
+                        slug={x.slug}
+                        className="group flex min-w-0 items-center gap-3"
                       >
                         {x.hasImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -263,7 +273,10 @@ export default async function PriceGuidePage({
                           <span className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
                         )}
                         <span className="min-w-0">
-                          <span className="block truncate font-semibold text-slate-100 group-hover:text-brand-400 group-hover:underline">
+                          <span
+                            data-card-name
+                            className="block truncate font-semibold text-slate-100 group-hover:text-brand-400 group-hover:underline"
+                          >
                             {x.name}
                           </span>
                           {x.variant ? (
@@ -271,13 +284,16 @@ export default async function PriceGuidePage({
                               {x.variant}
                             </span>
                           ) : null}
+                          <span className="num block truncate text-[11px] text-slate-500 md:hidden">
+                            {cat.setById.get(x.setId)?.code} · {x.number ?? "—"}
+                          </span>
                         </span>
-                      </Link>
+                      </CardQuickLink>
                     </td>
-                    <td className="num whitespace-nowrap text-xs text-slate-400">
+                    <td className="num hidden whitespace-nowrap text-xs text-slate-400 md:table-cell">
                       {cat.setById.get(x.setId)?.code} · {x.number ?? "—"}
                     </td>
-                    <td className="text-xs text-slate-300">
+                    <td className="hidden text-xs text-slate-300 xl:table-cell">
                       {rarityLabel(x.rarity)}
                     </td>
                     <td className="num whitespace-nowrap text-right font-semibold text-accent">
@@ -290,12 +306,27 @@ export default async function PriceGuidePage({
                       ) : (
                         "—"
                       )}
+                      {x.change7d != null ? (
+                        <span className="block sm:hidden">
+                          <Delta v={x.change7d} className="text-[11px]" />
+                        </span>
+                      ) : null}
                     </td>
-                    <td className="num text-right text-slate-300">
+                    <td className="num hidden text-right text-slate-300 sm:table-cell">
                       {x.stores[country] || ""}
                     </td>
-                    <td className="text-right">
+                    <td className="hidden text-right sm:table-cell">
                       <Delta v={x.change7d} className="text-xs" />
+                    </td>
+                    <td className="px-2 text-right">
+                      <GuideBuyLinks
+                        id={x.id}
+                        slug={x.slug}
+                        name={x.name}
+                        number={x.number}
+                        variant={x.variant}
+                        tcg={x.marketUsd != null ? usd(x.marketUsd) : null}
+                      />
                     </td>
                   </tr>
                 );
@@ -303,6 +334,14 @@ export default async function PriceGuidePage({
             </tbody>
           </table>
         </div>
+        <p className="border-t border-ink-800 px-5 py-3 text-xs leading-relaxed text-slate-500">
+          Buy: <span className="text-slate-400">TCGplayer</span> opens the
+          card&apos;s TCGplayer page (the figure is its US market price, in US
+          dollars); <span className="text-slate-400">eBay</span> searches your
+          own eBay for the card. Affiliate links: as an eBay Partner Network
+          affiliate and a TCGplayer affiliate, OP Compare earns from qualifying
+          purchases — at no extra cost to you.
+        </p>
       </section>
       <Pagination
         page={page}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { isBasketSource, planBuyList, type PlanItem } from "@/lib/buy-list";
+import { isBasketSource, planBuyList, tagPlanLinks, type PlanItem } from "@/lib/buy-list";
 import { getCardDetail, getSealedDetail } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
 import { isPremium } from "@/lib/premium";
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }),
   );
   const items = loaded.filter((x): x is PlanItem => x != null);
-  const plan = planBuyList(items);
+  const plan = tagPlanLinks(planBuyList(items));
   const label = (s: string) => sourceLabel(s);
   return NextResponse.json(
     {

@@ -8,6 +8,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import QuickViewProvider from "@/components/QuickViewProvider";
 import { SideNav } from "@/components/SideNav";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -73,6 +74,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <NextTopLoader color="#d92b33" height={2} showSpinner={false} />
         <CountryProvider initial={country}>
+          {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
+          <QuickViewProvider>
           <SideNav />
           <Navbar />
           <main id="main" style={{ paddingLeft: "var(--sidenav-w)" }}>
@@ -80,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <FooterAds />
           </main>
           <Footer />
+          </QuickViewProvider>
         </CountryProvider>
         <Analytics />
         <GoogleAnalytics />
