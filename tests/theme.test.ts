@@ -23,7 +23,8 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 //   • the light palette clears WCAG AA where the dark one does — the
 //     accessibility audit that lifted slate-500/600 must not be undone by the
 //     new theme;
-//   • the boot script agrees with the resolver and defaults to dark.
+//   • the boot script agrees with the resolver and defaults to LIGHT (OP
+//     Compare's default, DECISIONS "Light theme is the default").
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CSS = read("src/app/globals.css");
@@ -132,7 +133,7 @@ test("the light palette is actually light and the dark one actually dark", () =>
   assert.match(block(":root"), /color-scheme: dark;/);
 });
 
-test("the boot script agrees with the resolver for every cookie shape, defaults to dark, and never throws", () => {
+test("the boot script agrees with the resolver for every cookie shape, defaults to light, and never throws", () => {
   const run = (cookie: string) => {
     let stamped: string | null = null;
     const ctx = vm.createContext({ document: { cookie, documentElement: { setAttribute: (_k: string, v: string) => (stamped = v) } } });
@@ -142,10 +143,11 @@ test("the boot script agrees with the resolver for every cookie shape, defaults 
   for (const c of ["", "theme=light", "theme=dark", "a=1; theme=light; b=2", "theme=blue", "notheme=light", "sidenav=expanded"]) {
     assert.equal(run(c), resolveThemeMode(readThemeCookie(c)), `cookie "${c}"`);
   }
-  assert.equal(run(""), "dark");
+  assert.equal(run(""), "light");
+  assert.equal(run("theme=dark"), "dark", "dark only when the visitor chose it");
   assert.doesNotThrow(() => vm.runInContext(THEME_BOOT_SCRIPT, vm.createContext({})));
   assert.equal(readThemeCookie("theme=light"), "light");
-  assert.equal(resolveThemeMode("sideways"), "dark");
+  assert.equal(resolveThemeMode("sideways"), "light");
 });
 
 test("the boot script migrates OP Compare's old localStorage theme into the cookie once", () => {
@@ -158,15 +160,17 @@ test("the boot script migrates OP Compare's old localStorage theme into the cook
     vm.runInContext(THEME_BOOT_SCRIPT, vm.createContext({ document: doc, window: { localStorage } }));
     return { stamped, cookie: doc.cookie, left: store.has(LEGACY_THEME_KEY) };
   };
-  const light = run("", "light");
-  assert.equal(light.stamped, "light");
-  assert.match(light.cookie, /^theme=light; path=\/; max-age=31536000; SameSite=Lax$/);
-  assert.equal(light.left, false, "the legacy key is removed after the migration");
+  // A visitor who chose dark under the old key keeps dark.
+  const dark = run("", "dark");
+  assert.equal(dark.stamped, "dark");
+  assert.match(dark.cookie, /^theme=dark; path=\/; max-age=31536000; SameSite=Lax$/);
+  assert.equal(dark.left, false, "the legacy key is removed after the migration");
+  assert.equal(run("", "light").stamped, "light");
   // A cookie already set wins and the legacy key is left alone (it is gone by then anyway).
-  assert.equal(run("theme=dark", "light").stamped, "dark");
-  // Junk in the old key is removed and the default stays dark.
+  assert.equal(run("theme=light", "dark").stamped, "light");
+  // Junk in the old key is removed and the default stays light.
   const junk = run("", "sepia");
-  assert.equal(junk.stamped, "dark");
+  assert.equal(junk.stamped, "light");
   assert.equal(junk.left, false);
   // localStorage throwing (Safari private mode) still stamps the cookie's value.
   let stamped: string | null = null;
@@ -175,19 +179,20 @@ test("the boot script migrates OP Compare's old localStorage theme into the cook
     window: { get localStorage(): never { throw new Error("denied"); } },
   });
   vm.runInContext(THEME_BOOT_SCRIPT, ctx);
-  assert.equal(stamped, "dark");
+  assert.equal(stamped, "light");
 });
 
-test("the layout inlines the boot script in <head> and the meta theme-colour matches the dark palette", () => {
+test("the layout inlines the boot script in <head> and the meta theme-colour matches the light palette (the default)", () => {
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /import \{ THEME_BOOT_SCRIPT \} from "@\/lib\/theme-shared"/);
   const head = layout.slice(layout.indexOf("<head>"), layout.indexOf("</head>"));
   assert.match(head, /<script dangerouslySetInnerHTML=\{\{ __html: THEME_BOOT_SCRIPT \}\} \/>/);
-  assert.match(layout, new RegExp(`themeColor: "${THEME_COLOR.dark}"`), "viewport.themeColor must be the dark palette's page colour");
+  assert.match(layout, new RegExp(`themeColor: "${THEME_COLOR.light}"`), "viewport.themeColor must be the light palette's page colour");
+  assert.match(layout, /<html lang="en" data-theme="light"/, "the server renders the light default");
   assert.doesNotMatch(layout, /from "next\/headers"/, "the caching rule still holds — no cookies() in the root layout");
 });
 
-test("the toggle writes the attribute, the cookie and the browser-chrome colour, and hydrates as dark", () => {
+test("the toggle writes the attribute, the cookie and the browser-chrome colour, and hydrates as light", () => {
   // RiftCompare's version of this test also pins where the header and the
   // phone menu mount the toggle; those files arrive with the wave-2 design
   // track, which ports that half.
@@ -197,7 +202,7 @@ test("the toggle writes the attribute, the cookie and the browser-chrome colour,
   assert.match(toggle, /meta\[name="theme-color"\]/, "the browser-chrome colour must follow the page");
   assert.match(toggle, /new MutationObserver/);
   assert.match(toggle, /observe\(document\.head/);
-  assert.match(toggle, /useState<ThemeMode>\("dark"\)/, "initial state must match the server render (no hydration mismatch)");
+  assert.match(toggle, /useState<ThemeMode>\("light"\)/, "initial state must match the server render (no hydration mismatch)");
   assert.match(toggle, /const EVENT = "oc:theme";/);
   assert.ok(!existsSync(join(ROOT, "src/lib/theme.ts")), "the old localStorage theme module is gone");
 });

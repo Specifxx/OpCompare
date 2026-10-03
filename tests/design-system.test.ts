@@ -157,7 +157,7 @@ test("fonts: RiftCompare's next/font block on <html>, Fraunces headings, mono nu
   assert.match(layout, /const inter = Inter\(\{ subsets: \["latin"\], variable: "--font-sans", display: "swap" \}\);/);
   assert.match(layout, /JetBrains_Mono\(\{ subsets: \["latin"\], variable: "--font-mono", display: "swap", preload: false \}\)/);
   assert.match(layout, /weight: \["600", "700", "900"\],\s*style: \["normal"\],\s*variable: "--font-display",\s*display: "swap",/);
-  assert.match(layout, /<html lang="en" className=\{`\$\{inter\.variable\} \$\{jetbrainsMono\.variable\} \$\{fraunces\.variable\}`\}/);
+  assert.match(layout, /<html lang="en" data-theme="light" className=\{`\$\{inter\.variable\} \$\{jetbrainsMono\.variable\} \$\{fraunces\.variable\}`\}/);
   assert.match(layout, /<body className="min-h-screen bg-ink-950">/);
   assert.doesNotMatch(readCode("src/app/layout.tsx"), /Luckiest_Guy|Archivo/, "Archivo is the homepage's own import");
   const css = read("src/app/globals.css");
@@ -173,7 +173,7 @@ test("the layout's main container: skip link, the rail wrapper, container-app on
   assert.match(layout, /href="#main-content"[\s\S]{0,400}Skip to main content/);
   assert.match(layout, /focus:z-\[200\][^"]*focus:min-h-11[^"]*focus:ring-2 focus:ring-brand-400/);
   assert.match(layout, /<div className="pl-\[var\(--sidenav-w\)\]">\s*<main id="main-content" className="container-app min-w-0 py-6">/);
-  assert.match(layout, /viewport: Viewport = \{ themeColor: "#0b0e14" \}/);
+  assert.match(layout, /viewport: Viewport = \{ themeColor: "#f4f6f8" \}/);
   const offenders = walk("src/app")
     .filter((f) => /page\.tsx$/.test(f))
     .filter((f) => /return \(\s*<(?:div|article|section)\s+className="[^"]*\bcontainer-app\b/.test(read(f)));

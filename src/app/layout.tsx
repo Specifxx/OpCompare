@@ -67,15 +67,16 @@ export const metadata: Metadata = {
   },
 };
 
-// Brand chrome colour for the browser UI / installed-PWA theme (the dark
-// palette's page colour, THEME_COLOR.dark). ThemeToggle re-stamps the meta for
-// a light-theme visitor.
-export const viewport: Viewport = { themeColor: "#0b0e14" };
+// Brand chrome colour for the browser UI / installed-PWA theme: the light
+// palette's page colour (THEME_COLOR.light), since light is OP Compare's
+// default (DECISIONS "Light theme is the default"). ThemeToggle re-stamps the
+// meta for a dark-theme visitor.
+export const viewport: Viewport = { themeColor: "#f4f6f8" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const country = getCountry();
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="light" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />

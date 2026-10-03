@@ -1127,7 +1127,11 @@ RiftCompare's design system byte for byte, with one deliberate difference.
   one year, Lax; the boot script always stamps `data-theme`) replaces
   `src/lib/theme.ts`; the boot script moves an old `op:theme` localStorage value
   into the cookie once and removes it. `ThemeToggle` is RiftCompare's (icon and
-  row variants, an `oc:theme` event, the theme-color meta kept in step).
+  row variants, an `oc:theme` event, the theme-color meta kept in step). The
+  default is LIGHT, not RiftCompare's dark (see "Light theme is the default"
+  below): `<html data-theme="light">`, `resolveThemeMode` falls back to light,
+  dark only from the cookie or a migrated `op:theme` of `dark`, and
+  `viewport.themeColor` is the light page colour #f4f6f8.
 - **ui primitives are RiftCompare's** (`src/components/ui/{Dialog,EmptyState,
   SegmentedTabs,Skeleton,Toast,Tooltip}.tsx`), with OP's `data-oc-dialog` body
   flag. Wave 1's `components/Dialog.tsx` is a thin re-export (default z
@@ -1196,3 +1200,19 @@ the exception safe still holds: nothing under `src/app` imports `@/lib/db`.
 `tests/app-no-db-import.test.ts` now checks every import shape (alias,
 relative path, re-export, dynamic `import()`, `require`) and that the root
 layout imports none of the per-user libraries.
+
+## 2026-10-03 — Light theme is the default
+
+**Decision.** OP Compare now opens in the light theme. The root layout renders
+`<html data-theme="light">`, and the boot script switches to dark only when the
+visitor has chosen dark with the toggle (`op:theme` = `dark`). Dark stays fully
+supported.
+
+**Why.** The owner asked for light by default. This departs from RiftCompare,
+which defaults to dark; the wave-2 design port (RC's `theme-shared.ts`) must
+keep light as the default when it replaces `src/lib/theme.ts`.
+
+Kept through the wave-2 theme port (2026-10-03): RiftCompare's
+`src/lib/theme-shared.ts` replaced `src/lib/theme.ts`, and its default was
+flipped to light (`DEFAULT_THEME`); `tests/theme.test.ts` pins the light
+fallback, the server-rendered attribute and the light theme-colour.
