@@ -159,7 +159,8 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
             "@type": "BreadcrumbList",
             itemListElement: [
               { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-              { "@type": "ListItem", position: 2, name: "Deal Finder", item: `${SITE_URL}/tools/deal-finder` },
+              { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+              { "@type": "ListItem", position: 3, name: "Deal Finder", item: `${SITE_URL}/tools/deal-finder` },
             ],
           },
           {
@@ -180,7 +181,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         ]}
       />
       <div className="mx-auto max-w-4xl">
-        <Breadcrumbs items={[{ label: "Deal Finder" }]} />
+        <Breadcrumbs items={[{ href: "/tools", label: "Tools" }, { label: "Deal Finder" }]} />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-3xl text-white sm:text-4xl">Deal Finder</h1>
           <MarketPills />

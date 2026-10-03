@@ -78,14 +78,12 @@ export default async function StoresPage() {
                   {list.map(({ s, st }) => (
                     <tr key={s.key}>
                       <td>
-                        <a
-                          href={s.base}
-                          target="_blank"
-                          rel="nofollow noopener noreferrer"
+                        <Link
+                          href={`/stores/${s.key}`}
                           className="font-semibold text-slate-100 hover:text-brand-400"
                         >
                           {s.name}
-                        </a>
+                        </Link>
                         <span className="ml-2 text-xs text-slate-500">
                           {s.base.replace(/^https?:\/\/(www\.)?/, "")}
                         </span>

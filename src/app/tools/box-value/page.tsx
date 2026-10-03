@@ -48,7 +48,7 @@ export default async function BoxValue({
     <div className="container-app py-6">
       <Breadcrumbs
         items={[
-          { href: "/tools/deal-finder", label: "Tools" },
+          { href: "/tools", label: "Tools" },
           { label: "Box value" },
         ]}
       />
