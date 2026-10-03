@@ -11,6 +11,7 @@ import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog } from "@/lib/data";
 import { int, longDate, money } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
+import { withArticle } from "@/lib/filter-chips";
 import { median } from "@/lib/selectors";
 import { pageOgOwnImage } from "@/lib/og/meta";
 
@@ -95,7 +96,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           value={int(priced.length)}
           sub={
             cards.length
-              ? `${Math.round((priced.length / cards.length) * 100)}% have a ${c.adjective} listing`
+              ? `${Math.round((priced.length / cards.length) * 100)}% have ${withArticle(c.adjective)} listing`
               : undefined
           }
         />

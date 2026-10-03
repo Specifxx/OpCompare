@@ -52,7 +52,7 @@ export default async function PostPage({ params }: Props) {
   const more = POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
   // The shop strip: the hero cards, then every other card and product the post
   // names, in order of first mention (components/blog/mentions.ts).
-  const mentioned = collectMentions([body.lede, ...body.sections.map((x) => x.body)]);
+  const mentioned = collectMentions([...body.summary, body.lede, ...body.sections.map((x) => x.body)]);
   const shopSlugs = [...new Set([...body.heroCards.map((c) => c.slug), ...mentioned.cards])];
   const shopCards = shopSlugs
     .map((slug) => ctx.cat.bySlug.get(slug))

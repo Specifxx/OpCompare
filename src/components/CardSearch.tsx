@@ -294,7 +294,13 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
               setFocused(true);
               setOpen(true);
             }}
-            onBlur={() => setFocused(false)}
+            onBlur={(e) => {
+              setFocused(false);
+              // Tabbing out of the box closes the list (a click elsewhere is the
+              // mousedown listener's job; a click on a row keeps focus inside).
+              const to = e.relatedTarget as Node | null;
+              if (to && box.current && !box.current.contains(to)) close();
+            }}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
             autoComplete="off"

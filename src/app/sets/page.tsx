@@ -8,6 +8,7 @@ import { int, longDate, money, shortDate } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { upcomingSets } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
+import { withArticle } from "@/lib/filter-chips";
 
 export const metadata: Metadata = {
   title: "One Piece Sets — Card Lists & Prices for Every Set",
@@ -61,7 +62,7 @@ function SetCard({
           </p>
         ) : null}
         <p>
-          {int(priced)} with a {COUNTRIES[country].adjective} listing
+          {int(priced)} with {withArticle(COUNTRIES[country].adjective)} listing
         </p>
       </div>
     </Link>

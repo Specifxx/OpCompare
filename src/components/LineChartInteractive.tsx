@@ -135,7 +135,7 @@ export function LineChartInteractive({ data }: { data: ChartData }) {
                   setRangeKey(r.key);
                   setHover(null);
                 }}
-                className={`inline-flex min-h-9 items-center rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                className={`inline-flex min-h-11 items-center rounded-md px-3 text-xs [@media(pointer:fine)]:min-h-8 [@media(pointer:fine)]:px-2.5 font-semibold transition-colors ${
                   r.key === range.key ? "bg-brand-500/15 text-brand-400" : "text-slate-500 hover:bg-ink-800 hover:text-slate-200"
                 }`}
               >

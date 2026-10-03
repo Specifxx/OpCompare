@@ -103,9 +103,12 @@ export function WatchlistView({ layout = "page", onNavigate }: { layout?: "page"
             <span className="min-w-0 flex-1">
               <span data-card-name className="block truncate font-semibold text-white group-hover:text-brand-400">
                 {r.name}
-                {r.variant ? <span className="font-normal text-slate-400"> ({r.variant})</span> : null}
               </span>
-              <span className="block truncate text-xs text-slate-500">{r.sub}</span>
+              {/* The printing leads the sub-line, so a long name never truncates it away on a phone. */}
+              <span className="block truncate text-xs text-slate-500">
+                {r.variant ? <span className="text-slate-400">{r.variant} · </span> : null}
+                {r.sub}
+              </span>
             </span>
           </>
         );

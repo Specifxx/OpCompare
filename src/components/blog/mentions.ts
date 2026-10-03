@@ -31,19 +31,24 @@ export function collectMentions(node: ReactNode, out: Mentions = { cards: [], se
   const addCard = (slug: string) => {
     if (slug && !out.cards.includes(slug)) out.cards.push(slug);
   };
+  // A prop can hold a card, a list of cards, or more markup: SimpleTable's
+  // `rows` is an array of rows, each an array of cells that may be <Link>s.
+  const walk = (v: unknown, d: number) => {
+    if (d > 6) return;
+    if (isCardLike(v)) addCard(v.slug);
+    else if (Array.isArray(v)) for (const x of v) walk(x, d + 1);
+    else if (isValidElement(v)) collectMentions(v, out, depth + 1);
+  };
   for (const [k, v] of Object.entries(props)) {
     if (k === "children") continue;
-    if (isCardLike(v)) addCard(v.slug);
-    else if (Array.isArray(v)) {
-      for (const x of v) if (isCardLike(x)) addCard(x.slug);
-    } else if (k === "href" && typeof v === "string") {
+    if (k === "href" && typeof v === "string") {
       const m = /^\/(card|sealed)\/([^/?#]+)/.exec(v);
       if (m) {
         const slug = decodeURIComponent(m[2]);
         if (m[1] === "card") addCard(slug);
         else if (!out.sealed.includes(slug)) out.sealed.push(slug);
       }
-    }
+    } else walk(v, 0);
   }
   collectMentions(props.children as ReactNode, out, depth + 1);
   return out;

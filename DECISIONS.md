@@ -556,3 +556,26 @@ Compare's data or rules differ.
   affiliate eBay search ("Search eBay", never "Buy"). No list to maintain.
 - **/search?q=** redirects to /browse?q=, the results page the WebSite
   SearchAction already names.
+
+## 2026-10-03 — UX parity review fixes
+
+- **Enter in a /browse price box now applies it.** With JavaScript the filter
+  form has no submit button (the bottom bar becomes a `type="button"` "Show
+  results"), and a form with two text boxes and no submit button gets no
+  implicit submission, so Enter did nothing. The price boxes now handle Enter
+  themselves; blur still applies too.
+- **Market adjectives take the right article.** "a Australian listing" read
+  wrong in the filter panel, its chip and on /sets. `withArticle()`
+  (`lib/filter-chips.ts`) gives "an Australian" and "a US / UK / European".
+  The price chip reads "From A$5", "Up to A$20" or "A$5–A$20" instead of an
+  infinity sign or a zero.
+- **The blog shop strip finds products in tables and the summary.** The box
+  post names its boxes in the summary and in `SimpleTable` rows (arrays of
+  cells holding links), which the first walk skipped, so a post about boxes
+  showed only singles. Every prop is now walked for links and card objects,
+  and the strip is titled "Shop this post" when it lists products.
+- Small fixes: tabbing out of the search box closes its list; the watch
+  drawer's focus trap pulls focus back in after an unwatched row disappears;
+  the watchlist puts the printing on the sub-line so a long name cannot hide
+  it on a phone; chart range tabs are 44px tall on touch screens, as on
+  RiftCompare.

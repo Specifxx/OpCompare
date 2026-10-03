@@ -6,7 +6,7 @@ import { COLORS, COLOR_KEYS, PRINTINGS, PRINTING_KEYS, RARITIES, SET_KINDS, CARD
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { BrowseQuery } from "@/lib/browse";
 import type { SetLite } from "@/lib/data";
-import { canonical, clearFilters, priceInput, toggle, values } from "@/lib/filter-chips";
+import { canonical, clearFilters, priceInput, toggle, values, withArticle } from "@/lib/filter-chips";
 
 function Section({ title, open = false, children }: { title: string; open?: boolean; children: React.ReactNode }) {
   return (
@@ -87,6 +87,15 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
     go(next);
   };
 
+  // Enter in a price box applies it. The form has two text boxes and, with
+  // JavaScript, no submit button, so the browser's implicit submission on
+  // Enter never fires; this is that path.
+  const onPriceKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    applyPrice(e.currentTarget.form);
+  };
+
   const activeCount =
     ["set", "color", "rarity", "type", "printing"].reduce((n, k) => n + values(sp, k).length, 0) + (sp.get("priced") === "1" ? 1 : 0) + (sp.get("min") || sp.get("max") ? 1 : 0);
 
@@ -121,6 +130,7 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
             name="min"
             value={min}
             onChange={(e) => setMin(e.target.value)}
+            onKeyDown={onPriceKey}
             onBlur={(e) => {
               if ((priceInput(min) ?? "") !== (values(sp, "min")[0] ?? "")) applyPrice(e.currentTarget.form);
             }}
@@ -135,6 +145,7 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
             name="max"
             value={max}
             onChange={(e) => setMax(e.target.value)}
+            onKeyDown={onPriceKey}
             onBlur={(e) => {
               if ((priceInput(max) ?? "") !== (values(sp, "max")[0] ?? "")) applyPrice(e.currentTarget.form);
             }}
@@ -153,7 +164,7 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
               else n.set("priced", "1");
               go(n);
             }} className="h-4 w-4 accent-[#d92b33]" />
-          Only cards with a {c.adjective} listing
+          Only cards with {withArticle(c.adjective)} listing
         </label>
       </Section>
       {!hide.includes("set") ? (

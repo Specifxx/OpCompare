@@ -71,6 +71,11 @@ export interface ChipLabels {
   adjective: string;
 }
 
+/** "a US", "a UK", "a European", "an Australian": the article a market adjective takes. */
+export function withArticle(adjective: string): string {
+  return `${/^(?:[aio]|e(?!u))/i.test(adjective) ? "an" : "a"} ${adjective}`;
+}
+
 const title = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
 /** Every active filter as a removable chip, in panel order. The search words (q) are not a chip. */
@@ -81,10 +86,15 @@ export function activeChips(sp: ParamsLike, labels: ChipLabels): Chip[] {
   for (const v of values(sp, "rarity")) chips.push({ key: "rarity", value: v, label: RARITIES[v] ? `${RARITIES[v].label}${RARITIES[v].label === v ? "" : ` (${v})`}` : v });
   for (const v of values(sp, "type")) chips.push({ key: "type", value: v, label: v });
   for (const v of values(sp, "printing")) chips.push({ key: "printing", value: v, label: PRINTINGS[v]?.label ?? v });
-  if (sp.get("priced") === "1") chips.push({ key: "priced", value: "", label: `Has a ${labels.adjective} listing` });
+  if (sp.get("priced") === "1") chips.push({ key: "priced", value: "", label: `Has ${withArticle(labels.adjective)} listing` });
   const min = values(sp, "min")[0];
   const max = values(sp, "max")[0];
-  if (min || max) chips.push({ key: "price", value: "", label: `${labels.symbol}${min || "0"}–${max ? `${labels.symbol}${max}` : "∞"}` });
+  if (min || max)
+    chips.push({
+      key: "price",
+      value: "",
+      label: min && max ? `${labels.symbol}${min}–${labels.symbol}${max}` : min ? `From ${labels.symbol}${min}` : `Up to ${labels.symbol}${max}`,
+    });
   return chips;
 }
 

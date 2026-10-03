@@ -54,7 +54,7 @@ export function BlogShopStrip({
     <section className="not-prose card-surface mt-8 overflow-hidden" data-shop-strip={placement} aria-labelledby={`shop-${placement}`}>
       <div className="flex items-center justify-between gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-3 sm:px-5">
         <h2 id={`shop-${placement}`} className="text-sm font-extrabold uppercase tracking-wide text-white">
-          Shop the cards in this post
+          {sealed.length ? "Shop this post" : "Shop the cards in this post"}
         </h2>
         <span className="num text-[11px] text-slate-500">Prices in {c.currency}</span>
       </div>

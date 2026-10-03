@@ -62,6 +62,13 @@ export function WatchDrawerButton({ className = "" }: { className?: string }) {
       if (!f.length) return;
       const first = f[0];
       const last = f[f.length - 1];
+      // Focus fell out of the panel (the row just unwatched was removed with
+      // its button): bring it back in rather than letting Tab reach the page.
+      if (!panel.current.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
         last.focus();
