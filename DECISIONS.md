@@ -226,3 +226,118 @@ cache a stale file. Postgres keeps only today's prices: no `PriceDay` or
 with deployments off, and main's `vercel.json` repeats it, so history pushes
 never trigger a Vercel build. The files are also open data, linked from
 /methodology.
+
+## 2026-10-03 — Admin: RiftCompare's tools that fit, and mastermisclick@gmail.com as admin
+
+The owner asked for admin features "the same" as RiftCompare's, with
+`mastermisclick@gmail.com` flagged as an admin. Ported what OP Compare has data
+for: `/admin` (home counts), `/admin/accounts` (search, sign-ups, CSV, manual
+grant/revoke, "sync with Stripe now"), `/admin/subscriptions` (metrics for
+`site=opcompare` subscriptions only), `/admin/store-health` and `/admin/inbox`
+(price reports, store suggestions, feedback, contact), plus the public forms
+that feed the inbox.
+
+- **Who is an admin.** `SessionUser.isAdmin` = `User.isAdmin` or
+  `isAdminEmail()`. `src/lib/admin-emails.ts` has `mastermisclick@gmail.com`
+  built in, so a fresh deploy with no env var already works, and the address
+  isn't something a Vercel typo can lose. `ADMIN_EMAILS` REPLACES the default
+  when set (`ADMIN_EMAILS=""` removes every address-based admin), so a set
+  value must include the owner's address. Read per call, not at module load.
+- **One gate, fail closed.** `requireAdminPage()` / `requireAdminApi()` in
+  `src/lib/admin.ts` are the only checks, called first by every page and route;
+  `tests/admin.test.ts` walks the tree to prove it. Pages answer outsiders with
+  the site's ordinary 404 (and empty metadata, so the title doesn't name the
+  area); APIs answer 401/403. Session mutations are POST, same-origin
+  (canonical origin only in production, plus `ADMIN_EXTRA_ORIGINS`) and JSON,
+  and every one is logged with `adminLog`.
+- **`ADMIN_TOKEN` is for scripts, header-only.** RiftCompare's `?key=` links put
+  a long-lived secret in URLs, history, logs and Referer, and its two gates
+  disagreeing caused bugs. Here the token is accepted only as
+  `Authorization: Bearer`, needs 32+ characters, and is unset by default.
+- **`/admin` is disallowed in robots,** unlike RiftCompare (which feared a
+  Disallow hides the noindex and advertises the path). Outsiders get a 404,
+  which is never indexed anyway; the path is guessable; and OP Compare already
+  disallows `/account`. Admin pages are also noindex (meta and
+  `X-Robots-Tag`), never in the sitemap, and send no GA page views.
+- **Uncached reads in `src/lib/admin*.ts`.** Owner-only traffic; no
+  `unstable_cache`, nothing under `src/app` imports `@/lib/db`.
+- **Store health from `ImportRun.summary`.** The per-store results the import
+  already records are the history; no snapshot table, no new cron. The same
+  pure rules (`src/lib/store-health.ts`) print a report as a step of every
+  *Import prices* run (never failing it).
+- **Manual grant and revoke amend the entitlement-writer rule.** Besides the
+  webhook and the reconcile, `src/lib/admin-billing.ts` may write
+  `premiumUntil`, from an admin session only and audited. A grant only extends;
+  a revoke is the one explicit exception to extend-only. Neither calls Stripe,
+  so a live subscription re-grants itself, and the UI says so.
+  `ADMIN_GRANTS` switches both off if the owner wants.
+- **The inbox stores no IP and sends no email.** Rate limits key on a salted
+  hash of the IP (or the account), never stored; there is no FK to `User` and
+  an email only on contact messages. OP Compare has no mailer, so no copy
+  promises a reply.
+
+Skipped, and why: `?key=` admin links (above); delete-any moderation (no user
+content beyond the inbox); tier floor (no grandfathered cohort); `/admin/premium`
+interest clicks, `/admin/clicks` (GA4 covers them); demand, rising snapshots and
+`/rising/[token]` (no counters, and snapshots freeze eBay API data); price
+alert, deck and free-limit re-derivation (those features don't exist); email
+audiences, win-back, price-drop consoles, support tickets and "report fixed"
+thank-yous (no email); the feedback Premium reward (a pricing call for the
+owner); the public reviews strip and floating feedback widget (deferred); the
+store-health snapshot table and Discord cron (the import step replaces it);
+consulting, decks, loyalty and store-partner pages (no such product or data);
+the `close-inbox-items` script (the admin UI covers it); zod (validation is
+hand-written in `src/lib/inbox-rules.ts`).
+
+## 2026-10-03 — Link thumbnails feature the price guide
+
+The owner wants link thumbnails that are "very good featuring the website and
+mainly the price guide", and the launch post goes to Reddit, which shows the
+homepage's `og:image`. The old root image was an edge-runtime logo card, every
+share image rendered in Noto Sans Regular (next/og's only bundled font, so every
+bold weight was ignored), and the card image was never served.
+
+- **The default image is the price guide.** `/` and every page without its own
+  image show the lockup, "ONE PIECE PRICE GUIDE", "7,255 cards · 231 stores ·
+  6 markets" and five real top cards: art, printing, cheapest US price
+  (sorted, as on the page), TCGplayer market, number, and store count.
+  `/price-guide` has its own file with the same composition, so it survives a
+  change to the default. Sets get their own top five (or the release date
+  when unpriced), sealed products the box on a white plate with its price,
+  cards their art with printing, rarity and per-market prices, blog posts
+  their title beside three hero cards.
+- **Rows a reader would call wrong are filtered out.** Unfiltered, the top of
+  the guide is a US$50,000 single listing and championship promos.
+  `pickGuideRows` keeps $10+ standard/alt/manga/SP/treasure printings from
+  booster, extra and premium sets with art, no serial/championship/judge/
+  prerelease/stamp/signature variants, at least two US stores, and a cheapest
+  price within 0.5–1.2× of market (tighter than the site's 1.5× outlier rule,
+  because the first row is what a scroller sees), deduped by name; it relaxes step by step
+  and draws the fallback below three rows.
+- **STORES until the 7-day column means something.** History started
+  2026-10-03, so a "7 DAYS" column would read 0.0% everywhere. The last column
+  switches to 7-day change on its own once three of the five rows really moved.
+- **Real data, cheaply, and never a 500.** Images read only the cached
+  `src/lib/data.ts` loaders (`getCatalog`, `getSiteStats`, `getSealedCatalog`):
+  no Offer query, nothing prewarmed. `runtime = "nodejs"`, `revalidate =
+  21600`, a 6 h CDN header, US prices (an image has no visitor). Any error,
+  empty database or unknown slug draws a data-free fallback with a one-minute
+  cache, so a blip doesn't stick.
+- **Metadata fixes.** Card and sealed pages set `openGraph.images`, which
+  blocked their image files; pages now build `openGraph` with `pageOg()` /
+  `pageOgOwnImage()` (`src/lib/og/meta.ts`). The root's `og:url` made every
+  page claim to be the homepage on Facebook and LinkedIn; each page now sets
+  its own canonical path. Share PNGs get `X-Robots-Tag: noindex`, as on
+  RiftCompare.
+- **Brand fonts bundled.** Luckiest Guy, Archivo 900, Inter 600/700 and
+  JetBrains Mono 700 TTFs (OFL/Apache) in `src/lib/og/fonts/`, traced into
+  every image function by `next.config.js`, with a magic-byte check and a Noto
+  fallback. Layout keeps a safe area (nothing essential below ~575 px, where
+  Reddit and X overlay the domain).
+
+Skipped: share images for `/movers` and `/tools/deal-finder` (phase 2, once a
+week of history exists, about 2026-10-10), `/premium`, `/stores` and `/market`
+(the default fits for now); per-card alt text; a `scripts/render-og.tsx`
+renderer script. Known limits: TCGplayer serves "SAMPLE"-watermarked art for
+recent sets (the site shows the same), and platforms cache thumbnails
+themselves (Reddit forever per post), so check the live image before posting.

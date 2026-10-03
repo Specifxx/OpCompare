@@ -17,23 +17,53 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 
 | Page | What |
 |---|---|
-| `/` | Hero search, trending cards, market switch, today's top deals, newest set's chase cards, booster boxes, colours, FAQ |
+| `/` | Hero search, trending cards, market switch, today's top deals, newest set's chase cards, booster boxes, colours, FAQ. Share image: the price guide (see below) |
 | `/browse` | The card database: search, filters (price, set, colour, rarity, type, printing), sorts, pagination |
-| `/card/[slug]` | One printing: every store's price in your market cheapest first, eBay search, TCGplayer reference, price history, card text and details, other printings |
-| `/sets`, `/sets/[slug]` | Every set by type, each with its card list, stats and sealed products |
-| `/sealed`, `/sealed/[slug]` | Booster boxes, cases, packs, starter decks, double packs, collections — filters, per-pack prices, price board |
-| `/price-guide` | Every printing in one sortable table, prices by set |
+| `/card/[slug]` | One printing: every store's price in your market cheapest first, eBay search, TCGplayer reference, price history, card text and details, other printings, "Report a wrong price". Share image: art, printing and rarity, price per market |
+| `/sets`, `/sets/[slug]` | Every set by type, each with its card list, stats and sealed products. Share image: the set's five most valuable cards |
+| `/sealed`, `/sealed/[slug]` | Booster boxes, cases, packs, starter decks, double packs, collections — filters, per-pack prices, price board. Share image: the product and its price |
+| `/price-guide` | Every printing in one sortable table, prices by set. Share image: the price guide |
 | `/movers` | This week's risers, fallers and best value vs 90-day high |
 | `/market` | The OP Compare Index (chained, value-weighted) and value by set |
 | `/leaders`, `/colors`, `/cards`, `/cards/all` | Leaders by colour, colour hubs, type/rarity/printing hub, A–Z index |
 | `/tools/deal-finder`, `/tools/box-value` | Listings under market price (signed out: a preview; free account: top 3; Plus/Premium: every deal); box price vs the set's card value |
 | `/tools/buy-list` | **Premium:** the cheapest single store and cheapest split for your watchlist, per market |
 | `/premium`, `/login`, `/account` | Plus ($2.99/mo · $23.99/yr) and Premium ($4.99/mo · $39.99/yr) via Stripe; Google / Discord sign-in; manage or cancel in Stripe's portal |
-| `/stores` | Every store we read, per market, with today's matched listings |
-| `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`, share images |
+| `/stores`, `/stores/suggest` | Every store we read, per market, with today's matched listings; suggest a store |
+| `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`. Share image: the title beside three hero cards |
 | `/release-dates`, `/authors`, `/editorial-policy` | |
 | `/watchlist` | Hearted cards and products (saved in the browser) |
-| `/about`, `/methodology`, `/contact`, `/privacy`, `/terms` | |
+| `/about`, `/methodology`, `/contact`, `/feedback`, `/privacy`, `/terms` | `/contact` and `/feedback` are forms that land in the admin inbox (no email is sent) |
+| `/admin` | **Admins only** (404 for everyone else): see [Admin](#admin) |
+
+### Share images (link thumbnails)
+
+Links to OP Compare unfurl as the price guide, drawn from real data
+(`src/lib/og/`, 1200×630 PNGs with the site's own fonts). `/` and every page
+without its own image show "ONE PIECE PRICE GUIDE" with five real top cards:
+art, printing, the cheapest US price, TCGplayer market, number, and store count
+(7-day change once a week of moves exists). `/price-guide`, sets, sealed
+products, cards and blog posts get their own. A data error never breaks a
+share: it draws a data-free fallback card. Rebuilt every 6 h.
+
+## Admin
+
+Sign in with an admin account and the account menu shows **Admin**. An admin is
+`mastermisclick@gmail.com` (built in), or the addresses in `ADMIN_EMAILS` if
+that is set (it replaces the built-in one), or a user with `User.isAdmin`.
+Admins count as Premium. Everyone else gets a 404 at `/admin`.
+
+| Page | What |
+|---|---|
+| `/admin` | Counts: accounts, current members, new inbox items, stores whose newest read failed |
+| `/admin/accounts` | Search and filter accounts, daily sign-ups, CSV export; grant or revoke Plus/Premium by email (audited; a live Stripe subscription re-grants itself) and run the Stripe reconcile now |
+| `/admin/subscriptions` | OP Compare's Stripe subscriptions (`site=opcompare` only): MRR, tiers, trials and churn, and how many accounts are entitled in the database |
+| `/admin/store-health` | Per-store alerts from `ImportRun` results: failing, stale, empty reads, dropped listings or match rate, implausible prices, currency skips (also printed as a step in each *Import prices* run) |
+| `/admin/inbox` | Price reports, store suggestions, feedback and contact messages, with status changes. No IP addresses stored, no email sent |
+
+Scripts: `npm run health:stores` (the store-health report) and
+`npm run audit:inbox` (inbox counts, emails masked). An optional `ADMIN_TOKEN`
+lets scripts call `/api/admin/*` with an `Authorization: Bearer` header.
 
 ## Where the prices come from — and the eBay rule
 
@@ -115,8 +145,11 @@ card numbers (or TCGplayer-style names) in their titles.
 
 ## Not ported (yet) from RiftCompare
 
-Email (price alerts, trial reminders — and so RiftCompare's $1 trial), decks
-and deck builder, games, AdSense, social/ads marketing, the mobile app,
+Email (price alerts, trial reminders, inbox replies — and so RiftCompare's $1
+trial), decks and deck builder, games, AdSense, social/ads marketing, the
+mobile app, support tickets, the admin tools that need data OP Compare doesn't
+collect (demand, clicks, rising snapshots, tier floor, decks, loyalty,
+consulting, store partners) and admin `?key=` links,
 and Cardmarket as an EU source (its public files carry no card numbers, and One
 Piece's many same-name printings make name-only matching unsafe — and the data
 permission RiftCompare holds was granted for Riftbound). The watchlist works

@@ -5,12 +5,14 @@ import { affiliateUrl, ebayLabel, ebaySearchUrl, isPaidLink, outboundRel } from 
 import { ago, money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { sourceLabel } from "@/lib/stores";
+import { ReportPriceButton } from "./ReportPriceButton";
 
 // The price comparison (RiftCompare's card-page board): every open offer in the
 // visitor's market, cheapest first by ITEM price; sold-out stores folded below;
 // eBay as a search of the visitor's own eBay (no API); TCGplayer's market
 // price as a reference under the comparison, never in it.
 export function PriceBoard({
+  productId,
   offers,
   country,
   marketUsd,
@@ -19,6 +21,7 @@ export function PriceBoard({
   title = "Price comparison",
   noun = "card",
 }: {
+  productId: number;
   offers: OfferRow[];
   country: Country;
   marketUsd: number | null;
@@ -100,6 +103,11 @@ export function PriceBoard({
           ) : null}
         </div>
       )}
+      {open.length ? (
+        <div className="border-t border-ink-800">
+          <ReportPriceButton productId={productId} market={country} offers={open.map((o) => ({ source: o.source, label: sourceLabel(o.source) }))} />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3 border-t border-ink-800 bg-ink-850/50 px-4 py-3 sm:px-5">
         <span className="flex-1 text-sm text-slate-300">

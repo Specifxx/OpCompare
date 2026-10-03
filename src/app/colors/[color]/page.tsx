@@ -9,9 +9,11 @@ import { COUNTRIES } from "@/lib/country";
 import { getCatalog } from "@/lib/data";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
+import { pageOg } from "@/lib/og/meta";
 
 type Props = { params: { color: string }; searchParams: { page?: string } };
-const keyOf = (slug: string): ColorKey | undefined => COLOR_KEYS.find((k) => COLORS[k].slug === slug.toLowerCase());
+const keyOf = (slug: string): ColorKey | undefined =>
+  COLOR_KEYS.find((k) => COLORS[k].slug === slug.toLowerCase());
 const PER = 48;
 
 export function generateMetadata({ params }: Props): Metadata {
@@ -21,6 +23,7 @@ export function generateMetadata({ params }: Props): Metadata {
     title: `${k} One Piece Cards — Prices for Every ${k} Card`,
     description: `Every ${k} One Piece Card Game card with live prices compared across stores — Leaders, Characters, Events and Stages.`,
     alternates: { canonical: `/colors/${COLORS[k].slug}` },
+    openGraph: pageOg(`/colors/${COLORS[k].slug}`),
   };
 }
 
@@ -29,41 +32,73 @@ export default async function ColorPage({ params, searchParams }: Props) {
   if (!k) notFound();
   const country = getCountry();
   const cat = await getCatalog();
-  const cards = cat.cards.filter((x) => x.colors.includes(k)).sort((a, b) => (b.marketUsd ?? -1) - (a.marketUsd ?? -1));
-  const leaders = cards.filter((x) => x.cardType === "Leader" && x.printing === "standard");
+  const cards = cat.cards
+    .filter((x) => x.colors.includes(k))
+    .sort((a, b) => (b.marketUsd ?? -1) - (a.marketUsd ?? -1));
+  const leaders = cards.filter(
+    (x) => x.cardType === "Leader" && x.printing === "standard",
+  );
   const pages = Math.max(1, Math.ceil(cards.length / PER));
-  const page = Math.min(Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1), pages);
+  const page = Math.min(
+    Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1),
+    pages,
+  );
   return (
     <div className="container-app py-6">
-      <Breadcrumbs items={[{ href: "/colors", label: "Colours" }, { label: k }]} />
+      <Breadcrumbs
+        items={[{ href: "/colors", label: "Colours" }, { label: k }]}
+      />
       <div className="flex items-center gap-3">
-        <span className="h-8 w-2 rounded-full" style={{ background: COLORS[k].hex }} />
+        <span
+          className="h-8 w-2 rounded-full"
+          style={{ background: COLORS[k].hex }}
+        />
         <h1 className="text-3xl text-white sm:text-4xl">{k} One Piece cards</h1>
       </div>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
-        {int(cards.length)} {k.toLowerCase()} printings, most valuable first — {COLORS[k].tagline.toLowerCase()} is the colour&apos;s usual identity. Prices are the
-        cheapest in-stock listing in {COUNTRIES[country].place}. Narrow it by set, rarity or printing in the{" "}
-        <Link href={`/browse?color=${COLORS[k].slug}`} className="link">card database</Link>.
+        {int(cards.length)} {k.toLowerCase()} printings, most valuable first —{" "}
+        {COLORS[k].tagline.toLowerCase()} is the colour&apos;s usual identity.
+        Prices are the cheapest in-stock listing in {COUNTRIES[country].place}.
+        Narrow it by set, rarity or printing in the{" "}
+        <Link href={`/browse?color=${COLORS[k].slug}`} className="link">
+          card database
+        </Link>
+        .
       </p>
       {leaders.length ? (
         <p className="mt-3 text-sm text-slate-400">
-          {k} Leaders: {leaders.slice(0, 12).map((l, i) => (
+          {k} Leaders:{" "}
+          {leaders.slice(0, 12).map((l, i) => (
             <span key={l.id}>
               {i ? ", " : ""}
-              <Link href={`/card/${l.slug}`} className="link">{l.name}</Link>
+              <Link href={`/card/${l.slug}`} className="link">
+                {l.name}
+              </Link>
             </span>
           ))}
           {leaders.length > 12 ? ` and ${leaders.length - 12} more` : ""}.
         </p>
       ) : null}
       <section className="mt-8">
-        <SectionHeader title={`Every ${k.toLowerCase()} card`} sub={`page ${page} of ${pages}`} />
+        <SectionHeader
+          title={`Every ${k.toLowerCase()} card`}
+          sub={`page ${page} of ${pages}`}
+        />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {cards.slice((page - 1) * PER, page * PER).map((c) => (
-            <CardTile key={c.id} card={c} setCode={cat.setById.get(c.setId)?.code ?? ""} country={country} />
+            <CardTile
+              key={c.id}
+              card={c}
+              setCode={cat.setById.get(c.setId)?.code ?? ""}
+              country={country}
+            />
           ))}
         </div>
-        <Pagination page={page} pages={pages} href={(p) => `/colors/${COLORS[k].slug}${p > 1 ? `?page=${p}` : ""}`} />
+        <Pagination
+          page={page}
+          pages={pages}
+          href={(p) => `/colors/${COLORS[k].slug}${p > 1 ? `?page=${p}` : ""}`}
+        />
       </section>
     </div>
   );

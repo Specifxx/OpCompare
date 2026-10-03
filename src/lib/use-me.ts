@@ -12,9 +12,10 @@ export interface Me {
   tier: Tier | null;
   adFree: boolean;
   until: string | null;
+  admin: boolean; // the caller's own flag, only to show the menu's "Admin" link
 }
 
-export const SIGNED_OUT: Me = { user: null, tier: null, adFree: false, until: null };
+export const SIGNED_OUT: Me = { user: null, tier: null, adFree: false, until: null, admin: false };
 const AD_FREE_COOKIE = "oc_adfree";
 
 let pending: Promise<Me> | null = null;
@@ -26,7 +27,7 @@ function hasCookie(name: string): boolean {
 export function fetchMe(): Promise<Me> {
   if (!hasCookie("oc_auth")) return Promise.resolve(SIGNED_OUT);
   pending ??= fetch("/api/me", { cache: "no-store" })
-    .then((r) => (r.ok ? (r.json() as Promise<Me>) : SIGNED_OUT))
+    .then((r) => (r.ok ? (r.json() as Promise<Partial<Me>>).then((m): Me => ({ ...SIGNED_OUT, ...m, admin: m.admin === true })) : SIGNED_OUT))
     .catch(() => SIGNED_OUT);
   return pending;
 }

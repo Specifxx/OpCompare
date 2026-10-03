@@ -14,7 +14,9 @@
     "import": "tsx scripts/import.ts",
     "import:catalog": "IMPORT_STORES=0 tsx scripts/import.ts",
     "probe:stores": "tsx scripts/probe-stores.ts",
-    "icons": "tsx scripts/gen-icons.ts"
+    "icons": "tsx scripts/gen-icons.ts",
+    "health:stores": "tsx scripts/store-health.ts",
+    "audit:inbox": "tsx scripts/audit-inbox.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -22,6 +24,7 @@
     "jose": "^6.2.12",
     "next": "^14.2.35",
     "nextjs-toploader": "^3.9.17",
+    "prettier": "^3.9.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^23.0.0"

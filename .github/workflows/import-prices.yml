@@ -87,6 +87,12 @@ jobs:
       - name: Import
         if: steps.gate.outputs.run == 'true'
         run: npx tsx scripts/import.ts
+      # Scrapers that broke quietly (lib/store-health.ts): a summary table and
+      # up to 20 warnings in this run's log. Never fails the import.
+      - name: Store health report
+        if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        run: npx tsx scripts/store-health.ts
       - name: Publish the history
         if: steps.gate.outputs.run == 'true'
         run: |

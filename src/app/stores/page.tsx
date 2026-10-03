@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Breadcrumbs, InShort } from "@/components/ui";
 import { COUNTRY_LIST } from "@/lib/country";
 import { getSiteStats } from "@/lib/data";
@@ -7,25 +8,35 @@ import { STORES } from "@/lib/stores";
 
 export const metadata: Metadata = {
   title: "One Piece Card Stores We Track — US, AU, UK, SG, CA, EU",
-  description: "Every store OP Compare reads One Piece Card Game prices from, by market, with how many of their listings we match today.",
+  description:
+    "Every store OP Compare reads One Piece Card Game prices from, by market, with how many of their listings we match today.",
   alternates: { canonical: "/stores" },
 };
 
 export default async function StoresPage() {
   const stats = await getSiteStats();
-  const by = new Map(stats.storeOffers.map((s) => [`${s.source}|${s.market}`, s]));
+  const by = new Map(
+    stats.storeOffers.map((s) => [`${s.source}|${s.market}`, s]),
+  );
   return (
     <div className="container-app py-6">
       <Breadcrumbs items={[{ label: "Stores we track" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Stores we track</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
-        OP Compare reads the public product listings of every store below twice a day and matches each listing to the exact One Piece printing it is — by card
-        number, and by the printing words in its title (Parallel, Manga, SP…). A listing we cannot place with certainty is left out rather than guessed.
-        TCGplayer&apos;s cheapest listing is added in the US.
+        OP Compare reads the public product listings of every store below twice
+        a day and matches each listing to the exact One Piece printing it is —
+        by card number, and by the printing words in its title (Parallel, Manga,
+        SP…). A listing we cannot place with certainty is left out rather than
+        guessed. TCGplayer&apos;s cheapest listing is added in the US.
       </p>
       <div className="mt-6">
         <InShort>
-          Want your store listed? Stores on Shopify with card numbers in their product titles can usually be added in a day — get in touch from the contact page.
+          Want your store listed? Stores on Shopify with card numbers in their
+          product titles can usually be added in a day —{" "}
+          <Link href="/stores/suggest" className="link">
+            suggest a store
+          </Link>
+          .
         </InShort>
       </div>
       {COUNTRY_LIST.map((c) => {
@@ -36,7 +47,10 @@ export default async function StoresPage() {
         return (
           <section key={c.code} className="mt-10">
             <h2 className="mb-3 text-xl text-white">
-              {c.flag} {c.label} <span className="text-sm font-normal text-slate-500">({list.length + (tcg ? 1 : 0)} sources · {c.currency})</span>
+              {c.flag} {c.label}{" "}
+              <span className="text-sm font-normal text-slate-500">
+                ({list.length + (tcg ? 1 : 0)} sources · {c.currency})
+              </span>
             </h2>
             <div className="card-surface overflow-x-auto">
               <table className="data-table min-w-[520px]">
@@ -50,21 +64,38 @@ export default async function StoresPage() {
                 <tbody>
                   {tcg ? (
                     <tr>
-                      <td className="font-semibold text-white">TCGplayer (marketplace)</td>
-                      <td className="num text-right text-slate-300">{int(tcg.offers)}</td>
-                      <td className="num text-right text-emerald-400">{int(tcg.inStock)}</td>
+                      <td className="font-semibold text-white">
+                        TCGplayer (marketplace)
+                      </td>
+                      <td className="num text-right text-slate-300">
+                        {int(tcg.offers)}
+                      </td>
+                      <td className="num text-right text-emerald-400">
+                        {int(tcg.inStock)}
+                      </td>
                     </tr>
                   ) : null}
                   {list.map(({ s, st }) => (
                     <tr key={s.key}>
                       <td>
-                        <a href={s.base} target="_blank" rel="nofollow noopener noreferrer" className="font-semibold text-slate-100 hover:text-brand-400">
+                        <a
+                          href={s.base}
+                          target="_blank"
+                          rel="nofollow noopener noreferrer"
+                          className="font-semibold text-slate-100 hover:text-brand-400"
+                        >
                           {s.name}
                         </a>
-                        <span className="ml-2 text-xs text-slate-500">{s.base.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                        <span className="ml-2 text-xs text-slate-500">
+                          {s.base.replace(/^https?:\/\/(www\.)?/, "")}
+                        </span>
                       </td>
-                      <td className="num text-right text-slate-300">{st ? int(st.offers) : "—"}</td>
-                      <td className="num text-right text-emerald-400">{st ? int(st.inStock) : "—"}</td>
+                      <td className="num text-right text-slate-300">
+                        {st ? int(st.offers) : "—"}
+                      </td>
+                      <td className="num text-right text-emerald-400">
+                        {st ? int(st.inStock) : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
