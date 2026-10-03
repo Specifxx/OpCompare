@@ -55,7 +55,9 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "undervalued"] },
       { href: "/tools/box-value", label: "Box Value Calc", keywords: ["ev", "box value", "per pack", "is a box worth it"] },
+      { href: "/tools/buy-list", label: "Buy List Planner", keywords: ["basket", "buy list", "cheapest store", "split order", "premium"] },
       { href: "/watchlist", label: "My Watchlist", keywords: ["watchlist", "saved", "favourites"] },
+      { href: "/premium", label: "Plus & Premium", keywords: ["premium", "plus", "pricing", "subscription", "no ads"] },
     ],
   },
   {

@@ -6,7 +6,6 @@
 // search link we build ourselves.
 import fs from "node:fs";
 import path from "node:path";
-import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import {
   TCGCSV_BASE,
@@ -44,6 +43,8 @@ import {
 import { STORES, type StoreInfo } from "./stores";
 import { fetchStoreProducts, productUrl } from "./store-import";
 import { SITE_URL } from "./site";
+import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
+import { historyDir, readBucket, readIndex, writeBucket, writeDay, writeIndex } from "./history-store";
 
 type Log = (...a: unknown[]) => void;
 
@@ -394,68 +395,91 @@ export async function aggregate(log: Log): Promise<void> {
   log("Aggregated per-market lowest prices");
 }
 
-export async function recordHistory(log: Log, today: Date = utcDay()): Promise<void> {
-  for (const table of ["Card", "Sealed"]) {
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO "PriceDay" ("productId", day, "marketUsd", "lowUsd")
-       SELECT id, $1::date, "marketUsd", "lowUS" FROM "${table}" WHERE "marketUsd" IS NOT NULL OR "lowUS" IS NOT NULL
-       ON CONFLICT ("productId", day) DO UPDATE SET "marketUsd" = EXCLUDED."marketUsd", "lowUsd" = EXCLUDED."lowUsd"`,
-      today,
-    );
-    const windows: [string, number][] = table === "Card" ? [["change7d", 7], ["change30d", 30]] : [["change7d", 7]];
-    for (const [col, days] of windows) {
-      await prisma.$executeRawUnsafe(`UPDATE "${table}" SET "${col}" = NULL`);
-      await prisma.$executeRawUnsafe(
-        `UPDATE "${table}" t SET "${col}" = ROUND(((t."marketUsd" - p."marketUsd") * 100.0 / p."marketUsd")::numeric, 1)
-         FROM (SELECT DISTINCT ON ("productId") "productId", "marketUsd" FROM "PriceDay"
-               WHERE day <= $1::date - $2::int AND day >= $1::date - ($2::int + 4) AND "marketUsd" > 0
-               ORDER BY "productId", day DESC) p
-         WHERE p."productId" = t.id AND t."marketUsd" IS NOT NULL`,
-        today,
-        days,
-      );
+export async function recordHistory(log: Log, today: Date = utcDay()): Promise<HistoryResult> {
+  const day = today.toISOString().slice(0, 10);
+  const dn = dayNum(day);
+  const [cards, sealed] = await Promise.all([
+    prisma.card.findMany({ select: { id: true, marketUsd: true, lowUS: true } }),
+    prisma.sealed.findMany({ select: { id: true, marketUsd: true, lowUS: true } }),
+  ]);
+  const isCard = new Set(cards.map((c) => c.id));
+  const byBucket = new Map<string, { id: number; marketUsd: number | null; lowUS: number | null }[]>();
+  for (const p of [...cards, ...sealed]) (byBucket.get(bucketOf(p.id)) ?? byBucket.set(bucketOf(p.id), []).get(bucketOf(p.id))!).push(p);
+
+  const index = readIndex();
+  const prev = [...index.days].reverse().find((d) => d.day < day) ?? null;
+  const prevN = prev ? dayNum(prev.day) : null;
+  const dayFile: DayFile = { v: 1, day, p: {} };
+  const cardRows: unknown[][] = [];
+  const sealedRows: unknown[][] = [];
+  const pairs: [number, number][] = [];
+  let total = 0;
+  let n = 0;
+  for (let i = 0; i < HISTORY_BUCKETS; i++) {
+    const b = i.toString(16).padStart(2, "0");
+    const file = readBucket(b);
+    for (const p of byBucket.get(b) ?? []) {
+      const key = String(p.id);
+      if (p.marketUsd != null || p.lowUS != null) {
+        file.p[key] = withPoint(file.p[key], [dn, p.marketUsd, p.lowUS]);
+        dayFile.p[key] = [p.marketUsd, p.lowUS];
+      }
+      const series = file.p[key] ?? [];
+      const c7 = p.marketUsd != null ? changeOver(series, dn, 7) : null;
+      if (!isCard.has(p.id)) {
+        sealedRows.push([p.id, c7]);
+        continue;
+      }
+      cardRows.push([p.id, c7, p.marketUsd != null ? changeOver(series, dn, 30) : null, highOver(series, dn, 90)]);
+      if ((p.marketUsd ?? 0) >= 100) {
+        total += p.marketUsd!;
+        n++;
+        const y = prevN ? series.find((x) => x[0] === prevN)?.[1] : null;
+        if (y != null && y >= 100) pairs.push([p.marketUsd!, y]);
+      }
     }
+    // A product TCGplayer no longer lists keeps its series until it ages out.
+    for (const [k, series] of Object.entries(file.p)) if (!series.length || series[series.length - 1][0] <= addDays(dn, -KEEP_DAYS)) delete file.p[k];
+    writeBucket(b, file);
   }
-  await prisma.$executeRawUnsafe(
-    `UPDATE "Card" t SET "high90Usd" = h.hi FROM (SELECT "productId", MAX("marketUsd") AS hi FROM "PriceDay"
-      WHERE day >= $1::date - 90 GROUP BY "productId") h WHERE h."productId" = t.id`,
-    today,
-  );
-  log("Recorded today's price history and 7/30-day changes");
+  writeDay(dayFile);
+  const row = nextIndex(prev, pairs, total, n, day);
+  index.days = [...index.days.filter((d) => d.day !== day), row].sort((a, b) => a.day.localeCompare(b.day));
+  writeIndex(index);
+
+  await bulkUpdate("Card", [{ name: "change7d", cast: "float8" }, { name: "change30d", cast: "float8" }, { name: "high90Usd", cast: "int" }], cardRows);
+  await bulkUpdate("Sealed", [{ name: "change7d", cast: "float8" }], sealedRows);
+  log(`History: ${Object.keys(dayFile.p).length} prices for ${day} written to ${historyDir()}; index ${row.value.toFixed(1)} over ${n} cards`);
+  return { day, products: Object.keys(dayFile.p).length, index: row.value };
 }
 
-/**
- * The OP Compare Index: a chained, value-weighted index of every single priced
- * at US$1+ on TCGplayer on two consecutive recorded days. 1,000 on the first
- * day; each day moves it by Σ today / Σ previous day over the cards priced on
- * both, so a new set's cards join without jolting it.
- */
-export async function recordIndex(log: Log, today: Date = utcDay()): Promise<void> {
-  const prev = await prisma.indexDay.findFirst({ where: { day: { lt: today } }, orderBy: { day: "desc" } });
-  const totals = await prisma.$queryRaw<{ total: bigint | null; n: bigint }[]>(
-    Prisma.sql`SELECT SUM(d."marketUsd")::bigint AS total, COUNT(*)::bigint AS n FROM "PriceDay" d JOIN "Card" c ON c.id = d."productId"
-               WHERE d.day = ${today}::date AND d."marketUsd" >= 100`,
-  );
-  const total = Number(totals[0]?.total ?? 0);
-  const n = Number(totals[0]?.n ?? 0);
-  let value = 1000;
-  if (prev) {
-    const pair = await prisma.$queryRaw<{ now: bigint | null; before: bigint | null }[]>(
-      Prisma.sql`SELECT SUM(t."marketUsd")::bigint AS now, SUM(y."marketUsd")::bigint AS before
-                 FROM "PriceDay" t JOIN "PriceDay" y ON y."productId" = t."productId" AND y.day = ${prev.day}::date
-                 JOIN "Card" c ON c.id = t."productId"
-                 WHERE t.day = ${today}::date AND t."marketUsd" >= 100 AND y."marketUsd" >= 100`,
+export interface HistoryResult {
+  day: string;
+  products: number;
+  index: number;
+}
+
+/** UPDATE t SET cols FROM (VALUES (id, …)) — rows are [id, ...values]. */
+async function bulkUpdate(table: string, cols: Col[], rows: unknown[][]): Promise<void> {
+  const CHUNK = Math.max(1, Math.floor(30000 / (cols.length + 1)));
+  for (let s = 0; s < rows.length; s += CHUNK) {
+    const params: unknown[] = [];
+    const values = rows.slice(s, s + CHUNK).map(
+      (r) =>
+        "(" +
+        r
+          .map((v, i) => {
+            params.push(v);
+            return `$${params.length}::${i === 0 ? "int" : cols[i - 1].cast}`;
+          })
+          .join(",") +
+        ")",
     );
-    const a = Number(pair[0]?.now ?? 0);
-    const b = Number(pair[0]?.before ?? 0);
-    value = b > 0 ? prev.value * (a / b) : prev.value;
+    const sql =
+      `UPDATE "${table}" AS t SET ${cols.map((c) => `"${c.name}" = v."${c.name}"`).join(", ")} ` +
+      `FROM (VALUES ${values.join(",")}) AS v(id, ${cols.map((c) => `"${c.name}"`).join(", ")}) WHERE t.id = v.id`;
+    await prisma.$executeRawUnsafe(sql, ...params);
   }
-  await prisma.indexDay.upsert({
-    where: { day: today },
-    create: { day: today, value, totalUsd: Math.min(total, 2_000_000_000), cardCount: n },
-    update: { value, totalUsd: Math.min(total, 2_000_000_000), cardCount: n },
-  });
-  log(`Index ${value.toFixed(1)} over ${n} cards`);
 }
 
 export function utcDay(d: Date = new Date()): Date {

@@ -8,6 +8,7 @@ import { CountrySelect } from "./CountrySelect";
 import { Icon } from "./Icon";
 import { HatMark, Wordmark } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
+import { NavUser } from "./NavUser";
 import { PRIMARY_NAV } from "./nav-groups";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -62,6 +63,7 @@ export function Navbar() {
             <Link href="/watchlist" className="tap-icon rounded-md text-slate-200 hover:bg-ink-800 hover:text-brand-400" aria-label="My watchlist">
               <Icon name="heart" className="h-[18px] w-[18px]" />
             </Link>
+            <NavUser />
           </div>
         </div>
         <div className="px-3 pb-3 md:hidden">

@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CardTile } from "@/components/CardTile";
+import { LockedPreview, MoreWithPlan } from "@/components/Upsell";
 import { Breadcrumbs, EmptyState, InShort } from "@/components/ui";
+import { getCurrentUser } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
+import { FREE_DEAL_ROWS, dealAccess } from "@/lib/plans";
+import { tierOf } from "@/lib/premium";
 import { biggestSavings } from "@/lib/selectors";
 
 export const metadata: Metadata = {
@@ -19,12 +23,20 @@ const FLOORS = [
   { k: "100", label: "US$100+", cents: 10000 },
 ];
 
+export const dynamic = "force-dynamic";
+
+const FULL_ROWS = 60;
+
 export default async function DealFinder({ searchParams }: { searchParams: { min?: string } }) {
   const country = getCountry();
   const c = COUNTRIES[country];
-  const cat = await getCatalog();
+  const user = await getCurrentUser();
+  const access = dealAccess(Boolean(user), tierOf(user));
   const floor = FLOORS.find((f) => f.k === searchParams.min) ?? FLOORS[0];
-  const deals = biggestSavings(cat.cards, country, 60, floor.cents);
+  // Signed out: no query at all. Free account: three rows, limited in the query.
+  const cat = access === "none" ? null : await getCatalog();
+  const deals = cat ? biggestSavings(cat.cards, country, access === "full" ? FULL_ROWS : FREE_DEAL_ROWS, floor.cents) : [];
+  const href = `/tools/deal-finder${floor.k === "5" ? "" : `?min=${floor.k}`}`;
   return (
     <div className="container-app py-6">
       <Breadcrumbs items={[{ href: "/tools/deal-finder", label: "Tools" }, { label: "Deal finder" }]} />
@@ -46,7 +58,11 @@ export default async function DealFinder({ searchParams }: { searchParams: { min
           </Link>
         ))}
       </div>
-      {deals.length ? (
+      {access === "none" ? (
+        <LockedPreview title={`See today's top ${FREE_DEAL_ROWS} deals, free`} next={href}>
+          Create a free account to see the three biggest savings in {c.place} right now. Plus shows every deal, at every price level, with no ads.
+        </LockedPreview>
+      ) : deals.length && cat ? (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {deals.map(({ card, saving }) => (
             <div key={card.id} className="relative">
@@ -60,6 +76,9 @@ export default async function DealFinder({ searchParams }: { searchParams: { min
           <EmptyState title={`No deals in ${c.place} right now`}>No {c.adjective} listing is 10% or more under TCGplayer&apos;s market price at this price level.</EmptyState>
         </div>
       )}
+      {access === "top3" && deals.length === FREE_DEAL_ROWS ? (
+        <MoreWithPlan>These are the top {FREE_DEAL_ROWS}. Plus shows every deal in {c.place}, at every price level, with no ads.</MoreWithPlan>
+      ) : null}
     </div>
   );
 }

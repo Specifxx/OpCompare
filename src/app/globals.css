@@ -283,3 +283,8 @@ h1 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Members see no ads (lib/ad-free.ts). */
+html[data-adfree] [data-ad-placement] {
+  display: none !important;
+}

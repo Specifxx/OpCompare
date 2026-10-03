@@ -23,3 +23,6 @@ next-env.d.ts
 
 # local import caches
 /.cache/
+
+# local checkout of the history (`data` branch; lib/history.ts)
+/.data/

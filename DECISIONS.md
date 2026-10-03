@@ -167,3 +167,62 @@ A correctness review replayed every stored offer and found:
 - `/market`'s index loaded the OLDEST 730 days, so it would have frozen after
   two years. 401 Games failed every run on a 5,300-product collection past the
   20-page cap; the cap is now 30 pages.
+
+## 2026-10-03 — Plus & Premium: RiftCompare's model, minus the trial
+
+The owner wants subscriptions "similar to RiftCompare", especially for Deal
+Finder. Ported as-is:
+
+- **Sign-in:** Google and Discord OAuth only, with a JWT cookie.
+- **Tiers and prices:** Plus $2.99/mo or $23.99/yr; Premium $4.99/mo or
+  $39.99/yr.
+- **Stripe:** hosted Checkout, the webhook (six events, both payload
+  generations, extend-only, `past_due` never entitles), the billing portal, a
+  daily reconcile, and no Stripe calls on page loads.
+- **Deal Finder:** gated in the query. Signed out sees nothing, a free account
+  sees the top 3, a member sees everything.
+- **Ad-free:** Plus and Premium hide every `[data-ad-placement]`.
+
+What differs:
+
+- **Premium's tool.** It is the Buy List Planner, RiftCompare's Best Basket
+  idea: the cheapest single store and cheapest split for the watchlist, per
+  market. OP Compare has no deck watch or demand finder to sell.
+- **No paid trial or intro offer.** RiftCompare's $1-for-30-days trial is only
+  honest with its trial-ending reminder emails, and OP Compare sends no email.
+  The trial is the first thing to add once there is a mailer.
+- **Prices live in one place.** They live in `src/lib/plans.ts`, and
+  `scripts/stripe-setup.ts` creates the Stripe Prices from that table with
+  lookup keys, so there are no price-id env vars to drift. Each Price carries
+  `site=opcompare` and its tier, so a plan switch in the portal re-reads the
+  tier and an old Price keeps its own.
+- **Its own Stripe account.** RiftCompare's reconcile matches every
+  subscription in its account by email. An OP Compare subscriber in that account
+  who also has a RiftCompare login would be granted RiftCompare Premium. OP
+  Compare also ignores any subscription not marked `site=opcompare`, and never
+  matches by email.
+- **The watchlist stays in the browser** for everyone, so there are no free
+  limits to enforce.
+
+## 2026-10-03 — History lives in GitHub, not in a history database
+
+RiftCompare keeps price history in a second Neon project whose transfer
+allowance it keeps exhausting. The owner wants OP Compare's public history in
+GitHub instead. The import now writes it as JSON (`src/lib/history.ts`):
+
+- one append-only file per day,
+- 256 bucket files with each product's last two years (what a chart reads),
+- `index.json`.
+
+The import workflow commits these to the `data` branch of the public repo with
+its own token. The 7/30-day changes and 90-day high are computed from the files
+and stored on the Card rows.
+
+Pages fetch the files from raw.githubusercontent.com, pinned to the commit the
+import recorded (`Meta.historyRef`). A pinned URL never changes, so the fetch
+cache keeps each file for a month, and GitHub's CDN lag on branch names can't
+cache a stale file. Postgres keeps only today's prices: no `PriceDay` or
+`IndexDay`, and no second database. The `data` branch carries a `vercel.json`
+with deployments off, and main's `vercel.json` repeats it, so history pushes
+never trigger a Vercel build. The files are also open data, linked from
+/methodology.

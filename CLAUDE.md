@@ -26,6 +26,29 @@ never call a loader inside an `unstable_cache` callback, and keep each cache
 entry well under 2 MB (`tests/nested-cache.test.ts`). No `generateStaticParams`
 prewarming of database-backed routes.
 
+Accounts and billing are the one exception, and a narrow one: `src/lib/auth.ts`
+(`getCurrentUser`, one `select`-limited row), `src/lib/premium.ts`,
+`src/lib/accounts.ts` and the Stripe routes query per user, uncached, and only
+from account pages and `/api/*` routes — never from the root layout, which must
+not read the session (the header asks `/api/me`, and only when the `oc_auth`
+hint cookie exists). Gated rows are limited in the QUERY, never hidden with CSS.
+
+## Price history lives in GitHub, not Postgres
+
+The import writes history files (`src/lib/history.ts`) that the import workflow
+commits to the `data` branch; pages read them from raw.githubusercontent.com
+pinned to the commit in `Meta.historyRef`. Never add a history table back to
+Prisma, and never push to `data` by hand — it is the workflow's.
+
+## Plus & Premium (Stripe)
+
+Entitlement is `User.premiumUntil` + `premiumTier`, written only by the webhook
+and the daily reconcile, extend-only, and only for subscriptions whose Price or
+metadata says `site=opcompare` (`src/lib/stripe-entitlement.ts`). `past_due`
+never entitles. Prices live in `src/lib/plans.ts` and reach Stripe through
+`scripts/stripe-setup.ts` (lookup keys), never through hand-typed price ids.
+Changing a price, a tier's features or the trial policy is the owner's call.
+
 ## Matching store listings
 
 `src/lib/match.ts` matches a listing to ONE printing or not at all. Add a real

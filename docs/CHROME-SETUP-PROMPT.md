@@ -1,185 +1,307 @@
 # Claude in Chrome — OP Compare setup prompt
 
-Paste everything between the lines into Claude in Chrome while logged in to
-GitHub, Vercel, Neon, Google and the registrar of **opcompare.app** (the same
-accounts RiftCompare uses).
+Paste everything between the lines into Claude in Chrome. Before you do, log in
+to:
+- GitHub, Vercel, Neon, Google (Cloud Console, Analytics and Search Console),
+  Stripe and Discord, using the same accounts as RiftCompare;
+- the registrar of **opcompare.app**.
 
 ---
 
 You are setting up the production infrastructure for **OP Compare**, a One Piece
-Card Game price-comparison website. Its code is already finished in the GitHub
-repo **Specifxx/OpCompare** (branch `claude/tender-noether-2na98p`). It is the
-sister site of RiftCompare (repo Specifxx/TCGEmpire, site riftcompare.com) and
-must get its **own** database, Vercel project, Google Analytics property and
-Search Console property.
+Card Game price-comparison website at **https://opcompare.app**. Its code is
+finished in the GitHub repo **Specifxx/OpCompare** (branch
+`claude/tender-noether-2na98p`). It is the sister site of RiftCompare (repo
+Specifxx/TCGEmpire, site riftcompare.com). It must get its **own** of each of
+these:
+- Neon database
+- Vercel project
+- Google sign-in client and Discord app
+- Stripe account
+- Google Analytics property
+- Search Console property
 
-**The domain is `opcompare.app`. I already own it. Use exactly
-`https://opcompare.app` (no `www`, no trailing slash) everywhere a site URL is
-asked for.** `.app` domains are HTTPS-only, so the site won't load until
-Vercel has issued its certificate (a few minutes after the DNS records are
-right). That delay is normal.
+**The domain is `opcompare.app`. I already own it.** Use exactly
+`https://opcompare.app` (no `www`, no trailing slash) wherever a site URL is
+asked for. `.app` domains are HTTPS-only, so the site won't load until Vercel
+has issued its certificate. That takes a few minutes after the DNS is right,
+and it's normal.
 
 Ground rules:
-- Never change, delete or rotate anything belonging to RiftCompare (its Vercel
-  project, its GitHub repo/secrets, its Neon projects, its GA/GSC properties,
-  riftcompare.com's DNS). You may only READ values from RiftCompare where a
-  step says so.
-- Do not buy anything (no domains, no paid plans) and do not add a payment
-  method. If a step needs money or a decision I haven't given, stop and ask me.
-- Never delete an existing DNS record on opcompare.app without asking me first.
-- Never paste secret values into chat, issues or commit messages. Put them only
-  in the secret or env-var fields named below.
-- Keep a running checklist and finish with a summary of what you did, every
-  value you set (secrets shown as "set", not their contents) and anything left.
+- **RiftCompare is read-only.** Never change, delete or rotate anything of
+  RiftCompare's:
+  - its Vercel project
+  - its GitHub repo or secrets
+  - its Neon projects
+  - its Stripe account
+  - its Google Cloud or OAuth clients
+  - its GA or GSC properties
+  - riftcompare.com's DNS
+
+  You may only READ values from RiftCompare where a step says so.
+- **No money, no guesses.** Do not buy anything (domains, paid plans) and do not
+  add a payment method. If a step needs money, legal or business details I
+  haven't given (for example Stripe's activation form), or a decision, stop and
+  ask me.
+- **Ask before deleting DNS.** Never delete an existing DNS record on
+  opcompare.app without asking me first.
+- **Keep secrets in their fields.** Never paste secret values into chat, issues
+  or commit messages. Only put them in the secret or env-var fields named below.
+- **Track and report.** Keep a running checklist. Finish with a summary of what
+  you did, every value you set (secrets shown only as "set") and anything left.
+
+**Random secrets:** whenever a step says "generate a random secret", open
+https://www.random.org/strings/?num=3&len=20&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new
+and join the three lines into one 60-character string. Use a fresh one each
+time. You need two:
+- `CRON_SECRET`
+- `AUTH_SECRET`
 
 ## 1. Neon — new database
-1. Open https://console.neon.tech and create a **new project** named `opcompare`
-   (Postgres 16 or newest, region **AWS US East (N. Virginia)**, free plan).
-2. Copy the **pooled** connection string (Dashboard → Connect → "Pooled
-   connection" on; it contains `-pooler` and ends with `?sslmode=require`).
-   This is `DATABASE_URL`.
+1. Open https://console.neon.tech and create a **new project** `opcompare`:
+   - Postgres 16 or newest
+   - region **AWS US East (N. Virginia)**
+   - free plan
+2. Copy the **pooled** connection string (Connect → "Pooled connection" on; it
+   contains `-pooler` and ends with `?sslmode=require`). This is `DATABASE_URL`.
 
 ## 2. GitHub — Specifxx/OpCompare
-1. Create branch **`main`** from `claude/tender-noether-2na98p` (Code → branches
-   → New branch, source `claude/tender-noether-2na98p`). Then Settings → General
-   → Default branch → switch to `main`.
-2. Settings → Actions → General → Workflow permissions → **Read and write
-   permissions** → Save.
-3. Generate a random 48-character alphanumeric string for `CRON_SECRET` (keep it
-   for step 3).
-4. Settings → Secrets and variables → Actions → **Secrets** → New repository
-   secret:
+1. **Create `main`.** Code → branches → New branch `main`, source
+   `claude/tender-noether-2na98p`. Then Settings → General → Default branch →
+   `main`.
+2. **Workflow permissions.** Settings → Actions → General → Workflow
+   permissions → **Read and write permissions** → Save. The daily release pushes
+   to `main`, and the import pushes price history to a `data` branch that it
+   creates itself.
+3. **Secrets.** Settings → Secrets and variables → Actions → **Secrets**:
    - `DATABASE_URL` = the Neon pooled string
-   - `CRON_SECRET` = the random string
-   - `GSC_SA_KEY` = added in step 7.4
-5. Same page → **Variables** tab → New repository variable:
+   - `CRON_SECRET` = a random secret (keep it for step 3)
+   - `GSC_SA_KEY` = added in step 9
+   - `STRIPE_SECRET_KEY` = added in step 6
+4. **Variables.** Same page → **Variables**:
    - `SITE_URL` = `https://opcompare.app`
-   - `GSC_PROPERTY` = `sc-domain:opcompare.app` (change it in step 7 only if
-     you have to fall back to a URL-prefix property)
+   - `GSC_PROPERTY` = `sc-domain:opcompare.app`
    - `INDEXNOW_KEY` = `43ac93dd97a44d4894bedf52d621c57c` (RiftCompare's public
      IndexNow key, reused on purpose)
 
 ## 3. Vercel — new project and the domain
-1. https://vercel.com/new → import **Specifxx/OpCompare**, in the same Vercel
-   team as RiftCompare. Project name `opcompare`. Framework Next.js (auto).
-   Leave build settings default.
-2. Settings → Environment Variables, add for **Production and Preview**:
+1. **Create the project.** https://vercel.com/new → import
+   **Specifxx/OpCompare** in the same team as RiftCompare. Project name
+   `opcompare`, framework Next.js, defaults otherwise.
+2. **Environment variables.** Settings → Environment Variables, for
+   **Production and Preview**:
    - `DATABASE_URL` = the Neon pooled string
-   - `CRON_SECRET` = same random string as GitHub
+   - `CRON_SECRET` = the same value as GitHub's
+   - `AUTH_SECRET` = a NEW random secret (never RiftCompare's)
    - `NEXT_PUBLIC_SITE_URL` = `https://opcompare.app`
    - `INDEXNOW_KEY` = `43ac93dd97a44d4894bedf52d621c57c`
+   - `ADMIN_EMAILS` = my email address. Ask me which one; it is the account
+     treated as Premium for free.
+
    Then copy these from RiftCompare's Vercel project, but only the ones it
-   has (Settings → Environment Variables there; read the values, change
-   nothing): `EBAY_AFFILIATE_CAMPAIGN`, `TCGPLAYER_IMPACT_LINK`,
-   `NEXT_PUBLIC_USD_TO_AUD`, `NEXT_PUBLIC_USD_TO_GBP`, `NEXT_PUBLIC_USD_TO_SGD`,
-   `NEXT_PUBLIC_USD_TO_CAD`, `NEXT_PUBLIC_USD_TO_EUR`.
-   Do NOT copy any `EBAY_CLIENT_*`, `RM*`, `RH*`, `HISTORY_DATABASE_URL*`,
-   Stripe, Resend, Discord, AdSense or Google OAuth variables. OP Compare
-   doesn't use them.
-3. Settings → Git → Production Branch = **`main`**.
-4. Settings → Domains → add **`opcompare.app`**, then add **`www.opcompare.app`**
-   set to **redirect to `opcompare.app`** (308). opcompare.app is the primary
-   domain.
-5. Point the DNS at Vercel:
-   - Vercel → the team's **Domains** page: if `opcompare.app` is listed there
-     (bought through Vercel or using Vercel nameservers), Vercel configures
-     the records itself. Wait for both domains to show **Valid Configuration**.
-   - Otherwise find the registrar: open
-     https://lookup.icann.org/en/lookup?name=opcompare.app and read
-     "Registrar" and the nameservers. Open that registrar's (or DNS host's)
-     dashboard and add **exactly the records Vercel's Domains page shows** for
-     `opcompare.app` (an A record on `@`) and `www` (a CNAME). Do not change the
-     nameservers, and ask me before removing any record that conflicts (for
-     example a parking-page A record on `@`). If you can't get into that
-     account, stop and tell me which registrar it is.
-   - Wait until Vercel shows **Valid Configuration** and a certificate for
-     both names.
-6. Production builds run only for commits whose subject contains `[deploy]`. If
-   you see "build skipped" messages, leave them. Step 5 deploys it.
+   has. Read the values there and change nothing:
+   - `EBAY_AFFILIATE_CAMPAIGN`
+   - `TCGPLAYER_IMPACT_LINK`
+   - `NEXT_PUBLIC_USD_TO_AUD`, `NEXT_PUBLIC_USD_TO_GBP`,
+     `NEXT_PUBLIC_USD_TO_SGD`, `NEXT_PUBLIC_USD_TO_CAD`,
+     `NEXT_PUBLIC_USD_TO_EUR`
 
-## 4. Load the data
-1. GitHub → Actions → **Import prices** → Run workflow (branch main, defaults).
-   It creates the tables and imports ~7,300 cards, ~420 sealed products and the
-   prices from ~235 stores. Wait until it finishes green (10–20 min). If it fails,
-   open the log and report the error to me.
+   Do NOT copy any of these: `EBAY_CLIENT_*`, `RM*`, `RH*`,
+   `HISTORY_DATABASE_URL*`, `AUTH_SECRET`, `STRIPE_*`, `*_PRICE_ID`, Google or
+   Discord OAuth, Resend, Brevo, AdSense.
+3. **Production branch.** Settings → Git → Production Branch = **`main`**.
+4. **Domains.** Settings → Domains → add **`opcompare.app`**, then
+   **`www.opcompare.app`** set to **redirect to `opcompare.app`** (308).
+5. **DNS.**
+   - If `opcompare.app` appears on the team's **Domains** page (bought
+     through Vercel or on Vercel nameservers), Vercel configures it. Wait for
+     **Valid Configuration**.
+   - Otherwise:
+     1. Find the registrar at
+        https://lookup.icann.org/en/lookup?name=opcompare.app.
+     2. Add **exactly the records Vercel shows**: an A record on `@` and a
+        CNAME on `www`. Don't change nameservers. Ask me before removing a
+        conflicting record, such as a parking page.
+     3. If you can't access the registrar, stop and tell me which one it is.
 
-## 5. First production deploy
+   Wait for Valid Configuration and certificates on both names.
+6. **"Build skipped" is normal.** Production builds only for commits whose
+   subject contains `[deploy]`. Leave those messages alone; step 8 deploys.
+
+## 4. Google sign-in — a new OAuth client
+1. **Project.** https://console.cloud.google.com → project picker → **New
+   project** "OP Compare". Make sure it is selected.
+2. **Consent screen.** APIs & Services → **OAuth consent screen** (Google Auth
+   Platform):
+   - App name "OP Compare"; user support email and developer contact = my
+     email (same as ADMIN_EMAILS)
+   - Audience **External**
+   - Authorized domain `opcompare.app`
+   - Home page `https://opcompare.app`, privacy policy
+     `https://opcompare.app/privacy`, terms `https://opcompare.app/terms`
+   - Data access / scopes: `openid`, `.../auth/userinfo.email`,
+     `.../auth/userinfo.profile`
+   - Then **Publish app** (In production). These basic scopes need no Google
+     review. If Google asks for verification anyway, tell me and continue.
+3. **Client.** **Clients / Credentials → Create OAuth client → Web
+   application** "OP Compare web":
+   - Authorized JavaScript origin: `https://opcompare.app`
+   - Authorized redirect URI:
+     `https://opcompare.app/api/auth/oauth/google/callback`
+4. **Vercel.** Copy the client ID and secret into Vercel as
+   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Production and Preview).
+
+(Only if creating a project is impossible: RiftCompare's existing client could
+take that redirect URI too, but its sign-in screen would say "RiftCompare".
+Ask me before touching it.)
+
+## 5. Discord sign-in (optional, recommended)
+1. https://discord.com/developers/applications → **New Application** "OP
+   Compare" (add the logo from https://opcompare.app/icon-512.png once the
+   site is up).
+2. OAuth2 → Redirects → add
+   `https://opcompare.app/api/auth/oauth/discord/callback` → Save.
+3. Copy the Client ID and (Reset) Client Secret into Vercel as
+   `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`.
+
+## 6. Stripe — a separate account for OP Compare
+1. **Separate account.** https://dashboard.stripe.com → account switcher (top
+   left) → **New account** named "OP Compare". It must NOT be RiftCompare's
+   account: RiftCompare matches every subscription in its account to its own
+   users by email.
+2. **Activate payments.**
+   - Use the same business details as RiftCompare's account where Stripe offers
+     to copy them.
+   - Public business name **OP Compare**; statement descriptor **OPCOMPARE**;
+     website `https://opcompare.app`; support email = my email.
+   - If Stripe needs anything else (identity, bank account, tax details), stop
+     and ask me.
+3. **Branding and receipts.**
+   - Settings → Branding: the logo from https://opcompare.app/icon-512.png,
+     brand colour `#d92b33`.
+   - Settings → Customer emails: turn on **successful payments** receipts.
+4. **Secret key.** Developers → API keys → reveal the **live secret key**
+   (`sk_live_…`). Put it in:
+   - the Vercel env var `STRIPE_SECRET_KEY` (Production and Preview)
+   - the GitHub secret `STRIPE_SECRET_KEY`
+5. **Create products and prices.** GitHub → Actions → **Stripe setup** → Run
+   workflow (branch main). Wait for green. Its log lists:
+   - the two products (OP Compare Plus, OP Compare Premium)
+   - four prices: Plus $2.99/month and $23.99/year; Premium $4.99/month and
+     $39.99/year
+   - the portal configuration
+
+   It ends with "WEBHOOK MISSING", which is expected at this point.
+6. **Webhook.** Stripe → Developers → Webhooks → **Add endpoint**:
+   - URL `https://opcompare.app/api/stripe/webhook`
+   - events, exactly these six:
+     - `checkout.session.completed`
+     - `checkout.session.async_payment_succeeded`
+     - `invoice.paid`
+     - `invoice.payment_succeeded`
+     - `customer.subscription.created`
+     - `customer.subscription.updated`
+
+   Reveal the **Signing secret** (`whsec_…`) and put it in Vercel as
+   `STRIPE_WEBHOOK_SECRET` (Production).
+7. **Check.** Run **Stripe setup** once more. The log should now end with
+   "all six events subscribed".
+
+## 7. Load the data
+GitHub → Actions → **Import prices** → Run workflow (branch main, defaults).
+It does three things:
+- creates the tables;
+- imports ~7,300 cards, ~420 sealed products and prices from ~235 stores;
+- creates the `data` branch, where the price history is published.
+
+Wait for green (10–20 min). If it fails, open the log and report the error to
+me.
+
+## 8. First production deploy
 1. GitHub → Actions → **Production deploy** → Run workflow (branch main).
-2. In Vercel → Deployments, wait for the new production deployment to be
-   **Ready**, then open **https://opcompare.app** and check:
-   - the homepage shows card counts and prices
-   - `/browse` lists cards
-   - a card page shows a price table
-   - `https://opcompare.app/sitemap.xml` loads and its URLs start with
-     `https://opcompare.app/`
-   - `https://opcompare.app/indexnow.txt` shows the key
-   - `https://www.opcompare.app` redirects to `https://opcompare.app`
+2. In Vercel → Deployments, wait for the production deployment to be
+   **Ready**. Then open **https://opcompare.app** and check:
+   - the homepage shows card counts and prices; `/browse` lists cards; a card
+     page shows a price table;
+   - `/sitemap.xml` loads and its URLs start with `https://opcompare.app/`;
+   - `/indexnow.txt` shows the key;
+   - `https://www.opcompare.app` redirects to `https://opcompare.app`;
+   - `/login` shows "Continue with Google" (and Discord, if set up);
+   - sign in with my Google account: it lands on `/account`, which says
+     "Premium (owner account)" when ADMIN_EMAILS is my email;
+   - `/premium` shows "Get Plus" and "Get Premium" buttons, not "Opening soon".
+3. Optional end-to-end payment test (ask me first). In Stripe, create a coupon
+   at 100% off for one month and a promotion code `OWNERTEST`.
+   1. Sign in on the site with a second Google account.
+   2. On `/premium`, start Plus monthly and enter `OWNERTEST`.
+   3. Confirm the welcome page says "You're Plus!" and the footer ads
+      disappear.
+   4. Then in Stripe: cancel that subscription immediately, and deactivate the
+      promotion code and the coupon.
 
-## 6. Google Analytics 4
-1. https://analytics.google.com → Admin → in the **same account as RiftCompare**
-   → Create → Property → name "OP Compare", my time zone/currency → Web data
-   stream for `https://opcompare.app`, Enhanced measurement on.
-2. Copy the Measurement ID (`G-…`) → Vercel env var `NEXT_PUBLIC_GA_ID`
-   (Production).
-3. Admin → Events → once `buy_click` appears (after some traffic), mark it as a
-   key event. (If it hasn't appeared yet, tell me to do this later.)
+## 9. Google Analytics 4 and Search Console
+1. **GA4.**
+   1. https://analytics.google.com → Admin, in the **same account as
+      RiftCompare** → Create → Property "OP Compare", with my time zone and
+      currency.
+   2. Add a Web data stream for `https://opcompare.app` with Enhanced
+      measurement on.
+   3. Put the Measurement ID (`G-…`) in Vercel as `NEXT_PUBLIC_GA_ID`
+      (Production).
+2. **Search Console property.**
+   https://search.google.com/search-console → Add property → **Domain** →
+   `opcompare.app`.
+   1. Add the TXT record it shows on `@` wherever opcompare.app's DNS lives
+      (Vercel → Domains → opcompare.app → DNS Records, or the registrar).
+   2. Click **Verify**, retrying for up to ~30 minutes.
 
-## 7. Google Search Console
-1. https://search.google.com/search-console → Add property → **Domain** →
-   `opcompare.app`. Google shows a TXT record (`google-site-verification=…`).
-   Add it as a **TXT record on `@`** wherever opcompare.app's DNS lives (Vercel →
-   Domains → opcompare.app → DNS Records if Vercel manages it, otherwise the
-   registrar from step 3.5). Wait a few minutes, then click **Verify** (retry for
-   up to ~30 minutes; DNS can be slow). The property is
-   `sc-domain:opcompare.app`, which matches the GitHub variable already.
-   - Only if you cannot add DNS records: add a **URL prefix** property
-     `https://opcompare.app/` instead, choose the **HTML tag** method, copy only
-     the `content="…"` value into Vercel env var `GOOGLE_SITE_VERIFICATION`
-     (Production), run GitHub Actions → Production deploy, wait for Ready, then
-     click Verify. Then change the GitHub variable `GSC_PROPERTY` to
-     `https://opcompare.app/`.
-2. Settings → Users and permissions → Add user: the service-account email
-   RiftCompare's Search Console property already lists as a user (open
-   RiftCompare's property → Settings → Users and permissions to read it; it
-   ends in `.iam.gserviceaccount.com`) → permission **Full**.
-3. Sitemaps → submit `https://opcompare.app/sitemap.xml`.
-4. `GSC_SA_KEY`: GitHub secrets can't be read back, so: Google Cloud Console →
-   IAM & Admin → Service accounts → the account with that email → Keys → Add key
-   → Create new key → JSON. Open the downloaded JSON file in a browser tab and
-   copy its full contents into the GitHub secret `GSC_SA_KEY`. If you can't open
-   the file, stop and ask me to paste it.
-5. Bing: https://www.bing.com/webmasters → Add site → **Import from Google
-   Search Console** → select `opcompare.app`. (If import isn't offered, add
-   `https://opcompare.app/`, choose the meta-tag method, put its `content` value
-   in Vercel env var `BING_SITE_VERIFICATION`, redeploy as in step 5, verify.)
-   Then submit `https://opcompare.app/sitemap.xml` there too.
+   Only if you cannot add DNS records: use a **URL prefix** property
+   `https://opcompare.app/` with the **HTML tag** method instead.
+   1. Put the `content` value in Vercel as `GOOGLE_SITE_VERIFICATION`
+      (Production).
+   2. Run Production deploy and wait for Ready, then click Verify.
+   3. Set the GitHub variable `GSC_PROPERTY` to `https://opcompare.app/`.
+3. **Service account access.** Search Console → Settings → Users and
+   permissions → Add user: the service-account email (ends
+   `.iam.gserviceaccount.com`) that RiftCompare's property lists as a user →
+   **Full**.
+4. **`GSC_SA_KEY`.** Google Cloud Console → IAM & Admin → Service accounts →
+   that account → Keys → Add key → JSON. Open the downloaded file in a tab and
+   paste its full contents into the GitHub secret `GSC_SA_KEY`. If you can't
+   open it, ask me to paste it.
+5. **Sitemap.** Search Console → Sitemaps → submit
+   `https://opcompare.app/sitemap.xml`.
+6. **Bing.** https://www.bing.com/webmasters → Add site → **Import from Google
+   Search Console** → `opcompare.app`. Then submit the sitemap there too.
+7. **Redeploy.** Run **Production deploy** once more so the GA ID (and any
+   verification tag) take effect.
 
-## 8. Turn on the search workflows
-1. GitHub → Actions → **Search Console** → Run workflow. Check that its summary
-   shows "Sitemap submit … HTTP 204" or "HTTP 200".
-2. GitHub → Actions → **IndexNow submit** → Run workflow; check it reports URLs
-   submitted.
-3. If you set `NEXT_PUBLIC_GA_ID`, `GOOGLE_SITE_VERIFICATION` or
-   `BING_SITE_VERIFICATION` after step 5, run **Production deploy** once more so
-   they take effect, then view the page source of https://opcompare.app and
-   confirm the `gtag` script / verification meta tags are there.
+## 10. Turn on the search workflows
+1. GitHub → Actions → **Search Console** → Run workflow. Its summary should
+   show "Sitemap submit … HTTP 204" or "200".
+2. GitHub → Actions → **IndexNow submit** → Run workflow. It should report
+   URLs submitted.
 
-## 9. Affiliate housekeeping (optional — ask me before submitting forms)
+## 11. Affiliate housekeeping (optional — ask me before submitting forms)
 - Impact (TCGplayer affiliate): add `https://opcompare.app` as a promotional
-  property/website on the existing account.
+  property on the existing account.
 - eBay Partner Network: nothing required (OP Compare's clicks are tagged
-  `oc-…`); optionally add `https://opcompare.app` to the account's traffic
-  sources.
+  `oc-…`). Optionally add `https://opcompare.app` as a traffic source.
 
-## 10. Report
+## 12. Report
 Give me:
-- the live URL, and whether `www` redirects
-- the Neon project name and region
-- which GitHub secrets and variables exist, and which Vercel env vars exist
-  (names only)
-- the GA4 measurement ID
-- the GSC property and its verification status, and whether Bing is set up
-- the results of the Import / Production deploy / Search Console / IndexNow runs
-- anything you could not finish, and why
+- the live URL, and whether `www` redirects;
+- the Neon project name and region;
+- every GitHub secret and variable, and every Vercel env var (names only);
+- the Google OAuth project and client name, and whether the consent screen is
+  in production;
+- the Discord app name;
+- the Stripe account name, the products and prices created, the webhook URL and
+  its event count;
+- the GA4 measurement ID;
+- the GSC property, its verification status, and whether Bing is set up;
+- the results of the Import / Stripe setup / Production deploy / Search
+  Console / IndexNow runs, and of the sign-in test;
+- anything you could not finish, and why.
 
 ---

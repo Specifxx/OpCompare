@@ -22,7 +22,9 @@ export default async function HomePage() {
   const [cat, sealed, stats] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats()]);
   const newest = newestBoosterSet(cat.sets);
   const chase = newest ? mostValuable(cat.cards, 6, (x) => x.setId === newest.id) : [];
-  const savings = biggestSavings(cat.cards, country, 5);
+  // The single best deal is the homepage teaser; Deal Finder holds the rest
+  // (top 3 with a free account, every one with Plus).
+  const savings = biggestSavings(cat.cards, country, 1);
   const drops = movers(cat.cards, "down", 5);
   const rising = movers(cat.cards, "up", 5);
   // Trending: this week's biggest risers once there is a week of history; until
@@ -106,8 +108,8 @@ export default async function HomePage() {
           />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <DealList
-              title="Biggest savings"
-              sub="Cards selling below the TCGplayer market price"
+              title="Biggest saving"
+              sub="Today's top deal. A free account shows the top 3; Plus shows every one."
               rows={savings.map(({ card, saving }) => ({
                 card,
                 badge: <span className="num rounded bg-emerald-400/10 px-1.5 py-0.5 text-[11px] font-bold text-emerald-400">Save {saving.toFixed(0)}%</span>,

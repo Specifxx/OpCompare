@@ -124,6 +124,10 @@ export function SideNav() {
           <Icon name="heart" className="h-4 w-4 text-brand-400" />
           My Watchlist
         </Link>
+        <Link href="/premium" className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[15px] font-medium text-slate-200 hover:bg-ink-800" data-ad-placement="pricing-link">
+          <Icon name="crown" className="h-4 w-4 text-straw" />
+          Pricing
+        </Link>
       </div>
     </aside>
   );

@@ -53,6 +53,10 @@ export default function Methodology() {
         Every printing&apos;s TCGplayer market price and cheapest US listing are recorded once a day. Weekly moves compare a card with itself about seven days
         earlier; the <Link href="/market">OP Compare Index</Link> chains day-to-day changes across every single worth US$1 or more.
       </p>
+      <p>
+        The whole history is open data: every day&apos;s prices, each product&apos;s series and the index are published as JSON files in{" "}
+        <a href="https://github.com/Specifxx/OpCompare/tree/data/history" rel="noopener">our GitHub repository</a>, updated with every import.
+      </p>
     </StaticPage>
   );
 }

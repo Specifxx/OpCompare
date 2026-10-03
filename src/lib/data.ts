@@ -2,8 +2,11 @@
 // Each is an unstable_cache tagged "prices" (purged by the import's POST
 // /api/revalidate), with a 6h TTL as the backstop. Never wrap these in another
 // unstable_cache and never call one inside an unstable_cache callback.
+import fs from "node:fs/promises";
+import path from "node:path";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
+import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "./history";
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
 
@@ -223,7 +226,12 @@ export interface CardDetail {
   change30d: number | null;
   set: SetLite;
   offers: OfferRow[];
-  history: { day: string; marketUsd: number | null; lowUsd: number | null }[];
+}
+
+export interface HistoryPoint {
+  day: string;
+  marketUsd: number | null;
+  lowUsd: number | null;
 }
 
 // An offer not refreshed for 72 hours (its store failed to read since) is shown
@@ -245,26 +253,18 @@ export const getCardDetail = unstable_cache(
       },
     });
     if (!c) return null;
-    const [offers, history] = await Promise.all([
-      prisma.offer.findMany({
-        where: { productId: c.id },
-        select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
-        orderBy: { priceCents: "asc" },
-      }),
-      prisma.priceDay.findMany({
-        where: { productId: c.id, day: { gte: new Date(Date.now() - 365 * 864e5) } },
-        select: { day: true, marketUsd: true, lowUsd: true },
-        orderBy: { day: "asc" },
-      }),
-    ]);
+    const offers = await prisma.offer.findMany({
+      where: { productId: c.id },
+      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
+      orderBy: { priceCents: "asc" },
+    });
     return {
       ...c,
       set: { ...c.set, releasedOn: c.set.releasedOn ? c.set.releasedOn.toISOString().slice(0, 10) : null },
       offers: offers.map(freshOffer),
-      history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), marketUsd: h.marketUsd, lowUsd: h.lowUsd })),
     };
   },
-  ["card-detail-v1"],
+  ["card-detail-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -310,7 +310,6 @@ export const getSealedCatalog = unstable_cache(
 
 export interface SealedDetail extends SealedLite {
   offers: OfferRow[];
-  history: { day: string; marketUsd: number | null; lowUsd: number | null }[];
 }
 
 export const getSealedDetail = unstable_cache(
@@ -323,26 +322,18 @@ export const getSealedDetail = unstable_cache(
       },
     });
     if (!s) return null;
-    const [offers, history] = await Promise.all([
-      prisma.offer.findMany({
-        where: { productId: s.id },
-        select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
-        orderBy: { priceCents: "asc" },
-      }),
-      prisma.priceDay.findMany({
-        where: { productId: s.id, day: { gte: new Date(Date.now() - 365 * 864e5) } },
-        select: { day: true, marketUsd: true, lowUsd: true },
-        orderBy: { day: "asc" },
-      }),
-    ]);
+    const offers = await prisma.offer.findMany({
+      where: { productId: s.id },
+      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, updatedAt: true },
+      orderBy: { priceCents: "asc" },
+    });
     return {
       ...s,
       releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
       offers: offers.map(freshOffer),
-      history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), marketUsd: h.marketUsd, lowUsd: h.lowUsd })),
     };
   },
-  ["sealed-detail-v1"],
+  ["sealed-detail-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -379,12 +370,47 @@ export interface IndexPoint {
   cardCount: number;
 }
 
-export const getIndexSeries = unstable_cache(
-  async (): Promise<IndexPoint[]> => {
-    // The NEWEST two years, oldest first for the chart.
-    const rows = (await prisma.indexDay.findMany({ orderBy: { day: "desc" }, take: 730 })).reverse();
-    return rows.map((r) => ({ day: r.day.toISOString().slice(0, 10), value: r.value, totalUsd: r.totalUsd, cardCount: r.cardCount }));
-  },
-  ["index-series-v2"],
+/** The OP Compare Index: the NEWEST two years, oldest first for the chart. */
+export async function getIndexSeries(): Promise<IndexPoint[]> {
+  const f = await historyFile<IndexFile>("index.json");
+  return (f?.days ?? []).slice(-730);
+}
+
+// ── Price history (GitHub) ───────────────────────────────────────────────────
+// History is not in Postgres: the import commits it to the `data` branch of the
+// public repo (lib/history.ts), and pages read it from GitHub's raw CDN, pinned
+// to the commit the import last published (Meta "historyRef"). A pinned URL
+// never changes, so Next's fetch cache keeps each file for a month and the
+// database is asked only for the 40-byte ref. Falls back to the branch name
+// before the first publish; HISTORY_LOCAL_DIR reads a local checkout (dev).
+const HISTORY_RAW = (process.env.HISTORY_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
+
+export const getHistoryRef = unstable_cache(
+  async (): Promise<string | null> => (await prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }))?.value ?? null,
+  ["history-ref-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
+
+async function historyFile<T>(rel: string): Promise<T | null> {
+  const local = process.env.HISTORY_LOCAL_DIR;
+  if (local) {
+    try {
+      return JSON.parse(await fs.readFile(path.join(local, rel), "utf8")) as T;
+    } catch {
+      return null;
+    }
+  }
+  try {
+    const ref = (await getHistoryRef()) ?? "data";
+    const r = await fetch(`${HISTORY_RAW}/${ref}/history/${rel}`, { next: { revalidate: ref === "data" ? 3600 : 30 * 86400 } });
+    return r.ok ? ((await r.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** One card's or sealed product's last year of prices, for its chart. */
+export async function getProductHistory(id: number): Promise<HistoryPoint[]> {
+  const f = await historyFile<BucketFile>(`products/${bucketOf(id)}.json`);
+  return chartSeries(f?.p[String(id)], dayNum(new Date().toISOString()), 365);
+}

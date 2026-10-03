@@ -12,6 +12,7 @@ import { SideNav } from "@/components/SideNav";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
 // Inter for UI, JetBrains Mono for prices (RiftCompare's pairing), Archivo at
 // 800-900 for headings and Luckiest Guy for the hero headline — the bold,
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
       </head>
       <body className={`${inter.variable} ${mono.variable} ${archivo.variable} ${brand.variable} min-h-screen`}>
         <a

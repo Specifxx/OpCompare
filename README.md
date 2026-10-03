@@ -26,7 +26,9 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 | `/movers` | This week's risers, fallers and best value vs 90-day high |
 | `/market` | The OP Compare Index (chained, value-weighted) and value by set |
 | `/leaders`, `/colors`, `/cards`, `/cards/all` | Leaders by colour, colour hubs, type/rarity/printing hub, A–Z index |
-| `/tools/deal-finder`, `/tools/box-value` | Listings under market price; box price vs the set's card value |
+| `/tools/deal-finder`, `/tools/box-value` | Listings under market price (signed out: a preview; free account: top 3; Plus/Premium: every deal); box price vs the set's card value |
+| `/tools/buy-list` | **Premium:** the cheapest single store and cheapest split for your watchlist, per market |
+| `/premium`, `/login`, `/account` | Plus ($2.99/mo · $23.99/yr) and Premium ($4.99/mo · $39.99/yr) via Stripe; Google / Discord sign-in; manage or cancel in Stripe's portal |
 | `/stores` | Every store we read, per market, with today's matched listings |
 | `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`, share images |
 | `/release-dates`, `/authors`, `/editorial-policy` | |
@@ -47,6 +49,14 @@ name + set), its card name and its printing words; graded slabs, playsets, lots,
 live breaks and non-English listings are never matched, and a match far from the
 printing's market price is dropped as a probable mismatch.
 
+## Price history is in GitHub
+
+Postgres holds only today's prices. Every import writes the history as JSON
+(`src/lib/history.ts`): one file per day, each product's last two years in 256
+bucket files, and the index. The workflow commits them to the **`data`
+branch**, and pages read them from GitHub pinned to that commit. It's open
+data: [`data/history`](https://github.com/Specifxx/OpCompare/tree/data/history).
+
 ## Stack
 
 Next.js 14 (App Router) · TypeScript · Tailwind (RiftCompare's themeable token
@@ -56,8 +66,8 @@ system, recoloured) · Prisma + Postgres (Neon) · Vercel · GitHub Actions.
 
 - **`docs/CHROME-SETUP-PROMPT.md`** — one prompt for Claude in Chrome that does
   the whole setup: Neon database, GitHub branch/permissions/secrets/variables,
-  Vercel project and env vars, first import and deploy, GA4, Search Console,
-  Bing and the search workflows.
+  Vercel project, domain and env vars, Google and Discord sign-in, Stripe,
+  first import and deploy, GA4, Search Console, Bing and the search workflows.
 - **`docs/SETUP.md`** — the same steps written out, with every Vercel and GitHub
   variable, which ones reuse RiftCompare's values, and the free-tier limits.
 
@@ -105,9 +115,9 @@ card numbers (or TCGplayer-style names) in their titles.
 
 ## Not ported (yet) from RiftCompare
 
-Accounts and sign-in, Premium/Stripe, email price alerts, decks and deck
-builder, games, AdSense, social/ads marketing, the mobile app,
+Email (price alerts, trial reminders — and so RiftCompare's $1 trial), decks
+and deck builder, games, AdSense, social/ads marketing, the mobile app,
 and Cardmarket as an EU source (its public files carry no card numbers, and One
 Piece's many same-name printings make name-only matching unsafe — and the data
 permission RiftCompare holds was granted for Riftbound). The watchlist works
-without an account (saved in the browser).
+without an account (saved in the browser); Plus and Premium need one.

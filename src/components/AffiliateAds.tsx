@@ -6,7 +6,8 @@ import { useCountry } from "./CountryProvider";
 
 // RiftCompare's footer ad zone: an eBay box and a TCGplayer box above the
 // footer, labelled "Ad", with one disclosure line. Both are affiliate SEARCH /
-// category links — no eBay API call is involved. Not shown on the policy pages.
+// category links — no eBay API call is involved. Not shown on the policy pages,
+// nor to Plus and Premium members (data-ad-placement, lib/ad-free.ts).
 const BANNER_FREE = ["/about", "/authors", "/contact", "/editorial-policy", "/methodology", "/privacy", "/terms"];
 
 const TCGPLAYER_ONE_PIECE = "https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&view=grid";
@@ -36,7 +37,7 @@ export function FooterAds() {
   const { country } = useCountry();
   if (BANNER_FREE.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
   return (
-    <div className="container-app flex flex-col items-center gap-3 pb-6 pt-10">
+    <div className="container-app flex flex-col items-center gap-3 pb-6 pt-10" data-ad-placement="footer">
       <AdBox href={ebaySearchUrl(country, "One Piece Card Game", "footer-ad")} retailer="ebay_search" tone="border-[#e53238]/30 bg-[#e53238]/[0.04] hover:border-[#e53238]/60">
         <EbayWordmark />
         <span className="text-left">

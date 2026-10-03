@@ -10,7 +10,7 @@ import { Breadcrumbs, ColorBadge, Faq, JsonLd, PrintingBadge, RarityBadge, Secti
 import { cardEbayQuery } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
-import { getCardDetail, getCatalog } from "@/lib/data";
+import { getCardDetail, getCatalog, getProductHistory } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
@@ -43,6 +43,7 @@ export default async function CardPage({ params }: Props) {
   const co = COUNTRIES[country];
   const [card, cat] = await Promise.all([getCardDetail(params.slug), getCatalog()]);
   if (!card) notFound();
+  const history = await getProductHistory(card.id);
   const lite = cat.bySlug.get(card.slug);
   const h = lite ? headline(lite, country) : { kind: "none" as const, cents: null, stores: 0 };
   const siblings = card.number ? cat.cards.filter((x) => x.number === card.number && x.id !== card.id).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0)) : [];
@@ -174,11 +175,11 @@ export default async function CardPage({ params }: Props) {
             </div>
             <LineChart
               series={[
-                { label: "TCGplayer market", color: "#e9b73a", points: card.history.map((p) => ({ x: p.day, y: p.marketUsd })) },
-                { label: "Cheapest US listing", color: "#ff6b6b", points: card.history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
+                { label: "TCGplayer market", color: "#e9b73a", points: history.map((p) => ({ x: p.day, y: p.marketUsd })) },
+                { label: "Cheapest US listing", color: "#ff6b6b", points: history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
               ]}
               format={(v) => usd(Math.round(v))}
-              empty={`Price history starts ${card.history[0] ? longDate(card.history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
+              empty={`Price history starts ${history[0] ? longDate(history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
             />
           </section>
 

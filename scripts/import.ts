@@ -7,10 +7,12 @@
 //   IMPORT_ONLY_COUNTRY=UK npm run import
 //   TCGCSV_CACHE_DIR=.cache npm run import   # reuse downloaded TCGCSV files (dev)
 //
-// Writes only to DATABASE_URL. Never calls the eBay API.
+// Writes today's prices to DATABASE_URL and the price history to HISTORY_DIR
+// (default .data/history; the workflow commits it to the `data` branch — see
+// lib/history.ts). Never calls the eBay API.
 import fs from "node:fs";
 import { prisma } from "../src/lib/db";
-import { aggregate, importCatalog, importStores, recordHistory, recordIndex, revalidateSite } from "../src/lib/import";
+import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";
 import { normalizeCountry } from "../src/lib/country";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -34,10 +36,11 @@ async function main() {
       log(`Stores: ${stores.length} read, ${stores.reduce((a, s) => a + s.cards + s.sealed, 0)} offers, ${failed.length} failed${failed.length ? ` (${failed.join(", ")})` : ""}`);
     }
     await aggregate(log);
-    await recordHistory(log);
-    await recordIndex(log);
+    summary.history = await recordHistory(log);
     await prisma.importRun.update({ where: { id: run.id }, data: { ok: true, finishedAt: new Date(), summary: summary as object } });
-    await revalidateSite(log);
+    // In the workflow the history is pushed first and scripts/publish-history.ts
+    // revalidates once the site can read it.
+    if (process.env.SKIP_REVALIDATE !== "1") await revalidateSite(log);
   } catch (e) {
     await prisma.importRun.update({ where: { id: run.id }, data: { ok: false, finishedAt: new Date(), summary: { ...summary, error: String(e) } as object } });
     throw e;

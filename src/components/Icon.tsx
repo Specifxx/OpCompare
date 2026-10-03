@@ -20,6 +20,10 @@ const PATHS: Record<string, string> = {
   chart: "M3 3v18h18 M7 15l4-4 3 3 5-6",
   store: "M3 9l1.5-5h15L21 9 M3 9v11h18V9 M3 9h18 M9 20v-6h6v6",
   sparkle: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4 21a8 8 0 0 1 16 0",
+  crown: "M3 8l4 4 5-7 5 7 4-4-2 11H5L3 8Z",
+  lock: "M6 11h12v10H6V11Z M8 11V7a4 4 0 0 1 8 0v4",
+  check: "M5 12l5 5L20 7",
 };
 
 export function Icon({ name, className = "h-4 w-4", strokeWidth = 1.8 }: { name: keyof typeof PATHS | string; className?: string; strokeWidth?: number }) {

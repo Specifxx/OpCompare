@@ -9,7 +9,7 @@ import { WatchButton } from "@/components/WatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES } from "@/lib/country";
-import { getCatalog, getSealedCatalog, getSealedDetail } from "@/lib/data";
+import { getCatalog, getProductHistory, getSealedCatalog, getSealedDetail } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
@@ -34,6 +34,7 @@ export default async function SealedDetailPage({ params }: Props) {
   const co = COUNTRIES[country];
   const [s, cat, all] = await Promise.all([getSealedDetail(params.slug), getCatalog(), getSealedCatalog()]);
   if (!s) notFound();
+  const history = await getProductHistory(s.id);
   const lite = all.find((x) => x.id === s.id);
   const h = lite ? headline(lite, country) : { kind: "none" as const, cents: null, stores: 0 };
   const set = s.setId ? cat.setById.get(s.setId) : undefined;
@@ -126,8 +127,8 @@ export default async function SealedDetailPage({ params }: Props) {
             </div>
             <LineChart
               series={[
-                { label: "TCGplayer market", color: "#e9b73a", points: s.history.map((p) => ({ x: p.day, y: p.marketUsd })) },
-                { label: "Cheapest US listing", color: "#ff6b6b", points: s.history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
+                { label: "TCGplayer market", color: "#e9b73a", points: history.map((p) => ({ x: p.day, y: p.marketUsd })) },
+                { label: "Cheapest US listing", color: "#ff6b6b", points: history.map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
               ]}
               format={(v) => usd(Math.round(v))}
               empty="The chart draws once there are two days of prices."

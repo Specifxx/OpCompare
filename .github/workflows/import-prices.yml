@@ -26,6 +26,11 @@ concurrency:
   group: import-prices
   cancel-in-progress: false
 
+# Writes the price history to the `data` branch (lib/history.ts), so it needs
+# to push.
+permissions:
+  contents: write
+
 jobs:
   import:
     runs-on: ubuntu-latest
@@ -37,6 +42,8 @@ jobs:
       NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
       IMPORT_STORES: ${{ (github.event_name != 'workflow_dispatch' || inputs.stores) && '1' || '0' }}
       IMPORT_ONLY_STORES: ${{ inputs.only_stores }}
+      HISTORY_DIR: .data/history
+      SKIP_REVALIDATE: "1"
     steps:
       - name: Skip when the database is not configured
         id: gate
@@ -62,6 +69,36 @@ jobs:
       - name: Sync schema
         if: steps.gate.outputs.run == 'true'
         run: npx prisma db push --skip-generate && npx prisma generate
+      # The history lives on the `data` branch, not in Postgres. Check it out
+      # into .data (an orphan branch, created on the first run).
+      - name: Check out the history branch
+        if: steps.gate.outputs.run == 'true'
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          if git ls-remote --exit-code --heads "$REMOTE" data >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch data --single-branch "$REMOTE" .data
+          else
+            mkdir -p .data && cd .data && git init --quiet -b data && git remote add origin "$REMOTE"
+            # Vercel must never try to build this branch.
+            printf '{\n  "git": { "deploymentEnabled": false }\n}\n' > vercel.json
+            printf '# OP Compare price history\n\nWritten twice a day by the Import prices workflow on main. See src/lib/history.ts there for the format.\n' > README.md
+          fi
       - name: Import
         if: steps.gate.outputs.run == 'true'
         run: npx tsx scripts/import.ts
+      - name: Publish the history
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd .data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit --quiet -m "History $(date -u +%F) $(date -u +%H:%M)"
+            git push --quiet origin data
+          fi
+          echo "HISTORY_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Point the site at it and refresh
+        if: steps.gate.outputs.run == 'true'
+        run: npx tsx scripts/publish-history.ts
