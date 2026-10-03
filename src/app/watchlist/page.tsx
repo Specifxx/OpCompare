@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DiscoveryTip } from "@/components/DiscoveryTip";
 import { Breadcrumbs } from "@/components/ui";
 import { WatchlistView } from "@/components/WatchlistView";
 
@@ -16,6 +17,9 @@ export default function WatchlistPage() {
         Cards and sealed products you have hearted, with today&apos;s cheapest price in your market. Your watchlist is saved in this browser — no account
         needed.
       </p>
+      <DiscoveryTip id="watchlist-buy-list" surface="tip:watchlist" tier="premium" className="mt-4">
+        Premium&apos;s Buy List Planner turns this watchlist into the cheapest single store for the lot, and the cheapest way to split it across stores.
+      </DiscoveryTip>
       <WatchlistView />
     </div>
   );

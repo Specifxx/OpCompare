@@ -271,3 +271,37 @@ model ContactMessage {
 
   @@index([status, createdAt])
 }
+
+// ── Beacons (ported from RiftCompare) ───────────────────────────────────────
+// One row per outbound shop click (OutboundBeacon → /api/click), read only by
+// /admin/clicks. No IP, no user agent, no URL: the retailer key and page type
+// the link already carries in data-retailer / data-page, the card or sealed
+// slug when the click came from one, the visitor's market, and the account id
+// when someone signed in clicked. No foreign key, so deleting an account never
+// cascades through the log.
+model ClickEvent {
+  id        String   @id @default(cuid())
+  retailer  String // data-retailer: "store:<key>", "tcgplayer", "ebay", "ebay_search", "buy_list" …
+  page      String // data-page, or the first path segment: "card", "sealed", "price-guide", "footer" …
+  slug      String? // card / sealed slug when the click came from its page
+  country   String // US AU UK CA SG EU
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([retailer, createdAt])
+}
+
+// One row per click on a Plus/Premium call to action (PlanButton, the Pricing
+// links, the slide-in → /api/premium/click), read only by /admin/premium.
+// `surface` is validated against lib/nudge-surface.ts before it is written.
+model PremiumClick {
+  id        String   @id @default(cuid())
+  surface   String // "nav:header", "gate:buy-list", "nudge:slidein", "checkout" …
+  tier      String? // the tier the surface was selling: plus | premium
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+}

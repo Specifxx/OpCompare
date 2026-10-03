@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import PlanButton from "@/components/PlanButton";
 import { Breadcrumbs, InShort } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/country";
@@ -57,12 +58,13 @@ export default async function BuyList() {
               : `Premium (${planPrice("premium", "month")}/mo) plans your whole list across every store we read, with no ads and every Deal Finder deal.`}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
-            <Link
-              href={tierOf(user) === "plus" ? "/account" : "/premium"}
+            <PlanButton
+              surface="gate:buy-list"
+              tier="premium"
               className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
             >
               {tierOf(user) === "plus" ? "Switch to Premium" : "See Premium"}
-            </Link>
+            </PlanButton>
             {!user ? (
               <Link
                 href="/login?next=/tools/buy-list"

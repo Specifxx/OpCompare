@@ -16,6 +16,8 @@ const TOOLS = [
   { href: "/admin/subscriptions", icon: "chart", title: "Subscriptions", text: "MRR, churn, plan mix and cohorts from Stripe." },
   { href: "/admin/store-health", icon: "store", title: "Store health", text: "Scrapers that broke quietly: failures, drops, match rate." },
   { href: "/admin/inbox", icon: "book", title: "Inbox", text: "Wrong-price reports, store suggestions, feedback, messages." },
+  { href: "/admin/clicks", icon: "external", title: "Outbound clicks", text: "Shop, TCGplayer and eBay link clicks by store, page and market." },
+  { href: "/admin/premium", icon: "crown", title: "Plus & Premium interest", text: "Who clicked a plan button or Pricing link, and from where." },
 ] as const;
 
 export default async function AdminHome() {

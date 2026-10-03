@@ -9,6 +9,11 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
+import { PlanProvider } from "@/components/PlanProvider";
+import { OutboundBeacon } from "@/components/OutboundBeacon";
+import { PremiumSlideIn } from "@/components/PremiumSlideIn";
+import { AnnualSwitchNudge } from "@/components/AnnualSwitchNudge";
+import { stripeEnabled } from "@/lib/stripe";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
@@ -73,6 +78,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <NextTopLoader color="#d92b33" height={2} showSpinner={false} />
         <CountryProvider initial={country}>
+          {/* The Plus/Premium dialog, the click beacon and the corner nudges.
+              checkoutOpen is an environment read (is Stripe configured?), not
+              a session read: who the visitor is comes from /api/me, client-side. */}
+          <PlanProvider checkoutOpen={stripeEnabled()}>
+          <OutboundBeacon />
           <SideNav />
           <Navbar />
           <main id="main" style={{ paddingLeft: "var(--sidenav-w)" }}>
@@ -80,6 +90,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <FooterAds />
           </main>
           <Footer />
+          <PremiumSlideIn />
+          <AnnualSwitchNudge />
+          </PlanProvider>
         </CountryProvider>
         <Analytics />
         <GoogleAnalytics />

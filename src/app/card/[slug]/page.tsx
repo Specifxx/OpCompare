@@ -6,6 +6,8 @@ import { CardArt, CardTile } from "@/components/CardTile";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { ShareButton } from "@/components/ShareButton";
+import { CardConversionCta } from "@/components/CardConversionCta";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { WatchButton } from "@/components/WatchButton";
 import {
   Breadcrumbs,
@@ -260,6 +262,7 @@ export default async function CardPage({ params }: Props) {
             ebayQuery={cardEbayQuery(card)}
             page="card"
           />
+          <CardConversionCta slug={card.slug} name={title} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <section className="card-surface p-5">
@@ -288,6 +291,8 @@ export default async function CardPage({ params }: Props) {
               empty={`Price history starts ${history[0] ? longDate(history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
             />
           </section>
+
+          <InlineSignupPrompt surface="card" title="Get the top deals in your market, free" body="A free account shows Deal Finder's three biggest savings in your market right now, and is how you get Plus or Premium when you want them." />
 
           <section className="card-surface p-5">
             <h2 className="mb-3 text-lg text-white">Card details</h2>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MoverList } from "@/components/MoverList";
+import { MoversToolsCta } from "@/components/MoversToolsCta";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { Breadcrumbs, Delta, InShort } from "@/components/ui";
 import { getCatalog, getIndexSeries } from "@/lib/data";
 import { longDate } from "@/lib/format";
@@ -108,6 +110,10 @@ export default async function MoversPage() {
           empty="Appears once a card has fallen from a recorded high."
         />
       </div>
+      <div className="mt-6">
+        <MoversToolsCta />
+      </div>
+      <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />
     </div>
   );
 }

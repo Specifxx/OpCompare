@@ -8,6 +8,7 @@ import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { cardEbayQuery } from "@/lib/affiliate";
 import { mostValuable, newestBoosterSet } from "@/lib/selectors";
 import { Pagination } from "@/components/Pagination";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { Breadcrumbs, EmptyState } from "@/components/ui";
 import {
   SORTS,
@@ -186,6 +187,7 @@ export default async function BrowsePage({
             pages={pages}
             href={(p) => browseHref(searchParams, { page: String(p) })}
           />
+          <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>
     </div>

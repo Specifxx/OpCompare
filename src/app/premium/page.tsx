@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { PricingCards } from "@/components/PricingCards";
-import { Faq, JsonLd } from "@/components/ui";
-import {
-  PLAN_CENTS,
-  TIER_COMPARISON,
-  TIER_NAMES,
-  TIERS,
-  planPrice,
-} from "@/lib/plans";
+import { PremiumProofLine } from "@/components/PremiumProofLine";
+import { TierComparisonTable } from "@/components/TierComparisonTable";
+import { Breadcrumbs, JsonLd } from "@/components/ui";
+import { PLAN_CENTS, PLAN_FEATURES, PLAN_PITCH, TIER_NAMES, TIERS, planPrice } from "@/lib/plans";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { stripeEnabled } from "@/lib/stripe";
 import { pageOg } from "@/lib/og/meta";
+import { PremiumPlans } from "./PremiumPlans";
 
 export const metadata: Metadata = {
   title: "Plus & Premium — Every Deal, No Ads, a Store Plan for Your List",
@@ -42,65 +38,95 @@ const FAQ = [
   },
 ];
 
+// Pricing first (the owner's "pricing at the very top"): a one-line heading,
+// then the two plans side by side at every width, so both buttons sit in the
+// first screen of a phone. Members see their subscription there instead
+// (PremiumPlans, client-side). Then the proof line, what each tier gets, the
+// shared comparison table and the FAQ. While Stripe is not configured every
+// button reads "Opening soon", as before.
 export default function Premium() {
   const open = stripeEnabled();
   return (
-    <div className="container-app py-10">
+    <div className="container-app py-5 sm:py-8">
       <JsonLd
         data={{
           "@context": "https://schema.org",
           "@type": "Product",
           name: `${SITE_NAME} Plus and Premium`,
+          description: "Every One Piece Card Game deal with no ads (Plus), and the cheapest store plan for your list (Premium).",
           url: `${SITE_URL}/premium`,
+          brand: { "@type": "Brand", name: SITE_NAME },
           offers: TIERS.map((t) => ({
             "@type": "Offer",
             name: TIER_NAMES[t],
             price: (PLAN_CENTS[t].month / 100).toFixed(2),
             priceCurrency: "USD",
+            url: `${SITE_URL}/premium`,
+            availability: open ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
           })),
         }}
       />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+        }}
+      />
+      <Breadcrumbs items={[{ label: "Plus & Premium" }]} />
       <div className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-straw">
-          Plus &amp; Premium
-        </p>
-        <h1 className="mt-2 text-4xl text-white sm:text-5xl">
-          Find the deals. Buy them for less.
-        </h1>
-        <p className="mt-3 text-[15px] text-slate-300">
-          Comparing prices is free. Plus shows every deal with no ads; Premium
-          plans which stores to buy your list from.
-        </p>
+        <h1 className="text-2xl text-white sm:text-4xl">Find the deals. Buy them for less.</h1>
+        <p className="mt-1.5 text-sm text-slate-300 sm:text-[15px]">Comparing prices is free. Plus shows every deal with no ads; Premium plans your list.</p>
       </div>
-      <div className="mt-8">
-        <PricingCards checkoutOpen={open} />
+      <div className="mt-4 sm:mt-6" id="top-pricing">
+        <PremiumPlans checkoutOpen={open} />
       </div>
-      <div className="mx-auto mt-12 max-w-3xl overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-ink-700 text-slate-400">
-              <th className="py-2 pr-3 font-medium">What you get</th>
-              <th className="px-3 py-2 font-medium">Free account</th>
-              <th className="px-3 py-2 font-medium">Plus</th>
-              <th className="px-3 py-2 font-medium">Premium</th>
-            </tr>
-          </thead>
-          <tbody>
-            {TIER_COMPARISON.map(([f, free, plus, prem]) => (
-              <tr key={f} className="border-b border-ink-800">
-                <td className="py-2.5 pr-3 text-slate-200">{f}</td>
-                <td className="px-3 py-2.5 text-slate-300">{free}</td>
-                <td className="px-3 py-2.5 text-slate-300">{plus}</td>
-                <td className="px-3 py-2.5 text-slate-300">{prem}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mx-auto mt-12 max-w-3xl">
-        <h2 className="mb-3 text-2xl text-white">Questions</h2>
-        <Faq items={FAQ} />
-      </div>
+      <PremiumProofLine />
+
+      <section className="mx-auto mt-12 max-w-4xl" aria-labelledby="what-you-get">
+        <h2 id="what-you-get" className="text-2xl text-white">
+          What you get
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {TIERS.map((t) => (
+            <div key={t} className="card-surface p-5">
+              <p className="flex items-baseline justify-between gap-2">
+                <span className="text-lg font-bold text-white">{TIER_NAMES[t]}</span>
+                <span className="num text-sm text-slate-400">{planPrice(t, "month")}/mo</span>
+              </p>
+              <p className="mt-0.5 text-sm text-straw">{PLAN_PITCH[t]}</p>
+              <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[15px] text-slate-300">
+                {PLAN_FEATURES[t].map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto mt-10 max-w-3xl" aria-labelledby="compare">
+        <h2 id="compare" className="text-2xl text-white">
+          Free, Plus and Premium
+        </h2>
+        <div className="mt-3 overflow-x-auto rounded-lg border border-ink-800 bg-ink-900">
+          <TierComparisonTable />
+        </div>
+      </section>
+
+      <section className="mx-auto mt-10 max-w-3xl" aria-labelledby="faq">
+        <h2 id="faq" className="mb-3 text-2xl text-white">
+          Questions
+        </h2>
+        <dl className="divide-y divide-ink-800 rounded-lg border border-ink-800 bg-ink-900">
+          {FAQ.map((f) => (
+            <div key={f.q} className="px-5 py-4">
+              <dt className="font-semibold text-slate-100">{f.q}</dt>
+              <dd className="mt-1.5 text-[15px] leading-relaxed text-slate-300">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
     </div>
   );
 }

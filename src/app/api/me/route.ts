@@ -16,6 +16,9 @@ export async function GET() {
       adFree: tier != null,
       until: user?.premiumUntil?.toISOString() ?? null,
       admin: user?.isAdmin === true,
+      // When the account was made: the Plus/Premium slide-in waits until an
+      // account is 48 hours old (lib/nudge-gate.ts).
+      createdAt: user?.createdAt?.toISOString() ?? null,
     },
     { headers: { "Cache-Control": "no-store" } },
   );

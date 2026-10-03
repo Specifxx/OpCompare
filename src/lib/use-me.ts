@@ -13,9 +13,10 @@ export interface Me {
   adFree: boolean;
   until: string | null;
   admin: boolean; // the caller's own flag, only to show the menu's "Admin" link
+  createdAt: string | null; // the account's creation time (ISO), for the slide-in's 48-hour rule
 }
 
-export const SIGNED_OUT: Me = { user: null, tier: null, adFree: false, until: null, admin: false };
+export const SIGNED_OUT: Me = { user: null, tier: null, adFree: false, until: null, admin: false, createdAt: null };
 const AD_FREE_COOKIE = "oc_adfree";
 
 let pending: Promise<Me> | null = null;
