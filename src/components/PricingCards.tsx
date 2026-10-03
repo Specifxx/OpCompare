@@ -125,8 +125,14 @@ export function PricingCards({ checkoutOpen }: { checkoutOpen: boolean }) {
           );
         })}
       </div>
-      <p className="mt-3 text-center text-xs font-semibold text-slate-300">Cancel anytime · secure checkout by Stripe</p>
-      <p className="mt-1 text-center text-[11px] text-slate-500">Prices in US dollars. Cancel from your account; you keep access to the end of the period you paid for.</p>
+      {checkoutOpen ? (
+        <>
+          <p className="mt-3 text-center text-xs font-semibold text-slate-300">Cancel anytime · secure checkout by Stripe</p>
+          <p className="mt-1 text-center text-[11px] text-slate-500">Prices in US dollars. Cancel from your account; you keep access to the end of the period you paid for.</p>
+        </>
+      ) : (
+        <p className="mt-3 text-center text-[11px] text-slate-500">Prices in US dollars. Checkout isn&apos;t open yet; nothing can be charged until it is.</p>
+      )}
     </div>
   );
 }
