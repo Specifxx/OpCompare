@@ -43,9 +43,11 @@ function Condition({ c }: { c: string | null }) {
   return <span className="ml-1 rounded border border-ink-700 bg-ink-850 px-1 py-px text-[10px] font-semibold text-slate-200">{c}</span>;
 }
 
-function Out({ href, retailer, className, children, label }: { href: string; retailer: string; className: string; children: React.ReactNode; label?: string }) {
+// data-card and data-surface, like every other buy surface, so /admin/clicks
+// and GA's buy_click can tell which card and which column a click came from.
+function Out({ href, retailer, card, dataSurface, className, children, label }: { href: string; retailer: string; card: string; dataSurface: string; className: string; children: React.ReactNode; label?: string }) {
   return (
-    <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={PAGE} className={className} aria-label={label}>
+    <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={PAGE} data-card={card} data-surface={dataSurface} className={className} aria-label={label}>
       {children}
     </a>
   );
@@ -71,6 +73,8 @@ export function TcgDealTable({ rows, country }: { rows: TcgDealRow[]; country: C
               <Out
                 href={it.buyUrl}
                 retailer={it.buyRetailer}
+                card={it.card.slug}
+                dataSurface="deal_tcg"
                 label={`${money(it.buyCents, country)} at ${it.buyLabel}`}
                 className={`num font-semibold hover:underline ${it.isEbay ? "text-sky-300" : "text-accent"}`}
               >
@@ -82,7 +86,7 @@ export function TcgDealTable({ rows, country }: { rows: TcgDealRow[]; country: C
               </div>
             </td>
             <td className="hidden px-2 py-2 text-right sm:table-cell">
-              <Out href={it.marketUrl} retailer="tcgplayer" className="num text-slate-300 hover:text-brand-400 hover:underline">
+              <Out href={it.marketUrl} retailer="tcgplayer" card={it.card.slug} dataSurface="deal_tcg_market" className="num text-slate-300 hover:text-brand-400 hover:underline">
                 {country === "US" ? "" : "≈ "}
                 {money(it.marketCents, country)}
               </Out>
@@ -120,7 +124,7 @@ export function VsEbayTable({ rows, country }: { rows: VsEbayDealRow[]; country:
           <tr key={it.card.id} className="hover:bg-ink-800/60">
             <CardCell card={it.card} />
             <td className="px-2 py-2 text-right">
-              <Out href={it.storeUrl} retailer={it.storeRetailer} label={`${money(it.storeCents, country)} at ${it.storeName}`} className="num font-semibold text-accent hover:underline">
+              <Out href={it.storeUrl} retailer={it.storeRetailer} card={it.card.slug} dataSurface="deal_vs_ebay_store" label={`${money(it.storeCents, country)} at ${it.storeName}`} className="num font-semibold text-accent hover:underline">
                 {money(it.storeCents, country)}
               </Out>
               <div className="ml-auto flex max-w-[5rem] items-center min-[390px]:max-w-[5.5rem] justify-end text-[10px] text-slate-500 sm:max-w-none">
@@ -129,7 +133,7 @@ export function VsEbayTable({ rows, country }: { rows: VsEbayDealRow[]; country:
               </div>
             </td>
             <td className="hidden px-2 py-2 text-right sm:table-cell">
-              <Out href={it.ebayUrl} retailer={it.ebayRetailer} className="num text-sky-300 hover:underline">
+              <Out href={it.ebayUrl} retailer={it.ebayRetailer} card={it.card.slug} dataSurface="deal_vs_ebay" className="num text-sky-300 hover:underline">
                 {money(it.ebayCents, country)}
               </Out>
               <div className="text-[10px] text-slate-500">eBay {postage(it.postageKnown)}</div>
@@ -139,7 +143,7 @@ export function VsEbayTable({ rows, country }: { rows: VsEbayDealRow[]; country:
               <div className="text-[10px] font-semibold sm:hidden">{it.belowPct}% below</div>
               <div className="text-[10px] font-normal text-slate-500 sm:hidden">
                 vs{" "}
-                <Out href={it.ebayUrl} retailer={it.ebayRetailer} className="text-sky-300 underline">
+                <Out href={it.ebayUrl} retailer={it.ebayRetailer} card={it.card.slug} dataSurface="deal_vs_ebay" className="text-sky-300 underline">
                   eBay {money(it.ebayCents, country)}
                 </Out>{" "}
                 {postage(it.postageKnown)}

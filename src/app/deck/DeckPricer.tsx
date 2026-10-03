@@ -285,7 +285,7 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
                         {l.cheapest ? (
-                          <a href={l.cheapest.url} target="_blank" rel={outboundRel()} data-retailer={l.cheapest.source.replace("store:", "")} data-page="deck" className="font-semibold text-brand-400 hover:underline">
+                          <a href={l.cheapest.url} target="_blank" rel={outboundRel()} data-retailer={l.cheapest.source.replace("store:", "")} data-page="deck" data-card={l.card.slug} data-surface="deck_cheapest" className="font-semibold text-brand-400 hover:underline">
                             {l.cheapest.store}
                             {l.cheapest.condition && l.cheapest.condition !== "NM" ? ` (${l.cheapest.condition})` : ""} →
                           </a>
@@ -293,11 +293,11 @@ export function DeckPricer({ initialList }: { initialList: string }) {
                           <span className="text-slate-500">No store in {c.place} has it in stock</span>
                         )}
                         {l.tcgplayerUrl && country === "US" && l.cheapest?.source !== "tcgplayer" ? (
-                          <a href={l.tcgplayerUrl} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page="deck" className="text-slate-300 hover:underline">
+                          <a href={l.tcgplayerUrl} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page="deck" data-card={l.card.slug} data-surface="deck_tcgplayer" className="text-slate-300 hover:underline">
                             TCGplayer
                           </a>
                         ) : null}
-                        <a href={l.ebayUrl} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page="deck" className="text-slate-300 hover:underline">
+                        <a href={l.ebayUrl} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page="deck" data-card={l.card.slug} data-surface="deck_ebay" className="text-slate-300 hover:underline">
                           eBay
                         </a>
                       </div>

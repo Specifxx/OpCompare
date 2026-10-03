@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, StatTile } from "@/components/ui";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
-import { PLAN_CLICK_SAMPLE, loadPlanInterest, type PlanInterestReport } from "@/lib/admin-clicks";
+import { CLICK_RETENTION_DAYS, PLAN_CLICK_SAMPLE, loadPlanInterest, type PlanInterestReport } from "@/lib/admin-clicks";
 import { int, shortDate } from "@/lib/format";
 import { TIER_NAMES } from "@/lib/plans";
 
@@ -36,12 +36,12 @@ export default async function AdminPremiumInterest() {
       </div>
       {error ? (
         <EmptyState title="Couldn't load interest">{error}</EmptyState>
-      ) : !data || data.totals.all === 0 ? (
+      ) : !data || data.totals.d90 === 0 ? (
         <EmptyState title="No clicks recorded yet">They appear as soon as someone opens the plan dialog or a Pricing link.</EmptyState>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <StatTile label="Clicks · all time" value={int(data.totals.all)} />
+            <StatTile label={`Clicks · ${CLICK_RETENTION_DAYS} days`} value={int(data.totals.d90)} />
             <StatTile label="Clicks · 30 days" value={int(data.totals.d30)} sub={`${int(data.totals.d7)} in 7 days`} />
             <StatTile label="Checkout · 30 days" value={int(data.totals.checkout30)} tone="text-straw" />
             <StatTile label="Signed-out clicks" value={int(data.anon)} sub="in the sample" />

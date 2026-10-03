@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, StatTile } from "@/components/ui";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
-import { RECENT_CLICKS, loadClicks, retailerLabel, type ClicksReport } from "@/lib/admin-clicks";
+import { CLICK_RETENTION_DAYS, RECENT_CLICKS, loadClicks, retailerLabel, type ClicksReport } from "@/lib/admin-clicks";
 import { ago, int } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: 
 // Outbound shop clicks (RiftCompare's /admin/clicks): every click on an
 // a[data-retailer] link, recorded by OutboundBeacon → /api/click. Unlike
 // RiftCompare's page (whose beacon was switched off for egress), this one is
-// live: one small insert per click into the operational database.
+// live: one small insert per click into the operational database, kept
+// CLICK_RETENTION_DAYS (the import prunes older rows, lib/beacons.ts).
 function Breakdown({ title, items, label = (k: string) => k }: { title: string; items: { k: string; n: number }[]; label?: (k: string) => React.ReactNode }) {
   return (
     <div className="card-surface p-4">
@@ -41,7 +42,7 @@ export default async function AdminClicks() {
   } catch (e) {
     error = (e as Error).message;
   }
-  const sum = (k: "d7" | "d30" | "all") => (data ? data.rows.reduce((s, r) => s + r[k], 0) : 0);
+  const sum = (k: "d7" | "d30" | "d90") => (data ? data.rows.reduce((s, r) => s + r[k], 0) : 0);
   return (
     <div className="container-app space-y-6 py-6">
       <div>
@@ -59,7 +60,7 @@ export default async function AdminClicks() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatTile label="Clicks · 7 days" value={int(sum("d7"))} />
             <StatTile label="Clicks · 30 days" value={int(sum("d30"))} />
-            <StatTile label="Clicks · all time" value={int(sum("all"))} />
+            <StatTile label={`Clicks · ${CLICK_RETENTION_DAYS} days`} value={int(sum("d90"))} />
             <StatTile label="Signed in · 30 days" value={int(data.signedIn30)} tone="text-straw" />
           </div>
           <div className="overflow-x-auto rounded-lg border border-ink-800 bg-ink-900">
@@ -69,7 +70,7 @@ export default async function AdminClicks() {
                   <th className="px-3 py-2 font-medium">Retailer</th>
                   <th className="px-3 py-2 text-right font-medium">7d</th>
                   <th className="px-3 py-2 text-right font-medium">30d</th>
-                  <th className="px-3 py-2 text-right font-medium">All time</th>
+                  <th className="px-3 py-2 text-right font-medium">{CLICK_RETENTION_DAYS}d</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,7 +81,7 @@ export default async function AdminClicks() {
                     </td>
                     <td className="num px-3 py-2 text-right text-slate-300">{int(r.d7)}</td>
                     <td className="num px-3 py-2 text-right text-slate-300">{int(r.d30)}</td>
-                    <td className="num px-3 py-2 text-right text-white">{int(r.all)}</td>
+                    <td className="num px-3 py-2 text-right text-white">{int(r.d90)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -93,7 +94,7 @@ export default async function AdminClicks() {
               title="Top cards and products · 30 days"
               items={data.topSlugs}
               label={(k) => (
-                <Link href={`/card/${k}`} className="link">
+                <Link href={data?.topSlugs.find((t) => t.k === k)?.href ?? `/card/${k}`} className="link">
                   {k}
                 </Link>
               )}

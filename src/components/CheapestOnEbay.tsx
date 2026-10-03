@@ -26,6 +26,8 @@ export function CheapestOnEbay({ rows, country, positionOffset = 0 }: { rows: Eb
               rel={outboundRel()}
               data-retailer={d.ebayRetailer}
               data-page="deal-finder"
+              data-card={d.card.slug}
+              data-surface="deal_cheapest_ebay"
               data-position={positionOffset + i + 1}
               className="flex min-h-11 items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors hover:bg-[#0064d2]/10"
             >

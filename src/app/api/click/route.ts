@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sameOrigin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/auth";
 import { recordClick } from "@/lib/beacons";
 import { parseClick } from "@/lib/click-event";
@@ -15,6 +16,8 @@ const NO_CONTENT = () => new NextResponse(null, { status: 204, headers: { "Cache
 
 export async function POST(req: Request) {
   try {
+    // Our own pages only (sendBeacon and fetch both send Sec-Fetch-Site/Origin).
+    if (!sameOrigin(req)) return NO_CONTENT();
     if (!rateLimit(`click:${ipKey(req)}`, 120, HOUR).ok) return NO_CONTENT();
     const text = await req.text();
     if (text.length > 2_000) return NO_CONTENT();

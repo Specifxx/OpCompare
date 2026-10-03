@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pageFromPath, parseClick, slugFromPath } from "../src/lib/click-event";
 import { isPlanClickSurface, parsePlanClick } from "../src/lib/nudge-surface";
-import { foldPlanClicks, mergeRetailerCounts, retailerLabel } from "../src/lib/admin-clicks";
+import { CLICK_RETENTION_DAYS, foldPlanClicks, mergeRetailerCounts, retailerLabel, slugHref } from "../src/lib/admin-clicks";
 import { summarizeSubscription } from "../src/lib/plan-subscription";
 
 test("parseClick accepts what the links carry and normalises case", () => {
@@ -69,11 +69,17 @@ test("admin folds: retailer rows merge three windows; interest folds per user", 
     [{ k: "tcgplayer", n: 3 }, { k: "blackvaultgaming", n: 4 }],
     [{ k: "blackvaultgaming", n: 1 }],
   );
-  assert.deepEqual(rows.map((r) => [r.retailer, r.d7, r.d30, r.all]), [["blackvaultgaming", 1, 4, 4], ["tcgplayer", 0, 3, 10], ["ebay_us", 0, 0, 2]]);
+  assert.deepEqual(rows.map((r) => [r.retailer, r.d7, r.d30, r.d90]), [["blackvaultgaming", 1, 4, 4], ["tcgplayer", 0, 3, 10], ["ebay_us", 0, 0, 2]]);
   assert.equal(retailerLabel("tcgplayer"), "TCGplayer");
   assert.equal(retailerLabel("blackvaultgaming"), "Black Vault Gaming");
   assert.equal(retailerLabel("ebay_au"), "eBay (AU)");
   assert.equal(retailerLabel("mystery"), "mystery");
+  assert.equal(retailerLabel("ebay_no_listing"), "eBay (no listing on file)");
+  assert.equal(retailerLabel("ebay_banner"), "eBay banner");
+  assert.equal(retailerLabel("ebay"), "eBay (listing)");
+  assert.equal(retailerLabel("tcgplayer_banner"), "TCGplayer banner");
+  assert.equal(slugHref("op-09-booster-box", new Set(["op-09-booster-box"])), "/sealed/op-09-booster-box");
+  assert.equal(slugHref("op01-120-shanks", new Set(["op-09-booster-box"])), "/card/op01-120-shanks");
   const t = (h: number) => new Date(Date.UTC(2026, 9, 3, h));
   const { byUser, anon } = foldPlanClicks([
     { userId: "u1", surface: "nav:header", createdAt: t(1) },
@@ -128,4 +134,19 @@ test("resume (Keep) and switch-to-annual: same-origin POST, never write entitlem
   }
   const annual = fs.readFileSync(path.resolve(__dirname, "../src/app/api/premium/switch-to-annual/route.ts"), "utf8");
   assert.match(annual, /cancel_at_period_end/, "a plan set to end is never billed a year");
+});
+
+test("beacons: same-origin only, pruned after the retention window, the report bounded to it", () => {
+  const read = (p: string) => fs.readFileSync(path.resolve(__dirname, "..", p), "utf8");
+  for (const r of ["src/app/api/click/route.ts", "src/app/api/premium/click/route.ts"]) assert.match(read(r), /if \(!sameOrigin\(req\)\) return NO_CONTENT\(\);/, r);
+  assert.equal(CLICK_RETENTION_DAYS, 90);
+  assert.match(read("src/lib/beacons.ts"), /clickEvent\.deleteMany\(\{ where: \{ createdAt: \{ lt: before \} \} \}\)/);
+  assert.match(read("src/lib/beacons.ts"), /premiumClick\.deleteMany/);
+  assert.match(read("scripts/import.ts"), /pruneBeacons\(\)/);
+  // No unbounded scan of either table in the admin report.
+  const admin = read("src/lib/admin-clicks.ts");
+  for (const m of admin.matchAll(/prisma\.(clickEvent|premiumClick)\.(groupBy|count|findMany)\(([^\n]*)/g)) assert.match(m[3], /createdAt: \{ gte:/, m[0]);
+  // A list page's link names its card: the beacon prefers data-card over the path.
+  assert.match(read("src/components/OutboundBeacon.tsx"), /a\.getAttribute\("data-card"\) \|\| slugFromPath\(path\)/);
+  for (const f of ["src/components/DealTable.tsx", "src/components/CheapestOnEbay.tsx"]) assert.match(read(f), /data-card=\{/, f);
 });

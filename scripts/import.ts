@@ -13,6 +13,7 @@
 // scripts/ebay.ts (ebay-prices.yml), and this import aggregates its rows.
 import fs from "node:fs";
 import { prisma } from "../src/lib/db";
+import { pruneBeacons } from "../src/lib/beacons";
 import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";
 import { normalizeCountry } from "../src/lib/country";
 
@@ -38,6 +39,13 @@ async function main() {
     }
     await aggregate(log);
     summary.history = await recordHistory(log);
+    // The click beacons' retention (lib/beacons.ts): never fails the import.
+    try {
+      summary.pruned = await pruneBeacons();
+      log("Beacons: pruned", summary.pruned);
+    } catch (e) {
+      log("Beacons: prune failed", String(e));
+    }
     await prisma.importRun.update({ where: { id: run.id }, data: { ok: true, finishedAt: new Date(), summary: summary as object } });
     // In the workflow the history is pushed first and scripts/publish-history.ts
     // revalidates once the site can read it.

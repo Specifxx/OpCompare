@@ -7,7 +7,7 @@ import { useCountry } from "./CountryProvider";
 // ONE global listener for outbound shop clicks (RiftCompare's OutboundLink
 // beacon, done once instead of per link): any click on an a[data-retailer] —
 // PriceBoard rows, eBay search links, the footer ads, the Buy List Planner —
-// sends {retailer, page, slug, country} to /api/click with sendBeacon, so
+// sends {retailer, page, slug (data-card, else the page's), country} to /api/click with sendBeacon, so
 // /admin/clicks can count clicks per store and per page in our own database.
 // Mounted once in the root layout. It never delays or changes the click, and
 // a failed beacon is silent. Middle-clicks (open in a new tab) count too.
@@ -25,7 +25,8 @@ export function OutboundBeacon() {
         const body = JSON.stringify({
           retailer: a.getAttribute("data-retailer"),
           page: a.getAttribute("data-page") || pageFromPath(path),
-          slug: slugFromPath(path),
+          // The link's own card (list pages, QuickView) beats the page's path.
+          slug: a.getAttribute("data-card") || slugFromPath(path),
           country: countryRef.current,
         });
         const blob = new Blob([body], { type: "application/json" });

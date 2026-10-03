@@ -628,6 +628,8 @@ very top". Ported, adapted to One Piece:
   account id if signed in — never an IP, URL or user agent. Both routes are
   rate-limited per hashed IP, validate against fixed patterns
   (`lib/click-event.ts`, `lib/nudge-surface.ts`) and always answer 204.
+  Since "Fixes after the parity integration" below: same-origin only, and
+  rows are kept 90 days (the import prunes them).
 
 ## 2026-10-03 — Plus/Premium review: Keep, yearly switch in the member card, no year billed to a leaver
 
