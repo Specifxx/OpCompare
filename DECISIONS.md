@@ -1012,3 +1012,39 @@ keeping both sides of every conflict. The calls that were not mechanical:
 - QuickView records the card in "recently viewed" when it opens, as the card
   page does. Home trending links open QuickView. The card page's card number
   no longer breaks at its hyphen. "a {adjective} store" copy uses withArticle.
+
+## 2026-10-03 — Fixes after the parity integration
+
+Verification of the integrated branch found these; the calls that were not
+mechanical:
+
+- **Lists close in the bubble phase.** The search dropdown's rows, its
+  recently viewed chips and the watchlist drawer closed in `onClickCapture`,
+  which unmounted the row before CardQuickLink's `onClick` ran, so a mouse
+  click or tap followed the href instead of opening QuickView (Enter worked,
+  because it clicks the anchor itself). They close in `onClick` now, after the
+  link has handled the click; `tests/quick-view.test.ts` forbids
+  `onClickCapture` in those three files.
+- **The homepage's Plus rows are limited on the server.** The page used to
+  carry four "Biggest savings" rows and hide three in the browser, against
+  "gated rows are limited in the QUERY". `getTopDeals` now returns one savings
+  row plus the real total (the cached HTML is still the same for everyone),
+  and a member's browser asks `/api/top-deals/savings` (session + `isPremium`
+  per request, uncached, backed only by the self-cached loaders) for the four.
+  This departs from RiftCompare, which hides rows in the browser.
+- **Beacon retention: 90 days.** `ClickEvent` and `PremiumClick` had no
+  pruning. The import (twice a day) now runs `pruneBeacons` (non-fatal), the
+  admin reports read only the last 90 days (no all-time scan), and both beacon
+  routes refuse cross-site posts (`sameOrigin`). OP Compare has no account
+  deletion yet; when it gets one, it must null `userId` on both tables.
+- **A link names its card.** OutboundBeacon prefers the anchor's `data-card`
+  to the page path, so clicks from Deal Finder, the deck pricer and a QuickView
+  opened on another page are attributed to the right card; Deal Finder's and
+  the deck pricer's links now carry `data-card` and `data-surface`.
+  `/admin/clicks` links a sealed slug to `/sealed/`.
+- **`/deck?list=` metadata** shares `/api/deck/price`'s per-IP budget (40 a
+  minute) before its card loads, and unfurls generically past it, rather than
+  pricing from the catalogue's low (which counts eBay and would quote a
+  different total than the page).
+- **Header "Pricing" stays a link to /premium**, as RiftCompare's is; opening
+  the plan dialog there instead is the owner's call.
