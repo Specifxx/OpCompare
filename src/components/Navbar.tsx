@@ -48,8 +48,10 @@ export function Navbar() {
           <Link href="/browse" className="hidden px-2 text-[15px] font-semibold text-white hover:text-brand-400 lg:block">
             Database
           </Link>
-          <div className="hidden max-w-md flex-1 md:block">
-            <CardSearch />
+          {/* "Search cards" and a floor on the width: with "Log in", Pricing and
+              the xl nav beside it, the default placeholder was clipped at 1280. */}
+          <div className="hidden min-w-[11rem] max-w-md flex-1 md:block">
+            <CardSearch placeholder="Search cards" />
           </div>
           <nav className="ml-1 hidden items-center gap-1 xl:flex" aria-label="Primary">
             {PRIMARY_NAV.map((l) => (
