@@ -86,7 +86,7 @@ const DEAL_FAQS = [
   },
   {
     q: "How often do the numbers update?",
-    a: "Store prices are read twice a day, at 07:00 and 19:00 UTC, and every figure here comes from the same prices the rest of the site runs on; the line above each list says when they were last read. When we collect eBay listings, they are looked up twice a day for cards worth US$20 or more, the most valuable cards most often.",
+    a: "Store prices are read twice a day, at 07:00 and 19:00 UTC, and every figure here comes from the same prices the rest of the site runs on; the line above each list says when they were last read. When we collect eBay listings, cards worth US$100 or more are looked up every day and cards from US$20 (US$50 in the EU) every other day, so an eBay row can be up to two days old.",
   },
   {
     q: "Does the price include postage?",
@@ -144,7 +144,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
       {view === "tcg" && country !== "US" ? (
         <>Converted at US$1 = {money(Math.round((USD_TO[info.currency] ?? 1) * 100), country)}, an approximate reference rate. </>
       ) : null}
-      {view !== "tcg" && stats.ebayLive ? <>eBay listings are looked up twice a day for cards worth US$20 or more. </> : null}
+      {view !== "tcg" && stats.ebayLive ? <>eBay listings: cards worth US$100+ are refreshed daily, cheaper ones every other day. </> : null}
     </p>
   );
   const mineChips = member && view !== "ebay" ? <MineChips params={params} /> : null;

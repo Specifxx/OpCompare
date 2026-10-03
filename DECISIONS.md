@@ -489,3 +489,69 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Deal Finder: RiftCompare's three views; TCGplayer is the reference, never the buy side
+
+The owner wants one-to-one parity with RiftCompare. The parity audit found OP's
+Deal Finder broken in the US: `biggestSavings` ranked `Card.low<M>` against
+TCGplayer's market price, and `lowUS` is usually the `tcgplayer` Offer row —
+TCGCSV's `lowPrice`, TCGplayer's lowest listing of ANY condition. 988 of 1,115
+US "deals" (89%) were TCGplayer measured against itself, 40 of the top 60 were
+thin promo printings, and the % sort with a 60% ceiling pinned the list to the
+ceiling. Ported RiftCompare's Deal Finder (its `lib/arbitrage.ts` rules) instead:
+
+- **Three views, one URL builder.** `?view=` tcg (default, "Underpriced vs
+  TCGplayer"), ebay ("Cheapest on eBay", free for everyone, signed out
+  included) and vs-ebay ("Underpriced vs eBay"). Every link goes through
+  `hrefFor` (`src/lib/deal-finder-href.ts`, ported as is; `mine` has only
+  "watch" because OP has no binder).
+- **TCGplayer is the reference, never the buy side.** The buy side is each
+  market's stores plus eBay (`dealFinderSources`); a URL naming `tcgplayer` is
+  dropped (`resolveBuyKeys`). In the US the `tcgplayer` row is used only as a
+  VETO: a store or eBay price at or above TCGplayer's own lowest listing is not
+  a deal (`scoreVsTcg`). Floors: buy ≥ 300 minor units, ≥ 100 below market,
+  ≤ 75% below (a mismatch, not a deal). Sorted by money below market (then %),
+  with % as the option. Same data, US: 189 cards instead of 1,115, led by real
+  store listings (Kaido OP17-062 Manga at Hobbiesville, US$699 vs US$1,081.63).
+  OP's `tcgplayer` row is any-condition (RiftCompare's is cheapest English NM),
+  so the veto can drop a store a played TCGplayer copy undercuts; that errs on
+  the side of listing fewer deals.
+- **eBay on delivered cost.** Deal Finder compares an eBay row on item + stated
+  postage, on the item price alone ("+ postage") when none is stated, and a
+  stated postage wins a tie. This is Deal Finder's own comparison; the card
+  page's price board still ranks every row, eBay included, by item price.
+  Canada's eBay rows (`ebay_us`) are US listings with unquoted international
+  postage: off the default buy side (selectable, labelled "eBay US + intl
+  postage"), and Canada has no eBay comparison. Singapore has no eBay singles
+  feed. eBay views explain themselves when eBay isn't being collected
+  (`getSiteStats().ebayLive`) and offer eBay searches instead.
+- **Cheapest on eBay / Underpriced vs eBay** guards: eBay (or store) ≥ 100,
+  gap ≥ 50, gap < 80% of the reference. In the US the Cheapest on eBay
+  alternative includes TCGplayer's own lowest listing (buyable there).
+- **Data.** `getDealInputs(country)` — one raw query per market, reduced in
+  Postgres to `[id, storeMin, tcgLow, ebayCents, ebayKnown]` tuples (US 6,969
+  rows ≈ 160 KB), same 72 h freshness as `aggregate()`; `getStoreMins` for a
+  picked store subset (Plus); `getDealOffers(country, ≤25 ids)` for the page's
+  live listings. Every row shows the LIVE listing's own price, condition and
+  link, re-scored with the same predicate and dropped if it no longer
+  qualifies. `low<M>` stays the browse/card headline; it is no longer a deal
+  input. `biggestSavings`, `DEAL_MAX_SAVING_PCT`, `MAX_GAP_PCT`,
+  `savingVsMarket` and `DealList` are gone.
+- **Access unchanged** (`dealAccess`): signed out — no query on the gated
+  views, a locked preview with eBay searches beside it; free account — the
+  first 3 rows of the default ranking and "N more cards on this list" with the
+  real total; Plus — every row, store picker, sort, paging, "only my cards".
+- **Only my cards** needs the watchlist, which lives in the browser: the
+  `?mine=watch` chip renders a client island that POSTs the watched slugs to
+  `/api/deal-finder` (Plus only, uncached), which runs the same ranking with the
+  filter applied before paging.
+- **Homepage** "Today's Top Deals" is RiftCompare's: Biggest savings (the
+  default ranking sorted by %, 4 rows + the real total; non-members see 1 and
+  "Unlock N more with Plus", decided in the browser by `useMe()`), Price drops
+  and — with no demand signal to build Rising Cards from — "Biggest 7-day
+  climbs", free. Budget tabs use RiftCompare's per-market thresholds.
+- **/market/records** is the free cross-market board: cheapest in-stock STORE
+  prices (never TCGplayer's listing or an eBay ask) compared across markets at
+  the reference FX rate, ranked by money saved (≥ 5 units, 20–80%), plus 90-day
+  TCGplayer-market records (a "high" needs a month of history and a rise).
+  `/api/premium/proof` returns `{ country, dealCount }` from the same ranking.
