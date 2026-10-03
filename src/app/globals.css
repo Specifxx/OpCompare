@@ -312,9 +312,12 @@ html {
    and red takes WHITE ink in both themes (white on #d92b33 is 4.8:1, near-black
    about 4.4:1). Markup copied from RiftCompare writes `bg-brand-500
    text-ink-950` for a filled brand chip or the current page cell; this rule is
-   what keeps that markup verbatim and still readable. .btn-primary sets white
+   what keeps that markup verbatim and still readable; `text-white` on the red
+   fill (whose themed value is near-black in light) is held white the same
+   way. .btn-primary sets white
    itself (below). See DECISIONS.md, "Wave-2 design tokens". */
-.bg-brand-500.text-ink-950 {
+.bg-brand-500.text-ink-950,
+.bg-brand-500.text-white {
   color: #ffffff;
 }
 

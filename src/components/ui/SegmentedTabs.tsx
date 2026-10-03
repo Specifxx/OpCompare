@@ -170,15 +170,17 @@ export function SegmentedTabs({
                 // on bright fills" block. text-ink-950 inverted to #f4f6f8 in light,
                 // 2.91:1 on the green (2026-09-23); the fill is on a sibling span,
                 // so that block's .bg-brand-500.text-ink-950 selector never matched.
+                // OP Compare: the fill is Straw Hat red, which takes WHITE ink
+                // (DECISIONS "Wave-2 design tokens"), so the fixed ink is #ffffff.
                 className={`relative inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs font-bold uppercase tracking-wide transition-colors duration-fast ${
-                  isActive ? "text-[#0a0c10]" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
+                  isActive ? "text-[#ffffff]" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
                 }`}
               >
                 {t.label}
                 {t.count != null && (
                   <span
                     className={`num rounded-full px-1.5 text-[10px] font-bold ${
-                      isActive ? "bg-[#0a0c10]/20 text-[#0a0c10]" : "bg-ink-800 text-slate-500"
+                      isActive ? "bg-[#ffffff]/20 text-[#ffffff]" : "bg-ink-800 text-slate-500"
                     }`}
                   >
                     {t.count}

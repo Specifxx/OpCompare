@@ -114,7 +114,7 @@ test("the light palette keeps the accessibility guarantees the dark one makes (4
   // `bg-brand-500 text-ink-950` is overridden to white.
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-gold\.text-ink-950,[\s\S]*?\{\s*color: #0a0c10;/);
   assert.doesNotMatch(CSS, /:root\[data-theme="light"\] \.btn-primary/, "no light-mode dark-ink or hover override on the red button");
-  assert.match(CSS, /\n\.bg-brand-500\.text-ink-950 \{\s*color: #ffffff;/);
+  assert.match(CSS, /\n\.bg-brand-500\.text-ink-950,\s*\n\.bg-brand-500\.text-white \{\s*color: #ffffff;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-gold \{\s*background-color: #caa85a;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-brand-400 \{\s*background-color: #ff6b6b;/);
   assert.match(CSS, /\.btn-primary \{\s*@apply btn bg-brand-500 text-\[#ffffff\] hover:bg-brand-600;/);
