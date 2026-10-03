@@ -58,6 +58,16 @@ export default async function CardPage({ params }: Props) {
   if (card.power != null) stats.push({ label: "Power", value: card.power.toLocaleString("en-US") });
   if (card.counter != null) stats.push({ label: "Counter", value: `+${card.counter.toLocaleString("en-US")}` });
   const inMarket = card.offers.filter((o) => o.market === country && o.inStock);
+  const cardText = card.effect ? (
+    <div className="card-surface p-4">
+      <p className="eyebrow mb-2">Card text</p>
+      {card.effect.split("\n").map((l, i) => (
+        <p key={i} className="mb-2 text-sm leading-relaxed text-slate-200 last:mb-0">
+          {l}
+        </p>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div className="container-app py-6">
@@ -93,16 +103,7 @@ export default async function CardPage({ params }: Props) {
           <div className="card-surface p-4">
             <CardArt id={card.id} hasImage={card.hasImage} alt={`${title} — One Piece Card Game`} size="large" />
           </div>
-          {card.effect ? (
-            <div className="card-surface p-4">
-              <p className="eyebrow mb-2">Card text</p>
-              {card.effect.split("\n").map((l, i) => (
-                <p key={i} className="mb-2 text-sm leading-relaxed text-slate-200 last:mb-0">
-                  {l}
-                </p>
-              ))}
-            </div>
-          ) : null}
+          {cardText ? <div className="hidden lg:block">{cardText}</div> : null}
         </div>
 
         {/* ── Header, stats, board ── */}
@@ -164,6 +165,7 @@ export default async function CardPage({ params }: Props) {
           </p>
 
           <PriceBoard offers={card.offers} country={country} marketUsd={card.marketUsd} ebayQuery={cardEbayQuery(card)} page="card" />
+          {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

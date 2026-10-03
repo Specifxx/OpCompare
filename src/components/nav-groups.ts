@@ -35,6 +35,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/colors", label: "Colours", keywords: ["colors", "colours", "red", "green", "blue", "purple", "black", "yellow"] },
       { href: "/cards", label: "By type & rarity", keywords: ["rarity", "secret rare", "manga", "parallel", "sp", "treasure rare"] },
       { href: "/cards/all", label: "Every card (A-Z)", keywords: ["all cards", "full list", "a-z"] },
+      { href: "/release-dates", label: "Release dates", keywords: ["release date", "next set", "upcoming", "when", "countdown"] },
     ],
   },
   {

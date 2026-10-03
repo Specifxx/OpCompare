@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
     "", "/browse", "/price-guide", "/sealed", "/market", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
-    "/tools/deal-finder", "/tools/box-value", "/about", "/methodology", "/contact", "/privacy", "/terms",
+    "/tools/deal-finder", "/tools/box-value", "/release-dates", "/about", "/methodology", "/contact", "/privacy", "/terms",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // A build with no database yet (the very first deploy) still gets a sitemap;
   // the daily revalidation fills in the cards once the import has run.

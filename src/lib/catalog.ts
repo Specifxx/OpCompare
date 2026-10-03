@@ -164,14 +164,8 @@ export function classifyPrinting(input: { tokens: string[]; rarity: string | nul
   return "standard";
 }
 
-/** "Monkey.D.Luffy (003) (Parallel)" → "Monkey.D.Luffy". DON!! keeps its character. */
-export function baseName(name: string, cardType: string | null): string {
-  if (cardType === "DON!!") {
-    return name
-      .replace(/\((?:Manga|Alternate Art|Parallel|Gold|Textured Foil|Super Alternate Art)\)/gi, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+/** "Monkey.D.Luffy (003) (Parallel)" → "Monkey.D.Luffy". */
+export function baseName(name: string): string {
   return name
     .replace(/\s*\([^()]*\)/g, "")
     .replace(/\s*\[[^[\]]*\]/g, "")
@@ -229,24 +223,6 @@ export function eventTag(g: Pick<TcgcsvGroup, "name" | "abbreviation">): string 
   return null;
 }
 
-/** "Revision Pack Cards" → "Revision Pack"; "One Piece Demo Deck Cards" → "Demo Deck". */
-export function shortSetLabel(g: Pick<TcgcsvGroup, "name">): string {
-  return setDisplayName(g)
-    .replace(/^One Piece\s+/i, "")
-    .replace(/\s+Cards$/i, "")
-    .replace(/\s*-\s*/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** Does a card number belong to this group? "OP01-003" ↔ OP01, "ST01-012" ↔ ST-01, "P-001" ↔ OP-PR. */
-export function numberIsHome(number: string, g: Pick<TcgcsvGroup, "abbreviation">): boolean {
-  const code = (g.abbreviation ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const prefix = number.toUpperCase().split("-")[0];
-  if (prefix === "P") return code.startsWith("OPPR");
-  return code.includes(prefix);
-}
-
 /**
  * The extra token a printing needs to be told apart from its namesake: the
  * event stamp. Reprints in another set (Premium Booster, Demo Deck) are told
@@ -271,7 +247,7 @@ export function parseCard(p: TcgcsvProduct, setCodeHint?: string, group?: Pick<T
   const tag = !isDon && group ? printingTag(group) : null;
   if (tag && !tokens.some((t) => t.toLowerCase() === tag.toLowerCase())) tokens.push(tag);
   const printing = classifyPrinting({ tokens: isDon ? [] : tokens, rarity, cardType });
-  const name = isDon ? "DON!! Card" : baseName(p.name, cardType);
+  const name = isDon ? "DON!! Card" : baseName(p.name);
   let variant = tokens.length ? tokens.join(" · ") : null;
   if (!variant && printing === "treasure") variant = "Treasure Rare";
   return {
@@ -371,9 +347,6 @@ export function parseSealed(p: TcgcsvProduct, kindOfSet: SetKind | null, setIsRe
 // ── Images ───────────────────────────────────────────────────────────────────
 export function largeImage(productId: number): string {
   return `https://tcgplayer-cdn.tcgplayer.com/product/${productId}_in_1000x1000.jpg`;
-}
-export function thumbImage(productId: number): string {
-  return `https://tcgplayer-cdn.tcgplayer.com/product/${productId}_200w.jpg`;
 }
 
 // ── Prices ───────────────────────────────────────────────────────────────────
