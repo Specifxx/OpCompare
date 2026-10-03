@@ -269,9 +269,11 @@ export function storesIn(country: Country): StoreInfo[] {
   return STORES.filter((s) => s.country === country);
 }
 
-/** A real store's row ("store:<key>"): what every "N stores" count counts — never TCGplayer or eBay. */
+/** A row every "N stores" count counts: each tracked store and TCGplayer (as
+ *  RiftCompare counts every in-stock seller in the comparison), never eBay
+ *  (CLAUDE.md: eBay rows are never counted as a store). */
 export function isStoreSource(source: string): boolean {
-  return source.startsWith("store:");
+  return !source.startsWith("ebay");
 }
 
 /** "store:cherry" → the store; "tcgplayer" → null. */

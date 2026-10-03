@@ -1059,3 +1059,16 @@ supported.
 **Why.** The owner asked for light by default. This departs from RiftCompare,
 which defaults to dark; the wave-2 design port (RC's `theme-shared.ts`) must
 keep light as the default when it replaces `src/lib/theme.ts`.
+
+## 2026-10-03 — "N stores" counts TCGplayer again (never eBay)
+
+**Decision.** Every store count (`Card.stores<M>`, the card and sealed pages'
+"In stock at", the tiles) counts each in-stock seller the price comparison
+shows except eBay: every tracked store plus TCGplayer. `isStoreSource()` is
+`!source.startsWith("ebay")` and the aggregate filter is `NOT LIKE 'ebay%'`.
+
+**Why.** The owner saw a card listing Wulf Gaming and TCGplayer in its
+comparison while the header said "1 store". RiftCompare's `computeMarket`
+counts every in-stock retailer in the comparison, TCGplayer included. This
+reverses the stores-only count from "Store matching: SKU numbers, …" earlier
+today; eBay stays out per CLAUDE.md ("never counted as a store").
