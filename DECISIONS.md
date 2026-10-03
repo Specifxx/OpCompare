@@ -489,3 +489,70 @@ nothing and ways to show a wrong price. Fixed before any key exists:
 - **Guards.** `tests/no-ebay-api.test.ts` also covers `svcs.`/`apiz.ebay.com`
   and `SECURITY-APPNAME`, and fails on any import of an eBay module from
   outside `src/lib/ebay*.ts` in any form (dynamic, re-export, require).
+
+## 2026-10-03 — Search, recently viewed, chart, filter chips, watch drawer and blog shop strip (RiftCompare parity)
+
+Ported from RiftCompare's SearchBar, RecentlyViewedRail, PriceChart/Sparkline,
+Filters/ActiveFilters, WatchlistDrawer and ArticleShopStrip, adapted where OP
+Compare's data or rules differ.
+
+- **Search matching** (`lib/search.ts`, pinned by `tests/search.test.ts`).
+  Punctuation is a space and quotes split words, so "Monkey.D.Luffy",
+  "monkey d luffy" and `Eustass"Captain"Kid` → "captain kid" all match; a
+  squashed query ("monkeydluffy") matches the squashed name. A query word must
+  match the START of a word in the card's text (name, number, printing,
+  rarity, type, set); four letters or more may also match inside a word. This
+  is stricter than the old substring rule on purpose: "nami sp" used to hit
+  every name with "sp" inside it. A card number anywhere in the query narrows
+  by the remaining words ("OP05-119 manga"). Nicknames (big mom, blackbeard,
+  doffy, akainu …) are tried IN ADDITION to the typed words, mapped to one
+  distinctive printed-name word ("big mom" → "linlin" finds Charlotte Linlin
+  and Kaido & Linlin), so an alias can add results but never remove one.
+  Ranking weights are unchanged (value still beats print type), with a bonus
+  for words that hit the name. A query with no match gets up to three real
+  names within a small edit distance ("Did you mean"), closest first, then the
+  name with most printings — never invented names.
+- **No match → eBay search.** As on RiftCompare: an affiliate eBay SEARCH for
+  the typed words on the visitor's own eBay, labelled as a search with a
+  paid-link line. No listing is claimed.
+- **Recently viewed and recent searches** are localStorage only
+  (`lib/recently-viewed.ts`, 12 cards, 5 searches, defensive parsing). The
+  card page records through ONE island (`<RecentlyViewed record>`), which also
+  shows the rail; the search box shows both when empty, the watchlist page the
+  rail. QuickView should also record (integrator: call `pushRecentCard` from
+  QuickView's open, as RiftCompare does).
+- **Interactive chart without breaking LineChart's props.** Pages pass a
+  `format` function, which cannot cross into a client component, so the
+  server half formats every point and each range's axis ticks and the client
+  island (`LineChartInteractive`) only draws. Range tabs are offered only when
+  the history is longer than the range. History holds US market and US low
+  only, so there are no per-market series to show; the chart does not invent
+  them.
+- **Sparklines read history files, not the database.** `getSparklines` (the ux
+  block at the end of `lib/data.ts`) reads the same GitHub bucket files as the
+  card chart, one per distinct bucket, capped at 48 ids, through the fetch
+  cache; no `unstable_cache`, no Prisma. Used on /movers (hidden in the
+  three-column layout between lg and 2xl, where it would crush names) and in
+  the watchlist page and drawer.
+- **Filters apply instantly, URL is the state.** `BrowseFilters` is a client
+  form with an optimistic copy of the query string (RiftCompare's pattern);
+  `FilterChips` removes one filter per tap. Both write the one canonical query
+  from `lib/filter-chips.ts` (fixed key order, CSV multi-values, defaults and
+  `page` dropped; old repeated-key links still parse). It stays a real GET
+  form, so without JavaScript the bottom button submits it; with JavaScript
+  that button is the phone's "Show results". Price boxes apply on Enter or
+  blur. /cards is a hub of links into /browse, so the chips live on /browse.
+- **Watch drawer, no sign-in wall.** OP Compare's watchlist is browser-only,
+  so the drawer (header heart with a count, `WatchDrawer.tsx`) shows the list
+  directly, where RiftCompare's asks to sign in; the copy promises no
+  price-drop email because OP Compare sends none. It is self-contained (no
+  provider in the root layout, which still reads no session); anything can
+  open it with `openWatchDrawer()`. /watchlist stays the deep link.
+- **Blog shop strip from the post itself.** Posts are built from data, so the
+  strip reads the post's unrendered React tree (`components/blog/mentions.ts`)
+  for the cards and products it names — CardLite props and /card or /sealed
+  links — in order of first mention, hero cards first, capped at six cards.
+  Each row shows the live cheapest price in the reader's market and an
+  affiliate eBay search ("Search eBay", never "Buy"). No list to maintain.
+- **/search?q=** redirects to /browse?q=, the results page the WebSite
+  SearchAction already names.

@@ -11,6 +11,13 @@ export interface ChartData {
 }
 
 const FALLBACK_W = 800;
+const TIP_W = 200; // the tooltip's widest measured box, in px
+
+function tipStyle(hx: number, w: number): React.CSSProperties {
+  if (hx + 10 + TIP_W <= w) return { left: hx + 10 };
+  if (hx - 10 - TIP_W >= 0) return { right: w - hx + 10 };
+  return { left: Math.max(4, Math.min(w - TIP_W - 4, hx - TIP_W / 2)) };
+}
 const PAD = { r: 14, t: 14, b: 26 };
 const shortDay = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const longDay = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -193,8 +200,11 @@ export function LineChartInteractive({ data }: { data: ChartData }) {
         </svg>
         {hover != null ? (
           <div
-            className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-md border border-ink-700 bg-ink-950/95 px-2.5 py-1.5 shadow-glow"
-            style={{ left: `clamp(5.5rem, ${(hx / W) * 100}%, calc(100% - 5.5rem))` }}
+            className="pointer-events-none absolute top-1 z-10 max-w-[calc(100%-8px)] rounded-md border border-ink-700 bg-ink-950/95 px-2.5 py-1.5 shadow-glow"
+            // Beside the crosshair, on the side with room, so it never covers
+            // the point being read or hangs off the chart; centred and clamped
+            // when neither side fits (a narrow phone).
+            style={tipStyle(hx, measured ?? W)}
             role="status"
           >
             <p className="whitespace-nowrap text-[11px] font-semibold text-slate-400">{longDay(view.xs[hover])}</p>

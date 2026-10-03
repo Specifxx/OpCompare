@@ -188,18 +188,19 @@ export function editDistance(a: string, b: string, cap = 3): number {
 /**
  * "Did you mean …?" for a query that matched nothing: up to `limit` distinct
  * card names whose name (or one of its words) is within a small edit distance
- * of the query (or of each query word). Real names only — never invented.
+ * of the query (or of each query word), closest first and, among equals, the
+ * name with the most printings. Real names only — never invented.
  */
 export function suggestNames(names: Iterable<string>, q: string, limit = 3): string[] {
   const qn = norm(q);
   if (qn.length < 3) return [];
   const qWords = qn.split(" ").filter((w) => w.length >= 3);
   const allowed = (len: number) => (len <= 4 ? 1 : len <= 8 ? 2 : 3);
-  const hits: { name: string; d: number }[] = [];
-  const seen = new Set<string>();
-  for (const name of names) {
-    if (seen.has(name)) continue;
-    seen.add(name);
+  const hits: { name: string; d: number; n: number }[] = [];
+  // How many printings carry each name: the better-known card wins a tie.
+  const counts = new Map<string, number>();
+  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1);
+  for (const [name, n] of counts) {
     const nn = norm(name);
     if (!nn) continue;
     let best = editDistance(qn, nn, allowed(qn.length));
@@ -221,10 +222,10 @@ export function suggestNames(names: Iterable<string>, q: string, limit = 3): str
       best = total;
     }
     if (best === 0) continue;
-    hits.push({ name, d: best });
+    hits.push({ name, d: best, n });
   }
   return hits
-    .sort((a, b) => a.d - b.d || a.name.length - b.name.length || a.name.localeCompare(b.name))
+    .sort((a, b) => a.d - b.d || b.n - a.n || a.name.length - b.name.length || a.name.localeCompare(b.name))
     .slice(0, limit)
     .map((h) => h.name);
 }

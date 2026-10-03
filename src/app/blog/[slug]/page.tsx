@@ -148,7 +148,7 @@ export default async function PostPage({ params }: Props) {
                 {c.hasImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={cardImage.large(c.id)}
+                    src={cardImage.tile(c.id)}
                     alt={`${c.name}${c.variant ? ` (${c.variant})` : ""} ${c.number ?? ""}`}
                     className="w-full rounded-md"
                   />

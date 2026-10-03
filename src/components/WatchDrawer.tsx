@@ -110,7 +110,7 @@ export function WatchDrawerButton({ className = "" }: { className?: string }) {
                 <div className="flex items-center justify-between gap-3 border-b border-ink-800 px-4 py-3 sm:px-5">
                   <h2 id="watch-drawer-title" className="flex items-center gap-2 font-display text-lg font-extrabold text-white">
                     <Icon name="heart" className="h-5 w-5 shrink-0 text-brand-400" />
-                    My watchlist
+                    <span>My watchlist</span>
                     {count ? <span className="num text-sm font-semibold text-slate-500">({count})</span> : null}
                   </h2>
                   <button ref={closeBtn} type="button" onClick={close} aria-label="Close watchlist" className="tap-icon rounded-md text-slate-400 hover:bg-ink-800 hover:text-white">

@@ -32,7 +32,7 @@ export function BlogShopStrip({
   const source = placement === "inline" ? "blog-inline" : "blog-strip";
   const price = (p: Parameters<typeof headline>[0]) => {
     const h = headline(p, country);
-    if (h.kind === "listing") return { text: money(h.cents, country), note: `${h.stores} ${c.adjective} store${h.stores === 1 ? "" : "s"}` };
+    if (h.kind === "listing") return { text: money(h.cents, country), note: h.stores > 0 ? `${h.stores} ${c.adjective} store${h.stores === 1 ? "" : "s"}` : "Cheapest listing" };
     if (h.kind === "reference") return { text: `≈ ${money(h.cents, country)}`, note: "TCGplayer market" };
     return { text: "—", note: "No price yet" };
   };
