@@ -134,7 +134,9 @@ const read = (p: string) => fs.readFileSync(path.resolve(__dirname, "..", p), "u
 test("the session is never read by the layout, and gated rows are cut in the query", () => {
   assert.doesNotMatch(read("src/app/layout.tsx"), /getCurrentUser|@\/lib\/auth/);
   const deal = read("src/app/tools/deal-finder/page.tsx");
-  assert.match(deal, /access === "none" \? null : await getCatalog\(\)/);
-  assert.match(deal, /access === "full" \? FULL_ROWS : FREE_DEAL_ROWS/);
+  // Signed out runs no query on the gated views; a free account's rows are cut
+  // by pageSize in the ranking call itself (tests/deals.test.ts pins the rest).
+  assert.match(deal, /access === "none" \? null/);
+  assert.match(deal, /pageSize: FREE_DEAL_ROWS/);
   assert.match(read("src/app/api/buy-list/route.ts"), /isPremium\(user, "premium"\)/);
 });

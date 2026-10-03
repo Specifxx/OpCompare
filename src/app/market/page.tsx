@@ -67,7 +67,11 @@ export default async function MarketPage() {
           <Link href="/movers" className="link">
             this week&apos;s movers
           </Link>
-          ; the index tells you whether the market moved with it.
+          ; the index tells you whether the market moved with it.{" "}
+          <Link href="/market/records" className="link">
+            Price records and cross-market gaps
+          </Link>{" "}
+          show where the same card costs less in another market.
         </p>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">

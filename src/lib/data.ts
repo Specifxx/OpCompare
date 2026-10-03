@@ -433,3 +433,120 @@ export async function getProductHistory(id: number): Promise<HistoryPoint[]> {
   const f = await historyFile<BucketFile>(`products/${bucketOf(id)}.json`);
   return chartSeries(f?.p[String(id)], dayNum(new Date().toISOString()), 365);
 }
+
+// ---- deals track loaders ----
+import { ebaySourceFor, encodeDealInput, type DealInputTuple, type EbayListingRow, type StoreListing } from "./deals";
+// Deal Finder, the homepage's Today's Top Deals, /market/records and the
+// Premium proof line all rank from these (pure rules in lib/deals.ts). Same
+// freshness rule as aggregate() in lib/import.ts: in stock and refreshed in the
+// last 72 hours. Cards only.
+const DEAL_FRESH_HOURS = STALE_MS / 3_600_000;
+
+/**
+ * One compact tuple per card with any fresh listing in `country`:
+ * [id, cheapest store price, TCGplayer's own lowest listing (US), cheapest eBay
+ * listing (item + stated postage, or the item price alone), postage known].
+ * One query per market, reduced in Postgres; ~7k rows ≈ 200 KB.
+ */
+export const getDealInputs = unstable_cache(
+  async (country: Country): Promise<DealInputTuple[]> => {
+    const ebaySource = ebaySourceFor(country) ?? "";
+    const rows = await prisma.$queryRaw<{ id: number; storeMin: number | null; tcgLow: number | null; ebayCents: number | null; ebayKnown: boolean | null }[]>`
+      WITH fresh AS (
+        SELECT o."productId" AS id, o.source, o."priceCents" AS p, o."shippingCents" AS s
+        FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+        WHERE o.market = ${country} AND o."inStock" AND o."updatedAt" > now() - make_interval(hours => ${DEAL_FRESH_HOURS}::int)
+      ), st AS (
+        SELECT id, MIN(p) AS m FROM fresh WHERE source LIKE 'store:%' GROUP BY id
+      ), tc AS (
+        SELECT id, MIN(p) AS m FROM fresh WHERE source = 'tcgplayer' GROUP BY id
+      ), eb AS (
+        SELECT DISTINCT ON (id) id, p + COALESCE(s, 0) AS m, (s IS NOT NULL) AS k
+        FROM fresh WHERE source = ${ebaySource}
+        ORDER BY id, p + COALESCE(s, 0) ASC, (s IS NULL) ASC
+      ), ids AS (
+        SELECT id FROM st UNION SELECT id FROM tc UNION SELECT id FROM eb
+      )
+      SELECT ids.id, st.m AS "storeMin", tc.m AS "tcgLow", eb.m AS "ebayCents", eb.k AS "ebayKnown"
+      FROM ids LEFT JOIN st ON st.id = ids.id LEFT JOIN tc ON tc.id = ids.id LEFT JOIN eb ON eb.id = ids.id
+      ORDER BY ids.id
+    `;
+    return rows.map((r) => encodeDealInput({ id: Number(r.id), storeMin: num(r.storeMin), tcgLow: num(r.tcgLow), ebayCents: num(r.ebayCents), ebayKnown: r.ebayKnown }, country));
+  },
+  ["deal-inputs-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+function num(v: unknown): number | null {
+  return v == null ? null : Number(v);
+}
+
+/**
+ * The cheapest fresh in-stock price per card across SOME stores (the Deal
+ * Finder's store picker, Plus only): [id, min][]. Keyed by the sorted store
+ * list, like RiftCompare's minByCard. ~7k pairs ≈ 100 KB.
+ */
+export const getStoreMins = unstable_cache(
+  async (country: Country, storeKeys: string[]): Promise<[number, number][]> => {
+    const sources = [...new Set(storeKeys)].sort().map((k) => `store:${k}`);
+    if (!sources.length) return [];
+    const rows = await prisma.$queryRaw<{ id: number; m: number }[]>`
+      SELECT o."productId" AS id, MIN(o."priceCents") AS m
+      FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+      WHERE o.market = ${country} AND o."inStock" AND o."updatedAt" > now() - make_interval(hours => ${DEAL_FRESH_HOURS}::int)
+        AND o.source = ANY(${sources})
+      GROUP BY o."productId"
+    `;
+    return rows.map((r) => [Number(r.id), Number(r.m)]);
+  },
+  ["deal-store-mins-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+export interface DealOfferDetail {
+  id: number;
+  stores: StoreListing[]; // every fresh in-stock store listing in the market
+  ebay: EbayListingRow[]; // the market's eBay singles row(s)
+  tcgplayerUrl: string;
+}
+
+/**
+ * The live listings behind one page of deals (≤ 25 cards): every fresh store
+ * listing (source, price, url, condition), the eBay row and the card's TCGplayer
+ * URL. Bounded both ways; the page re-scores each row with these prices.
+ */
+export const getDealOffers = unstable_cache(
+  async (country: Country, ids: number[]): Promise<DealOfferDetail[]> => {
+    const want = [...new Set(ids.filter((n) => Number.isInteger(n)))].slice(0, 25);
+    if (!want.length) return [];
+    const ebaySource = ebaySourceFor(country);
+    const [offers, cards] = await Promise.all([
+      prisma.offer.findMany({
+        where: {
+          market: country,
+          productId: { in: want },
+          inStock: true,
+          updatedAt: { gt: new Date(Date.now() - STALE_MS) },
+          OR: [{ source: { startsWith: "store:" } }, ...(ebaySource ? [{ source: ebaySource }] : [])],
+        },
+        select: { productId: true, source: true, priceCents: true, shippingCents: true, url: true, condition: true },
+        // Cheapest first, so if the cap ever bites it drops the dearest listings, never a row's own.
+        orderBy: { priceCents: "asc" },
+        take: want.length * 80,
+      }),
+      prisma.card.findMany({ where: { id: { in: want } }, select: { id: true, tcgplayerUrl: true }, take: want.length }),
+    ]);
+    return cards.map((c) => ({
+      id: c.id,
+      tcgplayerUrl: c.tcgplayerUrl,
+      stores: offers
+        .filter((o) => o.productId === c.id && o.source.startsWith("store:"))
+        .map((o) => ({ source: o.source, priceCents: o.priceCents, url: o.url, condition: o.condition })),
+      ebay: offers
+        .filter((o) => o.productId === c.id && o.source === ebaySource)
+        .map((o) => ({ id: o.productId, priceCents: o.priceCents, shippingCents: o.shippingCents, url: o.url })),
+    }));
+  },
+  ["deal-offers-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);

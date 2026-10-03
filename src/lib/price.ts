@@ -30,10 +30,3 @@ export function sortPrice(p: Priced, country: Country): number | null {
   return p.low[country] ?? (p.marketUsd != null ? usdCentsToCountry(p.marketUsd, country) : null);
 }
 
-/** In-market listing against TCGplayer's market price, as a % saving (positive = cheaper). */
-export function savingVsMarket(p: Priced, country: Country): number | null {
-  const low = p.low[country];
-  if (low == null || p.marketUsd == null || p.marketUsd < 100) return null;
-  const ref = usdCentsToCountry(p.marketUsd, country);
-  return ((ref - low) / ref) * 100;
-}
