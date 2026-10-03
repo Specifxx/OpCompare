@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Breadcrumbs, Faq, InShort, JsonLd } from "@/components/ui";
 import { COUNTRIES } from "@/lib/country";
@@ -7,6 +8,7 @@ import { money } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { breadcrumbLd, faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
+import { ipKey, rateLimit } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
 import { DeckPricer } from "./DeckPricer";
 
@@ -23,12 +25,15 @@ function readList(sp: { list?: string | string[] }): string {
 
 // A shared list unfurls with its own total ("This One Piece deck costs $X"),
 // priced exactly as the page prices it (each card's cached offers, stores and
-// TCGplayer only), so the unfurl and the page quote the same total.
+// TCGplayer only), so the unfurl and the page quote the same total. That is up
+// to DECK_DETAIL_CAP card loads per request, so it shares /api/deck/price's
+// per-IP budget; past it the page unfurls with the generic title.
 export async function generateMetadata({ searchParams }: { searchParams: { list?: string | string[] } }): Promise<Metadata> {
   const base: Metadata = { title: TITLE, description: DESC, alternates: { canonical: "/deck" }, openGraph: pageOg("/deck") };
   const list = readList(searchParams);
   if (!list.trim()) return base;
   try {
+    if (!rateLimit(`deck-price:${ipKey(new Request("http://deck.local/", { headers: headers() }))}`, 40, 60_000).ok) return base;
     const country = getCountry();
     const r = await priceDeck(list, country);
     const t = r.totals[country];

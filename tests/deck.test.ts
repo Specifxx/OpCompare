@@ -189,3 +189,13 @@ test("checkDeck: one Leader, 50 main-deck cards, four copies a number", () => {
   assert.equal(c.mainCards, 50);
   assert.deepEqual(c.overLimit, ["OP01-016", "OP01-024"]);
 });
+
+test("the /deck share metadata prices under the deck API's per-IP budget", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const page = fs.readFileSync(path.resolve(__dirname, "../src/app/deck/page.tsx"), "utf8");
+  const meta = page.slice(page.indexOf("export async function generateMetadata"), page.indexOf("const FAQS"));
+  const limit = meta.indexOf("rateLimit(`deck-price:");
+  assert.ok(limit > 0, "metadata checks the limit");
+  assert.ok(limit < meta.indexOf("await priceDeck("), "before any card is loaded");
+});
