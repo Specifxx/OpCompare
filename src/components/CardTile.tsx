@@ -1,10 +1,10 @@
-import Link from "next/link";
 import type { Country } from "@/lib/country";
 import type { CardLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
 import { PRINTINGS } from "@/lib/constants";
+import CardQuickLink from "./CardQuickLink";
 import { WatchButton } from "./WatchButton";
 
 export function CardArt({ id, hasImage, alt, size = "tile", className = "" }: { id: number; hasImage: boolean; alt: string; size?: "thumb" | "tile" | "large"; className?: string }) {
@@ -62,7 +62,8 @@ export function CardTile({ card, setCode, country, priority = false }: { card: C
   const p = PRINTINGS[card.printing];
   const ribbon = card.printing !== "standard" && card.printing !== "don" ? (card.variant?.split(" · ")[0] ?? p?.label) : null;
   return (
-    <Link href={`/card/${card.slug}`} className="group card-surface flex flex-col overflow-hidden hover:border-ink-600">
+    // A plain click opens the card's QuickView; the href stays the card page.
+    <CardQuickLink slug={card.slug} className="group card-surface flex flex-col overflow-hidden hover:border-ink-600">
       <div className="relative bg-ink-850 p-3">
         {ribbon ? (
           <span className="absolute left-2 top-2 z-[1] max-w-[75%] truncate rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#1a1203]" style={{ background: p?.dot ?? "#e9c22a" }}>
@@ -87,6 +88,6 @@ export function CardTile({ card, setCode, country, priority = false }: { card: C
           <PriceLine card={card} country={country} />
         </div>
       </div>
-    </Link>
+    </CardQuickLink>
   );
 }

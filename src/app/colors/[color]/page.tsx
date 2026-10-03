@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { notFound } from "next/navigation";
 import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
@@ -71,9 +72,9 @@ export default async function ColorPage({ params, searchParams }: Props) {
           {leaders.slice(0, 12).map((l, i) => (
             <span key={l.id}>
               {i ? ", " : ""}
-              <Link href={`/card/${l.slug}`} className="link">
+              <CardQuickLink slug={l.slug} className="link">
                 {l.name}
-              </Link>
+              </CardQuickLink>
             </span>
           ))}
           {leaders.length > 12 ? ` and ${leaders.length - 12} more` : ""}.

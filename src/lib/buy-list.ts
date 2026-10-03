@@ -4,6 +4,8 @@
 // to split the order across stores. Pure — tests/buy-list.test.ts pins it.
 // Shipping is not modelled: stores' postage differs too much to guess, so the
 // page says so instead of pretending.
+import { affiliateUrl } from "./affiliate";
+import { retailerSubId } from "./board";
 export interface PlanOffer {
   source: string;
   priceCents: number;
@@ -80,4 +82,15 @@ export function planBuyList(items: PlanItem[], topStores = 5): BuyPlan {
     .slice(0, topStores);
   const splitList = [...split.values()].sort((a, b) => b.picks.length - a.picks.length || b.totalCents - a.totalCents);
   return { split: splitList, splitTotalCents: splitList.reduce((s, b) => s + b.totalCents, 0), single, unavailable };
+}
+
+/**
+ * The plan with every pick's link affiliate-tagged, the way the price board tags
+ * its rows: TCGplayer through the Impact link (sharedid oc-tcgplayer-tools),
+ * any eBay URL through EPN; a store's own URL is returned unchanged. The planner
+ * computes on raw URLs (above); the route tags them on the way out.
+ */
+export function tagPlanLinks<P extends Pick<BuyPlan, "split" | "single">>(plan: P, loc = "/tools/buy-list"): P {
+  const tag = <B extends StoreBasket>(b: B): B => ({ ...b, picks: b.picks.map((p) => ({ ...p, url: affiliateUrl(p.url, retailerSubId(b.source), loc) })) });
+  return { ...plan, split: plan.split.map(tag), single: plan.single.map(tag) };
 }

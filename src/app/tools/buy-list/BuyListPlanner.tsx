@@ -60,10 +60,11 @@ export function BuyListPlanner({ place }: { place: string }) {
       </div>
     );
   }
-  const Row = ({ p }: { p: Pick }) => (
+  // data-retailer: the basket's store key, as on the price board (lib/board.ts retailerSubId).
+  const Row = ({ p, source }: { p: Pick; source: string }) => (
     <li className="flex items-center justify-between gap-3 py-1.5 text-sm">
       <span className="min-w-0 truncate text-slate-200">{p.name}</span>
-      <a href={p.url} target="_blank" rel={outboundRel()} data-retailer="buy_list" className="num shrink-0 font-semibold text-white hover:text-brand-400">
+      <a href={p.url} target="_blank" rel={outboundRel()} data-retailer={source === "tcgplayer" ? "tcgplayer" : source.replace("store:", "")} data-page="buy-list" data-card={p.slug} data-surface="buy_list" className="num shrink-0 font-semibold text-white hover:text-brand-400">
         {money(p.priceCents, country)} →
       </a>
     </li>
@@ -93,7 +94,7 @@ export function BuyListPlanner({ place }: { place: string }) {
                   <span>{b.store}</span>
                   <span className="num">{money(b.totalCents, country)}</span>
                 </p>
-                <ul className="divide-y divide-ink-800">{b.picks.map((p) => <Row key={p.slug} p={p} />)}</ul>
+                <ul className="divide-y divide-ink-800">{b.picks.map((p) => <Row key={p.slug} p={p} source={b.source} />)}</ul>
               </div>
             ))}
           </section>
@@ -108,7 +109,7 @@ export function BuyListPlanner({ place }: { place: string }) {
                     {b.picks.length} of {plan.count - plan.unavailable.length} · <span className="num font-semibold text-white">{money(b.totalCents, country)}</span>
                   </span>
                 </summary>
-                <ul className="mt-2 divide-y divide-ink-800">{b.picks.map((p) => <Row key={p.slug} p={p} />)}</ul>
+                <ul className="mt-2 divide-y divide-ink-800">{b.picks.map((p) => <Row key={p.slug} p={p} source={b.source} />)}</ul>
                 {b.missing?.length ? <p className="mt-2 text-xs text-slate-500">Not stocked: {b.missing.join(", ")}</p> : null}
               </details>
             ))}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { Breadcrumbs, InShort, StatTile } from "@/components/ui";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog } from "@/lib/data";
@@ -137,12 +138,12 @@ export default async function BoxValue({
                 {sorted.slice(0, 20).map((x) => (
                   <tr key={x.id}>
                     <td>
-                      <Link
-                        href={`/card/${x.slug}`}
+                      <CardQuickLink
+                        slug={x.slug}
                         className="font-semibold text-slate-100 hover:text-brand-400"
                       >
                         {x.name}
-                      </Link>
+                      </CardQuickLink>
                       {x.variant ? (
                         <span className="text-xs text-slate-500">
                           {" "}

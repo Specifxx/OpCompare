@@ -4,6 +4,7 @@ import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
 import { CardTile } from "@/components/CardTile";
 import { FormCleaner } from "@/components/FormCleaner";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { cardEbayQuery } from "@/lib/affiliate";
 import { mostValuable, newestBoosterSet } from "@/lib/selectors";
@@ -144,6 +145,20 @@ export default async function BrowsePage({
             </div>
           </div>
 
+          {/* A visitor who typed a search has said what they want: eBay's
+              search for those words sits by the count (RiftCompare). Their
+              words, so "Search eBay for “q”", never "Buy q". */}
+          {q.q && total > 0 ? (
+            <EbayBuyCta
+              query={q.q}
+              freeText
+              compact
+              source="browse-search"
+              page="browse"
+              className="mt-4"
+            />
+          ) : null}
+
           {!filtered && newest ? (
             <div className="mt-4">
               <EbaySearchPanel
@@ -180,6 +195,14 @@ export default async function BrowsePage({
                 </Link>
                 .
               </EmptyState>
+              {/* A search we have no card for (a typo, a set not loaded yet, a
+                  product that is not a single) can still be on eBay. */}
+              <EbayBuyCta
+                className="mt-4"
+                {...(q.q ? { query: q.q, freeText: true } : {})}
+                source="browse-no-results"
+                page="browse"
+              />
             </div>
           )}
           <Pagination

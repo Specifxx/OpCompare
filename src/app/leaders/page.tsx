@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { Breadcrumbs, ColorDots, InShort } from "@/components/ui";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -88,9 +88,9 @@ export default async function LeadersPage() {
                 .map(({ base, prints }) => {
                   const h = headline(base, country);
                   return (
-                    <Link
+                    <CardQuickLink
                       key={base.id}
-                      href={`/card/${base.slug}`}
+                      slug={base.slug}
                       className="card-surface flex items-center gap-3 p-3 hover:border-ink-600"
                     >
                       {base.hasImage ? (
@@ -123,7 +123,7 @@ export default async function LeadersPage() {
                           ? "—"
                           : `${h.kind === "reference" ? "≈" : ""}${money(h.cents, country)}`}
                       </span>
-                    </Link>
+                    </CardQuickLink>
                   );
                 })}
             </div>

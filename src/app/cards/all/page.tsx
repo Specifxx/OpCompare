@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { Breadcrumbs } from "@/components/ui";
 import { getCatalog } from "@/lib/data";
 import { int } from "@/lib/format";
@@ -62,12 +62,12 @@ export default async function AllCardsPage() {
               const base = ps.find((p) => p.printing === "standard") ?? ps[0];
               return (
                 <li key={name} className="break-inside-avoid py-0.5">
-                  <Link
-                    href={`/card/${base.slug}`}
+                  <CardQuickLink
+                    slug={base.slug}
                     className="text-slate-200 hover:text-brand-400 hover:underline"
                   >
                     {name}
-                  </Link>{" "}
+                  </CardQuickLink>{" "}
                   <span className="text-xs text-slate-500">({ps.length})</span>
                 </li>
               );
