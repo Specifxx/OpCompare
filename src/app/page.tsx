@@ -2,30 +2,27 @@ import Link from "next/link";
 import { CardSearch } from "@/components/CardSearch";
 import { CardTile } from "@/components/CardTile";
 import { MarketPills } from "@/components/CountrySelect";
-import { DealList } from "@/components/DealList";
 import { Icon } from "@/components/Icon";
 import { HatMark, Wordmark } from "@/components/Logo";
 import { SealedTile } from "@/components/SealedTile";
-import { Delta, Faq, JsonLd, SectionHeader } from "@/components/ui";
+import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog, getSiteStats } from "@/lib/data";
 import { ago, int, longDate } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { biggestSavings, boosterBoxes, mostValuable, movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
+import { boosterBoxes, mostValuable, movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { storesIn } from "@/lib/stores";
+import { getTopDeals } from "@/lib/top-deals";
 
 export default async function HomePage() {
   const country = getCountry();
   const c = COUNTRIES[country];
-  const [cat, sealed, stats] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats()]);
+  const [cat, sealed, stats, deals] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats(), getTopDeals(country)]);
   const newest = newestBoosterSet(cat.sets);
   const chase = newest ? mostValuable(cat.cards, 6, (x) => x.setId === newest.id) : [];
-  // The single best deal is the homepage teaser; Deal Finder holds the rest
-  // (top 3 with a free account, every one with Plus).
-  const savings = biggestSavings(cat.cards, country, 1);
-  const drops = movers(cat.cards, "down", 5);
   const rising = movers(cat.cards, "up", 5);
   // Trending: this week's biggest risers once there is a week of history; until
   // then the most valuable standard prints of the newest set (not the chase row).
@@ -95,47 +92,8 @@ export default async function HomePage() {
       </section>
 
       <div className="container-app space-y-14 py-10">
-        {/* ── Deals ── */}
-        <section>
-          <SectionHeader
-            title="Today's Top Deals"
-            sub={`The best live opportunities in ${c.place} right now — refreshed twice a day.`}
-            action={
-              <Link href="/tools/deal-finder" className="btn-ghost">
-                Browse all deals →
-              </Link>
-            }
-          />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <DealList
-              title="Biggest saving"
-              sub="Today's top deal. A free account shows the top 3; Plus shows every one."
-              rows={savings.map(({ card, saving }) => ({
-                card,
-                badge: <span className="num rounded bg-emerald-400/10 px-1.5 py-0.5 text-[11px] font-bold text-emerald-400">Save {saving.toFixed(0)}%</span>,
-              }))}
-              country={country}
-              setById={cat.setById}
-              empty={`No ${c.adjective} listing is far enough under TCGplayer's market price today.`}
-            />
-            <DealList
-              title="Price drops"
-              sub="Biggest 7-day falls in market price"
-              rows={drops.map((card) => ({ card, badge: <Delta v={card.change7d} className="text-[11px]" />, note: "7-day drop" }))}
-              country={country}
-              setById={cat.setById}
-              empty="Weekly moves appear once we have seven days of price history."
-            />
-            <DealList
-              title="Rising cards"
-              sub="Biggest 7-day climbs in market price"
-              rows={rising.map((card) => ({ card, badge: <Delta v={card.change7d} className="text-[11px]" />, note: "7-day rise" }))}
-              country={country}
-              setById={cat.setById}
-              empty="Weekly moves appear once we have seven days of price history."
-            />
-          </div>
-        </section>
+        {/* ── Deals: Today's Top Deals (lib/top-deals.ts; Plus gate decided in the browser) ── */}
+        <TodaysTopDeals deals={deals} />
 
         {/* ── Newest set ── */}
         {newest ? (
