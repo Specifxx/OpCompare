@@ -433,3 +433,132 @@ export async function getProductHistory(id: number): Promise<HistoryPoint[]> {
   const f = await historyFile<BucketFile>(`products/${bucketOf(id)}.json`);
   return chartSeries(f?.p[String(id)], dayNum(new Date().toISOString()), 365);
 }
+
+// ---- tools track loaders ----
+// The deck pricer, keyword and Leader pages, and per-store pages. Each is one
+// self-cached read like every loader above; pages combine them with
+// getCatalog() OUTSIDE any cache callback.
+
+/**
+ * Card types (subtypes: "Straw Hat Crew") and printed keywords, per card
+ * NUMBER — every printing of a number carries the same text, so one row per
+ * number is read (DISTINCT ON), and the effect text itself never leaves this
+ * function: only lib/keywords.ts's slugs are cached. Dictionary-encoded, a few
+ * tens of KB.
+ */
+export interface CardTextIndex {
+  types: string[];
+  kws: string[];
+  rows: [number: string, typeIdx: number[], kwIdx: number[]][];
+}
+
+export const getCardText = unstable_cache(
+  async (): Promise<CardTextIndex> => {
+    const { cardKeywords } = await import("./keywords");
+    const rows = await prisma.$queryRaw<{ number: string; subtypes: string[]; effect: string | null }[]>`
+      SELECT DISTINCT ON (number) number, subtypes, effect FROM "Card"
+      WHERE number IS NOT NULL AND printing <> 'don'
+      ORDER BY number, (printing = 'standard') DESC, id`;
+    const types: string[] = [];
+    const kws: string[] = [];
+    const ti = new Map<string, number>();
+    const ki = new Map<string, number>();
+    const at = (m: Map<string, number>, list: string[], v: string) => m.get(v) ?? (list.push(v), m.set(v, list.length - 1).get(v)!);
+    return {
+      types,
+      kws,
+      rows: rows
+        .map((r): CardTextIndex["rows"][number] => [r.number, r.subtypes.map((t) => at(ti, types, t)), cardKeywords(r.effect).map((k) => at(ki, kws, k))])
+        .filter((r) => r[1].length || r[2].length),
+    };
+  },
+  ["card-text-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/** Decoded getCardText(): number → { types, keywords }. */
+export async function getCardTextByNumber(): Promise<Map<string, { types: string[]; keywords: string[] }>> {
+  const t = await getCardText();
+  return new Map(t.rows.map(([n, ts, ks]) => [n, { types: ts.map((i) => t.types[i]), keywords: ks.map((i) => t.kws[i]) }]));
+}
+
+/** One store's footprint in one market, for /stores/[slug]. Stale rows (72 h) are not in stock. */
+export interface StoreStat {
+  source: string;
+  market: string;
+  offers: number;
+  inStock: number;
+  singlesInStock: number;
+  sealedInStock: number;
+  /** In-stock products where this store's price IS the market's cheapest listing. */
+  cheapest: number;
+}
+
+export const getStoreStats = unstable_cache(
+  async (): Promise<StoreStat[]> => {
+    const rows = await prisma.$queryRaw<StoreStat[]>`
+      WITH o AS (
+        SELECT o.source, o.market, o."priceCents", c.id AS card_id, s.id AS sealed_id,
+          (o."inStock" AND o."updatedAt" > now() - interval '72 hours') AS live,
+          CASE o.market
+            WHEN 'US' THEN COALESCE(c."lowUS", s."lowUS") WHEN 'AU' THEN COALESCE(c."lowAU", s."lowAU")
+            WHEN 'UK' THEN COALESCE(c."lowUK", s."lowUK") WHEN 'SG' THEN COALESCE(c."lowSG", s."lowSG")
+            WHEN 'CA' THEN COALESCE(c."lowCA", s."lowCA") WHEN 'EU' THEN COALESCE(c."lowEU", s."lowEU") END AS low
+        FROM "Offer" o
+        LEFT JOIN "Card" c ON c.id = o."productId"
+        LEFT JOIN "Sealed" s ON s.id = o."productId"
+        WHERE o.source LIKE 'store:%'
+      )
+      SELECT source, market,
+        count(*)::int AS offers,
+        count(*) FILTER (WHERE live)::int AS "inStock",
+        count(*) FILTER (WHERE live AND card_id IS NOT NULL)::int AS "singlesInStock",
+        count(*) FILTER (WHERE live AND sealed_id IS NOT NULL)::int AS "sealedInStock",
+        count(*) FILTER (WHERE live AND "priceCents" = low)::int AS cheapest
+      FROM o GROUP BY source, market`;
+    return rows;
+  },
+  ["store-stats-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/**
+ * One store's showcase: its most expensive in-stock singles, and the most
+ * valuable products (by TCGplayer market) where it is the cheapest listing in
+ * its market. Tuples, 24 of each; the page names them from getCatalog().
+ */
+export type StoreListing = [productId: number, priceCents: number, condition: string | null, url: string];
+export interface StoreListings {
+  top: StoreListing[];
+  cheapestHere: StoreListing[];
+}
+
+export const getStoreListings = unstable_cache(
+  async (source: string, market: string): Promise<StoreListings> => {
+    // `market` is spliced into a column name below: only the six markets pass.
+    if (!(MARKETS as string[]).includes(market) || !source.startsWith("store:")) return { top: [], cheapestHere: [] };
+    const live = (q: { "inStock": boolean; updatedAt: Date }) => q.inStock && Date.now() - q.updatedAt.getTime() < STALE_MS;
+    const [top, cheap] = await Promise.all([
+      prisma.offer.findMany({
+        where: { source, market, inStock: true, updatedAt: { gte: new Date(Date.now() - STALE_MS) } },
+        orderBy: { priceCents: "desc" },
+        take: 24,
+        select: { productId: true, priceCents: true, condition: true, url: true, inStock: true, updatedAt: true },
+      }),
+      prisma.$queryRawUnsafe<{ productId: number; priceCents: number; condition: string | null; url: string }[]>(
+        `SELECT o."productId", o."priceCents", o.condition, o.url FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+         WHERE o.source = $1 AND o.market = $2 AND o."inStock" AND o."updatedAt" > now() - interval '72 hours'
+           AND o."priceCents" = c."low${market}" AND c."marketUsd" IS NOT NULL
+         ORDER BY c."marketUsd" DESC LIMIT 24`,
+        source,
+        market,
+      ),
+    ]);
+    return {
+      top: top.filter(live).map((r): StoreListing => [r.productId, r.priceCents, r.condition, r.url]),
+      cheapestHere: cheap.map((r): StoreListing => [r.productId, r.priceCents, r.condition, r.url]),
+    };
+  },
+  ["store-listings-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
