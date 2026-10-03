@@ -9,6 +9,7 @@ import {
   RARITY_KEYS,
 } from "@/lib/constants";
 import { getCatalog } from "@/lib/data";
+import { printingFacetHref, rarityFacetHref, typeFacetHref } from "@/lib/facets";
 import { int, money } from "@/lib/format";
 import { median } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
@@ -73,7 +74,7 @@ export default async function CardsHub() {
             return (
               <Link
                 key={k}
-                href={`/browse?printing=${k}`}
+                href={printingFacetHref(k)}
                 className="card-surface p-4 hover:border-ink-600"
               >
                 <p className="flex items-center gap-2 text-lg font-bold text-white">
@@ -102,7 +103,7 @@ export default async function CardsHub() {
             return (
               <Link
                 key={k}
-                href={`/browse?rarity=${encodeURIComponent(k)}`}
+                href={rarityFacetHref(k)}
                 className="card-surface p-4 hover:border-ink-600"
               >
                 <p className={`text-lg font-bold ${RARITIES[k].tone}`}>
@@ -125,11 +126,7 @@ export default async function CardsHub() {
             return (
               <Link
                 key={t}
-                href={
-                  t === "Leader"
-                    ? "/leaders"
-                    : `/browse?type=${encodeURIComponent(t)}`
-                }
+                href={typeFacetHref(t)}
                 className="card-surface p-4 hover:border-ink-600"
               >
                 <p className="text-lg font-bold text-white">{t}</p>
