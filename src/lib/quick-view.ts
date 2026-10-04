@@ -75,6 +75,8 @@ export interface QuickViewMarket {
   rows: BuyRow[];
   /** Affiliate-tagged eBay search for the card on this market's eBay. */
   ebaySearch: string;
+  /** Up to 3 graded slabs captured on this market's eBay (best grade first); display only, never a price row. */
+  graded: { grader: string; grade: string; priceCents: number; currency: string; url: string }[];
 }
 
 export interface QuickViewPayload {
@@ -122,6 +124,7 @@ export function quickViewPayload(
   c: CardDetail,
   today: string = new Date().toISOString().slice(0, 10),
   history: HistoryPoint[] = [],
+  graded: { market: string; grader: string; grade: string; priceCents: number; currency: string; url: string }[] = [],
 ): QuickViewPayload {
   const loc = `/card/${c.slug}`;
   const query = cardEbayQuery(c);
@@ -133,6 +136,10 @@ export function quickViewPayload(
       ebayRow: open.some((o) => isEbaySource(o.source)),
       rows: open.slice(0, QUICKVIEW_ROWS).map((o) => buyRow(o, m, loc)),
       ebaySearch: ebaySearchUrl(m, query, "quickview"),
+      graded: graded
+        .filter((g) => g.market === m)
+        .slice(0, 3)
+        .map(({ grader, grade, priceCents, currency, url }) => ({ grader, grade, priceCents, currency, url })),
     };
   }
   return {

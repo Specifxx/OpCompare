@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { addDays, bucketOf, changeOver, chartSeries, dayIso, dayNum, highOver, nextIndex, withPoint, type Point } from "../src/lib/history";
+import { HISTORY_MARKETS, POINT_LEN, normPoint, addDays, bucketOf, changeOver, chartSeries, dayIso, dayNum, highOver, nextIndex, withPoint, type Point } from "../src/lib/history";
 
 test("buckets and day numbers", () => {
   assert.equal(bucketOf(0), "00");
@@ -47,7 +47,31 @@ test("the index is chained over cards priced on both days", () => {
 
 test("the chart shows the last year", () => {
   const s: Point[] = [[20250101, 1, 1], [20261001, 2, null]];
-  assert.deepEqual(chartSeries(s, 20261003, 365), [{ day: "2026-10-01", marketUsd: 2, lowUsd: null }]);
+  assert.deepEqual(chartSeries(s, 20261003, 365), [{ day: "2026-10-01", marketUsd: 2, lowUsd: null, lows: [null, null, null, null, null, null] }]);
+});
+
+test("v2 points carry every market's low; v1 points read as US only", () => {
+  const v1: Point[] = [[20261001, 100, 90]];
+  assert.deepEqual(chartSeries(v1, 20261003, 30)[0].lows, [90, null, null, null, null, null]);
+  const v2: Point[] = [[20261002, 100, 90, 140, 70, null, 120, 85]];
+  const c = chartSeries(v2, 20261003, 30)[0];
+  assert.deepEqual(c.lows, [90, 140, 70, null, 120, 85]);
+  assert.equal(c.lowUsd, 90);
+  assert.equal(normPoint([1, 2, 3]).length, POINT_LEN);
+  assert.deepEqual(HISTORY_MARKETS, ["US", "AU", "UK", "SG", "CA", "EU"]);
+});
+
+test("a day's v2 point replaces a v1 point of the same day and mixed series stay sorted", () => {
+  let s: Point[] = [[20261001, 100, 90]];
+  s = withPoint(s, [20261001, 110, 95, 150, null, null, null, null]);
+  s = withPoint(s, [20260930, 105, 92]);
+  assert.deepEqual(s.map((p) => p[0]), [20260930, 20261001]);
+  assert.equal(s[1].length, 8);
+});
+
+test("marketLows follows MARKETS order", async () => {
+  const { marketLows } = await import("../src/lib/import");
+  assert.deepEqual(marketLows({ lowUS: 1, lowAU: 2, lowUK: 3, lowSG: 4, lowCA: 5, lowEU: 6 }), [1, 2, 3, 4, 5, 6]);
 });
 
 test("no request path reads history from Postgres", () => {

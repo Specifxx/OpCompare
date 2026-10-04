@@ -15,16 +15,30 @@
 export const HISTORY_BUCKETS = 256;
 export const KEEP_DAYS = 730;
 
-/** [YYYYMMDD, market cents | null, low cents | null] */
-export type Point = [number, number | null, number | null];
+/**
+ * v2 (2026-10-04, "history files carry every market"):
+ * [YYYYMMDD, TCGplayer market USD cents, lowUS, lowAU, lowUK, lowSG, lowCA, lowEU]
+ * with each low in its market's own currency, in MARKETS order. v1 files held
+ * only [day, market, lowUS]; readers pad them (a v1 point has no other market).
+ */
+export type Point = (number | null)[];
+export const POINT_LEN = 8;
+export const HISTORY_MARKETS = ["US", "AU", "UK", "SG", "CA", "EU"] as const;
 export interface BucketFile {
-  v: 1;
+  v: 1 | 2;
   p: Record<string, Point[]>;
 }
 export interface DayFile {
-  v: 1;
+  v: 2;
   day: string;
-  p: Record<string, [number | null, number | null]>;
+  /** id → [market, lowUS, lowAU, lowUK, lowSG, lowCA, lowEU] */
+  p: Record<string, (number | null)[]>;
+}
+
+/** A point of either version as a full v2 point (v1's missing markets are null). */
+export function normPoint(p: Point): Point {
+  if (p.length >= POINT_LEN) return p;
+  return [...p, ...Array(POINT_LEN - p.length).fill(null)];
 }
 export interface IndexRow {
   day: string;
@@ -45,10 +59,10 @@ export const addDays = (n: number, d: number) => dayNum(new Date(dayMs(n) + d * 
 
 /** A series with today's point set (replacing a same-day point) and anything older than `keep` days dropped. */
 export function withPoint(series: Point[] | undefined, p: Point, keep = KEEP_DAYS): Point[] {
-  const cutoff = addDays(p[0], -keep);
-  const out = (series ?? []).filter((x) => x[0] !== p[0] && x[0] > cutoff);
+  const cutoff = addDays(p[0] as number, -keep);
+  const out = (series ?? []).filter((x) => x[0] !== p[0] && (x[0] as number) > cutoff);
   out.push(p);
-  return out.sort((a, b) => a[0] - b[0]);
+  return out.sort((a, b) => (a[0] as number) - (b[0] as number));
 }
 
 /**
@@ -61,7 +75,7 @@ export function changeOver(series: Point[], today: number, days: number): number
   if (now == null) return null;
   const hi = addDays(today, -days);
   const lo = addDays(today, -(days + 4));
-  const then = [...series].reverse().find((x) => x[0] <= hi && x[0] >= lo && (x[1] ?? 0) > 0)?.[1];
+  const then = [...series].reverse().find((x) => (x[0] as number) <= hi && (x[0] as number) >= lo && (x[1] ?? 0) > 0)?.[1];
   return then ? Math.round(((now - then) * 1000) / then) / 10 : null;
 }
 
@@ -69,7 +83,7 @@ export function changeOver(series: Point[], today: number, days: number): number
 export function highOver(series: Point[], today: number, days = 90): number | null {
   const from = addDays(today, -days);
   let hi: number | null = null;
-  for (const x of series) if (x[0] >= from && x[1] != null && (hi == null || x[1] > hi)) hi = x[1];
+  for (const x of series) if ((x[0] as number) >= from && x[1] != null && (hi == null || x[1] > hi)) hi = x[1];
   return hi;
 }
 
@@ -88,8 +102,15 @@ export function nextIndex(prev: IndexRow | null, pairs: [number, number][], tota
   return { day, value: Math.round(value * 100) / 100, totalUsd: Math.min(total, 2_000_000_000), cardCount };
 }
 
-/** The chart series a page draws: the last `days` days, as dated points. */
-export function chartSeries(series: Point[] | undefined, today: number, days = 365): { day: string; marketUsd: number | null; lowUsd: number | null }[] {
+/** The chart series a page draws: the last `days` days, as dated points. `lows` is every market's low in MARKETS order (v1 days: US only). */
+export function chartSeries(
+  series: Point[] | undefined,
+  today: number,
+  days = 365,
+): { day: string; marketUsd: number | null; lowUsd: number | null; lows: (number | null)[] }[] {
   const from = addDays(today, -days);
-  return (series ?? []).filter((x) => x[0] >= from).map((x) => ({ day: dayIso(x[0]), marketUsd: x[1], lowUsd: x[2] }));
+  return (series ?? [])
+    .filter((x) => (x[0] as number) >= from)
+    .map(normPoint)
+    .map((x) => ({ day: dayIso(x[0] as number), marketUsd: x[1], lowUsd: x[2], lows: x.slice(2, POINT_LEN) }));
 }

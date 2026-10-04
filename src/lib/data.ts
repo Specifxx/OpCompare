@@ -233,6 +233,8 @@ export interface HistoryPoint {
   day: string;
   marketUsd: number | null;
   lowUsd: number | null;
+  /** Every market's low in MARKETS order and its own currency (v1 history: US only). */
+  lows?: (number | null)[];
 }
 
 // An offer not refreshed for 72 hours (its store failed to read since) is shown

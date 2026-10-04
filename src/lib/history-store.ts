@@ -19,7 +19,7 @@ function writeJson(file: string, data: unknown) {
   fs.writeFileSync(file, JSON.stringify(data));
 }
 
-export const readBucket = (b: string) => readJson<BucketFile>(path.join(historyDir(), "products", `${b}.json`), { v: 1, p: {} });
+export const readBucket = (b: string) => readJson<BucketFile>(path.join(historyDir(), "products", `${b}.json`), { v: 2, p: {} });
 export const writeBucket = (b: string, f: BucketFile) => writeJson(path.join(historyDir(), "products", `${b}.json`), f);
 export const writeDay = (f: DayFile) => writeJson(path.join(historyDir(), "days", `${f.day}.json`), f);
 export const readIndex = () => readJson<IndexFile>(path.join(historyDir(), "index.json"), { v: 1, days: [] });

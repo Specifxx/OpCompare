@@ -43,6 +43,7 @@ import { pageOgOwnImage } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
+import { visitorHistory } from "@/lib/price-history-view";
 import { PRINTING_SHORT } from "@/lib/content/card-narrative";
 import { breadcrumbLd, faqLd } from "@/lib/jsonld";
 import { buildNarrative } from "@/lib/content/card-narrative";
@@ -123,6 +124,7 @@ export default async function CardPage({ params }: Props) {
     .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
     .slice(0, 6);
   const title = displayTitle(card);
+  const vh = visitorHistory(history, country);
   const leader = card.cardType === "Leader";
   const stats: { label: string; value: string | number }[] = [];
   if (leader && card.life != null)
@@ -444,27 +446,17 @@ export default async function CardPage({ params }: Props) {
 
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg text-white">Price history</h2>
+              <h2 className="text-lg text-white">{vh.title}</h2>
               <p className="text-xs text-slate-400">
-                US dollars · TCGplayer market and the cheapest US listing we
-                track
+                TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}
               </p>
             </div>
             <LineChart
               series={[
-                {
-                  label: "TCGplayer market",
-                  color: "#e9b73a",
-                  points: history.map((p) => ({ x: p.day, y: p.marketUsd })),
-                },
-                {
-                  label: "Cheapest US listing",
-                  color: "#ff6b6b",
-                  points: history.map((p) => ({ x: p.day, y: p.lowUsd })),
-                  dashed: true,
-                },
+                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
+                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
               ]}
-              format={(v) => usd(Math.round(v))}
+              format={(v) => money(Math.round(v), country)}
               empty={`Price history starts ${history[0] ? longDate(history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
             />
           </section>

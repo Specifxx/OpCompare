@@ -24,6 +24,7 @@ import { pageOgOwnImage } from "@/lib/og/meta";
 import { isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
+import { visitorHistory } from "@/lib/price-history-view";
 
 type Props = { params: { slug: string } };
 
@@ -52,6 +53,7 @@ export default async function SealedDetailPage({ params }: Props) {
   ]);
   if (!s) notFound();
   const history = await getProductHistory(s.id);
+  const vh = visitorHistory(history, country);
   const lite = all.find((x) => x.id === s.id);
   const h = lite
     ? headline(lite, country)
@@ -251,24 +253,15 @@ export default async function SealedDetailPage({ params }: Props) {
           />
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg text-white">Price history</h2>
-              <p className="text-xs text-slate-400">US dollars</p>
+              <h2 className="text-lg text-white">{vh.title}</h2>
+              <p className="text-xs text-slate-400">TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}</p>
             </div>
             <LineChart
               series={[
-                {
-                  label: "TCGplayer market",
-                  color: "#e9b73a",
-                  points: history.map((p) => ({ x: p.day, y: p.marketUsd })),
-                },
-                {
-                  label: "Cheapest US listing",
-                  color: "#ff6b6b",
-                  points: history.map((p) => ({ x: p.day, y: p.lowUsd })),
-                  dashed: true,
-                },
+                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
+                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
               ]}
-              format={(v) => usd(Math.round(v))}
+              format={(v) => money(Math.round(v), country)}
               empty="The chart draws once there are two days of prices."
             />
           </section>
