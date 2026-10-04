@@ -29,3 +29,8 @@ export const AUTHOR = {
   url: "/authors",
   bio: "The OP Compare team builds and runs the site: the price import, the store matching and the guides. Every figure in a post comes from our own price database.",
 };
+
+/** Where a post lives: guides at /guides/[slug], everything else at /blog/[slug]. */
+export function postHref(p: Pick<Post, "slug" | "category">): string {
+  return p.category === "guide" ? `/guides/${p.slug}` : `/blog/${p.slug}`;
+}

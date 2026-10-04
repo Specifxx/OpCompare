@@ -4,7 +4,8 @@ import type { OfferRow } from "@/lib/data";
 import { affiliateUrl, ebayLabel, ebaySearchUrl, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money } from "@/lib/format";
 import { ebayRetailer, postageLine, retailerSubId } from "@/lib/board";
-import { isEbaySource, sourceLabel } from "@/lib/stores";
+import { isEbaySource, sourceLabel, storeForSource } from "@/lib/stores";
+import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
 import { marketRows } from "@/lib/quick-view";
 import { ReportPriceButton } from "./ReportPriceButton";
 
@@ -49,7 +50,17 @@ export function PriceBoard({
   const here = offers.filter((o) => o.market === country && o.currency === c.currency);
   const open = marketRows(offers, country);
   const hasEbayRow = open.some((o) => isEbaySource(o.source));
-  const sold = here.filter((o) => !o.inStock).sort((a, b) => a.priceCents - b.priceCents);
+  // Sold-out disclosure: one row per distinct store (a store can hold several
+  // dead rows), newest observation first, with when it was last seen.
+  const soldBySource = new Map<string, OfferRow>();
+  for (const o of here.filter((x) => !x.inStock && !isEbaySource(x.source))) {
+    const cur = soldBySource.get(o.source);
+    if (!cur || o.updatedAt > cur.updatedAt) soldBySource.set(o.source, o);
+  }
+  const sold = [...soldBySource.values()].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+  // A played copy against the cheapest Near Mint one in this market (the open
+  // rows the page already holds, so no new query).
+  const played = playedDiscounts(open.map((o) => ({ id: `${o.source}-${o.market}`, condition: o.condition, isFoil: false, priceCents: o.priceCents })));
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
   const elsewhere = MARKETS.filter((m) => m !== country)
     .map((m) => {
@@ -76,6 +87,9 @@ export function PriceBoard({
             const isEbay = isEbaySource(o.source);
             const label = sourceLabel(o.source, country);
             const retailer = isEbay ? ebayRetailer(o.source, country) : retailerSubId(o.source);
+            const store = storeForSource(o.source);
+            const pd = played.get(`${o.source}-${o.market}`);
+            const postage = postageLine(!isEbay && o.shippingCents == null && store?.shippingCents != null ? { ...o, shippingCents: store.shippingCents } : o, country);
             return (
               <li key={`${o.source}-${o.market}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
@@ -94,7 +108,13 @@ export function PriceBoard({
                         In stock
                       </span>
                     )}
-                    <span>{postageLine(o, country)}</span>
+                    <span>{postage}</span>
+                    {store?.policyUrl ? (
+                      <a href={store.policyUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-slate-400 underline hover:text-slate-200">
+                        shipping policy ↗
+                      </a>
+                    ) : null}
+                    {pd ? <span className="text-slate-300">{playedDiscountText(pd)}</span> : null}
                     <span>updated {ago(o.updatedAt)}</span>
                     {isPaidLink(o.url) ? <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span> : null}
                   </p>
@@ -148,13 +168,14 @@ export function PriceBoard({
           <summary className="cursor-pointer px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-200">
             {sold.length} out-of-stock {sold.length === 1 ? "store" : "stores"}
           </summary>
+          <p className="px-5 pb-2 text-[11px] text-slate-500">Stores we have seen stock this card. A sold-out store is checked again at every import.</p>
           <ul className="divide-y divide-ink-800 border-t border-ink-800">
             {sold.map((o) => (
               <li key={`${o.source}-sold`} className="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-400">
                 <span className="flex-1 truncate">{sourceLabel(o.source, country)}</span>
-                <span className="text-xs">sold out · last {money(o.priceCents, country)}</span>
+                <span className="text-xs">last seen {ago(o.updatedAt)} · {money(o.priceCents, country)}</span>
                 <a href={affiliateUrl(o.url, retailerSubId(o.source), page)} target="_blank" rel={outboundRel()} data-retailer={isEbaySource(o.source) ? ebayRetailer(o.source, country) : retailerSubId(o.source)} data-page={page} data-card={slug} data-surface="board_sold_out" className="text-xs font-semibold text-brand-400 hover:underline">
-                  View →
+                  Check →
                 </a>
               </li>
             ))}

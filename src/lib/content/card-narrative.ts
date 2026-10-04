@@ -62,8 +62,10 @@ export type NarrativeInput = {
   life: number | null;
   attribute: string | null;
   subtypes: string[];
-  /** Printed keywords (cardKeywords()), as printed: "Rush", "On Play". */
+  /** Printed keyword effects (KEYWORDS kind "keyword"), as printed: "Rush", "Blocker". */
   keywords: string[];
+  /** Printed timing markers (kind "timing"), as printed: "On Play", "Trigger", "Activate: Main". */
+  timings: string[];
   hasText: boolean;
   marketUsd: number | null;
   change7d: number | null;
@@ -226,10 +228,10 @@ function identity(c: NarrativeInput): string {
 
 // ── 1. Rules text ────────────────────────────────────────────────────────────
 function rulesText(c: NarrativeInput): string | null {
-  if (!c.hasText && !c.keywords.length) return null;
-  const ks = c.keywords.filter((k) => !/^(on play|when attacking|activate|main|trigger|counter|on k\.o\.|end of your turn|your turn|opponent's turn)/i.test(k));
-  const timing = c.keywords.filter((k) => !ks.includes(k));
-  const hasTrigger = c.keywords.some((k) => /^trigger$/i.test(k));
+  if (!c.hasText && !c.keywords.length && !c.timings.length) return null;
+  const ks = c.keywords;
+  const hasTrigger = c.timings.some((k) => /^trigger$/i.test(k));
+  const timing = c.timings.filter((k) => !/^trigger$/i.test(k));
   const parts: string[] = [];
   if (ks.length) {
     const list = ks.slice(0, 3).map((k) => `[${k}]`);
@@ -239,7 +241,7 @@ function rulesText(c: NarrativeInput): string | null {
         : `Its text prints ${list.join(", ").replace(/, ([^,]*)$/, " and $1")}${ks.length > 3 ? " among others" : ""}`,
     );
   }
-  if (timing.length && !hasTrigger) {
+  if (timing.length) {
     const t = timing.slice(0, 2).map((k) => `[${k}]`);
     parts.push(`its effects fire at ${t.join(" and ")}`);
   }

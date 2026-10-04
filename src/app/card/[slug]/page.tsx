@@ -14,6 +14,10 @@ import { PriceBoard } from "@/components/PriceBoard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
+import { CardMarketsTable } from "@/components/CardMarketsTable";
+import { CardNoListings } from "@/components/CardNoListings";
+import { KeywordText } from "@/components/KeywordTooltip";
+import { RelatedGuides } from "@/components/RelatedGuides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { WatchButton } from "@/components/WatchButton";
 import {
@@ -38,6 +42,20 @@ import { pageOgOwnImage } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
+import { PRINTING_SHORT } from "@/lib/content/card-narrative";
+import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { buildNarrative } from "@/lib/content/card-narrative";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { buildCardFaqs, cardMetaDescription, cardTitle } from "@/lib/card-seo";
+import { cheaperAlternatives, priceToolChips, sameCharacter, sameNameCount } from "@/lib/card-related";
+import { elsewhereLine, lastSeen, priceState } from "@/lib/card-price-state";
+import { marketPriceListSentence, compareMarkets } from "@/lib/market-comparison";
+import { KEYWORDS, KEYWORD_BY_SLUG, cardKeywords } from "@/lib/keywords";
+import { marketRows } from "@/lib/quick-view";
+import { MARKETS } from "@/lib/country";
+import { facetBySlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS, leaderSlug } from "@/lib/facets";
+import { COLORS } from "@/lib/constants";
+import { ago } from "@/lib/format";
 
 type Props = { params: { slug: string } };
 
@@ -53,13 +71,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = await getCardDetail(params.slug);
   if (!c) return { title: "Card not found" };
   const t = displayTitle(c);
-  const title =
-    `${t} Price`.length <= 52 ? `${t} Price — ${c.set.code}` : `${t} Price`;
+  const title = cardTitle({ name: c.name, variant: c.variant, number: c.number, setName: c.set.name, setCode: c.set.code, printing: c.printing, hasPrice: c.marketUsd != null || c.offers.some((o) => o.inStock) });
+  const cat = await getCatalog();
+  const lite = cat.bySlug.get(c.slug);
+  const description = cardMetaDescription({
+    displayName: t,
+    number: c.number,
+    setName: c.set.name,
+    setCode: c.set.code,
+    printing: c.printing,
+    rarity: c.rarity,
+    cardType: c.cardType,
+    colors: c.colors,
+    textBit: c.effect ? c.effect.split("\n")[0].slice(0, 110) : null,
+    marketUsd: c.marketUsd,
+    lowUsCents: lite?.low.US ?? null,
+  });
   return {
-    title: { absolute: `${title.slice(0, 60)}` },
-    description: `${t} from ${c.set.name} (${c.set.code}): live One Piece Card Game prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${
-      c.marketUsd ? `. TCGplayer market price ${usd(c.marketUsd)}` : ""
-    }.`,
+    title: { absolute: title },
+    description,
     alternates: { canonical: `/card/${c.slug}` },
     // No `images`: the sibling opengraph-image.tsx draws the 1200×630 share card.
     openGraph: pageOgOwnImage(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}` }),
@@ -123,11 +153,96 @@ export default async function CardPage({ params }: Props) {
           key={i}
           className="mb-2 text-sm leading-relaxed text-slate-200 last:mb-0"
         >
-          {l}
+          <KeywordText text={l} />
         </p>
       ))}
     </div>
   ) : null;
+
+  // ── Price state, narrative, FAQ, cross-links ──
+  const state = priceState(card.offers, country, { marketUsd: card.marketUsd, setKind: card.set.kind, printing: card.printing });
+  const seen = lastSeen(card.offers, country);
+  const elsewhere = elsewhereLine(state);
+  const today = new Date().toISOString().slice(0, 10);
+  const keys = cardKeywords(card.effect).map((sl) => KEYWORD_BY_SLUG.get(sl)).filter((k): k is NonNullable<typeof k> => !!k);
+  const setPriced = cat.cards.filter((x) => x.setId === card.set.id && (x.marketUsd ?? 0) > 0);
+  const sortedPrices = setPriced.map((x) => x.marketUsd as number).sort((a, b) => a - b);
+  const marketViews = MARKETS.map((m) => {
+    const rows = marketRows(card.offers, m);
+    return {
+      country: m,
+      place: COUNTRIES[m].place,
+      currency: COUNTRIES[m].currency,
+      lowestCents: rows[0]?.priceCents ?? null,
+      secondCents: rows[1]?.priceCents ?? null,
+      storeCount: new Set(rows.filter((r) => isStoreSource(r.source)).map((r) => r.source)).size,
+      listingCount: rows.length,
+    };
+  });
+  const baseSibling = siblings.find((x) => x.printing === "standard");
+  const narrative = buildNarrative({
+    name: card.name,
+    variant: card.variant,
+    number: card.number,
+    printing: card.printing,
+    setName: card.set.name,
+    setCode: card.set.code,
+    setKind: card.set.kind,
+    releasedOn: card.set.releasedOn,
+    today,
+    rarity: card.rarity,
+    cardType: card.cardType,
+    colors: card.colors,
+    cost: card.cost,
+    power: card.power,
+    counter: card.counter,
+    life: card.life,
+    attribute: card.attribute,
+    subtypes: card.subtypes,
+    keywords: keys.filter((k) => k.kind === "keyword").map((k) => k.name),
+    timings: keys.filter((k) => k.kind === "timing").map((k) => k.name),
+    hasText: !!card.effect,
+    marketUsd: card.marketUsd,
+    change7d: card.change7d,
+    change30d: card.change30d,
+    high90Usd: lite?.high90Usd ?? null,
+    baseline: marketViews.find((m) => m.country === country)!,
+    markets: marketViews,
+    printings: siblings.map((x) => ({ label: PRINTING_SHORT[x.printing] ?? "Other", marketUsd: x.marketUsd })),
+    setContext:
+      card.marketUsd != null && setPriced.length >= 10
+        ? { pricedInSet: setPriced.length, cheaperThan: sortedPrices.filter((v) => v < card.marketUsd!).length, medianUsd: sortedPrices[Math.floor(sortedPrices.length / 2)] ?? null }
+        : null,
+    sameNameElsewhere: lite ? sameNameCount(lite, cat.cards) : 0,
+  });
+  const cmpHere = compareMarkets(card.offers, co.currency);
+  const faqs = buildCardFaqs({
+    name: card.name,
+    displayName: title,
+    number: card.number,
+    setName: card.set.name,
+    setCode: card.set.code,
+    rarity: card.rarity,
+    cardType: card.cardType,
+    colors: card.colors,
+    printing: card.printing,
+    country,
+    lowest: h.kind === "listing" ? h.cents : null,
+    stores: h.kind === "listing" ? h.stores : 0,
+    printingCount: siblings.length,
+    marketUsd: card.marketUsd,
+    baseMarketUsd: baseSibling?.marketUsd ?? null,
+    currencyAnswer: cmpHere.quotes.length >= 2 ? marketPriceListSentence(cmpHere) : null,
+    preRelease,
+  });
+  const cheaper = lite ? cheaperAlternatives(lite, cat.cards) : [];
+  const sameChar = lite ? sameCharacter(lite, cat.cards) : [];
+  const tools = priceToolChips({ cardType: card.cardType, name: card.name, setSlug: card.set.slug, hasSealed: card.set.sealedCount > 0, priced: state.hasListings || card.marketUsd != null });
+  const inStockPrintings = siblings.filter((x) => Object.values(x.low).some((v) => v != null)).length;
+  const typeFacet = card.cardType ? facetBySlug(TYPE_FACETS, card.cardType.toLowerCase()) : undefined;
+  const rarityFacet = card.rarity ? RARITY_FACETS.find((f) => f.key === card.rarity) : undefined;
+  const printingFacet = PRINTING_FACETS.find((f) => f.key === card.printing);
+  const guides = guidesForCatalogue("card");
 
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
@@ -161,6 +276,14 @@ export default async function CardPage({ params }: Props) {
             : {}),
         }}
       />
+      <JsonLd
+        data={breadcrumbLd([
+          { name: "Cards", path: "/browse" },
+          { name: card.set.name, path: `/sets/${card.set.slug}` },
+          { name: card.name, path: `/card/${card.slug}` },
+        ])}
+      />
+      {faqs.length ? <JsonLd data={faqLd(faqs)} /> : null}
       <Breadcrumbs
         items={[
           { href: "/browse", label: "Cards" },
@@ -244,8 +367,11 @@ export default async function CardPage({ params }: Props) {
                     ? money(h.cents, country)
                     : h.kind === "reference"
                       ? `≈ ${money(h.cents, country)}`
-                      : "—"}
+                      : seen
+                        ? money(seen.priceCents, country)
+                        : "—"}
                 </p>
+                {h.kind === "none" && seen ? <p className="mt-0.5 text-[11px] text-slate-500">Last seen {ago(seen.at)}</p> : null}
               </div>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
@@ -254,6 +380,7 @@ export default async function CardPage({ params }: Props) {
                 <p className="num mt-1 text-xl font-bold text-white">
                   {inStores.length} {inStores.length === 1 ? "store" : "stores"}
                 </p>
+                {elsewhere ? <p className="mt-0.5 text-[11px] text-slate-500">{elsewhere}</p> : null}
               </div>
               {stats.slice(0, 2).map((s) => (
                 <div key={s.label}>
@@ -289,6 +416,10 @@ export default async function CardPage({ params }: Props) {
               How we compare prices →
             </Link>
           </p>
+
+          {!state.hasListings || (state.noRetailChannel && !state.inMarket) ? (
+            <CardNoListings name={title} slug={card.slug} country={country} state={state} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
+          ) : null}
 
           <PriceBoard
             productId={card.id}
@@ -338,6 +469,93 @@ export default async function CardPage({ params }: Props) {
           </section>
 
           <InlineSignupPrompt surface="card" title="Get the top deals in your market, free" body="A free account shows Deal Finder's three biggest savings in your market right now, and is how you get Plus or Premium when you want them." />
+
+          {/* ── Our own analysis: leads over the FAQ and the affiliate blocks ── */}
+          <section className="card-surface p-5" aria-label={`About ${card.name}`}>
+            <h2 className="font-bold text-white">About {card.name}</h2>
+            <div className="mt-3 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-300">
+              {narrative.paragraphs.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+              {card.effect ? (
+                <p className="text-slate-400">
+                  <KeywordText text={card.effect.replace(/\n+/g, " ")} />
+                </p>
+              ) : null}
+            </div>
+            {card.subtypes.length || keys.length ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {card.subtypes.map((t) => (
+                  <Link key={t} href={`/browse?q=${encodeURIComponent(t)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                    {t}
+                  </Link>
+                ))}
+                {keys.map((k) => (
+                  <Link key={k.slug} href={`/keywords/${k.slug}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                    [{k.name}]
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            {/* Facet chips render only where the page they point at exists. */}
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-800 pt-4">
+              {typeFacet ? (
+                <Link href={`/cards/type/${typeFacet.slug}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {typeFacet.label} cards →
+                </Link>
+              ) : null}
+              {rarityFacet ? (
+                <Link href={`/cards/rarity/${rarityFacet.slug}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {rarityFacet.label} cards →
+                </Link>
+              ) : null}
+              {printingFacet && card.printing !== "standard" ? (
+                <Link href={`/cards/printing/${printingFacet.slug}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {printingFacet.label} cards →
+                </Link>
+              ) : null}
+              {card.colors.map((c) =>
+                COLORS[c as keyof typeof COLORS] ? (
+                  <Link key={c} href={`/colors/${COLORS[c as keyof typeof COLORS].slug}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                    More {c} cards →
+                  </Link>
+                ) : null,
+              )}
+              {card.cardType === "Leader" && card.number ? (
+                <Link href={`/leaders/${leaderSlug(card.name, card.number)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  {card.name} decks and cards →
+                </Link>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="card-surface p-5">
+            <h2 className="font-bold text-white">Frequently asked questions</h2>
+            <dl className="mt-3 space-y-4">
+              {faqs.map((f) => (
+                <div key={f.q}>
+                  <dt className="font-semibold text-white">{f.q}</dt>
+                  <dd className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">{f.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <CardMarketsTable offers={card.offers} name={card.name} country={country} />
+
+          <section className="card-surface p-5" aria-label="Do more with this price">
+            <h2 className="font-bold text-white">Do more with this price</h2>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {tools.map((t) => (
+                <li key={t.href}>
+                  <Link href={t.href} className="block rounded-lg border border-ink-700 bg-ink-850 p-3 transition-colors hover:border-ink-600 hover:bg-ink-800">
+                    <span className="block text-sm font-semibold text-white">{t.label} →</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{t.sub}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
 
           <section className="card-surface p-5">
             <h2 className="mb-3 text-lg text-white">Card details</h2>
@@ -393,7 +611,7 @@ export default async function CardPage({ params }: Props) {
       </div>
 
       {siblings.length ? (
-        <section className="mt-10">
+        <section id="printings" className="mt-10 scroll-mt-20">
           <SectionHeader
             title={`Other printings of ${card.number}`}
             sub={`The same card in other art, finishes and promo releases — priced in ${co.place}.`}
@@ -406,6 +624,28 @@ export default async function CardPage({ params }: Props) {
                 setCode={cat.setById.get(s.setId)?.code ?? ""}
                 country={country}
               />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {cheaper.length ? (
+        <section className="mt-10">
+          <SectionHeader title={`Cheaper ${card.colors[0] ?? ""} ${card.cardType ?? "card"}s in ${card.set.name}`.replace(/\s+/g, " ")} sub="Same set, colour and type, strictly cheaper on TCGplayer." />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {cheaper.map((s) => (
+              <CardTile key={s.id} card={s} setCode={card.set.code} country={country} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {sameChar.length ? (
+        <section className="mt-10">
+          <SectionHeader title={`More ${card.name} cards`} sub="Every other card with this name, across sets." />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {sameChar.map((s) => (
+              <CardTile key={s.id} card={s} setCode={cat.setById.get(s.setId)?.code ?? ""} country={country} />
             ))}
           </div>
         </section>
@@ -436,40 +676,7 @@ export default async function CardPage({ params }: Props) {
 
       <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
-      <section className="mt-10">
-        <SectionHeader title="Questions" />
-        <Faq
-          items={[
-            {
-              q: `How much is ${title} worth?`,
-              a:
-                card.marketUsd != null
-                  ? `TCGplayer's market price — what it has recently sold for there — is ${usd(card.marketUsd)}. The cheapest listing we track in ${co.place} is ${
-                      h.kind === "listing"
-                        ? money(h.cents, country)
-                        : "not available right now"
-                    }. Prices are read twice a day.`
-                  : `There is no recent TCGplayer sale to value it on yet. Store listings appear above as soon as a store we track lists it.`,
-            },
-            {
-              q: `Where is the cheapest place to buy ${card.name}${card.variant ? ` (${card.variant})` : ""}?`,
-              a: inStores.length
-                ? `Right now, ${inStores.sort((a, b) => a.priceCents - b.priceCents)[0] ? "the first row of the comparison above" : ""} — ${inStores.length} ${co.adjective} ${
-                    inStores.length === 1 ? "store has" : "stores have"
-                  } it in stock, ranked by item price. Postage is added at each store's checkout.`
-                : `No ${co.adjective} store we track has it in stock today. Try the eBay search above, or switch market to see other countries.`,
-            },
-            ...(siblings.length
-              ? [
-                  {
-                    q: `Is this the same card as the other ${card.number} printings?`,
-                    a: `Same card for play, different collectible. ${card.number} exists in ${siblings.length + 1} printings on TCGplayer, and they are priced separately because their value differs — often by orders of magnitude for Parallel, Manga and SP art.`,
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </section>
+      <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
       {best ? (
         <CardStickyBuyBar
           boardId="price-comparison"

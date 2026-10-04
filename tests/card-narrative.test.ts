@@ -11,7 +11,7 @@ const mk = (country: "US" | "AU" | "UK", currency: string, place: string, low: n
 const base: NarrativeInput = {
   name: "Monkey.D.Luffy", variant: null, number: "OP05-060", printing: "standard", setName: "Awakening of the New Era", setCode: "OP05", setKind: "booster",
   releasedOn: "2024-03-01", today: "2026-10-04", rarity: "L", cardType: "Leader", colors: ["Purple"], cost: null, power: 5000, counter: null, life: 4,
-  attribute: "Strike", subtypes: ["Straw Hat Crew"], keywords: ["Activate:Main", "Rush"], hasText: true, marketUsd: 1200, change7d: 8.5, change30d: 14,
+  attribute: "Strike", subtypes: ["Straw Hat Crew"], keywords: ["Rush"], timings: ["Activate: Main"], hasText: true, marketUsd: 1200, change7d: 8.5, change30d: 14,
   high90Usd: 1500,
   baseline: mk("US", "USD", "the United States", 1250), markets: [mk("US", "USD", "the United States", 1250), mk("AU", "AUD", "Australia", 2400), mk("UK", "GBP", "the United Kingdom", 900)],
   printings: [{ label: "Parallel", marketUsd: 9000 }, { label: "Manga", marketUsd: 80000 }], setContext: { pricedInSet: 120, cheaperThan: 119, medianUsd: 90 },
@@ -63,12 +63,12 @@ test("three different cards do not share a fixed skeleton", () => {
   const a = buildNarrative(base);
   const b = buildNarrative({
     ...base, name: "Nami", number: "OP01-016", cardType: "Character", colors: ["Red"], rarity: "R", cost: 1, power: 2000, counter: 1000, life: null, attribute: null,
-    keywords: ["Trigger"], marketUsd: 40, change7d: -1, change30d: 0.5, printings: [], sameNameElsewhere: 0, setContext: { pricedInSet: 120, cheaperThan: 50, medianUsd: 60 },
+    keywords: [], timings: ["Trigger", "On Play"], marketUsd: 40, change7d: -1, change30d: 0.5, printings: [], sameNameElsewhere: 0, setContext: { pricedInSet: 120, cheaperThan: 50, medianUsd: 60 },
     baseline: mk("US", "USD", "the United States", 35, { storeCount: 1, secondCents: null }), markets: [mk("US", "USD", "the United States", 35, { storeCount: 1, secondCents: null })],
   });
   const c = buildNarrative({
     ...base, name: "Gum-Gum Pistol", number: "OP01-029", cardType: "Event", colors: ["Blue"], rarity: "C", cost: 1, power: null, counter: 3000, life: null, attribute: null,
-    keywords: [], marketUsd: null, change7d: null, change30d: null, high90Usd: null, printings: [], sameNameElsewhere: 2, setContext: null,
+    keywords: [], timings: [], marketUsd: null, change7d: null, change30d: null, high90Usd: null, printings: [], sameNameElsewhere: 2, setContext: null,
     baseline: mk("US", "USD", "the United States", null), markets: [mk("US", "USD", "the United States", null)],
   });
   // Replace everything specific; what is left must still differ.
