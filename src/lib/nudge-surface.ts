@@ -11,10 +11,10 @@ import { isTier, type Tier } from "./plans";
 // Steps of the purchase itself, and the generic fallback.
 const FIXED = new Set(["dialog", "checkout", "premium-page", "slidein", "annual-switch"]);
 
-// Scoped surfaces: `nav:header`, `gate:buy-list`, `tip:sealed` … The suffix
+// Scoped surfaces: `nav:header`, `gate:basket`, `tip:sealed` … The suffix
 // names the place; the prefix is the kind of surface.
 //   nav:   a Pricing link (header, rail, avatar menu, phone menu)
-//   gate:  a wall in front of a paid tool (Deal Finder, Buy List Planner)
+//   gate:  a wall in front of a paid tool (Deal Finder, Best Basket)
 //   nudge: an in-page pitch (movers, card page)
 //   tip:   a one-line DiscoveryTip where a paid feature lives
 const SCOPED = /^(nav|gate|nudge|tip):[a-z0-9-]{1,32}$/;

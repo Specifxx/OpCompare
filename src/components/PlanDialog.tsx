@@ -112,13 +112,13 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                     <>
                       {checkoutOpen ? (
                         <>
-                          <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Switch plans in the billing portal; the difference is prorated.</p>
+                          <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket's store-by-store plan. Switch plans in the billing portal; the difference is prorated.</p>
                           <div className="mt-3 flex justify-center">
                             <ManageSubscriptionButton label="Switch to Premium" />
                           </div>
                         </>
                       ) : (
-                        <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Plan changes open when subscriptions do.</p>
+                        <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket's store-by-store plan. Plan changes open when subscriptions do.</p>
                       )}
                     </>
                   ) : (
@@ -126,8 +126,8 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                       <Link href="/tools/deal-finder" onClick={onClose} className="btn-ghost text-sm">
                         Deal Finder →
                       </Link>
-                      <Link href="/tools/buy-list" onClick={onClose} className="btn-ghost text-sm">
-                        Buy List Planner →
+                      <Link href="/tools/best-basket" onClick={onClose} className="btn-ghost text-sm">
+                        Best Basket →
                       </Link>
                     </div>
                   )}

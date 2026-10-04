@@ -25,8 +25,8 @@ const FAQ = [
     a: "Signed out, a preview of how it works. With a free account, the top 3 deals in your market. Plus and Premium show every deal at every price level.",
   },
   {
-    q: "What is the Buy List Planner?",
-    a: "Give it your watchlist and your market, and it works out the cheapest single store that has your cards, and the cheapest way to split the order across stores. Shipping isn't included, so check each store's postage.",
+    q: "What is Best Basket?",
+    a: "Paste a deck or send your watchlist, and it works out the cheapest delivered way to buy it across the stores in your market, each store's measured postage included. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from, beside the best one-store and two-store orders, at the minimum condition you set.",
   },
   {
     q: "How do I cancel?",

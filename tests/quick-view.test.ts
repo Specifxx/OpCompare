@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { CardDetail, OfferRow } from "../src/lib/data";
 import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
-import { tagPlanLinks, planBuyList } from "../src/lib/buy-list";
+import { planBasket } from "../src/lib/basket";
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -126,19 +126,19 @@ test("cheapestBuyRow is the board's #1 row (CardTopBuy and the sticky bar agree 
   assert.equal(cardDisplayName({ name: "Shanks", variant: "Parallel", number: "OP01-120" }), "Shanks (Parallel) OP01-120");
 });
 
-test("Buy List Planner links: TCGplayer through Impact, stores untouched", () => {
-  const plan = tagPlanLinks(
-    planBuyList([
-      { slug: "a", name: "A", offers: [{ source: "tcgplayer", priceCents: 100, url: "https://www.tcgplayer.com/product/1", inStock: true }] },
-      { slug: "b", name: "B", offers: [{ source: "store:x", priceCents: 200, url: "https://x.example/p/b", inStock: true }] },
-    ]),
+test("Best Basket links: TCGplayer through Impact, stores untouched", () => {
+  const post = (cents: number) => () => ({ cents, label: "Standard", tracked: true, basis: "measured" as const, free: false, upTo: false });
+  const { plan } = planBasket(
+    [
+      { cardId: "1", name: "A", slug: "a", qty: 1, listings: [{ retailer: "tcgplayer", priceCents: 100, url: "https://www.tcgplayer.com/product/1" }] },
+      { cardId: "2", name: "B", slug: "b", qty: 1, listings: [{ retailer: "x", priceCents: 200, url: "https://x.example/p/b" }] },
+    ],
+    { tcgplayer: { name: "TCGplayer", postage: post(100) }, x: { name: "X", postage: post(100) } },
+    { loc: "/tools/best-basket" },
   );
-  const urls = plan.split.flatMap((b) => b.picks.map((p) => p.url));
-  assert.ok(urls.some((u) => /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=oc-tcgplayer-tools/.test(u)));
+  const urls = plan.stores.flatMap((s) => s.lines.map((l) => l.url));
+  assert.ok(urls.some((u) => /^https:\/\/partner\.tcgplayer\.com\//.test(u)), urls.join(" "));
   assert.ok(urls.includes("https://x.example/p/b"));
-  assert.ok(plan.single.every((b) => b.picks.every((p) => b.source !== "tcgplayer" || p.url.includes("partner.tcgplayer.com"))));
-  // The helper under test is the one the route ships.
-  assert.match(read("src/app/api/buy-list/route.ts"), /const tagged = tagPlanLinks\(plan\);/);
 });
 
 test("wiring: the provider sits in the root layout, which still reads no session", () => {
@@ -161,7 +161,7 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
     "src/app/colors/[color]/page.tsx",
     // /leaders rows open each Leader's own page (tools track); its card links are CardQuickLinks.
     "src/app/leaders/[slug]/page.tsx",
-    "src/app/tools/box-value/page.tsx",
+    "src/components/BoxEvCalculator.tsx",
     "src/app/blog/[slug]/page.tsx",
     "src/components/blog/BlogBits.tsx",
   ]) {

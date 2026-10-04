@@ -31,13 +31,13 @@ export function WelcomePoller() {
     return (
       <>
         <h1 className="text-4xl text-white">You&apos;re {TIER_NAMES[tier]}!</h1>
-        <p className="mt-3 text-slate-300">Thank you for supporting OP Compare. Ads are gone{tier === "premium" ? ", and the Buy List Planner is yours" : ""}.</p>
+        <p className="mt-3 text-slate-300">Thank you for supporting OP Compare. Ads are gone{tier === "premium" ? ", and Best Basket's store-by-store plan is yours" : ""}.</p>
         <div className="mt-6 flex justify-center gap-3">
           <Link href="/tools/deal-finder" className="rounded-lg bg-brand-500 px-4 py-2.5 font-bold text-white hover:bg-brand-600">
             Open Deal Finder
           </Link>
           {tier === "premium" ? (
-            <Link href="/tools/buy-list" className="rounded-lg border border-ink-600 px-4 py-2.5 font-semibold text-white">
+            <Link href="/tools/best-basket" className="rounded-lg border border-ink-600 px-4 py-2.5 font-semibold text-white">
               Plan a buy list
             </Link>
           ) : null}

@@ -30,8 +30,10 @@ export interface DeckLine {
   leader: boolean;
 }
 
-export const DECK_LINE_CAP = 120;
-export const QTY_CAP = 50;
+// RiftCompare's caps: 200 card lines (what /deck, Best Basket and a deck watch
+// price) and 99 copies a line (a bulk list, not just a deck).
+export const DECK_LINE_CAP = 200;
+export const QTY_CAP = 99;
 
 // A card number anywhere in a line: OP01-016, ST-01-001 style typos, EB01-001,
 // PRB01-001, P-001, OP01016. Group 1 the prefix, 2 the set digits, 3 the card.
@@ -152,6 +154,12 @@ export interface ResolvedLine<C> {
   how: MatchKind;
   /** Matched by name only and other card numbers share that name. */
   ambiguous: boolean;
+  /**
+   * Matched only because the card's name CONTAINS the line's words (RiftCompare's
+   * name-contains fallback: "Luffy" → Monkey.D.Luffy). A guess the page must
+   * show as one ("guessed from …"), never count silently.
+   */
+  fuzzy: boolean;
 }
 
 export function normName(s: string): string {
@@ -211,7 +219,7 @@ export function resolveLine<C extends ResolvableCard>(line: DeckLine, idx: CardI
     const c = idx.byId.get(line.productId);
     if (c && c.printing !== "don") {
       const options = c.number ? orderPrintings(idx.byNumber.get(c.number) ?? [c]) : [c];
-      return { line, card: c, options, how: "pinned", ambiguous: false };
+      return { line, card: c, options, how: "pinned", ambiguous: false, fuzzy: false };
     }
   }
   if (line.number) {
@@ -219,11 +227,26 @@ export function resolveLine<C extends ResolvableCard>(line: DeckLine, idx: CardI
     if (prints.length) {
       const options = orderPrintings(prints);
       const card = (line.parallel ? nthParallel(prints, line.parallel) : undefined) ?? basePrinting(prints)!;
-      return { line, card, options, how: "number", ambiguous: false };
+      return { line, card, options, how: "number", ambiguous: false, fuzzy: false };
     }
   }
   if (line.name) {
-    let named = idx.byName.get(normName(line.name)) ?? [];
+    const key = normName(line.name);
+    let named = idx.byName.get(key) ?? [];
+    let fuzzy = false;
+    // No exact name: the name-contains fallback, bounded (a line of three or
+    // more letters; the first 40 names that contain it), flagged fuzzy.
+    if (!named.length && key.length >= 3) {
+      const hits: C[] = [];
+      let names = 0;
+      for (const [k, cards] of idx.byName) {
+        if (!k.includes(key)) continue;
+        hits.push(...cards);
+        if (++names >= 40) break;
+      }
+      named = hits;
+      fuzzy = hits.length > 0;
+    }
     if (line.leader && named.some((c) => c.cardType === "Leader")) named = named.filter((c) => c.cardType === "Leader");
     if (named.length) {
       const numbers = new Map<string, C[]>();
@@ -236,10 +259,10 @@ export function resolveLine<C extends ResolvableCard>(line: DeckLine, idx: CardI
       const groups = [...numbers.values()].sort((a, b) => b.length - a.length || Math.min(...a.map((c) => c.id)) - Math.min(...b.map((c) => c.id)));
       const card = basePrinting(groups[0])!;
       const options = groups.flatMap((g) => orderPrintings(g)).slice(0, 40);
-      return { line, card, options, how: "name", ambiguous: groups.length > 1 };
+      return { line, card, options, how: "name", ambiguous: groups.length > 1, fuzzy };
     }
   }
-  return { line, card: null, options: [], how: "none", ambiguous: false };
+  return { line, card: null, options: [], how: "none", ambiguous: false, fuzzy: false };
 }
 
 export function resolveDeck<C extends ResolvableCard>(lines: DeckLine[], idx: CardIndex<C>): ResolvedLine<C>[] {
@@ -408,7 +431,40 @@ export function checkDeck(lines: { qty: number; number: string | null; isLeader:
 export const DECK_SIZE = 50;
 export const COPY_LIMIT = 4;
 
-/** ?list= ← list text. Plain URI encoding: decklists are ASCII and stay readable. */
+/**
+ * ?list= ← list text, as UTF-8-safe base64: RiftCompare's encodeList, the one
+ * encoding /deck, Best Basket, a published deck and the deck watch all share
+ * (a list with accented or "!!" names survives the round trip). The caller
+ * still URI-encodes it ("+", "/" and "=" are base64 characters).
+ */
+export function encodeList(text: string): string {
+  const bytes = new TextEncoder().encode(text.trim().slice(0, 6000));
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+/**
+ * The list a ?list= value carries: base64 (encodeList), or — for the plain
+ * URI-encoded links wave 1 wrote (Leader pages, older shares) — the text
+ * itself. Anything that is not clean base64 of valid UTF-8 is read as text.
+ */
+export function decodeList(code: string): string {
+  const v = code.trim();
+  if (v && v.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(v)) {
+    try {
+      const bin = atob(v);
+      const bytes = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      if (!/[\u0000-\u0008\u000e-\u001f]/.test(text)) return text.slice(0, 6000);
+    } catch {
+      // not base64 of UTF-8: a plain list
+    }
+  }
+  return v.slice(0, 6000);
+}
+
+/** The ?list= query value for a list: base64, URI-encoded. */
 export function encodeDeckParam(text: string): string {
-  return encodeURIComponent(text.trim().slice(0, 6000));
+  return encodeURIComponent(encodeList(text));
 }

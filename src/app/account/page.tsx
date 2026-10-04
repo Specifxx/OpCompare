@@ -82,10 +82,10 @@ export default async function Account({
                 </Link>
               ) : (
                 <Link
-                  href="/tools/buy-list"
+                  href="/tools/best-basket"
                   className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
                 >
-                  Open the Buy List Planner
+                  Open Best Basket
                 </Link>
               )}
             </div>
@@ -97,7 +97,7 @@ export default async function Account({
                 ? `Your membership ended on ${fmt(user.premiumUntil!)}.`
                 : "Free account."}{" "}
               Free accounts see the top {3} Deal Finder deals. Plus shows every
-              deal with no ads; Premium adds the Buy List Planner.
+              deal with no ads; Premium adds Best Basket's store-by-store plan.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link

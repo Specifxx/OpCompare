@@ -103,10 +103,10 @@ test("normalizeNumber reads typos and missing dashes", () => {
   assert.equal(normalizeNumber("P-042"), "P-042");
 });
 
-test("quantities are clamped to 1..50", () => {
+test("quantities are clamped to 1..99", () => {
   const [a, b] = parseDeckList("0 OP01-016\n999xOP01-016");
   assert.equal(a.qty, 1);
-  assert.equal(b.qty, 50);
+  assert.equal(b.qty, 99);
 });
 
 test("a number resolves to its base printing; _pN and #id pick another", () => {

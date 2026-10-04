@@ -20,12 +20,12 @@ export function MoversToolsCta() {
             Deal Finder →
           </Link>
           {me.tier === "premium" ? (
-            <Link href="/tools/buy-list" className="btn-ghost text-sm">
-              Buy List Planner →
+            <Link href="/tools/best-basket" className="btn-ghost text-sm">
+              Best Basket →
             </Link>
           ) : (
             <PlanButton surface="nudge:movers" tier="premium" className="btn-ghost text-sm">
-              Buy List Planner is on Premium →
+              Best Basket's store plan is on Premium →
             </PlanButton>
           )}
         </div>

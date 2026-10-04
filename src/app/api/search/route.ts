@@ -22,6 +22,11 @@ export async function GET(req: Request) {
     const h = headline(c, country);
     return {
       kind: "card" as const,
+      // Additive fields for the tools (wave 2): the card id (Best Basket's and
+      // the deck pricer's search-to-add) and every market's cheapest in-stock
+      // price, so the trade calculator re-totals on a currency switch.
+      id: c.id,
+      low: c.low,
       slug: c.slug,
       name: c.name,
       number: c.number,

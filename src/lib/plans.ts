@@ -47,7 +47,7 @@ export const PLAN_PITCH: Record<Tier, string> = {
 
 export const PLAN_FEATURES: Record<Tier, string[]> = {
   plus: ["No ads on any page", "Every Deal Finder deal, at every price level", "Deals in all six markets", "Supports an independent site"],
-  premium: ["Everything in Plus, no ads", "Buy List Planner: the cheapest store plan for your watchlist", "Cheapest single store and cheapest split, per market", "Every Deal Finder deal"],
+  premium: ["Everything in Plus, no ads", "Best Basket: the store-by-store plan for a deck or your watchlist, postage included", "The best one-store and two-store orders, at the condition you set", "Every Deal Finder deal"],
 };
 
 /** The comparison table on /premium: [feature, free account, Plus, Premium]. */
@@ -56,7 +56,10 @@ export const TIER_COMPARISON: [string, string, string, string][] = [
   ["Watchlist (in your browser)", "✓", "✓", "✓"],
   ["Deal Finder", "Top 3", "Every deal", "Every deal"],
   ["No ads", "", "✓", "✓"],
-  ["Buy List Planner", "", "", "✓"],
+  ["Best Basket", "Your delivered total, 5 a day", "Your delivered total, 5 a day", "Store-by-store plan"],
+  ["Rising Cards", "Top 3", "Every card", "Every card"],
+  ["Demand Finder", "Top 10 searched", "Top 10 searched", "Top 25, searched or viewed, 7 or 30 days"],
+  ["Deck price watch", "", "", "Up to 10 lists"],
 ];
 
 /**

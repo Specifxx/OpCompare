@@ -734,3 +734,111 @@ export async function getEmailStatus(): Promise<EmailStatus> {
   }
 }
 // ── end wave2:foundation ──
+
+// ── wave2:tools ──
+// Best Basket, Box EV, Demand Finder, Rising Cards and the deck library read
+// through these. Same rules as every loader above: one self-cached read each,
+// tagged "prices", combined with getCatalog() OUTSIDE any cache callback.
+
+/**
+ * BEST BASKET'S LISTINGS: every fresh (72 h) in-stock store listing — and in
+ * the US TCGplayer's own cheapest listing — for these cards in one market.
+ * eBay is never in a basket (CLAUDE.md), so it is not even read. OP Compare
+ * keeps ONE row per (product, source, market), the store's best-condition copy
+ * (lib/import.ts), so the member's minimum condition filters that row
+ * (lib/basket-server.ts). Tuples, cheapest first; the caller chunks ids into
+ * sorted groups of BASKET_ID_CHUNK, so an entry holds at most ~40 cards × the
+ * market's ~75 sources (a few hundred KB at the very worst, well under 2 MB).
+ */
+export type BasketListingTuple = [productId: number, source: string, priceCents: number, condition: string | null, url: string];
+export const BASKET_ID_CHUNK = 40;
+
+export const getBasketListings = unstable_cache(
+  async (country: Country, ids: number[]): Promise<BasketListingTuple[]> => {
+    const want = [...new Set(ids.filter((n) => Number.isInteger(n) && n > 0))].slice(0, BASKET_ID_CHUNK);
+    if (!want.length) return [];
+    const rows = await prisma.offer.findMany({
+      where: {
+        market: country,
+        productId: { in: want },
+        inStock: true,
+        updatedAt: { gt: new Date(Date.now() - STALE_MS) },
+        OR: [{ source: { startsWith: "store:" } }, { source: "tcgplayer" }],
+      },
+      select: { productId: true, source: true, priceCents: true, condition: true, url: true },
+      orderBy: { priceCents: "asc" },
+      take: want.length * 120,
+    });
+    return rows.map((r): BasketListingTuple => [r.productId, r.source, r.priceCents, r.condition, r.url]);
+  },
+  ["basket-listings-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+// ── The public deck library (lib/published-decks.ts) ──
+// Live decks, one compact row each; the page prices them from getCatalog()
+// (each card's low<MKT>) outside the cache, so a price import moves every
+// total without a deck read. Tagged "published-decks": a publish or a hide
+// revalidates it at once. Readers THROW inside the cache (a failed read is
+// never stored as an empty library) and pages catch outside it.
+export const DECKS_TAG = "published-decks";
+
+export interface LibraryDeckRow {
+  id: string;
+  slug: string;
+  title: string;
+  authorName: string | null;
+  leaderName: string;
+  leaderSlug: string;
+  leaderCardId: number;
+  colors: string;
+  lines: { cardId: number; qty: number }[];
+  cardCount: number;
+  publishedTotals: Partial<Record<Country, number | null>>;
+  createdAt: string;
+}
+
+const DECK_ROW_SELECT = {
+  id: true, slug: true, title: true, authorName: true, leaderName: true, leaderSlug: true, leaderCardId: true, colors: true,
+  lines: true, cardCount: true, publishedTotals: true, createdAt: true,
+} as const;
+
+function deckRowOf(d: { id: string; slug: string; title: string; authorName: string | null; leaderName: string; leaderSlug: string; leaderCardId: number; colors: string; lines: unknown; cardCount: number; publishedTotals: unknown; createdAt: Date }): LibraryDeckRow {
+  return {
+    ...d,
+    lines: Array.isArray(d.lines) ? (d.lines as { cardId: number; qty: number }[]) : [],
+    publishedTotals: (d.publishedTotals && typeof d.publishedTotals === "object" ? d.publishedTotals : {}) as Partial<Record<Country, number | null>>,
+    createdAt: d.createdAt.toISOString(),
+  };
+}
+
+/** Every live deck, newest first (at most 300 — a few hundred KB at most). */
+export const getLibraryDecks = unstable_cache(
+  async (): Promise<LibraryDeckRow[]> =>
+    (await prisma.publishedDeck.findMany({ where: { status: "live" }, orderBy: { createdAt: "desc" }, take: 300, select: DECK_ROW_SELECT })).map(deckRowOf),
+  ["library-decks-v1"],
+  { tags: [DECKS_TAG], revalidate: 3600 },
+);
+
+/** One live deck by slug, with its description and list text; null when there is none. */
+export const getPublishedDeck = unstable_cache(
+  async (slug: string): Promise<(LibraryDeckRow & { description: string | null; list: string }) | null> => {
+    const d = await prisma.publishedDeck.findFirst({ where: { slug, status: "live" }, select: { ...DECK_ROW_SELECT, description: true, list: true } });
+    return d ? { ...deckRowOf(d), description: d.description, list: d.list } : null;
+  },
+  ["published-deck-v1"],
+  { tags: [DECKS_TAG], revalidate: 3600 },
+);
+
+/** Up to six live decks that play a card (the card page's "Decks using this card"). */
+export const getDecksUsingCard = unstable_cache(
+  async (cardId: number): Promise<{ slug: string; title: string; leaderName: string }[]> =>
+    prisma.publishedDeck.findMany({
+      where: { status: "live", cardIds: { has: cardId } },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { slug: true, title: true, leaderName: true },
+    }),
+  ["decks-using-card-v1"],
+  { tags: [DECKS_TAG], revalidate: 3600 },
+);
+// ── end wave2:tools ──

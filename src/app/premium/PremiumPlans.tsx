@@ -112,8 +112,8 @@ function MemberView({ tier, until, admin }: { tier: Tier; until: string | null; 
           <span className="font-semibold text-white">Deal Finder →</span>
           <span className="mt-0.5 block text-xs text-slate-400">Every deal, every price level</span>
         </Link>
-        <Link href="/tools/buy-list" className="card-surface block p-4 hover:border-ink-600">
-          <span className="font-semibold text-white">Buy List Planner →</span>
+        <Link href="/tools/best-basket" className="card-surface block p-4 hover:border-ink-600">
+          <span className="font-semibold text-white">Best Basket →</span>
           <span className="mt-0.5 block text-xs text-slate-400">{shownTier === "premium" ? "The cheapest stores for your list" : "On Premium"}</span>
         </Link>
         <Link href="/watchlist" className="card-surface block p-4 hover:border-ink-600">

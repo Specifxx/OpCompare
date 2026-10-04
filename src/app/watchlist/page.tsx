@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { DiscoveryTip } from "@/components/DiscoveryTip";
 import { Breadcrumbs } from "@/components/ui";
 import { WatchlistView } from "@/components/WatchlistView";
@@ -19,8 +20,11 @@ export default function WatchlistPage() {
         needed.
       </p>
       <DiscoveryTip id="watchlist-buy-list" surface="tip:watchlist" tier="premium" className="mt-4">
-        Premium&apos;s Buy List Planner turns this watchlist into the cheapest single store for the lot, and the cheapest way to split it across stores.
+        Premium&apos;s Best Basket turns this watchlist into the cheapest delivered order: which store to buy each card from, postage included.
       </DiscoveryTip>
+      <Link href="/tools/best-basket?source=watchlist" className="mb-4 mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand-400 hover:underline">
+        Price my watchlist, delivered →
+      </Link>
       <WatchlistView />
       <RecentlyViewed className="mt-8" title="Recently viewed — tap one to look again" />
     </div>

@@ -67,8 +67,8 @@ export function NavUser() {
             Watchlist
           </Link>
           {me.tier === "premium" ? (
-            <Link role="menuitem" href="/tools/buy-list" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
-              Buy List Planner
+            <Link role="menuitem" href="/tools/best-basket" className="block rounded-md px-3 py-2 text-sm text-slate-200 hover:bg-ink-800">
+              Best Basket
             </Link>
           ) : (
             <PricingLink role="menuitem" surface="nav:account-menu" className="block rounded-md px-3 py-2 text-sm font-semibold text-gold hover:bg-ink-800">
