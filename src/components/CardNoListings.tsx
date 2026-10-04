@@ -32,7 +32,7 @@ export function CardNoListings({
   const heading = state.noRetailChannel ? `Why there's no price for ${name}` : `No live listings for ${name} yet`;
   const body = state.noRetailChannel ? (
     <>
-      {setName} is handed out at events and in promotional kits rather than sold through shops, so no store we track lists it. The only price it can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.
+      Cards from {setName} are handed out at events and in promotional kits rather than sold through shops, so no store we track lists them. The only price this card can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.
     </>
   ) : preRelease ? (
     <>

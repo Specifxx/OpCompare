@@ -45,7 +45,8 @@ export function FilterableArticles({ articles, sections, featured, featuredLabel
     [articles, tag, needle],
   );
   const picks = featured.map((s) => articles.find((a) => a.slug === s)).filter((a): a is ArticleListItem => Boolean(a));
-  const used = new Set<string>();
+  // A pick is shown once, in "Editor's picks", not again in its topic cluster.
+  const used = new Set<string>(picks.map((a) => a.slug));
   const grouped = sections
     .map((s) => {
       const items = articles.filter((a) => !used.has(a.slug) && a.tags.some((t) => s.tags.includes(t)));
