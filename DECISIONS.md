@@ -1233,3 +1233,84 @@ comparison while the header said "1 store". RiftCompare's `computeMarket`
 counts every in-stock retailer in the comparison, TCGplayer included. This
 reverses the stores-only count from "Store matching: SKU numbers, …" earlier
 today; eBay stays out per CLAUDE.md ("never counted as a store").
+
+## 2026-10-04 — Catalogue parity (wave 2): what was ported, and where OP differs on purpose
+
+The card, sealed, price-guide, set, market, movers, guide, ad, support and
+release-date surfaces were brought to RiftCompare's feature set, ported from its
+files with the copy rebranded. The choices that are not obvious:
+
+- **Rendering model kept.** OP's card, sealed and `/sealed` pages render per
+  request (`getCountry()` over cached loaders), so every port is a server
+  component that takes `country`; nothing moved to RiftCompare's market-neutral
+  ISR. `CardMarketsTable` is therefore a server component, not a client one.
+- **The card "About" narrative is written for One Piece, not translated**
+  (`src/lib/content/card-narrative.ts`). It keeps RC's rule (a sentence is
+  emitted only when the data on that render backs it) and branches on Leader /
+  Character / Event / Stage / DON!!, printing against standard print, TCGplayer
+  market against cheapest listing, cross-market spread, 7/30-day move, 90-day
+  high and set percentile. It runs 250-450 words on a fully priced card, not RC's
+  ~1,000: padding to reach the number would be the failure mode the module exists
+  to avoid. Tests assert no claim without data and different skeletons.
+- **Title ladder**: drops the set name first, then the set code, then the long
+  variant ("Manga · Alternate Art" becomes "Manga"), then "Price". Never the card
+  number or the printing word; when nothing fits the SHORTEST rung ships.
+- **eBay listing panels cost zero extra Browse calls.** `BrowseItem` gained
+  `image`, `writePair` writes `EbayListing` (first 8 survivors, headline pick
+  first) and `EbayGradedListing` in its existing transaction after a completed
+  search only, and the run sweeps both at 72 h. Graded slabs reuse the raw
+  matcher minus the slab words (`screenGraded`), need a known grader, and are
+  dropped below half the raw reference; they never become an Offer and never join
+  a comparison. `ebay-plan` and `no-ebay-api` are unchanged. CLAUDE.md's eBay
+  section now says the panels are display-only.
+- **Store postage.** `StoreInfo` gained `shippingCents`, `freeOverCents` and
+  `policyUrl`. Only `policyUrl` is filled: 192 of 235 stores returned HTTP 200 on
+  `<base>/policies/shipping-policy` on 2026-10-04 (`STORE_POSTAGE_CHECKED`). No
+  flat rate or threshold is seeded, because none could be verified from a policy
+  page without reading prose, so rows still say "postage at checkout" with a
+  "shipping policy" link.
+- **History files carry every market (v2).** A bucket point is
+  `[day, market, lowUS, lowAU, lowUK, lowSG, lowCA, lowEU]`, each low in its own
+  currency; day files are v2 too. The reader pads v1 points (US only), so an old
+  checkout still reads, and `chartSeries` returns `lows`. The card and sealed
+  charts show the visitor's market line plus TCGplayer's market price converted
+  at the indicative rate, titled "Price history (AUD · lowest price)", and say
+  when a market's history starts. Non-US history begins at the first v2 import:
+  nothing is back-filled.
+- **/sealed filters are the URL.** `q`, `min`, `max`, `stock`, `promo`, repeated
+  `kind` and csv `set` (OP's param names), applied by `lib/sealed-query.ts`; the
+  page is `noindex,follow` when filtered. "In stock at MSRP" is not built: OP has
+  no verified MSRP table and none was invented (`lib/msrp.ts` does not exist).
+  "Sold out at every store we track" is one SQL read (`getSealedSoldOut`): every
+  non-eBay row in the market fresh inside 72 h and none in stock.
+- **/price-guide reuses /browse's filters** (`parseBrowse`/`runBrowse`,
+  `BrowseFilters`, `FilterChips`) so the same filters give the same cards on both
+  pages; the guide adds its own sort list (including 30-day and most stores),
+  page sizes 50/100/200, a `?market=` override ("Prices for X from this link ·
+  Use my market") and a 30-day column only when at least half the priced rows
+  have one. The plain guide and a single set are indexable; everything else is
+  `noindex,follow`.
+- **/market**: `computeStats` ported pure over OP's chained index; the table
+  ships the top 200 cards, breadth counts the whole US$1+ basket. The label is
+  "US$ · TCGplayer market". No Dataset JSON-LD: there is no public index JSON.
+- **Guides.** `Post` gained `category` and `faq`; the rarities and where-to-buy
+  posts are guides at `/guides/[slug]` with a permanent redirect from `/blog/...`
+  (done in the page, not `next.config.js`, which the tools track owns). Guides
+  and blog share `ArticleView`.
+- **Ads.** `AdSlot` shows a first-party house promo by default and a real AdSense
+  unit only when `NEXT_PUBLIC_ADSENSE_CLIENT_ID` is a valid id; unlike RC it never
+  throws in production. The loader and `/ads.txt` exist only with the id.
+  `TcgplayerAd` renders only for owner-supplied creative ids in
+  `NEXT_PUBLIC_TCGPLAYER_CREATIVES` and draws OP's own creative, not Impact's
+  hosted image, which is seasonal art.
+- **Support tickets**: `/api/support` goes through the public form gate (3 an
+  hour per IP, 5 a day per account), numbers come from `Counter` inside the
+  insert's transaction, shown as `OC-<n>`; no email is sent. The admin editor
+  posts with POST (CLAUDE.md: admin mutations are POST); PATCH is the same handler.
+- **Release calendar**: all-day events (the date is a listing date, not an
+  announced hour), RFC 5545 escaping and octet-aware folding, tested.
+
+Not done here, by design: SetOwned ticks and ReleaseAlertSignup
+(collection-alerts), MostSearchedStrip and NewsletterSignup on `/movers` (tools,
+collection-alerts), PriceWatchButton and SealedWatchButton (member). The call
+sites use the wave-1 `WatchButton` until those merge.

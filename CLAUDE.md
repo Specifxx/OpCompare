@@ -38,6 +38,14 @@ say so. A commit BODY may discuss the marker; it does not deploy.
 - eBay rows are never re-ranked (item price, like every row), never in alerts
   or the Buy List Planner's baskets, never counted as a store, and never
   "delivered" without known postage. No "money back"/"buyer protection" copy.
+- The eBay listing panels (`EbayListing`: the first 8 survivors with the
+  headline pick first; `EbayGradedListing`: PSA/BGS/CGC/SGC slabs) are captured
+  by `scripts/ebay.ts` from the SAME Browse search the price pass already makes:
+  zero extra calls, written in `writePair`'s transaction after a COMPLETED search
+  only, swept at 72 h, read through `getEbayPanel` / `getEbayPicks` in
+  `src/lib/data.ts`. Those rows are display-only: never ranked into a price row,
+  never in alerts or baskets, never counted as a store, and a slab never becomes
+  an Offer or enters a comparison. Pages still never call eBay.
 - The Marketplace Account Deletion route
   (`src/app/api/ebay/marketplace-deletion`) must stay deployed while the keyset
   exists.
