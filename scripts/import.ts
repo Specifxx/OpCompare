@@ -16,6 +16,7 @@ import { prisma } from "../src/lib/db";
 import { pruneBeacons } from "../src/lib/beacons";
 import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";
 import { normalizeCountry } from "../src/lib/country";
+import { recordToolsHistory } from "../src/lib/tools-history";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -39,6 +40,13 @@ async function main() {
     }
     await aggregate(log);
     summary.history = await recordHistory(log);
+    // Demand snapshots and the Rising Cards feed (lib/tools-history.ts), beside
+    // the price history on the data branch. Never fails the import.
+    try {
+      summary.tools = await recordToolsHistory(log);
+    } catch (e) {
+      log("Tools history: skipped", String(e));
+    }
     // The click beacons' retention (lib/beacons.ts): never fails the import.
     try {
       summary.pruned = await pruneBeacons();

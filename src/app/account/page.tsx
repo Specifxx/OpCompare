@@ -97,7 +97,7 @@ export default async function Account({
                 ? `Your membership ended on ${fmt(user.premiumUntil!)}.`
                 : "Free account."}{" "}
               Free accounts see the top {3} Deal Finder deals. Plus shows every
-              deal with no ads; Premium adds Best Basket's store-by-store plan.
+              deal with no ads; Premium adds Best Basket&apos;s store-by-store plan.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link

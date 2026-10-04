@@ -5,7 +5,9 @@ import { MoverList } from "@/components/MoverList";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { Breadcrumbs, Delta, InShort } from "@/components/ui";
-import { getCatalog, getIndexSeries, getSparklines } from "@/lib/data";
+import { getCatalog, getIndexSeries, getSparklines, getTopDemand } from "@/lib/data";
+import { MostSearchedStrip } from "@/components/MostSearchedStrip";
+import { FREE_DEMAND_ROWS } from "@/lib/tier-limits";
 import { longDate } from "@/lib/format";
 import { movers, offHighs } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
@@ -18,8 +20,11 @@ export const metadata: Metadata = {
   openGraph: pageOg("/movers"),
 };
 
+// "Most searched this week" (wave 2, tools track): Demand Finder's free rows.
+const MOST_SEARCHED_ROWS = FREE_DEMAND_ROWS;
+
 export default async function MoversPage() {
-  const [cat, series] = await Promise.all([getCatalog(), getIndexSeries()]);
+  const [cat, series, searched] = await Promise.all([getCatalog(), getIndexSeries(), getTopDemand(7, MOST_SEARCHED_ROWS)]);
   const up = movers(cat.cards, "up", 15);
   const down = movers(cat.cards, "down", 15);
   const value = offHighs(cat.cards, 15);
@@ -121,6 +126,9 @@ export default async function MoversPage() {
       {up.length || down.length || value.length ? (
         <EbayBuyCta className="mt-6" source="movers" page="movers" />
       ) : null}
+      <div className="mt-8">
+        <MostSearchedStrip rows={searched.bySearch.map((p) => ({ card: p.card, searches: p.searches }))} coveredDays={searched.coveredDays} />
+      </div>
       <div className="mt-6">
         <MoversToolsCta />
       </div>

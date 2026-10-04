@@ -112,13 +112,13 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, onClose }: { in
                     <>
                       {checkoutOpen ? (
                         <>
-                          <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket's store-by-store plan. Switch plans in the billing portal; the difference is prorated.</p>
+                          <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket&apos;s store-by-store plan. Switch plans in the billing portal; the difference is prorated.</p>
                           <div className="mt-3 flex justify-center">
                             <ManageSubscriptionButton label="Switch to Premium" />
                           </div>
                         </>
                       ) : (
-                        <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket's store-by-store plan. Plan changes open when subscriptions do.</p>
+                        <p className="mt-1 text-xs text-slate-400">Premium adds Best Basket&apos;s store-by-store plan. Plan changes open when subscriptions do.</p>
                       )}
                     </>
                   ) : (

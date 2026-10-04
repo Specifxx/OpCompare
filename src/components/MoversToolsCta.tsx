@@ -25,7 +25,7 @@ export function MoversToolsCta() {
             </Link>
           ) : (
             <PlanButton surface="nudge:movers" tier="premium" className="btn-ghost text-sm">
-              Best Basket's store plan is on Premium →
+              Best Basket&apos;s store plan is on Premium →
             </PlanButton>
           )}
         </div>

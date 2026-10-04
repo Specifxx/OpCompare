@@ -736,6 +736,12 @@ export async function getEmailStatus(): Promise<EmailStatus> {
 // ── end wave2:foundation ──
 
 // ── wave2:tools ──
+import { cardImage } from "./images";
+import { compareDemand, chartMovement, type Movement } from "./demand-movement";
+import { demandWindowOrThrow, utcDayKey, type DemandDayFile, type DemandDaysFile, type DemandWindowResult } from "./demand-snapshot";
+import { FREE_DEMAND_ROWS, PREMIUM_DEMAND_ROWS, type DemandWindowDays } from "./demand-view";
+import { assembleRisingCards, emptyAnalysis, riseInputsFor, weekAgoRanks, type RiseAnalysis, type RiseFile, type RiseHistory, type RiseInputs, type RiseScope, type UniverseCard, type WeekAgoRanking } from "./rise-predictor";
+import type { RisingSnapshotData } from "./rising-snapshot";
 // Best Basket, Box EV, Demand Finder, Rising Cards and the deck library read
 // through these. Same rules as every loader above: one self-cached read each,
 // tagged "prices", combined with getCatalog() OUTSIDE any cache callback.
@@ -840,5 +846,227 @@ export const getDecksUsingCard = unstable_cache(
     }),
   ["decks-using-card-v1"],
   { tags: [DECKS_TAG], revalidate: 3600 },
+);
+// ── Demand Finder, the /movers strip and Rising Cards ──
+// Both read the demand snapshot FILES and the Rising Cards feed the import
+// writes to the `data` branch (lib/demand-snapshot.ts, lib/rise-predictor.ts,
+// lib/tools-history.ts), plus the live counters. The history ref is read by
+// the caller (getHistoryRef caches itself) and passed IN, so no cached
+// callback below calls another loader, and a new import's ref is a new key.
+// Readers THROW inside the cache (a failed read is never stored as "no
+// demand") and the exported entry points catch outside it.
+
+/** A history file at a pinned ref: null when it doesn't exist, a throw when it can't be read. */
+async function historyFileAtOrThrow<T>(ref: string, rel: string): Promise<T | null> {
+  const local = process.env.HISTORY_LOCAL_DIR;
+  if (local) {
+    try {
+      return JSON.parse(await fs.readFile(path.join(local, rel), "utf8")) as T;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") return null;
+      throw e;
+    }
+  }
+  const r = await fetch(`${HISTORY_RAW}/${ref}/history/${rel}`, { next: { revalidate: ref === "data" ? 3600 : 30 * 86400 } });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`history ${rel}: HTTP ${r.status}`);
+  return (await r.json()) as T;
+}
+
+/** The live counters: every card with any activity, as cardId → [searches, views] (id + two integers each). */
+async function liveDemandOrThrow(): Promise<Record<string, [number, number]>> {
+  const rows = await prisma.card.findMany({
+    where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
+    select: { id: true, searchCount: true, viewCount: true },
+  });
+  return Object.fromEntries(rows.map((r) => [String(r.id), [r.searchCount, r.viewCount] as [number, number]]));
+}
+
+/** The window read, with the files at `ref` and the live counters. Throws (see above). */
+export async function demandWindowAtOrThrow(ref: string, days: number, opts: { previous?: boolean } = {}): Promise<DemandWindowResult> {
+  const [index, live] = await Promise.all([historyFileAtOrThrow<DemandDaysFile>(ref, "demand/days.json"), liveDemandOrThrow()]);
+  return demandWindowOrThrow(days, { days: index?.days ?? [], live, today: utcDayKey(), readDay: (d) => historyFileAtOrThrow<DemandDayFile>(ref, `demand/${d}.json`) }, opts);
+}
+
+/** One ranked demand row before hydration: the card id and its counts in the window. */
+export interface DemandRankRow {
+  cardId: string;
+  searches: number;
+  views: number;
+  move: Movement | null;
+}
+export interface DemandRanking {
+  bySearch: DemandRankRow[];
+  byView: DemandRankRow[];
+  windowUsable: boolean;
+  coveredDays: number | null;
+  totalDays: number;
+  previous: { startDay: string; endDay: string; coveredDays: number } | null;
+}
+
+// RiftCompare's computeTopDemand: computed once per (window, ref, day) at the
+// deepest list any reader shows (PREMIUM_DEMAND_ROWS) and sliced for every
+// caller. Only ids and counts are cached — a few KB; the cards are hydrated
+// from the catalogue outside the cache.
+const getDemandRanking = unstable_cache(
+  async (days: DemandWindowDays, ref: string, _day: string): Promise<DemandRanking> => {
+    const win = await demandWindowAtOrThrow(ref, days, { previous: true });
+    const usable = win.baselineDay != null && win.rows.length > 0;
+    if (!usable) return { bySearch: [], byView: [], windowUsable: false, coveredDays: null, totalDays: win.totalDays, previous: null };
+    // Each list keeps only cards with its own metric, ordered by compareDemand —
+    // the one ordering the previous period is ranked by too.
+    const bySearch = win.rows.filter((r) => r.searches > 0).sort(compareDemand("searches")).slice(0, PREMIUM_DEMAND_ROWS);
+    const byView = win.rows.filter((r) => r.views > 0).sort(compareDemand("views")).slice(0, PREMIUM_DEMAND_ROWS);
+    const prev = win.previous ?? null;
+    const searchMoves = prev ? chartMovement(bySearch.map((r) => r.cardId), prev.rows, "searches") : null;
+    const viewMoves = prev ? chartMovement(byView.map((r) => r.cardId), prev.rows, "views") : null;
+    return {
+      bySearch: bySearch.map((r) => ({ ...r, move: searchMoves?.get(r.cardId) ?? null })),
+      byView: byView.map((r) => ({ ...r, move: viewMoves?.get(r.cardId) ?? null })),
+      windowUsable: true,
+      coveredDays: win.coveredDays,
+      totalDays: win.totalDays,
+      previous: prev ? { startDay: prev.startDay, endDay: prev.endDay, coveredDays: prev.coveredDays } : null,
+    };
+  },
+  ["oc-demand-v1"],
+  { tags: [PRICES_TAG], revalidate: 172800 },
+);
+
+export interface DemandPick {
+  card: CardLite & { setCode: string };
+  searches: number;
+  views: number;
+  move: Movement | null;
+}
+export interface DemandResult {
+  bySearch: DemandPick[];
+  byView: DemandPick[];
+  windowUsable: boolean;
+  coveredDays: number | null;
+  totalDays: number;
+  failed?: boolean;
+  previous: { startDay: string; endDay: string; coveredDays: number } | null;
+}
+
+/**
+ * Most-searched and most-viewed cards over a window (RiftCompare's
+ * getTopDemand(days, limit)): the /movers strip (7, FREE_DEMAND_ROWS) and
+ * Demand Finder. Self-cached: call it directly, never from inside another
+ * cache. Never throws: a failure is an empty result with `failed`.
+ */
+export async function getTopDemand(days: DemandWindowDays, limit: number = FREE_DEMAND_ROWS): Promise<DemandResult> {
+  try {
+    const ref = (await getHistoryRef()) ?? "data";
+    const [full, cat] = await Promise.all([getDemandRanking(days, ref, utcDayKey()), getCatalog()]);
+    const hydrate = (rows: DemandRankRow[]): DemandPick[] =>
+      rows.flatMap((r) => {
+        const c = cat.byId.get(Number(r.cardId));
+        return c ? [{ card: { ...c, setCode: cat.setById.get(c.setId)?.code ?? "" }, searches: r.searches, views: r.views, move: r.move }] : [];
+      });
+    return {
+      bySearch: hydrate(full.bySearch).slice(0, limit),
+      byView: hydrate(full.byView).slice(0, limit),
+      windowUsable: full.windowUsable,
+      coveredDays: full.coveredDays,
+      totalDays: full.totalDays,
+      previous: full.previous,
+    };
+  } catch (err) {
+    console.error(`[demand] getTopDemand(${days}) failed — not cached:`, err);
+    return { bySearch: [], byView: [], windowUsable: false, coveredDays: null, totalDays: 0, failed: true, previous: null };
+  }
+}
+
+/** The searched cards (id + counts, most searched first) and the Rising Cards feed at `ref`. Throws inside. */
+export interface RiseFeed {
+  searched: [id: number, searches: number, views: number][];
+  file: RiseFile | null;
+}
+
+// The operational half of Rising Cards, scope-independent (RiftCompare's
+// getRiseInputs + getRiseHistory in one): the 2,000 most-searched cards' ids
+// and counts (a few tens of KB) and history/rising.json (each card's ≤18
+// weekly prices, demand velocity, demand a week ago — a few hundred KB, well
+// under 2 MB). Keyed on the ref and the day; the assembly is outside.
+const getRiseFeed = unstable_cache(
+  async (ref: string, _day: string): Promise<RiseFeed> => {
+    const [rows, file] = await Promise.all([
+      prisma.card.findMany({
+        where: { searchCount: { gt: 0 } },
+        orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }, { id: "asc" }],
+        take: 2000,
+        select: { id: true, searchCount: true, viewCount: true },
+      }),
+      historyFileAtOrThrow<RiseFile>(ref, "rising.json"),
+    ]);
+    return { searched: rows.map((r) => [r.id, r.searchCount, r.viewCount]), file };
+  },
+  ["oc-rise-feed-v1"],
+  { tags: [PRICES_TAG], revalidate: 172800 },
+);
+
+async function riseParts(scope: RiseScope): Promise<{ inputs: RiseInputs; history: RiseHistory; file: RiseFile | null }> {
+  const ref = (await getHistoryRef()) ?? "data";
+  const [feed, cat] = await Promise.all([getRiseFeed(ref, utcDayKey()), getCatalog()]);
+  const searched: UniverseCard[] = feed.searched.flatMap(([id, s, v]) => {
+    const c = cat.byId.get(id);
+    if (!c) return [];
+    return [{
+      id: String(id), slug: c.slug, name: c.name, setCode: cat.setById.get(c.setId)?.code ?? "", number: c.number, variant: c.variant,
+      hasImage: c.hasImage, imageThumbUrl: c.hasImage ? cardImage.thumb(c.id) : null, searchCount: s, viewCount: v,
+      marketUsd: c.marketUsd, low: c.low, stores: c.stores,
+    }];
+  });
+  const file = feed.file;
+  return {
+    inputs: riseInputsFor(scope, searched, file?.velocity ?? {}, file?.snapshotDays ?? 0),
+    history: { series: file?.series ?? {} },
+    file,
+  };
+}
+
+// Where a failed load is remembered, per scope, so an outage costs one attempt
+// per five minutes per instance rather than one per request (RiftCompare's).
+const riseFailedUntil = new Map<RiseScope, number>();
+
+/**
+ * THE one Rising Cards entry point — /tools/rising, /admin/rising and the
+ * snapshot mint. Not a cache itself: never wrap it in one, and never call it
+ * from inside an unstable_cache callback (its loaders cache themselves).
+ */
+export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  if ((riseFailedUntil.get(scope) ?? 0) > Date.now()) return Promise.resolve(emptyAnalysis(scope, true));
+  return riseParts(scope)
+    .then(({ inputs, history }) => assembleRisingCards(scope, inputs, history, Date.now()))
+    .catch((err) => {
+      console.error(`[rise-predictor] getCachedRisingCards(${scope}) failed — serving "temporarily unavailable":`, err);
+      riseFailedUntil.set(scope, Date.now() + 5 * 60_000);
+      return emptyAnalysis(scope, true);
+    });
+}
+
+/** The ranking as it stood a week ago, for ▲▼; null when it can't be rebuilt. Self-cached through its loaders. */
+export async function getRisingWeekAgo(scope: RiseScope): Promise<WeekAgoRanking | null> {
+  try {
+    const { inputs, history, file } = await riseParts(scope);
+    return file?.weekAgo ? weekAgoRanks(scope, inputs, history, file.weekAgo, Date.now()) : null;
+  } catch (err) {
+    console.warn(`[rise-predictor] week-ago ranking for ${scope} unavailable:`, (err as Error).message);
+    return null;
+  }
+}
+
+// ── A minted Hot 40 snapshot (/rising/[token]) ──
+// Frozen JSON, so cached for long; a delete revalidates RISING_SNAPSHOTS_TAG.
+export const RISING_SNAPSHOTS_TAG = "rising-snapshots";
+export const getRisingSnapshot = unstable_cache(
+  async (token: string): Promise<{ title: string; data: RisingSnapshotData; createdAt: string } | null> => {
+    if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+    const s = await prisma.risingSnapshot.findUnique({ where: { token }, select: { title: true, data: true, createdAt: true } });
+    return s ? { title: s.title, data: s.data as unknown as RisingSnapshotData, createdAt: s.createdAt.toISOString() } : null;
+  },
+  ["rising-snapshot-v1"],
+  { tags: [RISING_SNAPSHOTS_TAG], revalidate: 86400 },
 );
 // ── end wave2:tools ──

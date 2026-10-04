@@ -7,7 +7,8 @@
 // sent with OG_CACHED, every fallback with OG_AFTER_ERROR (see respond.ts).
 import type { ImageResponse } from "next/og";
 import { PRINTINGS, SET_KINDS, rarityLabel } from "../constants";
-import { getCatalog, getPublishedDeck, getSealedCatalog, getSiteStats } from "../data";
+import { getCatalog, getPublishedDeck, getRisingSnapshot, getSealedCatalog, getSiteStats } from "../data";
+import { hotListName } from "../rising-snapshot";
 import { cardImage } from "../images";
 import { postBySlug } from "../blog";
 import { postContext } from "../blog/context";
@@ -169,6 +170,25 @@ export async function deckOg(slug: string): Promise<ImageResponse> {
     return ogResponse(<BlogImage title={title} arts={arts} badge="DECK" footer={`${deck.leaderName} · ${deck.cardCount} cards, priced in six markets`} />, OG_CACHED);
   } catch (err) {
     warn(`deck(${slug})`, err);
+    return fallbackOg();
+  }
+}
+
+/**
+ * A minted Hot 40 snapshot (/rising/[token]): its frozen title beside the top
+ * three cards' art — every figure from the frozen row (getRisingSnapshot),
+ * nothing recomputed. A missing token or an empty run draws the fallback.
+ */
+export async function risingOg(token: string): Promise<ImageResponse> {
+  try {
+    const snap = await getRisingSnapshot(token);
+    if (!snap || !snap.data.picks.length) return fallbackOg();
+    const top = snap.data.picks.slice(0, 3);
+    const arts = await Promise.all(top.map((p) => (p.imageThumbUrl ? ogArt(cardImage.tile(Number(p.id))) : Promise.resolve(null))));
+    const day = new Date(snap.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+    return ogResponse(<BlogImage title={snap.title} arts={arts} badge={hotListName(snap.data.picks.length).replace("OP Compare ", "").toUpperCase()} footer={`A frozen snapshot of Rising Cards, ${day}`} />, OG_CACHED);
+  } catch (err) {
+    warn(`rising(${token.slice(0, 6)}…)`, err);
     return fallbackOg();
   }
 }
