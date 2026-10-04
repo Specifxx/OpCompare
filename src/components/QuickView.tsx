@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { sendCardView } from "@/lib/card-views";
 import { COUNTRIES, MARKETS } from "@/lib/country";
-import { ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
+import { ebayAffiliateUrl, ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
@@ -326,6 +326,25 @@ export function QuickView({
               />
               {/* Add to collection — track & value your whole binder (collection-alerts, wave 2). */}
               <AddToCollectionButton cardId={data.id} cardPath={`/card/${data.slug}`} />
+              {m.graded.length ? (
+                <div className="mt-3">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">Graded on {ebay}</p>
+                  <ul className="space-y-1">
+                    {m.graded.map((g) => (
+                      <li key={g.url}>
+                        <a href={ebayAffiliateUrl(g.url, "quickview-graded")} target="_blank" rel={outboundRel()} data-retailer="ebay_graded" data-page={PAGE} data-card={data.slug} data-surface="ebay_graded" className="flex items-center justify-between gap-3 rounded-md border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs hover:border-ink-600">
+                          <span className="font-semibold text-slate-200">
+                            {g.grader}
+                            {g.grade !== "Graded" ? <span className="num ml-1">{g.grade}</span> : null}
+                          </span>
+                          <span className="num font-bold text-white">{money(g.priceCents, country)}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-[11px] text-slate-500">Slabs are a different product from the raw copies above and never part of the comparison.</p>
+                </div>
+              ) : null}
 
               {/* Every market's cheapest open listing, the visitor's own marked. */}
               <div className="mt-4">

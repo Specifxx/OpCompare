@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getCatalog, getLibraryDecks, getSealedCatalog } from "@/lib/data";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
-import { POSTS } from "@/lib/blog";
+import { AUTHORS, POSTS, postHref } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 import { getStoreStats } from "@/lib/data";
 import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/facets";
@@ -22,14 +22,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // The five region homes (design track), each a market-locked copy of "/".
   const regions = ["/au", "/uk", "/ca", "/sg", "/eu"].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.9 }));
   fixed.push(...regions);
-  const posts = POSTS.map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }));
+  const posts = POSTS.map((p) => ({ url: `${SITE_URL}${postHref(p)}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }));
   // A build with no database yet (the very first deploy) still gets a sitemap;
   // the daily revalidation fills in the cards once the import has run.
   let data: [Awaited<ReturnType<typeof getCatalog>>, Awaited<ReturnType<typeof getSealedCatalog>>];
   try {
     data = await Promise.all([getCatalog(), getSealedCatalog()]);
   } catch {
-    return [...fixed, ...posts];
+    return [...fixed, ...posts, ...catalogueEntries(null, now)];
   }
   const [cat, sealed] = data;
   return [
@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
+    ...catalogueEntries(cat, now),
     ...(await deckEntries(now)),
   ];
 }
@@ -71,5 +72,20 @@ function toolsTrackEntries(cat: Awaited<ReturnType<typeof getCatalog>>, stats: A
     ...KEYWORDS.map((k) => `/keywords/${k.slug}`),
     ...[...leaders].map((s) => `/leaders/${s}`),
     ...STORES.filter((s) => stocked.has(`store:${s.key}`)).map((s) => `/stores/${s.key}`),
+  ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));
+}
+
+// The catalogue track's pages: the guides hub, the gallery hub and every set's
+// gallery (a set with no revealed cards is noindex, so not listed), support,
+// authors. The guides themselves are in `posts` through postHref.
+function catalogueEntries(cat: Awaited<ReturnType<typeof getCatalog>> | null, now: Date): MetadataRoute.Sitemap {
+  const withCards = cat ? new Set(cat.cards.map((c) => c.setId)) : new Set<number>();
+  return [
+    "/guides",
+    "/gallery",
+    "/support",
+    "/learn",
+    ...AUTHORS.map((a) => `/authors/${a.slug}`),
+    ...(cat ? cat.sets.filter((s) => withCards.has(s.id)).map((s) => `/sets/${s.slug}/gallery`) : []),
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));
 }

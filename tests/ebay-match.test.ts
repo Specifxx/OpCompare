@@ -16,6 +16,10 @@ import {
   chooseListing,
   ebayConditionLabel,
   mapItem,
+  panelListings,
+  parseGrade,
+  isGradedListing,
+  screenGraded,
   priceFilter,
   pruneCheapOutliers,
   queryWord,
@@ -301,7 +305,7 @@ test("chooseListing picks the cheapest DELIVERED listing", () => {
   assert.equal(r.shippingCents, null);
 });
 
-const L = (cents: number, i: number): EbayListing => ({ itemId: String(i), title: "", priceCents: cents, currency: "USD", shippingCents: 0, url: "", condition: null, location: "US" });
+const L = (cents: number, i: number): EbayListing => ({ itemId: String(i), title: "", priceCents: cents, currency: "USD", shippingCents: 0, url: "", condition: null, location: "US", imageUrl: null });
 test("pruneCheapOutliers drops a 0.3×-median head only with 4+ listings", () => {
   assert.equal(pruneCheapOutliers([L(300, 1), L(1000, 2), L(1000, 3), L(1100, 4)])[0].itemId, "2");
   assert.equal(pruneCheapOutliers([L(300, 1), L(1000, 2), L(1100, 3)])[0].itemId, "1");
@@ -373,4 +377,48 @@ test("sealed: identity through matchSealedTitle", () => {
   const r = chooseListing([other, ok], t, "US");
   assert.equal(r.listing?.itemId, ok.itemId);
   assert.equal(r.rejects["other-product"], 1);
+});
+
+// ── Graded slabs: captured from the same search, never an Offer ──────────────
+test("parseGrade reads the grader and grade, and never invents one", () => {
+  assert.deepEqual(parseGrade("PSA 10 GEM MINT Shanks OP01-120 Manga Rare One Piece"), { grader: "PSA", grade: 10 });
+  assert.deepEqual(parseGrade("Shanks OP01-120 Parallel BGS 9.5 Romance Dawn"), { grader: "BGS", grade: 9.5 });
+  assert.deepEqual(parseGrade("CGC-9 Portgas.D.Ace OP13-119 SAA"), { grader: "CGC", grade: 9 });
+  assert.deepEqual(parseGrade("Shanks OP01-120 SGC10 One Piece"), { grader: "SGC", grade: 10 });
+  assert.deepEqual(parseGrade("Shanks OP01-120 PSA graded, see photos"), { grader: "PSA", grade: null });
+  assert.deepEqual(parseGrade("One of 10 PSA submissions Shanks"), { grader: "PSA", grade: null });
+  assert.deepEqual(parseGrade("Shanks OP01-120 SEC Romance Dawn NM"), { grader: null, grade: null });
+  assert.equal(isGradedListing("PSA 9 Shanks"), true);
+  assert.equal(isGradedListing("Shanks OP01-120 NM"), false);
+});
+
+test("screenGraded keeps slabs of the target printing only, best grade first, and the raw path still rejects them", () => {
+  const slab10 = item("PSA 10 GEM MINT Shanks OP01-120 Parallel Alt Art SEC Romance Dawn One Piece TCG", "260.00", { conditionId: "2750", condition: "Graded" });
+  const slab9 = item("BGS 9 Shanks OP01-120 Parallel Alt Art Romance Dawn One Piece", "150.00", { conditionId: "2750", condition: "Graded" });
+  const wrongPrinting = item("PSA 10 Shanks OP01-120 SEC Romance Dawn One Piece English", "40.00", { conditionId: "2750", condition: "Graded" });
+  const raw = item("Shanks OP01-120 Parallel Alt Art SEC Romance Dawn One Piece TCG English", "80.00");
+  const noGrader = item("Graded Shanks OP01-120 Parallel Alt Art Romance Dawn One Piece", "100.00", { conditionId: "2750", condition: "Graded" });
+  const lowBait = item("PSA 8 Shanks OP01-120 Parallel Alt Art Romance Dawn One Piece", "5.00", { conditionId: "2750", condition: "Graded" });
+  const lot = item("Lot of 3 PSA 10 Shanks OP01-120 Parallel Alt Art Romance Dawn One Piece", "600.00", { conditionId: "2750", condition: "Graded" });
+  const all = [slab9, raw, wrongPrinting, noGrader, lowBait, lot, slab10];
+  const slabs = screenGraded(all, single(2), "US");
+  assert.deepEqual(slabs.map((l) => `${l.grader} ${l.grade}`), ["PSA 10", "BGS 9"]);
+  assert.equal(pick(all, 2).listing?.title, raw.title); // raw pricing is unchanged
+  assert.equal(screenGraded(all, single(1), "US").length, 1); // the base printing's own slab
+});
+
+test("panelListings puts the headline pick first and caps at 8", () => {
+  const list = Array.from({ length: 12 }, (_, i) => L(1000 + i * 10, i));
+  const out = panelListings(list, list[3]);
+  assert.equal(out[0].itemId, "3");
+  assert.equal(out.length, 8);
+  assert.equal(new Set(out.map((l) => l.itemId)).size, 8);
+  assert.equal(panelListings(list, null, new Set(["0"]))[0].itemId, "1");
+});
+
+test("mapItem carries Browse's own https image only", () => {
+  const it = item("Shanks OP01-120 NM", "7.50");
+  assert.equal(mapItem({ ...it, image: { imageUrl: "https://i.ebayimg.com/x.jpg" } })?.imageUrl, "https://i.ebayimg.com/x.jpg");
+  assert.equal(mapItem({ ...it, image: { imageUrl: "http://i.ebayimg.com/x.jpg" } })?.imageUrl, null);
+  assert.equal(mapItem(it)?.imageUrl, null);
 });

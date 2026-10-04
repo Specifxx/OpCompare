@@ -15,6 +15,7 @@
 // printing, not every "spa…" in a name); words of four letters or more may also
 // match inside a word. Ranking: exact name, then names that start with the
 // query, then word-start matches, standard prints first, then value.
+import { slugsForAlias } from "./card-aliases";
 import type { CardLite, SetLite } from "./data";
 
 export function norm(s: string): string {
@@ -151,8 +152,10 @@ export function searchCards(cards: CardLite[], setById: Map<number, SetLite>, q:
       .sort((a, b) => (a.printing === "standard" ? -1 : 0) - (b.printing === "standard" ? -1 : 0) || (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
       .slice(0, limit);
   }
+  // A community nickname for an exact printing ranks that card first.
+  const aliased = new Set(slugsForAlias(q));
   const variants = queryVariants(q);
-  if (!variants.length) return [];
+  if (!variants.length && !aliased.size) return [];
   const scored: { c: CardLite; s: number }[] = [];
   for (const c of cards) {
     const set = setById.get(c.setId);
@@ -161,6 +164,7 @@ export function searchCards(cards: CardLite[], setById: Map<number, SetLite>, q:
       const s = scoreCard(c, set, v);
       if (s != null && (best == null || s > best)) best = s;
     }
+    if (aliased.has(c.slug)) best = Number.MAX_SAFE_INTEGER;
     if (best != null) scored.push({ c, s: best });
   }
   return scored.sort((a, b) => b.s - a.s || a.c.id - b.c.id).slice(0, limit).map((x) => x.c);

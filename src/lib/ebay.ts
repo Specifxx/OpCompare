@@ -175,6 +175,7 @@ export interface BrowseItem {
   itemAffiliateWebUrl?: string;
   condition?: string;
   conditionId?: string;
+  image?: { imageUrl?: string };
 }
 
 export type BrowseResult =

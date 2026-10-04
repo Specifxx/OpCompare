@@ -42,6 +42,12 @@ export interface StoreInfo {
    */
   collections: string[];
   currency?: string;
+  /** Flat postage in the market's currency, ONLY where the store's own page states one flat rate (dated in STORE_POSTAGE_CHECKED). */
+  shippingCents?: number;
+  /** Free postage over this order total, same rule. */
+  freeOverCents?: number;
+  /** The store's own shipping policy page, ONLY where it was fetched and returned 200 (STORE_POSTAGE_CHECKED). */
+  policyUrl?: string;
   /** Omitted = "shopify". */
   platform?: StorePlatform;
   /** Ecwid only: the store id. The public token is re-read from the storefront on every run. */
@@ -52,7 +58,11 @@ export function platformOf(store: Pick<StoreInfo, "platform">): StorePlatform {
   return store.platform ?? "shopify";
 }
 
-export const STORES: StoreInfo[] = [
+/** The day store shipping-policy URLs were last verified (an HTTP 200 on <base>/policies/shipping-policy). */
+export const STORE_POSTAGE_CHECKED = "2026-10-04";
+const POLICY_VERIFIED = new Set(["acecollectibles", "animealley", "balancegaming", "bananagames", "battlebearkl", "battlebearsb", "blackrosehobbies", "blackvaultgaming", "boardgamebliss", "boardsandswords", "boutiquelechevalier", "breakthecase", "bsastore", "burbanksportscards", "capefear", "cardboardanddie", "cardboardgamer", "cardbot", "cardboyz", "cardcapital", "cardcavern", "cardcosmos", "carddynasty", "cardfather", "cardgoblin", "cardhouse", "cardhub", "cardsandcoasters", "cardxcards", "cardxchange", "cartesleo", "cartessportivesrivesud", "castlegames", "cherry", "collectedition", "collectorclash", "collectorsmith", "collectorstorecards", "comicsbeyond", "commonboxgames", "cosmiccollectables", "danireon", "danireonca", "deckoutgaming", "deepdivegames", "derpycards", "desertcitygames", "devastationmiami", "dicesaloon", "dobigthings", "dongames", "dragonegggames", "dragonsdenshop", "eacollectibles", "eclipsecardsandhobby", "eclipsegames", "elduelista", "elementalarcade", "empiretradings", "enterthebattlefield", "eternalgameschesterfield", "eternalmagic", "fabricatorsforge", "fantasyforged", "finalboss", "five6gaming", "forbiddenplanet", "frenlybricks", "gachaboba", "game3", "gamelandia", "gameology", "gameostorus", "games401", "gamesportal", "gamestimeaversa", "gametime", "gamezilla", "gatekeepers", "gatheringpointgames", "gatorscardden", "gggreensborough", "gglegends", "goodgames", "grailborne", "grognardgames", "gsgameon", "gtgames", "guf", "hairytarantula", "haventabletop", "hbtcollectables", "heavenscollectibles", "hobbiesville", "hobbiesvilleca", "hobbycollectorsaustralia", "hobbysag", "hpwcards", "impactgamingcenter", "impactleague", "infinitycards", "invasioninc", "itsgametime", "jacksonqueen", "jgccollectables", "justcardstuff", "kaiofcards", "kanzengames", "kingdomtitans", "knightandday", "legendarycollectables", "letsplaycards", "levelupgames", "levelupgamesmd", "lichcards", "lmshandel", "lunacards", "lvlupgaming", "managaming", "manamarketeu", "manyrealms", "mayhemcollectables", "merchantsinventory", "millenniumcomics", "mintcollectables", "motorcitygaming", "moxinthehole", "mysterymtg", "nerdmerchant", "nexustabletopgames", "nordiclegends", "northernwartable", "npcollectibles", "obsessiongaming", "onboardgaming", "onepiececardsfr", "onepiecesingles", "paradoxtcg", "pcatoys", "phantasma", "piratecards", "plenty", "pokebox", "pokeboxusa", "progressccg", "punkouter", "pvpshoppe", "raptorgames", "rarecards", "recollectibles", "redriotgames", "redsun", "shippintexas", "shuffled", "silvergoblin", "smokeandmirrorshobby", "solacido", "spellboundgames", "spellroo", "spindown", "stompinggrounds", "stylecreep", "superanimestore", "tapsgames", "tcgking", "teamcardtitan", "thatgamestore", "thecardspot", "thetrainercourt", "tier1games", "tierzerogames", "timetwister", "tistacards", "totalcards", "toysucker", "tradingcardmasters", "tradingcardworld", "triadcards", "trinketmage", "trollaustralia", "trollaustraliamelb", "troveofcollectibles", "turtletcg", "universetcg", "vegassingles", "vulcancollectibles", "waywardcitygames", "wolfdentcg", "wonderlandgames", "wulfgaming", "yardsgames", "zulusgames"]);
+
+const RAW_STORES: StoreInfo[] = [
   { key: "atomilicollectables", name: "ATOMILI COLLECTABLES", base: "https://atomilicollectables.com", country: "US", collections: ["one-piece-card-game"] },
   { key: "blackvaultgaming", name: "Black Vault Gaming", base: "https://blackvaultgaming.com", country: "US", collections: ["one-piece-card-game","one-piece-tcg-singles","one-piece-card-game-singles","one-piece-promotion-cards","extra-booster-one-piece-heroines-edition","one-piece-demo-deck-cards"] },
   { key: "capefear", name: "Cape Fear Collectibles", base: "https://www.capefearcollectibles.com", country: "US", collections: ["one-piece-singles"] },
@@ -453,6 +463,9 @@ export const STORES: StoreInfo[] = [
   { key: "mightytoys", name: "Mighty Toys", base: "https://mightytoys.com.au", country: "AU", collections: ["147798763"], platform: "ecwid", ecwidStoreId: 14194057 },
   { key: "grandjgames", name: "Grand J Games", base: "https://grandjgames.com", country: "AU", collections: ["/tcgs/one-piece/one-piece-singles/"], platform: "bigcommerce" },
 ];
+
+/** Every store, with `policyUrl` filled where the store's policy page was verified. */
+export const STORES: StoreInfo[] = RAW_STORES.map((s) => (POLICY_VERIFIED.has(s.key) ? { ...s, policyUrl: `${s.base}/policies/shipping-policy` } : s));
 
 export const STORE_BY_KEY: Record<string, StoreInfo> = Object.fromEntries(STORES.map((s) => [s.key, s]));
 

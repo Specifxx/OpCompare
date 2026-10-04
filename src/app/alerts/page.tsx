@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, JsonLd } from "@/components/ui";
 import { AlertsSignupCta } from "@/components/AlertsSignupCta";
-import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { getEmailStatus } from "@/lib/data";
 import { alertsAnswer, alertsFaqs, alertsPlusCopy } from "@/lib/alerts-copy";
@@ -89,7 +89,6 @@ export default async function AlertsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <JsonLd data={breadcrumbLd([{ name: "Price alerts", path: CANONICAL }])} />
       <JsonLd data={faqLd(faqs)} />
       <Breadcrumbs trail={[{ name: "Price alerts" }]} />
 

@@ -78,8 +78,8 @@ export interface RecentMove {
 
 /** Day-file maps (productId → [market cents, low cents]) → the changed products, biggest |%| first. */
 export function recentMoves(
-  prev: Record<string, [number | null, number | null]>,
-  last: Record<string, [number | null, number | null]>,
+  prev: Record<string, (number | null)[]>,
+  last: Record<string, (number | null)[]>,
   isCard: (id: number) => boolean,
   limit = 24,
 ): RecentMove[] {

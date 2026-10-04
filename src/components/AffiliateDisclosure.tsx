@@ -1,5 +1,13 @@
-// RiftCompare's AffiliateDisclosure: the one-line FTC-style note beside an
-// affiliate link or strip, worded once here so every surface says the same.
+// The visible affiliate disclosure, shown IMMEDIATELY ADJACENT to affiliate
+// links (RiftCompare's AffiliateDisclosure). The eBay Partner Network requires
+// the disclosure to be "clear and prominent" and near the promotional content;
+// the same FTC-derived rule covers TCGplayer's programme.
+//
+// Never hide it behind a hover, tooltip, sr-only or collapsed element, and
+// never render it for only some visitors: if an affiliate link renders, its
+// disclosure renders. The machine-readable half (rel="sponsored nofollow")
+// is lib/affiliate.ts outboundRel().
+
 type Partner = "ebay" | "tcgplayer" | "both";
 
 const TEXT: Record<Partner, string> = {

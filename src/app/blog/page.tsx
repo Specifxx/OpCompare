@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/ui";
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import { postContext } from "@/lib/blog/context";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default async function BlogIndex() {
   const ctx = await postContext(getCountry());
-  const posts = POSTS.map((p) => ({
+  const posts = POSTS.filter((p) => p.category !== "guide").map((p) => ({
     p,
     title: p.title(ctx),
     hero: p.build(ctx).heroCards,
@@ -54,6 +54,10 @@ export default async function BlogIndex() {
           <a href="/feed.xml" className="text-brand-400 hover:underline">
             RSS
           </a>
+          . Evergreen explainers live in the{" "}
+          <Link href="/guides" className="text-brand-400 hover:underline">
+            guides
+          </Link>
           .
         </p>
       </div>
@@ -61,14 +65,14 @@ export default async function BlogIndex() {
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
         Latest{" "}
         <span className="font-sans text-xs font-normal text-slate-500">
-          · {POSTS.length}
+          · {posts.length}
         </span>
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map(({ p, title, hero }, i) => (
           <Link
             key={p.slug}
-            href={`/blog/${p.slug}`}
+            href={postHref(p)}
             className="card-surface group flex flex-col overflow-hidden hover:border-ink-600"
           >
             <div

@@ -1,4 +1,4 @@
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import { getCatalog } from "@/lib/data";
 import { KEYWORDS } from "@/lib/keywords";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -47,10 +47,11 @@ export async function GET() {
     `- [Box EV calculator](${u("/tools/box-ev")}), [Deal Finder](${u("/tools/deal-finder")}), [Best Basket](${u("/tools/best-basket")}); all tools: [${u("/tools")}](${u("/tools")})`,
     "",
     "## Guides",
-    ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(`/blog/${p.slug}`)}): ${p.description}`),
+    ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(postHref(p))}): ${p.description}`),
     "",
     "## About",
     `- [How we compare prices](${u("/methodology")}), [About](${u("/about")}), [Editorial policy](${u("/editorial-policy")})`,
+    `- [Full reference for AI search](${u("/llms-full.txt")}): the same facts at length, with the most valuable cards, every released set and the stores per market`,
     `- Feeds: [RSS](${u("/feed.xml")}), [JSON Feed](${u("/feed.json")}); [sitemap](${u("/sitemap.xml")})`,
     "",
   ];

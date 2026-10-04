@@ -1,15 +1,15 @@
-import Link from "next/link";
+import SealedQuickLink from "./SealedQuickLink";
 import type { Country } from "@/lib/country";
 import type { SealedLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { headline } from "@/lib/price";
 import { SealedWatchButton } from "./SealedWatchButton";
 
-export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Country; setCode?: string | null }) {
+export function SealedTile({ s, country, setCode, soldOut = false }: { s: SealedLite; country: Country; setCode?: string | null; /** Every store we track lists it and says sold out on a fresh read (sealed-offers.ts soldOutEverywhere). */ soldOut?: boolean }) {
   const h = headline(s, country);
   const perPack = s.packCount && s.packCount > 1 && h.cents != null ? Math.round(h.cents / s.packCount) : null;
   return (
-    <Link href={`/sealed/${s.slug}`} className="group card-surface flex flex-col overflow-hidden hover:border-ink-600">
+    <SealedQuickLink slug={s.slug} className="group card-surface flex flex-col overflow-hidden hover:border-ink-600">
       <div className="relative bg-white/95 p-3">
         <span className="absolute left-2 top-2 z-[1] rounded-sm bg-ink-950/85 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-100">{s.kind}</span>
         <span className="absolute right-2 top-2 z-[1]">
@@ -23,6 +23,7 @@ export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Co
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
+        {soldOut ? <span className="chip w-fit bg-red-500/15 text-[10px] font-bold uppercase tracking-wide text-red-400">Sold out at every store we track</span> : null}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white">{s.name}</h3>
         <p className="text-xs text-slate-400">
           {setCode ?? "One Piece"}
@@ -52,6 +53,6 @@ export function SealedTile({ s, country, setCode }: { s: SealedLite; country: Co
           )}
         </div>
       </div>
-    </Link>
+    </SealedQuickLink>
   );
 }

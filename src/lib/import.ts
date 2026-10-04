@@ -403,21 +403,27 @@ export async function aggregate(log: Log): Promise<void> {
   log("Aggregated per-market lowest prices");
 }
 
+/** A product's cheapest listing per market, in MARKETS order and each market's own currency. */
+export function marketLows(p: { lowUS: number | null; lowAU: number | null; lowUK: number | null; lowSG: number | null; lowCA: number | null; lowEU: number | null }): (number | null)[] {
+  return [p.lowUS, p.lowAU, p.lowUK, p.lowSG, p.lowCA, p.lowEU];
+}
+
 export async function recordHistory(log: Log, today: Date = utcDay()): Promise<HistoryResult> {
   const day = today.toISOString().slice(0, 10);
   const dn = dayNum(day);
   const [cards, sealed] = await Promise.all([
-    prisma.card.findMany({ select: { id: true, marketUsd: true, lowUS: true } }),
-    prisma.sealed.findMany({ select: { id: true, marketUsd: true, lowUS: true } }),
+    prisma.card.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
+    prisma.sealed.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
   ]);
   const isCard = new Set(cards.map((c) => c.id));
-  const byBucket = new Map<string, { id: number; marketUsd: number | null; lowUS: number | null }[]>();
+  type Row = (typeof cards)[number];
+  const byBucket = new Map<string, Row[]>();
   for (const p of [...cards, ...sealed]) (byBucket.get(bucketOf(p.id)) ?? byBucket.set(bucketOf(p.id), []).get(bucketOf(p.id))!).push(p);
 
   const index = readIndex();
   const prev = [...index.days].reverse().find((d) => d.day < day) ?? null;
   const prevN = prev ? dayNum(prev.day) : null;
-  const dayFile: DayFile = { v: 1, day, p: {} };
+  const dayFile: DayFile = { v: 2, day, p: {} };
   const cardRows: unknown[][] = [];
   const sealedRows: unknown[][] = [];
   const pairs: [number, number][] = [];
@@ -428,9 +434,12 @@ export async function recordHistory(log: Log, today: Date = utcDay()): Promise<H
     const file = readBucket(b);
     for (const p of byBucket.get(b) ?? []) {
       const key = String(p.id);
-      if (p.marketUsd != null || p.lowUS != null) {
-        file.p[key] = withPoint(file.p[key], [dn, p.marketUsd, p.lowUS]);
-        dayFile.p[key] = [p.marketUsd, p.lowUS];
+      // v2: every market's low rides with the day's point (lib/history.ts Point).
+      const lows = marketLows(p);
+      if (p.marketUsd != null || lows.some((x) => x != null)) {
+        file.v = 2;
+        file.p[key] = withPoint(file.p[key], [dn, p.marketUsd, ...lows]);
+        dayFile.p[key] = [p.marketUsd, ...lows];
       }
       const series = file.p[key] ?? [];
       const c7 = p.marketUsd != null ? changeOver(series, dn, 7) : null;
@@ -447,7 +456,7 @@ export async function recordHistory(log: Log, today: Date = utcDay()): Promise<H
       }
     }
     // A product TCGplayer no longer lists keeps its series until it ages out.
-    for (const [k, series] of Object.entries(file.p)) if (!series.length || series[series.length - 1][0] <= addDays(dn, -KEEP_DAYS)) delete file.p[k];
+    for (const [k, series] of Object.entries(file.p)) if (!series.length || (series[series.length - 1][0] as number) <= addDays(dn, -KEEP_DAYS)) delete file.p[k];
     writeBucket(b, file);
     writeRecentBucket(b, recentOf(file, dn)); // the binder chart's 120-day read (collection-alerts)
   }

@@ -74,7 +74,7 @@ export function priceMapFromPoints(points: readonly Point[] | undefined): Map<nu
   const col = points.some((p) => p[1] != null && p[1] > 0) ? 1 : 2;
   for (const p of points) {
     const v = p[col];
-    if (v != null && v > 0) out.set(dayMsOf(p[0]), v);
+    if (v != null && v > 0) out.set(dayMsOf(p[0] as number), v);
   }
   return out;
 }

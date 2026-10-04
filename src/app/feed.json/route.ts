@@ -1,4 +1,4 @@
-import { AUTHOR, POSTS } from "@/lib/blog";
+import { AUTHOR, POSTS, postHref } from "@/lib/blog";
 import { getCatalog } from "@/lib/data";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -23,7 +23,7 @@ export async function GET() {
     language: "en",
     authors: [{ name: AUTHOR.name, url: `${SITE_URL}${AUTHOR.url}` }],
     items: POSTS.map((p) => {
-      const url = `${SITE_URL}/blog/${p.slug}`;
+      const url = `${SITE_URL}${postHref(p)}`;
       return {
         id: url,
         url,

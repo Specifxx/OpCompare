@@ -10,6 +10,14 @@ export const rarities: Post = {
   title: () => "One Piece Card Rarities Explained: Parallel, Manga, SP & Treasure Rare",
   description: "What C, UC, R, SR, SEC and L mean on a One Piece card, how Parallel, Manga, SP and Treasure Rare printings differ, and what each typically costs — from live price data.",
   tags: ["guide", "rarity", "collecting"],
+  category: "guide",
+  faq: [
+    { q: "What does SEC mean on a One Piece card?", a: "SEC is Secret Rare, the rarest regular rarity in a booster set, usually one or two a box. The Parallel, Manga and SP printings of a card are separate products with their own prices, often far above the standard print." },
+    { q: "What is a Parallel in the One Piece Card Game?", a: "A Parallel (or alternate art) is the same card with new art, usually foil and pulled much less often than the standard print. It plays identically and is priced as its own product." },
+    { q: "Are SP and Manga cards worth more than the standard card?", a: "Usually, because they are scarcer and collected for their art, but the gap varies card by card. Each card page shows the ratio between its printings from live TCGplayer prices; [the price guide](/price-guide) lists them all." },
+    { q: "What is a Treasure Rare?", a: "Treasure Rare (TR) is a special rarity introduced in recent sets, among the hardest pulls in a box. Like other special printings it has its own TCGplayer product and price." },
+    { q: "Does a higher rarity mean a card is better to play?", a: "No. Rarity sets how often a card is pulled, not how good it is. Plenty of lower-rarity cards trade above higher ones because demand follows what players use." },
+  ],
   date: "2026-10-03",
   minutes: 8,
   related: [

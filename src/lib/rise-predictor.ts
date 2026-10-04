@@ -262,7 +262,7 @@ export function weeklySeries(points: readonly Point[], today: string): [number, 
   const byWeek = new Map<number, [number, number]>();
   for (const [dn, market] of points) {
     if (market == null || market <= 0) continue;
-    const day = Math.round(Date.parse(`${dayIso(dn)}T00:00:00Z`) / DAY_MS);
+    const day = Math.round(Date.parse(`${dayIso(dn as number)}T00:00:00Z`) / DAY_MS);
     if (day < from || day > todayEpoch) continue;
     const w = weekOf(day);
     const cur = byWeek.get(w);

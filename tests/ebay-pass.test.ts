@@ -24,6 +24,8 @@ const op = () => Promise.resolve({ count: 0 });
   sealed: { findMany: async () => [] },
   ebayCheck: { findMany: async () => [], upsert: () => (db.writes++, op()) },
   offer: { findMany: async () => [], upsert: () => (db.writes++, op()), deleteMany: () => (db.writes++, op()) },
+  ebayListing: { deleteMany: () => (db.writes++, op()), createMany: () => (db.writes++, op()) },
+  ebayGradedListing: { deleteMany: () => (db.writes++, op()), createMany: () => (db.writes++, op()) },
   $transaction: (ops: Promise<unknown>[]) => Promise.all(ops),
 };
 

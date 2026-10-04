@@ -1,3 +1,4 @@
+import { AdSenseLoader } from "@/components/AdSenseLoader";
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
@@ -11,6 +12,7 @@ import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import QuickViewProvider from "@/components/QuickViewProvider";
+import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { SideNav } from "@/components/SideNav";
 import { PlanProvider } from "@/components/PlanProvider";
 import { OutboundBeacon } from "@/components/OutboundBeacon";
@@ -149,6 +151,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QuickViewProvider>
             {/* The watchlist drawer (the header heart's slide-over); client-only state. */}
             <WatchlistDrawerProvider>
+            <SealedQuickViewProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <OutboundBeacon />
@@ -173,6 +176,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ReferralCapture />
               </MegaMenuProvider>
             </CommandLauncherProvider>
+            </SealedQuickViewProvider>
             </WatchlistDrawerProvider>
           </QuickViewProvider>
           {/* The ad zone needs the same rail reservation as <main>. It reads the
@@ -193,6 +197,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         />
         </PlanProvider>
+        <AdSenseLoader />
         {/* Vercel Analytics behind the consent signal (RiftCompare's
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />

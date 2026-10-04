@@ -233,6 +233,8 @@ export interface HistoryPoint {
   day: string;
   marketUsd: number | null;
   lowUsd: number | null;
+  /** Every market's low in MARKETS order and its own currency (v1 history: US only). */
+  lows?: (number | null)[];
 }
 
 // An offer not refreshed for 72 hours (its store failed to read since) is shown
@@ -1308,3 +1310,105 @@ export async function getSetChecklist(setId: number, market: Country): Promise<C
     });
 }
 // ── end wave2:collection-alerts ──
+
+
+// ── wave2:catalogue ──
+// Loaders for the catalogue surfaces (eBay panels, picks, per-market history,
+// support, market stats…). Every one is self-cached with the "prices" tag; never
+// wrap one in another unstable_cache and never call one from inside a cache
+// callback. Entries stay small (the largest is under 100 KB).
+import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type EbayPanelData, type PickCard } from "./listing-panel";
+
+/**
+ * One product's captured eBay listings (Listings tab) and slabs (Graded tab),
+ * every market. Written by scripts/ebay.ts from the SAME Browse search the
+ * price pass makes (zero extra calls); read here through the Data Cache so a
+ * card view costs no query. ~8 rows x 6 markets, titles trimmed: well under 10 KB.
+ */
+export const getEbayPanel = unstable_cache(
+  async (productId: number): Promise<EbayPanelData> => {
+    const since = new Date(Date.now() - PANEL_MAX_AGE_HOURS * 3600 * 1000);
+    const [listings, graded] = await Promise.all([
+      prisma.ebayListing.findMany({
+        where: { productId, updatedAt: { gte: since } },
+        orderBy: [{ market: "asc" }, { rank: "asc" }],
+        select: { market: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
+      }),
+      prisma.ebayGradedListing.findMany({
+        where: { productId, updatedAt: { gte: since } },
+        orderBy: [{ market: "asc" }, { priceCents: "asc" }],
+        take: 24,
+        select: { market: true, itemId: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true, grader: true, grade: true },
+      }),
+    ]);
+    return {
+      listings: listings.map((l) => ({ ...l, title: panelTitle(l.title) })),
+      graded: graded.map((l) => ({ ...l, title: panelTitle(l.title) })),
+    };
+  },
+  ["ebay-panel-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/**
+ * "Chase cards on eBay": the newest released booster set's (or `setId`'s) top
+ * SP / Manga / Parallel / Treasure / Secret printings by TCGplayer market price,
+ * each joined with its rank-0 eBay listing in every market that has a fresh one
+ * with an image. At most 12 cards: a few KB.
+ */
+export const getEbayPicks = unstable_cache(
+  async (setId: number | null): Promise<PickCard[]> => {
+    let sid = setId;
+    if (sid == null) {
+      const s = await prisma.set.findFirst({ where: { kind: "booster", releasedOn: { lte: new Date() } }, orderBy: { releasedOn: "desc" }, select: { id: true } });
+      sid = s?.id ?? null;
+    }
+    if (sid == null) return [];
+    const cards = await prisma.card.findMany({
+      where: { setId: sid, marketUsd: { gt: 0 }, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
+      orderBy: { marketUsd: "desc" },
+      take: 24,
+      select: { id: true, slug: true, name: true, number: true, variant: true, printing: true, rarity: true, marketUsd: true, set: { select: { code: true } } },
+    });
+    const chase = cards.filter(isChasePrinting).slice(0, 12);
+    if (!chase.length) return [];
+    const rows = await prisma.ebayListing.findMany({
+      where: { productId: { in: chase.map((c) => c.id) }, rank: 0, imageUrl: { not: null }, updatedAt: { gte: new Date(Date.now() - PICKS_MAX_AGE_HOURS * 3600 * 1000) } },
+      select: { productId: true, market: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
+    });
+    return chase
+      .map((c): PickCard => {
+        const listings: PickCard["listings"] = {};
+        for (const r of rows) if (r.productId === c.id && r.imageUrl) listings[r.market] = { priceCents: r.priceCents, shippingCents: r.shippingCents, currency: r.currency, url: r.url, title: panelTitle(r.title), imageUrl: r.imageUrl };
+        return { id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, setCode: c.set.code, marketUsd: c.marketUsd!, listings };
+      })
+      .filter((c) => Object.keys(c.listings).length > 0);
+  },
+  ["ebay-picks-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/**
+ * Sealed products that every store we track in a market lists as SOLD OUT on a
+ * fresh read (all of the product's non-eBay rows in that market updated inside
+ * 72 h, none in stock): /sealed's "Sold out at every store we track" chip and
+ * lib/sealed-offers.ts soldOutEverywhere, computed once in SQL so the page needs
+ * no per-product offer rows. No rows at all is "not tracked here", never "sold
+ * out"; one stale row keeps the chip off. A few hundred ids at most.
+ */
+export const getSealedSoldOut = unstable_cache(
+  async (): Promise<Record<Country, number[]>> => {
+    const rows = await prisma.$queryRaw<{ id: number; market: string }[]>`
+      SELECT o."productId" AS id, o.market
+      FROM "Offer" o JOIN "Sealed" s ON s.id = o."productId"
+      WHERE o.source NOT LIKE 'ebay%'
+      GROUP BY o."productId", o.market
+      HAVING NOT bool_or(o."inStock") AND MIN(o."updatedAt") > now() - make_interval(hours => ${STALE_MS / 3_600_000}::int)`;
+    const out = { US: [], AU: [], UK: [], SG: [], CA: [], EU: [] } as Record<Country, number[]>;
+    for (const r of rows) (out[r.market as Country] ?? []).push(r.id);
+    return out;
+  },
+  ["sealed-soldout-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+// ── end wave2:catalogue ──

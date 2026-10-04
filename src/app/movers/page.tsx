@@ -1,13 +1,22 @@
+import { AdSlot } from "@/components/AdSlot";
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
+import { AnswerBox } from "@/components/AnswerBox";
+import { HubFaq } from "@/components/HubFaq";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { Breadcrumbs, Delta, JsonLd } from "@/components/ui";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { MOVERS_FAQ } from "@/lib/content/movers-faq";
+import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { releasedSets } from "@/lib/selectors";
+import { getCatalog, getIndexSeries, getSparklines, getTopDemand } from "@/lib/data";
 import { EmailOnly } from "@/components/EmailOnly";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { Breadcrumbs, Delta, InShort } from "@/components/ui";
-import { getCatalog, getIndexSeries, getSparklines, getTopDemand } from "@/lib/data";
 import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { FREE_DEMAND_ROWS } from "@/lib/tier-limits";
 import { longDate } from "@/lib/format";
@@ -39,34 +48,16 @@ export default async function MoversPage() {
 
   return (
     <div>
+      <JsonLd data={faqLd(MOVERS_FAQ)} />
       <Breadcrumbs trail={[{ name: "Price movers" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece price movers — this week
       </h1>
-      <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-        <p>
-          The One Piece singles whose price moved most this week, in three
-          lists: the biggest risers, the biggest drops, and the best value
-          against a card&apos;s own 90-day high. A move compares
-          TCGplayer&apos;s market price today with the same card about seven
-          days earlier, in US dollars, so it reads the same in every market.
-        </p>
-        <p>
-          A single week is a short window: a tournament result or a new
-          set&apos;s reveal can spike a card that settles once the meta adjusts.
-          The{" "}
-          <Link href="/market" className="text-brand-400 hover:underline">
-            OP Compare Index
-          </Link>{" "}
-          shows whether the whole market moved or one card did.
-        </p>
-      </div>
+      <HubIntro path="/movers" />
       <div className="mt-6">
-        <InShort>
-          One Piece price movers are the cards whose market price changed most
-          in the past week. Only cards worth US$1 or more are ranked, so a
-          10-cent common doubling never tops the list.
-        </InShort>
+        <AnswerBox>
+          One Piece price movers are the cards whose TCGplayer market price changed most in the past week. Only cards worth US$1 or more are ranked, so a 10-cent common doubling never tops the list.
+        </AnswerBox>
       </div>
       {noHistory ? (
         <div className="card-surface mt-4 max-w-3xl p-4 text-sm text-slate-300">
@@ -90,6 +81,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="No week-on-week moves yet."
+          ebaySource="movers-panel"
         />
         <MoverList
           title="Biggest drops this week"
@@ -103,6 +95,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="No week-on-week moves yet."
+          ebaySource="movers-panel"
         />
         <MoverList
           title="Best value right now"
@@ -120,6 +113,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="Appears once a card has fallen from a recorded high."
+          ebaySource="movers-panel"
         />
       </div>
       {/* Straight after the lists (RiftCompare): a reader who has just seen a
@@ -128,17 +122,33 @@ export default async function MoversPage() {
       {up.length || down.length || value.length ? (
         <EbayBuyCta className="mt-6" source="movers" page="movers" />
       ) : null}
-      <div className="mt-8">
-        <MostSearchedStrip rows={searched.bySearch.map((p) => ({ card: p.card, searches: p.searches }))} coveredDays={searched.coveredDays} />
-      </div>
       <div className="mt-6">
         <MoversToolsCta />
       </div>
+      <div className="mt-8">
+        <MostSearchedStrip rows={searched.bySearch.map((p) => ({ card: p.card, searches: p.searches }))} coveredDays={searched.coveredDays} />
+      </div>
+      <section className="mt-8" aria-label="Browse prices by set">
+        <h2 className="mb-3 text-lg font-bold text-white">Browse prices by set</h2>
+        <div className="flex flex-wrap gap-2">
+          {releasedSets(cat.sets, ["booster", "extra", "premium"]).slice(0, 12).map((s) => (
+            <Link key={s.id} href={`/sets/${s.slug}`} className="chip border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:text-white">
+              {s.code} {s.name}
+            </Link>
+          ))}
+          <Link href="/sets" className="chip border border-brand-500/40 text-brand-400 hover:text-brand-300">
+            All sets →
+          </Link>
+        </div>
+      </section>
       <div className="mt-6 empty:hidden">
         <EmailOnly>
           <NewsletterSignup siteName="OP Compare" source="movers" variant="card" heading="Get the week's biggest movers in your inbox" cta="Email me the movers" done="Done. You'll get the movers digest each week." />
         </EmailOnly>
       </div>
+      <AdSlot slot="movers" className="mt-8" thin={noHistory} />
+      <HubFaq faqs={MOVERS_FAQ} />
+      <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
       <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />
     </div>
   );

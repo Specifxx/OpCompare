@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LineChart } from "@/components/LineChart";
+import { CardMarketsTable } from "@/components/CardMarketsTable";
+import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { PriceBoard } from "@/components/PriceBoard";
 import { SealedTile } from "@/components/SealedTile";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
@@ -25,6 +27,7 @@ import { isPreRelease } from "@/lib/quick-view";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
+import { visitorHistory } from "@/lib/price-history-view";
 
 type Props = { params: { slug: string } };
 
@@ -53,6 +56,7 @@ export default async function SealedDetailPage({ params }: Props) {
   ]);
   if (!s) notFound();
   const history = await getProductHistory(s.id);
+  const vh = visitorHistory(history, country);
   const lite = all.find((x) => x.id === s.id);
   const h = lite
     ? headline(lite, country)
@@ -237,6 +241,7 @@ export default async function SealedDetailPage({ params }: Props) {
             }
           />
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
+          <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* TCGplayer's market price: a reference under the comparison, with
               its affiliate button — never a row in it. */}
           <TcgMarketPrice
@@ -248,27 +253,20 @@ export default async function SealedDetailPage({ params }: Props) {
           />
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg text-white">Price history</h2>
-              <p className="text-xs text-slate-400">US dollars</p>
+              <h2 className="text-lg text-white">{vh.title}</h2>
+              <p className="text-xs text-slate-400">TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}</p>
             </div>
             <LineChart
               series={[
-                {
-                  label: "TCGplayer market",
-                  color: "#e9b73a",
-                  points: history.map((p) => ({ x: p.day, y: p.marketUsd })),
-                },
-                {
-                  label: "Cheapest US listing",
-                  color: "#ff6b6b",
-                  points: history.map((p) => ({ x: p.day, y: p.lowUsd })),
-                  dashed: true,
-                },
+                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
+                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
               ]}
-              format={(v) => usd(Math.round(v))}
+              format={(v) => money(Math.round(v), country)}
               empty="The chart draws once there are two days of prices."
             />
           </section>
+          {/* Listings tab only: no graded slabs for sealed product. */}
+          <EbayCardPanel productId={s.id} country={country} query={ebayQ} name={s.name} card={s.slug} page="sealed" sealed preRelease={s.presale || isPreRelease(s.releasedOn ?? set?.releasedOn ?? null, new Date().toISOString().slice(0, 10))} />
         </div>
       </div>
       {sameSet.length ? (

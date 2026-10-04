@@ -19,7 +19,7 @@ function writeJson(file: string, data: unknown) {
   fs.writeFileSync(file, JSON.stringify(data));
 }
 
-export const readBucket = (b: string) => readJson<BucketFile>(path.join(historyDir(), "products", `${b}.json`), { v: 1, p: {} });
+export const readBucket = (b: string) => readJson<BucketFile>(path.join(historyDir(), "products", `${b}.json`), { v: 2, p: {} });
 export const writeBucket = (b: string, f: BucketFile) => writeJson(path.join(historyDir(), "products", `${b}.json`), f);
 export const writeDay = (f: DayFile) => writeJson(path.join(historyDir(), "days", `${f.day}.json`), f);
 export const readIndex = () => readJson<IndexFile>(path.join(historyDir(), "index.json"), { v: 1, days: [] });
@@ -52,10 +52,10 @@ export function recentOf(file: BucketFile, today: number, days = RECENT_DAYS): B
   const cutoff = addDays(today, -days);
   const p: BucketFile["p"] = {};
   for (const [k, series] of Object.entries(file.p)) {
-    const recent = series.filter((x) => x[0] > cutoff);
+    const recent = series.filter((x) => (x[0] as number) > cutoff);
     if (recent.length) p[k] = recent;
   }
-  return { v: 1, p };
+  return { v: file.v, p };
 }
 
 export const writeRecentBucket = (b: string, f: BucketFile) => writeJson(path.join(historyDir(), "recent", `${b}.json`), f);

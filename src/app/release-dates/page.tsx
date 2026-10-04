@@ -6,6 +6,7 @@ import { getCatalog } from "@/lib/data";
 import { int, longDate } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
 import { DATA_TABLE } from "@/components/prose";
+import { ReleaseCountdownTimer } from "@/components/ReleaseCountdownTimer";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 
 export const metadata: Metadata = {
@@ -57,6 +58,14 @@ export default async function ReleaseDates() {
             ({next.code}), out {longDate(next.releasedOn)} —{" "}
             {int(Math.max(0, daysUntil(next.releasedOn!)))} days from today.
           </InShort>
+          {/* The day line above is server-computed (no-JS and crawlers); the ticking
+              timer starts from the same date at 00:00 UTC. */}
+          <ReleaseCountdownTimer targetIso={`${next.releasedOn}T00:00:00Z`} />
+          <p className="mt-4 text-center text-sm">
+            <a href="/release-dates/calendar" className="font-semibold text-brand-400 hover:underline">
+              Add {next.code} to your calendar (.ics) →
+            </a>
+          </p>
         </div>
       ) : null}
       {next ? <ReleaseAlertSlot setSlug={next.slug} setName={next.name} releasedOn={next.releasedOn} source="release-dates" className="mt-6 max-w-2xl" /> : null}

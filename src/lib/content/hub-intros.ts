@@ -21,7 +21,10 @@
 
 export type HubIntro = { paragraphs: string[] };
 
+import { CATALOGUE_HUB_INTROS } from "./hub-intros-catalogue";
+
 export const HUB_INTROS: Record<string, HubIntro> = {
+  ...CATALOGUE_HUB_INTROS,
   // Rendered BELOW the builder: /deck opens on the tool.
   "/deck": {
     paragraphs: [

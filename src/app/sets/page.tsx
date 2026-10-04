@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, InShort, SectionHeader } from "@/components/ui";
@@ -102,24 +103,7 @@ export default async function SetsPage() {
         <h1 className="text-3xl text-white sm:text-4xl">
           One Piece sets — card lists &amp; prices
         </h1>
-        <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-          <p>
-            Every One Piece Card Game set in release order, each with its own
-            page carrying the full card list, live prices and where that
-            set&apos;s value is concentrated. Set pages answer two questions in
-            particular: what is in a set before you buy sealed, and which of its
-            cards are worth the most right now.
-          </p>
-          <p>
-            Prices on every set page are the cheapest in-stock listing we track
-            for each card in your market — {c.place} for you, in {c.currency} —
-            read twice a day. Sealed product for each set is priced on the{" "}
-            <Link href="/sealed" className="text-brand-400 hover:underline">
-              sealed products page
-            </Link>
-            .
-          </p>
-        </div>
+        <HubIntro path="/sets" />
         <div className="mt-6">
           <InShort>
             The One Piece Card Game has {boosters} released booster sets plus
