@@ -38,7 +38,7 @@ export function WelcomePoller() {
           </Link>
           {tier === "premium" ? (
             <Link href="/tools/best-basket" className="rounded-lg border border-ink-600 px-4 py-2.5 font-semibold text-white">
-              Plan a buy list
+              Open Best Basket
             </Link>
           ) : null}
         </div>
