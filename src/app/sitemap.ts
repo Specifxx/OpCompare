@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getCatalog, getSealedCatalog } from "@/lib/data";
+import { getCatalog, getLibraryDecks, getSealedCatalog } from "@/lib/data";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { POSTS } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
     "", "/browse", "/price-guide", "/sealed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
-    "/tools/deal-finder", "/tools/box-ev", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/decks", "/premium", "/release-dates", "/stores/suggest", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
+    "/tools/deal-finder", "/tools/box-ev", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/stores/suggest", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
     "/tools", "/deck", "/tools/selling-fees", "/singles", "/keywords", "/cards/rarity",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   const posts = POSTS.map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }));
@@ -37,6 +37,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
+    ...(await deckEntries(now)),
+  ];
+}
+
+// The public deck library (RiftCompare's sitemap-sections): /decks itself only
+// once a deck is live (an empty library is noindexed too), then every live deck
+// and each Leader's page. A failed read lists none rather than failing the map.
+async function deckEntries(now: Date): Promise<MetadataRoute.Sitemap> {
+  const decks = await getLibraryDecks().catch(() => []);
+  if (!decks.length) return [];
+  const leaders = new Map<string, string>();
+  for (const d of decks) if (!leaders.has(d.leaderSlug)) leaders.set(d.leaderSlug, d.createdAt);
+  return [
+    { url: `${SITE_URL}/decks`, changeFrequency: "daily", priority: 0.7, lastModified: new Date(decks[0].createdAt) },
+    ...[...leaders].map(([slug, at]) => ({ url: `${SITE_URL}/decks/leader/${slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: new Date(at) })),
+    ...decks.map((d) => ({ url: `${SITE_URL}/decks/${d.slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: new Date(d.createdAt) })),
   ];
 }
 
