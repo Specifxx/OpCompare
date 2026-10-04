@@ -353,14 +353,14 @@ its own 5,000 calls a day. Rules for this section:
    `eBay quota: …` line, the `eBay US: due …` funnel line, the `eBay rejects:`
    line and whether `⚠ another app is spending this keyset` appeared.
 
-## 13. Wave-2 features: what to switch on (ask me before each paid or irreversible step)
+## 11b. Wave-2 features: what to switch on (ask me before each paid or irreversible step)
 
 The member area, alerts, Best Basket and the rest of the RiftCompare features are
 live. A few of them stay **off until you set the services below**, exactly like
 the eBay keys: nothing breaks while they are off, and the site makes no promises
 it can't keep.
 
-### 13a. Email (Resend), a NEW account for OP Compare
+### 11b-1. Email (Resend), a NEW account for OP Compare
 Do NOT use RiftCompare's Resend account (its 100 emails a day would be split).
 1. Create a Resend account with opcompareofficial@gmail.com.
 2. Add the domain `opcompare.app`. In the domain's DNS (at the registrar or
@@ -380,25 +380,25 @@ Do NOT use RiftCompare's Resend account (its 100 emails a day would be split).
    promising email (alerts, welcome mail). If it isn't, tell me the error.
 Then ask me whether to approve updating the privacy policy to name Resend.
 
-### 13b. Postage data for Best Basket
+### 11b-2. Postage data for Best Basket
 Actions → **Shipping rates** → Run workflow (outside 07:00–08:10 and
 19:00–20:10 UTC). It opens a pull request with measured store postage; tell me
 the PR link, don't merge it unless I say so.
 
-### 13c. Check the plan and trial settings (read only)
+### 11b-3. Check the plan and trial settings (read only)
 In Stripe (the OP Compare account), open Settings → Billing → Customer portal and
 confirm plan switching between Plus and Premium (monthly and annual) is allowed
 with proration. Report what you see; change nothing.
 
-### 13d. Optional extras (ask me which I want)
+### 11b-4. Optional extras (ask me which I want)
 - `NEXT_PUBLIC_ADSENSE_CLIENT_ID` once AdSense approves opcompare.app.
 - `NEXT_PUBLIC_TCGPLAYER_CREATIVES` (Impact banner creative ids).
 - `DISCORD_URL` (an invite link for the header icon).
 
-### 13e. Final check
+### 11b-5. Final check
 After the next deploy, open https://opcompare.app/alerts and
 https://opcompare.app/dashboard signed in, and report whether the pages mention
-email (they should only once 13a is done).
+email (they should only once 11b-1 is done).
 
 ## 12. Report
 Give me:
