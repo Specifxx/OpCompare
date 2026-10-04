@@ -1,4 +1,4 @@
-import { outboundRel } from "@/lib/affiliate";
+import { ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import type { Country } from "@/lib/country";
 import { selectPicks, type PickCard } from "@/lib/listing-panel";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
@@ -44,7 +44,7 @@ export function EbayPicksLive({
         {items.map((c) => (
           <li key={c.id} className="w-[38vw] max-w-[150px] shrink-0 snap-start sm:w-auto sm:max-w-none">
             <a
-              href={c.listing.url}
+              href={ebayAffiliateUrl(c.listing.url, "picks")}
               target="_blank"
               rel={outboundRel()}
               data-retailer="ebay_picks"

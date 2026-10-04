@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { COUNTRIES, MARKETS } from "@/lib/country";
-import { ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
+import { ebayAffiliateUrl, ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
@@ -300,7 +300,7 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
                   <ul className="space-y-1">
                     {m.graded.map((g) => (
                       <li key={g.url}>
-                        <a href={g.url} target="_blank" rel={outboundRel()} data-retailer="ebay_graded" data-page={PAGE} data-card={data.slug} data-surface="ebay_graded" className="flex items-center justify-between gap-3 rounded-md border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs hover:border-ink-600">
+                        <a href={ebayAffiliateUrl(g.url, "quickview-graded")} target="_blank" rel={outboundRel()} data-retailer="ebay_graded" data-page={PAGE} data-card={data.slug} data-surface="ebay_graded" className="flex items-center justify-between gap-3 rounded-md border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs hover:border-ink-600">
                           <span className="font-semibold text-slate-200">
                             {g.grader}
                             {g.grade !== "Graded" ? <span className="num ml-1">{g.grade}</span> : null}

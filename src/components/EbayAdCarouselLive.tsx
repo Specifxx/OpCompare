@@ -1,4 +1,4 @@
-import { outboundRel } from "@/lib/affiliate";
+import { ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import type { Country } from "@/lib/country";
 import type { PanelListing } from "@/lib/listing-panel";
 import { panelTitle } from "@/lib/listing-panel";
@@ -54,7 +54,7 @@ export function EbayAdCarouselLive({
           {items.map((l) => (
             <a
               key={l.rank}
-              href={l.url}
+              href={ebayAffiliateUrl(l.url, "card-panel")}
               target="_blank"
               rel={outboundRel()}
               data-retailer="ebay_carousel"
