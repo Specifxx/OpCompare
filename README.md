@@ -35,6 +35,9 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 | `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`. Share image: the title beside three hero cards |
 | `/release-dates`, `/authors`, `/editorial-policy` | |
 | `/watchlist` | Hearted cards and products (saved in the browser) |
+| `/portfolio`, `/portfolio/sets`, `/portfolio/sets/[set]` | **My binder** (free to 50 cards, unlimited with Plus/Premium): what the cards you own are worth in your market with a daily value chart, the replacement cost, CSV import/export (TCGplayer Product ID or card number + printing), and the set checklist with the cost to finish a set. `/c/[token]` is the read-only share link (noindex; cost and notes never shown) |
+| `/alerts` | How watchlists and price alerts work (static; honest about whether email is on) |
+| `/alerts/action`, `/alerts/manage`, `/alerts/release`, `/unsubscribe`, `/newsletter/unsubscribe` | The pages the links in alert, release and newsletter emails open: a confirm card first, only the button's POST acts, all noindex |
 | `/about`, `/methodology`, `/contact`, `/feedback`, `/privacy`, `/terms` | `/contact` and `/feedback` are forms that land in the admin inbox (no email is sent) |
 | `/admin` | **Admins only** (404 for everyone else): see [Admin](#admin) |
 
@@ -151,12 +154,27 @@ runs the real reader and matcher and prints what the import would keep.
 
 ## Not ported (yet) from RiftCompare
 
-Email (price alerts, trial reminders, inbox replies — and so RiftCompare's $1
-trial), decks and deck builder, games, AdSense, social/ads marketing, the
+Trial reminders and inbox replies (and so RiftCompare's $1 trial), the deck
+builder, games, AdSense, social/ads marketing, the
 mobile app, support tickets, the admin tools that need data OP Compare doesn't
 collect (demand, clicks, rising snapshots, tier floor, decks, loyalty,
 consulting, store partners) and admin `?key=` links,
 and Cardmarket as an EU source (its public files carry no card numbers, and One
 Piece's many same-name printings make name-only matching unsafe — and the data
-permission RiftCompare holds was granted for Riftbound). The watchlist works
-without an account (saved in the browser); Plus and Premium need one.
+permission RiftCompare holds was granted for Riftbound). Plus and Premium need an account.
+
+## Email (built, off until configured)
+
+Price alerts, release alerts, the welcome email and the weekly newsletter are
+built and send **nothing** until both `RESEND_API_KEY` and `EMAIL_FROM` exist
+as GitHub Actions secrets (OP Compare's own Resend account, never
+RiftCompare's, never on Vercel). Every send runs script-side in Actions:
+`scripts/alerts.ts` after each import (`import-prices.yml`),
+`scripts/email-hourly.ts` hourly (`email.yml`) and `scripts/newsletter.ts` on
+Fridays 21:00 UTC (`email-weekly.yml`). Until then the alert run still works:
+it advances baselines and delivers each trigger **in-app** (a notification on
+the dashboard and a chip on the watchlist), and no page promises an email or
+shows an email field. Each run records Meta `email` = on/off, which is what
+the site reads. A key that is set but refused fails the run red.
+`tests/no-email-api.test.ts` pins where the provider hosts and key names may
+appear and that no page or route can call a send function. Setup: `docs/SETUP.md` section 6b.

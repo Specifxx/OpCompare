@@ -16,6 +16,8 @@ import { cardImage } from "@/lib/images";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { ARTICLE_PROSE } from "@/components/prose";
+import { EmailOnly } from "@/components/EmailOnly";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 type Props = { params: { slug: string } };
 
@@ -218,6 +220,12 @@ export default async function PostPage({ params }: Props) {
               {r.label}
             </Link>
           ))}
+        </div>
+
+        <div className="mt-6 empty:hidden">
+          <EmailOnly>
+            <NewsletterSignup siteName="OP Compare" source="article" variant="card" heading="Get the week's One Piece price moves by email" cta="Email me" />
+          </EmailOnly>
         </div>
 
         <aside

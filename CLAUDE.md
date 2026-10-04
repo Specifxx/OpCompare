@@ -65,6 +65,12 @@ The wave-2 member libraries join that exception on the same terms
 routes and account pages — `/watching`, `/dashboard`, `/profile`,
 `/portfolio/**`, `/c/[token]` — never from the root layout or a public page):
 `src/lib/{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server}.ts`.
+The collection-alerts libraries do the same, for token- or per-request reads and writes only:
+`src/lib/{alert-routes,alert-subscribe,alert-mute,alert-actions,newsletter-signup}.ts`
+(the unsubscribe and action tokens, the anonymous watch door and the newsletter signup; none imports
+the mail module). Nothing under `src/app` imports `src/lib/email.ts` or a module that sends
+(`tests/no-email-api.test.ts`): every email is sent script-side from GitHub Actions, only once
+both mail secrets exist, and pages decide what to promise from `getEmailStatus()`.
 Nothing under `src/app` imports `@/lib/db` (`tests/app-no-db-import.test.ts`).
 Admin pages read through uncached `src/lib/admin*.ts`; public forms write
 through `src/lib/inbox.ts`. Share images read only `src/lib/data.ts` loaders

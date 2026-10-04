@@ -20,6 +20,7 @@ import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
 import { enabledProviders } from "@/lib/oauth";
+import { AddToCollectionButton } from "@/components/AddToCollectionButton";
 import {
   Breadcrumbs,
   ColorBadge,
@@ -37,6 +38,7 @@ import { getCardDetail, getCatalog, getEmailStatus, getProductHistory } from "@/
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
+import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
@@ -245,6 +247,8 @@ export default async function CardPage({ params }: Props) {
               preorder={preRelease}
               emailOn={emailOn}
             />
+            {/* Add to collection (collection-alerts, wave 2): a client island; the page reads no session. */}
+            <AddToCollectionButton cardId={card.id} cardPath={`/card/${card.slug}`} src="card" />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
@@ -292,6 +296,8 @@ export default async function CardPage({ params }: Props) {
               card={card.slug}
             />
           ) : null}
+
+          <ReleaseAlertSlot setSlug={card.set.slug} setName={card.set.name} releasedOn={card.set.releasedOn} source="card" cardId={card.id} cardName={title} unreleasedOnly />
 
           <p className="text-right text-xs text-slate-400">
             Cheapest first by item price; postage is added at each store&apos;s

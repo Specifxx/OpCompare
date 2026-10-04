@@ -3,6 +3,8 @@ import Link from "next/link";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
+import { EmailOnly } from "@/components/EmailOnly";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { Breadcrumbs, Delta, InShort } from "@/components/ui";
 import { getCatalog, getIndexSeries, getSparklines, getTopDemand } from "@/lib/data";
@@ -131,6 +133,11 @@ export default async function MoversPage() {
       </div>
       <div className="mt-6">
         <MoversToolsCta />
+      </div>
+      <div className="mt-6 empty:hidden">
+        <EmailOnly>
+          <NewsletterSignup siteName="OP Compare" source="movers" variant="card" heading="Get the week's biggest movers in your inbox" cta="Email me the movers" done="Done. You'll get the movers digest each week." />
+        </EmailOnly>
       </div>
       <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />
     </div>

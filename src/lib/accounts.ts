@@ -5,6 +5,7 @@
 import { prisma } from "./db";
 import type { OAuthProfile, OAuthProvider } from "./oauth";
 import { isCountry } from "./country";
+import { claimAlertsForUser } from "./alerts";
 
 // `signupSource` (wave 2): the whitelisted sign-up surface from the
 // oc_signup_src cookie (lib/signup-source-shared.ts parseSignupSource),
@@ -18,6 +19,7 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
       where: { id: byProvider.id },
       data: { lastLoginAt: new Date(), avatarUrl: byProvider.avatarUrl ?? p.avatar, emailVerified: byProvider.emailVerified ?? (p.emailVerified ? new Date() : null) },
     });
+    await claimAlertsForUser(byProvider.id, p.email); // anonymous watches made before signing in (lib/alerts.ts)
     return { id: byProvider.id, isNew: false };
   }
   if (!p.emailVerified) return null;
@@ -27,6 +29,7 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
       where: { id: byEmail.id },
       data: { ...link, lastLoginAt: new Date(), avatarUrl: byEmail.avatarUrl ?? p.avatar, emailVerified: byEmail.emailVerified ?? new Date() },
     });
+    await claimAlertsForUser(byEmail.id, p.email);
     return { id: byEmail.id, isNew: false };
   }
   const created = await prisma.user.create({
@@ -41,6 +44,7 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
     },
     select: { id: true },
   });
+  await claimAlertsForUser(created.id, p.email);
   return { id: created.id, isNew: true };
 }
 

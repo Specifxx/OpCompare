@@ -22,6 +22,7 @@ import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { isPreRelease } from "@/lib/quick-view";
+import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
 
@@ -235,6 +236,7 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
+          {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           {/* TCGplayer's market price: a reference under the comparison, with
               its affiliate button — never a row in it. */}
           <TcgMarketPrice

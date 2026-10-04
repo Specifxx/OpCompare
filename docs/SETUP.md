@@ -103,7 +103,7 @@ Each workflow is a no-op until its values exist.
 Never copy RiftCompare's `EBAY_CLIENT_*` values (and never put any
 `EBAY_CLIENT_*` in Vercel): create OP Compare's own eBay application and keys
 (section 6a). Do not copy any of these either: `RM*`, `RH*`, `HISTORY_DATABASE_URL*`, RiftCompare's `AUTH_SECRET`,
-`STRIPE_*` or `*_PRICE_ID`, Resend, Brevo, Discord bot, or AdSense.
+`STRIPE_*` or `*_PRICE_ID`, RiftCompare's Resend or Brevo keys, Discord bot, or AdSense.
 
 ## 4. Google Analytics 4
 
@@ -244,6 +244,43 @@ the last 24h (from the eBay `ImportRun` rows). Searches that fail without a 429
 shares the *Import prices* concurrency group; a newly queued run cancels a
 pending one, so it could cancel an import waiting behind a late eBay run. The
 deletion route must stay deployed for as long as the eBay keyset exists.
+
+## 6b. Email (optional, off until you do this)
+
+OP Compare ships with email **off**: alerts are delivered in-app (a
+notification and a watchlist chip), no page promises an email and no email
+field renders. To switch it on, create OP Compare's **own** Resend account
+(never RiftCompare's: it would spend RiftCompare's daily quota silently) and
+verify the sending domain. Then, in GitHub → Settings → Secrets and variables →
+Actions, as **repository** secrets (the keys never go to Vercel):
+
+| Name | Kind | What |
+|---|---|---|
+| `RESEND_API_KEY` | Secret | OP Compare's Resend key (sending access) |
+| `EMAIL_FROM` | Secret | `OP Compare <alerts@opcompare.app>` (an address on the verified domain) |
+| `EMAIL_LINK_SECRET` | Secret | 32+ random characters. Signs the one-tap links in alert emails (stop watching, snooze, target); with it unset every link is refused and emails carry none. Never copy `AUTH_SECRET` here |
+| `EMAIL_REPLY_TO` | Optional variable | A reply-to address |
+| `ALERT_DAILY_BUDGET` | Optional variable | `50`: distinct addresses emailed per rolling 20h (the free run takes at most 35) |
+
+Both `RESEND_API_KEY` and `EMAIL_FROM` are needed: with either missing the
+runs stay green no-ops for mail (and still advance baselines and write
+in-app notifications). The runners are `import-prices.yml` (the alert steps,
+after the 07:07 and 19:07 import), `email.yml` (hourly at :23: welcome emails,
+first-watch confirmations, newsletter welcomes) and `email-weekly.yml`
+(Fridays 21:00 UTC). Each records Meta `email` = on/off at the start of a run;
+**the site switches its copy and shows the newsletter and release-alert forms
+only after a run has recorded `on`**, so after adding the secrets, run *Email
+outbox* once by hand. A key that is set but refused by Resend turns the run red
+and flips the site's email copy back off.
+
+The anonymous "email me, no account" watch form is built but stays hidden until
+you also set `NEXT_PUBLIC_ANON_ALERTS=1` in Vercel (it needs email on). That is
+the owner's call: it lets anyone enter any address, so it can be abused for
+unwanted mail, and Resend's free tier is 100 emails a day.
+
+Alert runs after a manual *Import prices* send nothing by default (`alerts`
+input = `none`): choose `baseline` after a matcher change (moves every baseline,
+sends nothing) or `free` to recover a missed 07:07 run.
 
 ## 7. Google Search Console and Bing
 

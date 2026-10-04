@@ -17,6 +17,7 @@ import { ReportPriceButton } from "./ReportPriceButton";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { PriceDropAlertCta } from "./PriceDropAlertCta";
+import { AddToCollectionButton } from "./AddToCollectionButton";
 
 // The QuickView panel (RiftCompare's QuickViewModal, adapted): art and the
 // "Open full page" link on the left; on the right the printing, the visitor's
@@ -323,6 +324,8 @@ export function QuickView({
                 unpriced={!m.rows.length}
                 preorder={data.preRelease}
               />
+              {/* Add to collection — track & value your whole binder (collection-alerts, wave 2). */}
+              <AddToCollectionButton cardId={data.id} cardPath={`/card/${data.slug}`} />
 
               {/* Every market's cheapest open listing, the visitor's own marked. */}
               <div className="mt-4">

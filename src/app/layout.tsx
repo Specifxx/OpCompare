@@ -19,6 +19,9 @@ import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
 import { SignupWelcome } from "@/components/SignupWelcome";
 import { ReferralCapture } from "@/components/ReferralCapture";
+import { PriceAlertModalGate } from "@/components/PriceAlertModalGate";
+import { EmailOnly } from "@/components/EmailOnly";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { stripeEnabled } from "@/lib/stripe";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
@@ -177,8 +180,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="op-ad-zone" className="pl-[var(--sidenav-w)]">
             <FooterAds />
           </div>
+          {/* Email-only price alerts: renders nothing unless email is on AND
+              NEXT_PUBLIC_ANON_ALERTS=1 (reads one cached Meta row, never the session). */}
+          <PriceAlertModalGate />
         </CountryProvider>
-        <Footer />
+        {/* The newsletter signup sits atop the footer; it renders nothing while email is off. */}
+        <Footer
+          newsletter={
+            <EmailOnly>
+              <NewsletterSignup siteName={SITE_NAME} />
+            </EmailOnly>
+          }
+        />
         </PlanProvider>
         {/* Vercel Analytics behind the consent signal (RiftCompare's
             ConsentGatedAnalytics); GA4 with explicit page views. */}
