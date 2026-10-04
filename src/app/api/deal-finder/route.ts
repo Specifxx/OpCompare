@@ -4,6 +4,7 @@ import { getCountry } from "@/lib/get-country";
 import { isPremium } from "@/lib/premium";
 import { DEAL_PAGE_SIZE, defaultBuyKeys, resolveBuyKeys, type DealSort } from "@/lib/deals";
 import { getTcgDeals, getVsEbayDeals, idsForSlugs } from "@/lib/deal-pages";
+import { watchedCardIds } from "@/lib/watchlist-server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,9 @@ export async function POST(req: Request) {
   const sort: DealSort = body.sort === "pct" ? "pct" : "saving";
   const page = Math.max(1, Math.floor(Number(body.page)) || 1);
   const country = getCountry();
-  const onlyIds = await idsForSlugs(slugs);
+  // The account's own watchlist (PriceAlert, wave 2 — RiftCompare reads it
+  // server-side too), plus any slugs still saved in this browser.
+  const onlyIds = new Set([...(await idsForSlugs(slugs)), ...(await watchedCardIds(user.id)).map((r) => r.cardId)]);
   const headers = { "Cache-Control": "no-store" };
   if (body.view === "vs-ebay") {
     const list = await getVsEbayDeals(country, { sort, page, pageSize: DEAL_PAGE_SIZE, onlyIds });

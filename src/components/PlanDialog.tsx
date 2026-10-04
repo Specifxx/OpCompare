@@ -3,11 +3,16 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { INTERVALS, PLAN_PITCH, TIERS, TIER_NAMES, annualSavingPct, perMonth, planPrice, type Interval, type Tier } from "@/lib/plans";
-import { useMe } from "@/lib/use-me";
 import type { OAuthProvider } from "@/lib/oauth";
 import { AuthForm } from "./AuthForm";
+import { invalidateMe, useMe } from "@/lib/use-me";
+import { planSwitchPriceLabel } from "@/lib/plan-switch-price";
+import { intervalPlan, premiumStartHref } from "@/lib/premium-start";
+import { firePlanClick } from "@/lib/nudge-surface";
+import { trackEvent } from "@/lib/analytics";
 import { Icon } from "./Icon";
-import { ManageSubscriptionButton, startCheckout } from "./PricingCards";
+import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { startCheckout } from "./PricingCards";
 import { TierComparisonTable } from "./TierComparisonTable";
 import { useEscapeLayer, useModalFlag, useScrollLock } from "./ui/Dialog";
 
@@ -15,11 +20,13 @@ import { useEscapeLayer, useModalFlag, useScrollLock } from "./ui/Dialog";
 // through PlanProvider. Tier toggle (opens on the LOWEST tier that unlocks the
 // wall), Monthly/Yearly toggle, the price from lib/plans.ts, the shared
 // comparison table, and one button whose state follows the visitor:
-//   member            → "You're on Plus/Premium", billing portal (Plus → Premium
-//                       is a prorated switch there)
+//   Plus member       → "Upgrade to Premium — $X" in place (/api/premium/upgrade,
+//                       prorated, at the member's own interval; wave 2)
+//   Premium member    → "You're Premium", their tools
 //   Stripe not set up → "Opening soon", exactly as /premium shows it
-//   signed out        → sign in, then /premium?go=<tier>-<interval> starts
-//                       checkout on return (PricingCards' ?go= logic)
+//   signed out        → /premium/start with the selection and the page they
+//                       were on (lib/premium-start.ts; wave 2), the sign-in
+//                       step inside checkout
 //   signed in         → straight to Stripe Checkout (PricingCards' startCheckout)
 const toggle = (on: boolean) => `flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${on ? "bg-ink-700 text-white" : "text-slate-400 hover:text-white"}`;
 
@@ -74,8 +81,36 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, providers = [],
     }
   };
 
+  // Plus → Premium, in place, same interval (RiftCompare's PremiumDialog).
+  const upgradeTier = async () => {
+    setBusy(true);
+    setError(null);
+    trackEvent("premium_tier_upgrade_started", { source: "dialog" });
+    try {
+      const res = await fetch("/api/premium/upgrade", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(d.error ?? "Couldn't upgrade — try again");
+        setBusy(false);
+        return;
+      }
+      invalidateMe();
+      trackEvent("premium_tier_upgrade_success", { source: "dialog" });
+      onClose();
+    } catch {
+      setError("Network error — try again");
+      setBusy(false);
+    }
+  };
+
   const save = annualSavingPct(tier);
-  const next = `/premium?go=${tier}-${interval}`;
+  // The page the wall was on comes back after checkout (`back`).
+  const startHref = premiumStartHref({
+    tier,
+    plan: intervalPlan(interval),
+    src: "dialog",
+    back: typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : null,
+  });
 
   return (
     <div className="fixed inset-0 z-modal overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="plan-dialog-title">
@@ -112,24 +147,36 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, providers = [],
                   <p className="text-sm font-semibold text-gold">You&apos;re on {TIER_NAMES[me.tier]}</p>
                   {me.tier === "plus" ? (
                     <>
-                      {checkoutOpen ? (
-                        <>
-                          <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Switch plans in the billing portal; the difference is prorated.</p>
-                          <div className="mt-3 flex justify-center">
-                            <ManageSubscriptionButton label="Switch to Premium" />
-                          </div>
-                        </>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Premium plans the order: Best Basket&apos;s store-by-store plan for a deck, a list or the rest of a set, at the minimum condition you
+                        set, a deck price watch that re-prices a saved list after every price update, unlimited target alerts and sealed watches, and
+                        Demand Finder.
+                      </p>
+                      {!checkoutOpen ? (
+                        <p className="mt-2 text-xs text-slate-400">Plan changes open when subscriptions do.</p>
+                      ) : me.trialing ? (
+                        <p className="mt-3 rounded-lg border border-ink-700 px-3 py-2 text-xs text-slate-300">
+                          Plan changes open once your trial has converted — upgrade from{" "}
+                          <Link href="/premium" onClick={onClose} className="font-semibold text-gold hover:underline">
+                            your membership page
+                          </Link>{" "}
+                          then.
+                        </p>
                       ) : (
-                        <p className="mt-1 text-xs text-slate-400">Premium adds the Buy List Planner. Plan changes open when subscriptions do.</p>
+                        <button data-autofocus type="button" onClick={upgradeTier} disabled={busy} className="btn-primary mt-3 w-full">
+                          {busy ? "Upgrading…" : `Upgrade to Premium — ${planSwitchPriceLabel("premium", me.interval)} →`}
+                        </button>
                       )}
+                      {error ? (
+                        <p role="alert" className="mt-2 text-center text-xs text-rose-400">
+                          {error}
+                        </p>
+                      ) : null}
                     </>
                   ) : (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
-                      <Link href="/tools/deal-finder" onClick={onClose} className="btn-ghost text-sm">
-                        Deal Finder →
-                      </Link>
-                      <Link href="/tools/buy-list" onClick={onClose} className="btn-ghost text-sm">
-                        Buy List Planner →
+                      <Link href="/dashboard" onClick={onClose} className="btn-ghost text-sm">
+                        Go to your tools →
                       </Link>
                     </div>
                   )}
@@ -155,18 +202,22 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, providers = [],
                     ))}
                   </div>
                   <div className="mb-3 text-center">
-                    <p className="flex items-baseline justify-center gap-1">
-                      <span className="num text-3xl font-extrabold text-white">{planPrice(tier, interval)}</span>
-                      <span className="text-sm text-slate-400">/{interval === "month" ? "mo" : "yr"}</span>
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-400">{PLAN_PITCH[tier]}</p>
+                    {interval === "year" ? (
+                      // RiftCompare's AnnualPriceBlock: the monthly year struck
+                      // through, the annual price big, the saving badge.
+                      <AnnualPriceBlock size="sm" tier={tier} />
+                    ) : (
+                      <p className="flex items-baseline justify-center gap-1">
+                        <span className="num text-3xl font-extrabold text-white">{planPrice(tier, interval)}</span>
+                        <span className="text-sm text-slate-400">/mo</span>
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-slate-400">{PLAN_PITCH[tier]}</p>
                     {interval === "month" ? (
                       <button type="button" onClick={() => setInterval("year")} className="mt-1 text-[11px] font-semibold text-brand-400 hover:underline">
                         or {perMonth(tier)}/mo billed yearly →
                       </button>
-                    ) : (
-                      <p className="mt-1 text-[11px] font-semibold text-emerald-400">{perMonth(tier)}/mo, billed once a year</p>
-                    )}
+                    ) : null}
                   </div>
                   {!checkoutOpen ? (
                     <>
@@ -180,7 +231,7 @@ export function PlanDialog({ initialTier, surface, checkoutOpen, providers = [],
                       {/* RiftCompare's PremiumDialog: sign in right here (AuthForm),
                           then land back on the checkout this dialog was opening. */}
                       <p className="mb-2 text-center text-xs font-semibold text-slate-200">Sign in to continue to checkout</p>
-                      <AuthForm providers={providers} compact bare next={next} source="plan-dialog" />
+                      <AuthForm providers={providers} compact bare next={startHref} source="premium_dialog" onProviderClick={() => firePlanClick(surface, tier)} />
                       <p className="mt-2 text-center text-[11px] text-slate-500">Your account is free and needs no card · cancel your subscription anytime.</p>
                     </>
                   ) : (

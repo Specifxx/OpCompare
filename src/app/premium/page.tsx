@@ -110,7 +110,7 @@ export default function Premium() {
           Free, Plus and Premium
         </h2>
         <div className="mt-3 overflow-x-auto rounded-lg border border-ink-800 bg-ink-900">
-          <TierComparisonTable />
+          <TierComparisonTable tinted />
         </div>
       </section>
 

@@ -11,6 +11,7 @@ import { Icon } from "./Icon";
 import { RecentlyViewed } from "./RecentlyViewed";
 
 interface Hit {
+  id?: number;
   slug: string;
   name: string;
   number: string | null;
@@ -74,7 +75,27 @@ function isVisible(el: HTMLElement): boolean {
 // and recently viewed cards. A card row opens QuickView (CardQuickLink); Enter
 // on the typed text, or "See all results", opens /browse?q=. No match offers
 // "Did you mean" names and an affiliate eBay search for the typed words.
-export function CardSearch({ size = "md", placeholder = "Search for cards", autoFocus = false }: { size?: "md" | "lg"; placeholder?: string; autoFocus?: boolean }) {
+/** What `onPick` receives: a card row of the dropdown (pick mode). */
+export interface SearchCard {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+// `onPick` (wave 2, RiftCompare's CardSearch onPick — the welcome checklist's
+// "Watch a card"): a card row CHOOSES the card instead of opening it, and the
+// sealed rows and "See all results" are left out.
+export function CardSearch({
+  size = "md",
+  placeholder = "Search for cards",
+  autoFocus = false,
+  onPick,
+}: {
+  size?: "md" | "lg";
+  placeholder?: string;
+  autoFocus?: boolean;
+  onPick?: (card: SearchCard) => void;
+}) {
   const { country } = useCountry();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -190,7 +211,10 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
   const trimmed = q.trim();
   const zero = trimmed.length < 2;
   const cards = useMemo(() => hits.filter((h) => h.kind === "card").slice(0, cap), [hits, cap]);
-  const sealed = useMemo(() => hits.filter((h) => h.kind === "sealed").slice(0, Math.max(0, Math.min(3, cap - cards.length))), [hits, cap, cards.length]);
+  const sealed = useMemo(
+    () => (onPick ? [] : hits.filter((h) => h.kind === "sealed").slice(0, Math.max(0, Math.min(3, cap - cards.length)))),
+    [hits, cap, cards.length, onPick],
+  );
   const rows: Hit[] = useMemo(() => [...cards, ...sealed], [cards, sealed]);
   const recent = recentSearches.slice(0, MOBILE_CAP);
   const count = zero ? recent.length : rows.length;
@@ -205,6 +229,12 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
   const commit = (term: string, newTab = false) => {
     const t = term.trim();
     if (!t) return;
+    // Pick mode: Enter chooses the first card rather than leaving the page.
+    if (onPick) {
+      const first = rows.findIndex((r) => r.kind === "card");
+      if (first >= 0) activate(first, false);
+      return;
+    }
     pushRecentSearch(t);
     const href = `/browse?q=${encodeURIComponent(t)}`;
     if (newTab) {
@@ -228,6 +258,12 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
     }
     const h = rows[i];
     if (!h) return;
+    if (onPick && h.kind === "card" && h.id != null) {
+      close();
+      setQ("");
+      onPick({ id: h.id, slug: h.slug, name: h.name });
+      return;
+    }
     const href = h.kind === "card" ? `/card/${h.slug}` : `/sealed/${h.slug}`;
     if (newTab) {
       window.open(href, "_blank", "noopener");
@@ -455,7 +491,16 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
                         CardQuickLink's onClick runs, and the browser then
                         follows the href instead of opening QuickView. */}
                     <div id={optionId(i)} role="option" aria-selected={active === i} onClick={close}>
-                      {h.kind === "card" ? (
+                      {onPick && h.kind === "card" ? (
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => activate(i, false)}
+                          className={`w-full text-left ${rowCls(active === i)}`}
+                        >
+                          {inner}
+                        </button>
+                      ) : h.kind === "card" ? (
                         <CardQuickLink slug={h.slug} className={rowCls(active === i)}>
                           {inner}
                         </CardQuickLink>
@@ -468,6 +513,7 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
                   </li>
                 );
               })}
+              {onPick ? null : (
               <li role="presentation" className="border-t border-ink-800">
                 <button
                   type="button"
@@ -478,6 +524,7 @@ export function CardSearch({ size = "md", placeholder = "Search for cards", auto
                   See all {total > rows.filter((r) => r.kind === "card").length ? `${total} ` : ""}results for “{trimmed}” →
                 </button>
               </li>
+              )}
             </ul>
           )}
         </div>

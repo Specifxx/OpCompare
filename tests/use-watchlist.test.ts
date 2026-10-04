@@ -39,6 +39,7 @@ g.window = {
 type Call = { url: string; method: string; body?: unknown };
 let calls: Call[] = [];
 let respond: (c: Call) => { status: number; body?: unknown } = () => ({ status: 404 });
+let mergeStatus = 200;
 g.fetch = async (url: string, init?: { method?: string; body?: string }) => {
   const c: Call = { url, method: init?.method ?? "GET", body: init?.body ? JSON.parse(init.body) : undefined };
   calls.push(c);
@@ -57,7 +58,10 @@ function signedOut() {
   invalidateWatchlist();
   calls = [];
 }
-function signedIn(tier: "plus" | "premium" | null, ids: number[]) {
+function signedIn(tier: "plus" | "premium" | null, ids: number[], opts: { keepLocal?: boolean } = {}) {
+  // No signed-out list unless a test asks for one: otherwise the first load
+  // merges it (the member track's merge hook) before the ids request.
+  if (!opts.keepLocal) store.delete(LOCAL_WATCHLIST_KEY);
   (g.document as { cookie: string }).cookie = "oc_auth=1";
   invalidateMe();
   invalidateWatchlist();
@@ -71,6 +75,10 @@ function signedIn(tier: "plus" | "premium" | null, ids: number[]) {
       if (!tier && !held.has(id) && held.size >= 10) return { status: 402, body: { error: "limit", code: "free_limit", kind: "watchlist", limit: 10, count: held.size } };
       held.add(id);
       return { status: 200, body: { ok: true } };
+    }
+    if (c.url === "/api/alerts/watchlist/merge" && c.method === "POST") {
+      for (const it of (c.body as { items: { id?: number }[] }).items) if (typeof it.id === "number") held.add(it.id);
+      return mergeStatus === 200 ? { status: 200, body: { ok: true } } : { status: mergeStatus };
     }
     if (c.url.startsWith("/api/alerts/watchlist/") && c.method === "DELETE") return held.delete(Number(c.url.split("/").pop())) ? { status: 200 } : { status: 404 };
     return { status: 404 };
@@ -200,7 +208,8 @@ test("signed in before the member routes exist: a 404 list is an empty set, not 
 
 test("the local key is WatchButton's, and the module keeps RiftCompare's optimistic shape", () => {
   const button = readFileSync(join(process.cwd(), "src/components/WatchButton.tsx"), "utf8");
-  assert.match(button, new RegExp(`WATCH_KEY = "${LOCAL_WATCHLIST_KEY}"`));
+  assert.match(button, /WATCH_KEY = LOCAL_WATCHLIST_KEY/);
+  assert.equal(LOCAL_WATCHLIST_KEY, "op:watchlist");
   const src = readFileSync(join(process.cwd(), "src/lib/use-watchlist.ts"), "utf8");
   assert.match(src, /export function useWatchlist\(\)/);
   assert.match(src, /export function useWatchedIds\(\)/);
@@ -231,4 +240,56 @@ test("a subscribed store follows invalidateMe(): signing in swaps the local list
   assert.deepEqual(seen.slice(-2), [null, "account"]);
   off();
   signedOut();
+});
+
+// ── The merge on first sign-in (member track, wave 2) ────────────────────────
+
+test("first signed-in load: local CARD items are merged before the ids request, then leave localStorage; sealed stay", async () => {
+  store.set(
+    LOCAL_WATCHLIST_KEY,
+    JSON.stringify([
+      { slug: luffy.slug, kind: "card", name: luffy.name, added: "x", id: luffy.id },
+      { slug: zoro.slug, kind: "card", name: zoro.name, added: "x" }, // an older item: slug only
+      { slug: "op-01-booster-box", kind: "sealed", name: "OP-01 Booster Box", added: "x" },
+    ]),
+  );
+  mergeStatus = 200;
+  signedIn(null, [], { keepLocal: true });
+  (g.document as { cookie: string }).cookie = "oc_auth=1; country=AU";
+  const s = await watchlistStore.load();
+  assert.deepEqual(
+    calls.map((c) => c.url),
+    ["/api/me", "/api/alerts/watchlist/merge", "/api/alerts/watchlist?ids=1"],
+    "merge first, so the ids request already includes the merged cards",
+  );
+  const merge = calls.find((c) => c.url === "/api/alerts/watchlist/merge")!;
+  assert.deepEqual(merge.body, {
+    items: [
+      { slug: luffy.slug, id: luffy.id },
+      { slug: zoro.slug },
+    ],
+    market: "AU",
+  });
+  assert.ok(s.ids.has(luffy.id), "the merged card is watched on the account");
+  assert.deepEqual(
+    local().map((i) => i.kind),
+    ["sealed"],
+    "card items leave localStorage; the sealed item stays (sealed watches are Plus)",
+  );
+  assert.equal(store.get("op:watchlist-merged"), undefined, "no userId in this /api/me answer, so no marker");
+});
+
+test("a failed merge leaves the local list intact for the next load", async () => {
+  store.set(LOCAL_WATCHLIST_KEY, JSON.stringify([{ slug: luffy.slug, kind: "card", name: luffy.name, added: "x", id: luffy.id }]));
+  mergeStatus = 503;
+  signedIn(null, [], { keepLocal: true });
+  await watchlistStore.load();
+  assert.equal(local().length, 1, "nothing is lost when the merge fails");
+  mergeStatus = 200;
+});
+
+test("nothing local: no merge request at all", async () => {
+  signedIn("plus", [1]);
+  await watchlistStore.load();
+  assert.ok(!calls.some((c) => c.url.endsWith("/merge")));
 });

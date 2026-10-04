@@ -100,6 +100,23 @@ export default async function AdminAccounts({ searchParams }: { searchParams: { 
             <StatTile label="Signed in · 7d" value={int(stats.signedIn7d)} />
           </div>
           <Signups stats={stats} />
+          <div className="card-surface p-4" data-signups-by-source>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Sign-ups by source · 30 days <span className="normal-case tracking-normal text-slate-500">· active in 7 days: {int(stats.active7d)}</span>
+            </p>
+            {stats.bySource30.length === 0 ? (
+              <p className="text-sm text-slate-500">–</p>
+            ) : (
+              <ul className="grid gap-x-8 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                {stats.bySource30.map((s) => (
+                  <li key={s.k} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-slate-300">{s.k}</span>
+                    <span className="num text-white">{int(s.n)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </>
       ) : (
         <EmptyState title="Couldn't load the account stats" />

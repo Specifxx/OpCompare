@@ -143,7 +143,7 @@ test("Buy List Planner links: TCGplayer through Impact, stores untouched", () =>
 
 test("wiring: the provider sits in the root layout, which still reads no session", () => {
   const layout = read("src/app/layout.tsx");
-  assert.match(layout, /<QuickViewProvider>/);
+  assert.match(layout, /<QuickViewProvider providers=\{enabledProviders\(\)\}>/);
   assert.doesNotMatch(layout, /getCurrentUser|cookies\(\)/);
   const provider = read("src/components/QuickViewProvider.tsx");
   assert.doesNotMatch(provider, /useMe|\/api\/me|document\.cookie/);
@@ -227,7 +227,7 @@ test("card search opens a card hit in the QuickView; the TCGplayer banner is an 
   assert.match(search, /querySelector\("a"\)/);
   // A mouse click must reach CardQuickLink's onClick: closing a list in the
   // CAPTURE phase unmounts it first and the browser follows the href instead.
-  for (const f of ["src/components/CardSearch.tsx", "src/components/RecentlyViewed.tsx", "src/components/WatchlistView.tsx"]) {
+  for (const f of ["src/components/CardSearch.tsx", "src/components/RecentlyViewed.tsx", "src/components/Watchlist.tsx"]) {
     assert.doesNotMatch(read(f), /onClickCapture/, `${f} closes in the capture phase`);
   }
   const banner = read("src/components/TcgplayerBanner.tsx");

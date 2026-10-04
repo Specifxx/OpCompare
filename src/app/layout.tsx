@@ -16,6 +16,9 @@ import { PlanProvider } from "@/components/PlanProvider";
 import { OutboundBeacon } from "@/components/OutboundBeacon";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
+import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
+import { SignupWelcome } from "@/components/SignupWelcome";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { stripeEnabled } from "@/lib/stripe";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
@@ -141,6 +144,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CountryProvider initial={DEFAULT_COUNTRY}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
           <QuickViewProvider>
+            {/* The watchlist drawer (the header heart's slide-over); client-only state. */}
+            <WatchlistDrawerProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <OutboundBeacon />
@@ -158,8 +163,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <PremiumSlideIn />
                 <AnnualSwitchNudge />
                 <FeedbackWidget />
+                {/* sign_up + "Your free account is ready" on ?welcome=, and a watch
+                    stashed before OAuth (client-only; renders a toast at most). */}
+                <SignupWelcome />
+                {/* ?ref= and the first-touch traffic bucket (client-only, renders nothing). */}
+                <ReferralCapture />
               </MegaMenuProvider>
             </CommandLauncherProvider>
+            </WatchlistDrawerProvider>
           </QuickViewProvider>
           {/* The ad zone needs the same rail reservation as <main>. It reads the
               market from CountryProvider, so it sits inside it. */}

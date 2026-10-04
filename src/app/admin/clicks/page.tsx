@@ -91,6 +91,7 @@ export default async function AdminClicks() {
           <div className="grid gap-4 md:grid-cols-3">
             <Breakdown title="By market · 30 days" items={data.byCountry} />
             <Breakdown title="By page · 30 days" items={data.byPage} />
+            <Breakdown title="By entry (first touch) · 30 days" items={data.byEntry} />
             <Breakdown
               title="Top cards and products · 30 days"
               items={data.topSlugs}

@@ -10,7 +10,7 @@ import { CardImage } from "./CardImage";
 import { PrintingBadge, rarityColor } from "./Badge";
 import { useCountry } from "./CountryProvider";
 import { useQuickView } from "./QuickViewProvider";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 
 export type CardTileCard = Pick<
   CardLite,
@@ -54,7 +54,7 @@ export function CardTile({ card, setCode, country: fixed, priority = false }: { 
   return (
     <div className="cv-auto group card-surface relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0">
       <div className="absolute right-2 top-2 z-30">
-        <WatchButton slug={card.slug} kind="card" name={card.name} />
+        <PriceWatchButton cardId={card.id} slug={card.slug} name={card.name} />
       </div>
       <Link
         href={`/card/${card.slug}`}

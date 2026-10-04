@@ -9,8 +9,14 @@
 // Premium"): changing a number here changes what a tier gets, so it needs the
 // owner's word, a DECISIONS entry and the tier-table copy in the same change.
 
-/** Rows a free account sees in Deal Finder; signed-out visitors see none (wave 1, lib/plans.ts). */
-export { FREE_DEAL_ROWS } from "./plans";
+/**
+ * Rows a free account sees in Deal Finder; signed-out visitors see none.
+ * Defined HERE (and re-exported by lib/plans.ts, wave 1's home for it) since
+ * the member track: plans.ts builds TIER_COMPARISON from these constants, so
+ * this module must not import plans.ts back (a cycle would read them before
+ * they exist).
+ */
+export const FREE_DEAL_ROWS = 3;
 
 /** Rising Cards rows a free account sees before the Plus gate (RiftCompare's FREE_PREVIEW_ROWS). */
 export const FREE_RISING_ROWS = 3;

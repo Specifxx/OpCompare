@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
+export default async function LoginPage({ searchParams }: { searchParams: { next?: string; src?: string } }) {
   const next = sanitizeNextPath(searchParams.next);
   if (await getCurrentUser()) redirect(next ?? POST_SIGN_IN_FALLBACK);
-  return <AuthForm providers={enabledProviders()} cancelHref={next ?? "/"} next={next ?? undefined} contextLine={next ? contextLineFor(next) : undefined} />;
+  return <AuthForm providers={enabledProviders()} cancelHref={next ?? "/"} next={next ?? undefined} source={searchParams.src} contextLine={next ? contextLineFor(next) : undefined} />;
 }

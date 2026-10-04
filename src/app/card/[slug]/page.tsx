@@ -15,7 +15,9 @@ import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { WatchButton } from "@/components/WatchButton";
+import { PriceWatchButton } from "@/components/PriceWatchButton";
+import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
+import { enabledProviders } from "@/lib/oauth";
 import {
   Breadcrumbs,
   ColorBadge,
@@ -29,7 +31,7 @@ import {
 import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES, isoCountry } from "@/lib/country";
-import { getCardDetail, getCatalog, getProductHistory } from "@/lib/data";
+import { getCardDetail, getCatalog, getEmailStatus, getProductHistory } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
@@ -113,6 +115,8 @@ export default async function CardPage({ params }: Props) {
   const best = cheapestBuyRow(card.offers, country, loc);
   const tcgHref = affiliateUrl(card.tcgplayerUrl, "tcgplayer", loc);
   const preRelease = isPreRelease(card.set.releasedOn, new Date().toISOString().slice(0, 10));
+  // Alert copy promises an email only once a mailer is configured (cached Meta flag).
+  const emailOn = (await getEmailStatus()) === "on";
   const noListingAnywhere = !card.offers.some((o) => o.inStock);
   const ebayQuery = cardEbayQuery(card);
   const cardText = card.effect ? (
@@ -224,16 +228,21 @@ export default async function CardPage({ params }: Props) {
                 </p>
               </div>
               <div className="flex gap-2">
-                <WatchButton
-                  slug={card.slug}
-                  kind="card"
-                  name={title}
-                  variant="button"
-                />
+                <PriceWatchButton cardId={card.id} slug={card.slug} name={title} variant="responsive" />
                 <ShareButton title={`${title} — ${SITE_NAME}`} />
               </div>
             </div>
             <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
+            <PriceDropAlertCta
+              cardId={card.id}
+              slug={card.slug}
+              name={title}
+              cardPath={loc}
+              providers={enabledProviders()}
+              unpriced={inMarket.length === 0}
+              preorder={preRelease}
+              emailOn={emailOn}
+            />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
@@ -301,7 +310,7 @@ export default async function CardPage({ params }: Props) {
             name={title}
             preRelease={preRelease}
           />
-          <CardConversionCta slug={card.slug} name={title} />
+          <CardConversionCta cardId={card.id} slug={card.slug} name={title} />
           {/* Under the comparison, never in it: TCGplayer's market price as a
               reference with its affiliate button, then the card's eBay banner
               and TCGplayer's (ads: hidden for Plus and Premium members). */}
@@ -481,6 +490,7 @@ export default async function CardPage({ params }: Props) {
           page="card"
           slug={card.slug}
           name={title}
+          cardId={card.id}
         />
       ) : null}
     </div>

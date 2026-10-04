@@ -7,6 +7,19 @@
 // To change a price: edit PLAN_CENTS and re-run the "Stripe setup" workflow; it
 // creates new Prices and moves the lookup keys onto them. Subscribers already
 // on the old Price keep it (its metadata still names its tier).
+import {
+  DECK_WATCH_LIMIT,
+  FREE_DEAL_ROWS,
+  FREE_DEMAND_ROWS,
+  FREE_PORTFOLIO_LIMIT,
+  FREE_RISING_ROWS,
+  FREE_WATCHLIST_LIMIT,
+  PLUS_TARGET_ALERT_LIMIT,
+  SEALED_CHECK_CADENCE,
+  SEALED_WATCH_LIMIT_PLUS,
+  SET_GAP_CHUNK,
+} from "./tier-limits";
+
 export type Tier = "plus" | "premium";
 export type Interval = "month" | "year";
 
@@ -37,26 +50,62 @@ export const planPrice = (tier: Tier, interval: Interval) => usd(PLAN_CENTS[tier
 export const perMonth = (tier: Tier) => usd(Math.round(PLAN_CENTS[tier].year / 12));
 export const annualSavingPct = (tier: Tier) => Math.round((1 - PLAN_CENTS[tier].year / (PLAN_CENTS[tier].month * 12)) * 100);
 
-/** Rows a free account sees in Deal Finder; signed-out visitors see none. */
-export const FREE_DEAL_ROWS = 3;
+/** Rows a free account sees in Deal Finder; signed-out visitors see none (defined in lib/tier-limits.ts). */
+export { FREE_DEAL_ROWS };
 
+// RiftCompare's taglines (PremiumPricingCards).
 export const PLAN_PITCH: Record<Tier, string> = {
-  plus: "No ads, and every deal",
+  plus: "No ads, and price watches",
   premium: "Plans which stores to buy from",
 };
 
+// THE LINEUP — the same entitlements as TIER_COMPARISON's rows, in a few words
+// each, four bullets a card (RiftCompare's PremiumPricingCards, wave 2,
+// 2026-10-03). Plus LEADS with "No ads on any page" (tests/ad-free-tier.test.ts).
+// Every number is the enforced constant. Prices are unchanged.
 export const PLAN_FEATURES: Record<Tier, string[]> = {
-  plus: ["No ads on any page", "Every Deal Finder deal, at every price level", "Deals in all six markets", "Supports an independent site"],
-  premium: ["Everything in Plus, no ads", "Buy List Planner: the cheapest store plan for your watchlist", "Cheapest single store and cheapest split, per market", "Every Deal Finder deal"],
+  plus: ["No ads on any page", "No watchlist or portfolio limit", `Target alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`, `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products`],
+  premium: ["Everything in Plus, no ads", `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`, "Store-by-store plan for any list", "Unlimited alerts and Demand Finder"],
 };
 
-/** The comparison table on /premium: [feature, free account, Plus, Premium]. */
-export const TIER_COMPARISON: [string, string, string, string][] = [
-  ["Every store price, in six markets", "✓", "✓", "✓"],
-  ["Watchlist (in your browser)", "✓", "✓", "✓"],
-  ["Deal Finder", "Top 3", "Every deal", "Every deal"],
-  ["No ads", "", "✓", "✓"],
-  ["Buy List Planner", "", "", "✓"],
+// THE TIER COMPARISON — RiftCompare's TIER_COMPARISON (TierComparisonTable.tsx),
+// ported in wave 2 (2026-10-03): eighteen rows, each a real entitlement whose
+// gate lives in code, and every number is the enforced constant from
+// lib/tier-limits.ts (never typed here). tests/access-tiers.test.ts and
+// tests/premium-tiers.test.ts read the rows against those constants and the
+// dashboard's tool list. `false` renders a dash (✗ in the dialog), `true` a
+// tick, a string as-is.
+//
+// One Piece adaptations: "OP Compare Index"; no at-RRP row text (OP Compare has
+// no MSRP table, lib/alert-limits.ts SEALED_RRP_MARKETS = []); the deck watch
+// "alerts" rather than "emails" (email is off until a mailer is configured).
+export type TierRow = {
+  feature: string;
+  account: boolean | string;
+  plus: boolean | string;
+  premium: boolean | string;
+};
+
+export const TIER_COMPARISON: TierRow[] = [
+  { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
+  { feature: "Full card database, charts & search", account: true, plus: true, premium: true },
+  { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
+  { feature: "OP Compare Index & weekly price movers", account: true, plus: true, premium: true },
+  { feature: "Watchlist & new-low alerts", account: `${FREE_WATCHLIST_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
+  { feature: "Portfolio — value, P&L, CSV & replacement cost", account: `${FREE_PORTFOLIO_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
+  { feature: "Set tracker — what your binder is missing and the cheapest listing to finish", account: `Up to ${FREE_PORTFOLIO_LIMIT} cards`, plus: "Whole sets, no limit", premium: "Whole sets, no limit" },
+  { feature: "Deal Finder", account: `Top ${FREE_DEAL_ROWS}`, plus: "Full list + only my cards", premium: "Full list + only my cards" },
+  { feature: "Rising Cards", account: `Top ${FREE_RISING_ROWS}`, plus: "Full list", premium: "Full list" },
+  { feature: "Target-price alerts after every price update", account: false, plus: `Up to ${PLUS_TARGET_ALERT_LIMIT}`, premium: "Unlimited" },
+  { feature: "Best Basket — cheapest delivered order for a list", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
+  { feature: "Finish this set — store-by-store plan for what's missing, postage included", account: "Total and saving preview", plus: "Total and saving preview", premium: `Store-by-store plan, up to ${SET_GAP_CHUNK} cards` },
+  { feature: "Minimum condition — NM only or LP or better, in the plan and the deck watch", account: false, plus: false, premium: true },
+  { feature: "Demand Finder — most searched & viewed cards", account: `Top ${FREE_DEMAND_ROWS} searched`, plus: `Top ${FREE_DEMAND_ROWS} searched`, premium: true },
+  { feature: `Sealed watches — restock and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },
+  { feature: "Deck price watch — an alert when a deck's delivered total drops", account: false, plus: false, premium: true },
+  // Kept LAST (RiftCompare): the most broadly understood reason to pay at all.
+  { feature: "Ad-free experience", account: false, plus: true, premium: true },
 ];
 
 /**

@@ -24,7 +24,7 @@ const PV_KEY = "oc_annual_nudge_pv";
 const DISMISS_COUNT = "oc_annual_nudge_dismisses";
 const SNOOZE_UNTIL = "oc_annual_nudge_until";
 const SNOOZE_AFTER_DISMISS_MS = 30 * 864e5;
-const ANNUAL_SKIP_PATHS = ["/premium", "/account", "/login", "/admin"] as const;
+const ANNUAL_SKIP_PATHS = ["/premium", "/account", "/profile", "/login", "/admin"] as const;
 
 export function AnnualSwitchNudge() {
   const { me, loaded } = useMe();
@@ -162,7 +162,7 @@ export function AnnualSwitchNudge() {
             <>
               <p className="text-xs leading-relaxed text-red-300">{error ?? "Couldn't switch your plan automatically."} You can change it yourself from the billing portal.</p>
               <div className="mt-3 flex items-center gap-2">
-                <a href="/account" className="btn-ghost flex-1 text-xs">
+                <a href="/premium" className="btn-ghost flex-1 text-xs">
                   Manage billing →
                 </a>
                 <button type="button" onClick={hide} className="rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-500 hover:bg-ink-800 hover:text-slate-300">

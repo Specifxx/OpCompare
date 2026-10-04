@@ -6,7 +6,7 @@
 const UNSAFE_CHARS = /[\\\x00-\x20\x7f]/;
 
 /** Where a sign-in with no destination lands. */
-export const POST_SIGN_IN_FALLBACK = "/account";
+export const POST_SIGN_IN_FALLBACK = "/dashboard";
 
 export function sanitizeNextPath(next: string | null | undefined): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/api")) return null;

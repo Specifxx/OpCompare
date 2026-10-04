@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
+// Personal pages (/watching, /dashboard, /profile and the /watchlist and
+// /account redirects) are NOT disallowed: each carries a noindex meta, which a
+// Disallow would hide from Google (RiftCompare, wave 2).
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/admin", "/watchlist", "/account", "/login", "/premium/welcome"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/admin", "/login", "/premium/welcome"] }],
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
   };

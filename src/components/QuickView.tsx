@@ -14,7 +14,8 @@ import { Icon } from "./Icon";
 import { LineChart } from "./LineChart";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { TcgMarketPrice } from "./TcgMarketPrice";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
+import { PriceDropAlertCta } from "./PriceDropAlertCta";
 
 // The QuickView panel (RiftCompare's QuickViewModal, adapted): art and the
 // "Open full page" link on the left; on the right the printing, the visitor's
@@ -54,7 +55,20 @@ function display(p: { name: string; variant: string | null }): string {
   return `${p.name}${p.variant ? ` (${p.variant})` : ""}`;
 }
 
-export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb: string | null; label: string | null; onClose: () => void }) {
+export function QuickView({
+  slug,
+  thumb,
+  label,
+  onClose,
+  providers = [],
+}: {
+  slug: string;
+  thumb: string | null;
+  label: string | null;
+  onClose: () => void;
+  /** The enabled OAuth providers (env-only, from the root layout), for the alert row. */
+  providers?: ("google" | "discord")[];
+}) {
   const { country } = useCountry();
   const co = COUNTRIES[country];
   const [data, setData] = useState<QuickViewPayload | null>(null);
@@ -153,7 +167,7 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
                 </p>
               ) : null}
             </div>
-            {data ? <WatchButton slug={data.slug} kind="card" name={display(data)} variant="button" /> : null}
+            {data ? <PriceWatchButton cardId={data.id} slug={data.slug} name={display(data)} variant="full" limitInline /> : null}
           </div>
 
           {failed ? (
@@ -293,6 +307,20 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
                   <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebay} →</span>
                 </a>
               )}
+
+              {/* The one-click price-drop alert, compact (RiftCompare's QuickView
+                  row; wave 2): after the buy path, ghost buttons only. */}
+              <PriceDropAlertCta
+                compact
+                placement="quickview_alert"
+                cardId={data.id}
+                slug={data.slug}
+                name={display(data)}
+                cardPath={href}
+                providers={providers}
+                unpriced={!m.rows.length}
+                preorder={data.preRelease}
+              />
 
               {/* Every market's cheapest open listing, the visitor's own marked. */}
               <div className="mt-4">

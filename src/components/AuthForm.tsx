@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { OAuthProvider } from "@/lib/oauth";
+import { parseSignupSource } from "@/lib/signup-source-shared";
 
 // RiftCompare's AuthForm: "Create your free account" with the perks, an error
 // line for a failed OAuth round trip (?error=), and Google / Discord buttons.
@@ -54,7 +55,16 @@ export function AuthForm({
     trackEvent("auth_start", { provider, placement: source ?? "login" });
     onProviderClickProp?.();
   };
-  const oauthHref = (provider: OAuthProvider) => `/api/auth/oauth/${provider}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+  // `src` stamps the new account's sign-up surface (lib/signup-source-shared.ts
+  // whitelist; an unknown placement is simply left off).
+  const oauthHref = (provider: OAuthProvider) => {
+    const params = new URLSearchParams();
+    if (next) params.set("next", next);
+    const src = parseSignupSource(source);
+    if (src) params.set("src", src);
+    const q = params.toString();
+    return `/api/auth/oauth/${provider}${q ? `?${q}` : ""}`;
+  };
 
   useEffect(() => {
     const e = new URLSearchParams(window.location.search).get("error");

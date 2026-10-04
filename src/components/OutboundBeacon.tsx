@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { pageFromPath, slugFromPath } from "@/lib/click-event";
 import { useCountry } from "./CountryProvider";
+import { readEntrySource } from "@/lib/entry-source";
 
 // ONE global listener for outbound shop clicks (RiftCompare's OutboundLink
 // beacon, done once instead of per link): any click on an a[data-retailer] —
@@ -28,6 +29,8 @@ export function OutboundBeacon() {
           // The link's own card (list pages, QuickView) beats the page's path.
           slug: a.getAttribute("data-card") || slugFromPath(path),
           country: countryRef.current,
+          // First-touch traffic bucket of this tab (lib/entry-source.ts; wave 2).
+          entry: readEntrySource(),
         });
         const blob = new Blob([body], { type: "application/json" });
         if (!navigator.sendBeacon?.("/api/click", blob)) {

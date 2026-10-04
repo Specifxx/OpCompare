@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { isBasketSource, planBuyList, tagPlanLinks, type PlanItem, type PlanOffer } from "@/lib/buy-list";
 import { cheapestGrades, meetsMinCondition, parseMinCondition, planTotal } from "@/lib/buy-list-condition";
-import { getCardDetail, getSealedDetail, type OfferRow } from "@/lib/data";
+import { getCardDetail, getCatalog, getSealedDetail, type OfferRow } from "@/lib/data";
 import { mergeLines, parseDeckList, resolveDeck } from "@/lib/deck";
 import { deckIndex } from "@/lib/deck-price";
 import { getCountry } from "@/lib/get-country";
@@ -61,7 +61,10 @@ export async function POST(req: Request) {
     );
     items = loaded.filter((x): x is GradedItem => x != null);
   } else {
+    // An account's watched cards arrive as ids (wave 2); resolve them to slugs.
+    const cat = await getCatalog();
     const wanted = (Array.isArray(body.items) ? body.items : [])
+      .map((i) => (typeof (i as { id?: unknown })?.id === "number" ? { slug: cat.byId.get((i as { id: number }).id)?.slug, kind: "card" } : i))
       .filter((i) => typeof i?.slug === "string" && i.slug.length < 200)
       .slice(0, MAX_ITEMS) as { slug: string; kind?: unknown }[];
     const loaded = await Promise.all(

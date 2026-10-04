@@ -28,6 +28,11 @@ export interface SessionUser {
   googleId: string | null;
   discordId: string | null;
   createdAt: Date;
+  // Wave 2 (member track): activity stamps (lib/activity.ts) and the market
+  // the welcome checklist saved. Same row, no extra read.
+  lastActiveAt: Date | null;
+  activeDays: number;
+  preferredCountry: string | null;
 }
 
 export async function createSession(userId: string): Promise<void> {
@@ -62,6 +67,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     select: {
       id: true, email: true, displayName: true, avatarUrl: true, isAdmin: true, premiumUntil: true, premiumTier: true,
       stripeCustomerId: true, googleId: true, discordId: true, createdAt: true,
+      lastActiveAt: true, activeDays: true, preferredCountry: true,
     },
   });
   if (!u) return null;

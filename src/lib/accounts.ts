@@ -4,8 +4,12 @@
 //    an account with that email gets the provider linked, else a new account.
 import { prisma } from "./db";
 import type { OAuthProfile, OAuthProvider } from "./oauth";
+import { isCountry } from "./country";
 
-export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile): Promise<{ id: string; isNew: boolean } | null> {
+// `signupSource` (wave 2): the whitelisted sign-up surface from the
+// oc_signup_src cookie (lib/signup-source-shared.ts parseSignupSource),
+// stamped on a NEW account only — never rewritten on a later sign-in.
+export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, opts: { signupSource?: string | null } = {}): Promise<{ id: string; isNew: boolean } | null> {
   if (!p.providerId || !p.email) return null;
   const link = provider === "google" ? { googleId: p.providerId } : { discordId: p.providerId };
   const byProvider = await prisma.user.findFirst({ where: link, select: { id: true, avatarUrl: true, emailVerified: true } });
@@ -26,8 +30,27 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile):
     return { id: byEmail.id, isNew: false };
   }
   const created = await prisma.user.create({
-    data: { email: p.email, displayName: (p.name ?? p.email.split("@")[0]).slice(0, 24), ...link, emailVerified: new Date(), avatarUrl: p.avatar, lastLoginAt: new Date() },
+    data: {
+      email: p.email,
+      displayName: (p.name ?? p.email.split("@")[0]).slice(0, 24),
+      ...link,
+      emailVerified: new Date(),
+      avatarUrl: p.avatar,
+      lastLoginAt: new Date(),
+      signupSource: opts.signupSource ?? null,
+    },
     select: { id: true },
   });
   return { id: created.id, isNew: true };
+}
+
+/**
+ * The market an account chose (User.preferredCountry), from the welcome
+ * checklist's market step via /api/account/country (wave 2). One
+ * select-limited update of the caller's own row; an unknown code is refused.
+ */
+export async function setPreferredCountry(userId: string, country: unknown): Promise<boolean> {
+  if (!isCountry(country)) return false;
+  await prisma.user.update({ where: { id: userId }, data: { preferredCountry: country }, select: { id: true } });
+  return true;
 }
