@@ -14,6 +14,7 @@ import { PlanProvider } from "@/components/PlanProvider";
 import { OutboundBeacon } from "@/components/OutboundBeacon";
 import { PremiumSlideIn } from "@/components/PremiumSlideIn";
 import { AnnualSwitchNudge } from "@/components/AnnualSwitchNudge";
+import { PriceAlertModalGate } from "@/components/PriceAlertModalGate";
 import { stripeEnabled } from "@/lib/stripe";
 import { getCountry } from "@/lib/get-country";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -119,6 +120,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <PremiumSlideIn />
           <AnnualSwitchNudge />
+          {/* Email-only price alerts: renders nothing unless email is on AND
+              NEXT_PUBLIC_ANON_ALERTS=1 (reads one cached Meta row, never the session). */}
+          <PriceAlertModalGate />
           </PlanProvider>
           </QuickViewProvider>
         </CountryProvider>

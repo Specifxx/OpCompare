@@ -30,7 +30,7 @@
 //     prices move between two clicks, and a rank offset would skip cards.
 //
 // Client-safe: imports only pure modules (tests/client-imports.test.ts).
-import { DECK_LINE_CAP } from "./deck";
+import { SET_GAP_CHUNK } from "./tier-limits";
 import {
   cardInScope,
   compareByNumber,
@@ -41,8 +41,8 @@ import {
   type SetScope,
 } from "./set-scope";
 
-/** Cards in one plan. Best Basket's line cap (DECK_LINE_CAP, WATCHLIST_BASKET_CAP), so a plan is never bigger than the tool prices. */
-export const SET_GAP_CHUNK = DECK_LINE_CAP;
+/** Cards in one plan: Best Basket's 200-line cap, from lib/tier-limits.ts (its one home). */
+export { SET_GAP_CHUNK };
 
 /** How many not-stocked cards a Premium answer names; the rest are counted. */
 export const NOT_STOCKED_LIST_CAP = 200;
