@@ -1,6 +1,6 @@
 # Claude in Chrome — OP Compare setup prompt
 
-Paste everything between the lines into Claude in Chrome. Before you do, log in
+Paste everything between the lines into Claude in Chrome. After the first deploy, also run docs/CHROME-QA-PROMPT.md. Before you do, log in
 to:
 - GitHub, Vercel, Neon, Google (Cloud Console, Analytics and Search Console),
   Stripe and Discord, using the same accounts as RiftCompare;
@@ -352,6 +352,53 @@ its own 5,000 calls a day. Rules for this section:
    19:00–20:10 UTC (it can cancel a waiting import). Report the
    `eBay quota: …` line, the `eBay US: due …` funnel line, the `eBay rejects:`
    line and whether `⚠ another app is spending this keyset` appeared.
+
+## 13. Wave-2 features: what to switch on (ask me before each paid or irreversible step)
+
+The member area, alerts, Best Basket and the rest of the RiftCompare features are
+live. A few of them stay **off until you set the services below**, exactly like
+the eBay keys: nothing breaks while they are off, and the site makes no promises
+it can't keep.
+
+### 13a. Email (Resend), a NEW account for OP Compare
+Do NOT use RiftCompare's Resend account (its 100 emails a day would be split).
+1. Create a Resend account with opcompareofficial@gmail.com.
+2. Add the domain `opcompare.app`. In the domain's DNS (at the registrar or
+   Vercel DNS, wherever opcompare.app's DNS lives) add the records Resend shows:
+   SPF, DKIM, the bounce MX, and a DMARC TXT `v=DMARC1; p=none`. Wait for Resend
+   to show the domain as **Verified**.
+3. Create an API key with **Sending access** only. Don't show it in chat.
+4. In GitHub, Specifxx/OpCompare → Settings → Secrets and variables → Actions,
+   add the secrets: `RESEND_API_KEY` (the key), `EMAIL_FROM`
+   (`OP Compare <alerts@opcompare.app>`).
+5. Generate a 32+ character random string and save it as `EMAIL_LINK_SECRET`
+   in BOTH GitHub Actions secrets and Vercel (Production environment). It must be
+   the same value in both.
+6. Optional: `EMAIL_REPLY_TO` = opcompareofficial@gmail.com, and
+   `ALERT_DAILY_BUDGET` (default is fine).
+7. In Actions, run the **Email** workflow once. When it's green the site starts
+   promising email (alerts, welcome mail). If it isn't, tell me the error.
+Then ask me whether to approve updating the privacy policy to name Resend.
+
+### 13b. Postage data for Best Basket
+Actions → **Shipping rates** → Run workflow (outside 07:00–08:10 and
+19:00–20:10 UTC). It opens a pull request with measured store postage; tell me
+the PR link, don't merge it unless I say so.
+
+### 13c. Check the plan and trial settings (read only)
+In Stripe (the OP Compare account), open Settings → Billing → Customer portal and
+confirm plan switching between Plus and Premium (monthly and annual) is allowed
+with proration. Report what you see; change nothing.
+
+### 13d. Optional extras (ask me which I want)
+- `NEXT_PUBLIC_ADSENSE_CLIENT_ID` once AdSense approves opcompare.app.
+- `NEXT_PUBLIC_TCGPLAYER_CREATIVES` (Impact banner creative ids).
+- `DISCORD_URL` (an invite link for the header icon).
+
+### 13e. Final check
+After the next deploy, open https://opcompare.app/alerts and
+https://opcompare.app/dashboard signed in, and report whether the pages mention
+email (they should only once 13a is done).
 
 ## 12. Report
 Give me:
