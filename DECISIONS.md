@@ -1862,10 +1862,16 @@ What the review found, and what was decided (items not listed were fixed as writ
   we kept the full list because it is the page's set index.
 - **Signed-out member pages are a real 307.** `/watching`, `/portfolio`,
   `/portfolio/sets` and `/portfolio/sets/:set` have a `loading.tsx`, so their own
-  `redirect()` ran after the shell was flushed and swapping it threw React error
-  #310 in production. `next.config.js` now redirects them (307, `missing` the
-  `oc_session` cookie) before anything streams. A stale or invalid cookie still
-  goes through the page's redirect; the pages' checks stay.
+  `redirect()` ran after the shell was flushed, and swapping it threw React error
+  #310 in production (inside Next's own app router, `useMemo` after
+  `useUnwrapState`; it needs the redirect to land while the stream is open, so
+  dev never shows it). Two layers now: `next.config.js` redirects a visit with no
+  `oc_session` cookie (307, exact path in `next`), and a `layout.tsx` for each of
+  `watching` and `portfolio` (outside the segment's Suspense boundary) redirects an
+  expired or invalid cookie. Reproduced with a junk cookie on a production build:
+  7 of 12 loads threw before the layouts, 0 of 12 after. The portfolio layout
+  cannot see the sub-path, so a stale-cookie visit to a set page returns to
+  `/portfolio` after sign-in. The pages keep their own checks.
 - **Box EV gives no verdict it cannot back.** Under half of the paying pools'
   cards priced (a set that has just come out) reads "too few cards priced", never
   "price is well above EV"; a positive ratio where chase pools carry 90% or more

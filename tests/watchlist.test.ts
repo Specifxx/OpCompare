@@ -31,8 +31,14 @@ test("signed-out visits to the streamed member pages are a real 307, decided bef
     assert.match(l!, /missing: \[\{ type: "cookie", key: "oc_session" \}\]/);
     assert.ok(l!.includes(`destination: "/login?next=${p}"`));
   }
-  // Every route with a loading.tsx that redirects when signed out is covered.
-  for (const dir of ["watching", "portfolio"]) assert.ok(existsSync(join(process.cwd(), `src/app/${dir}/loading.tsx`)));
+  // An expired or invalid cookie is not "missing": the segment's LAYOUT (outside
+  // loading.tsx's Suspense boundary) makes that redirect a real 307 too.
+  for (const dir of ["watching", "portfolio"]) {
+    assert.ok(existsSync(join(process.cwd(), `src/app/${dir}/loading.tsx`)));
+    const layout = code(`src/app/${dir}/layout.tsx`);
+    assert.match(layout, /getCurrentUser\(\)/, dir);
+    assert.match(layout, new RegExp(`redirect\\("/login\\?next=/${dir}"\\)`), dir);
+  }
 });
 
 test("/watchlist and /account redirect with a 307 (never a cached 308) to /watching and /profile", () => {
