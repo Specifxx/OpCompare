@@ -1233,3 +1233,32 @@ comparison while the header said "1 store". RiftCompare's `computeMarket`
 counts every in-stock retailer in the comparison, TCGplayer included. This
 reverses the stores-only count from "Store matching: SKU numbers, …" earlier
 today; eBay stays out per CLAUDE.md ("never counted as a store").
+
+## 2026-10-04 — Wave-2 tools: Best Basket, Box EV, demand, rising, deck library and deck watch
+
+**Decision.** The tools track ports RiftCompare's tools one for one.
+
+- Best Basket replaces the Buy List Planner. The optimiser, the minimum-condition
+  floor and the postage display are RC's. Postage comes from the committed
+  `src/lib/shipping-rates.json`, measured per store by
+  `scripts/probe-shipping-rates.ts`; an unmeasured store uses the market's
+  dearest measured one-card tracked rate and is flagged "estimate". eBay and
+  TCGplayer-reference rows never enter a basket (`tests/basket-sources.test.ts`).
+- The shipping refresh workflow (`.github/workflows/shipping-rates.yml`) runs
+  monthly at 03:17 UTC and on dispatch, and uploads the rebuilt snapshot as an
+  artifact. It never commits or opens a PR (the stricter of two ported tests
+  wins); the owner commits the file.
+- `/tools/box-value` (which summed one copy of every printing) is replaced by
+  `/tools/box-ev`, a real expected value. Every rate in `pack-composition.ts` is
+  `sourced: false`, set low on purpose, and the page says they are community
+  estimates.
+- Demand snapshots and `history/rising.json` are files on the `data` branch,
+  written by the import's history step, never Prisma tables.
+- The public deck library, the deck price watch (Premium, 10 lists) and the card
+  view and search counters follow RC. The counters are the one public write to
+  `Card` (bots dropped, per-IP caps), the same exception RC records.
+- Plan-click surfaces stay `[a-z-]` scoped: `gate:basket-limit`, `inline-deck`,
+  `inline-published-deck`.
+
+**Why.** The owner asked for a copy-paste of RiftCompare with only branding and
+cards changed.

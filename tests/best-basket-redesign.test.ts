@@ -725,7 +725,7 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   assert.match(ui, /basketSavingPitch\(r\.savedCents, fmt,/);
   assert.match(ui, /Your list: \{fmt\(r\.totalCents\)\} delivered from \{stores\}\. Premium shows which store to buy each card from\./);
   assert.match(ui, /Buying each card&apos;s cheapest copy is already the cheapest way for\s+this list\./);
-  assert.match(ui, /<PlanButton surface="limit:basket" tier="premium" \/>/);
+  assert.match(ui, /<PlanButton surface="gate:basket-limit" tier="premium" \/>/);
   assert.match(ui, /Skip copies I already own/);
   for (const t of ["Paste a list", "My watchlist", "My binder", "Finish a set"]) assert.ok(ui.includes(t), `tab "${t}"`);
   for (const t of ["Cheapest split", "Best single store", "Best two stores"]) assert.ok(ui.includes(t), `plan card "${t}"`);

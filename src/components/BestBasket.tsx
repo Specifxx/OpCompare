@@ -736,7 +736,7 @@ function PreviewCard({
       {overCap && <ResultCapNote />}
       <UnmatchedList unmatched={r.unmatched} />
       <div className="mt-4">
-        <PlanButton surface="limit:basket" tier="premium" />
+        <PlanButton surface="gate:basket-limit" tier="premium" />
       </div>
       <PostageFooter postage={postage} className="mt-4 text-left" />
     </div>

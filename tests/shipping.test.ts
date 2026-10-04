@@ -424,7 +424,7 @@ test("condensing: identical addresses collapse, pickup and other currencies are 
   assert.equal(condenseStore(usdRatesInAud, {}).zones.find((z) => z.at.includes("syd"))?.std[0], null, "never mix currencies");
 });
 
-test("the refresh workflow re-runs the probe per market, never touches the database, and only opens a pull request", () => {
+test("the refresh workflow re-runs the probe per market, never touches the database, and never commits", () => {
   const wf = read(".github/workflows/shipping-rates.yml");
   assert.match(wf, /workflow_dispatch:/);
   assert.match(wf, /scripts\/probe-shipping-rates\.ts --market=/);
@@ -433,8 +433,7 @@ test("the refresh workflow re-runs the probe per market, never touches the datab
   assert.match(wf, /GITHUB_STEP_SUMMARY/);
   assert.doesNotMatch(wf, /DATABASE_URL|secrets\.(?!GITHUB_TOKEN)/, "no database, no secret but the workflow's own token");
   assert.doesNotMatch(wf, /\[deploy\]/i, "the refresh rides the daily release");
-  assert.match(wf, /gh pr create --base main/, "a refresh is a pull request…");
-  assert.doesNotMatch(wf, /git push origin (main|HEAD:main)/, "…never a push to main");
+  assert.doesNotMatch(wf, /git push|git commit|gh pr create|contents: write/, "the refreshed snapshot is an artifact for the owner to commit, never pushed by the workflow");
   // Monthly at 03:17 UTC: outside the import windows (07:00–08:10, 19:00–20:10).
   const cron = /cron: "(\d+) (\d+) /.exec(wf);
   assert.ok(cron);

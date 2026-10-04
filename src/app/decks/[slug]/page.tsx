@@ -87,7 +87,7 @@ export default async function DeckPage({ params }: { params: { slug: string } })
       {/* Each card's Buy link is its cheapest store through affiliateUrl(), so the disclosure sits right under the list. */}
       <AffiliateDisclosure partner="both" />
       <InlineSignupPrompt
-        surface="inline_published_deck"
+        surface="inline-published-deck"
         className="mt-6"
         title="See what this deck costs delivered"
         body="A free account shows what this list costs delivered in Best Basket, postage included: from how many stores, and how much less that is than buying each card's cheapest copy separately."
