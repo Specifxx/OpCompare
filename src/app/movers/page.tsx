@@ -4,7 +4,14 @@ import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { Breadcrumbs, Delta, InShort } from "@/components/ui";
+import { AnswerBox } from "@/components/AnswerBox";
+import { HubFaq } from "@/components/HubFaq";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { Breadcrumbs, Delta, JsonLd } from "@/components/ui";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { MOVERS_FAQ } from "@/lib/content/movers-faq";
+import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { releasedSets } from "@/lib/selectors";
 import { getCatalog, getIndexSeries, getSparklines } from "@/lib/data";
 import { longDate } from "@/lib/format";
 import { movers, offHighs } from "@/lib/selectors";
@@ -32,6 +39,8 @@ export default async function MoversPage() {
 
   return (
     <div>
+      <JsonLd data={breadcrumbLd([{ name: "Price movers", path: "/movers" }])} />
+      <JsonLd data={faqLd(MOVERS_FAQ)} />
       <Breadcrumbs items={[{ label: "Price movers" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece price movers — this week
@@ -55,11 +64,9 @@ export default async function MoversPage() {
         </p>
       </div>
       <div className="mt-6">
-        <InShort>
-          One Piece price movers are the cards whose market price changed most
-          in the past week. Only cards worth US$1 or more are ranked, so a
-          10-cent common doubling never tops the list.
-        </InShort>
+        <AnswerBox>
+          One Piece price movers are the cards whose TCGplayer market price changed most in the past week. Only cards worth US$1 or more are ranked, so a 10-cent common doubling never tops the list.
+        </AnswerBox>
       </div>
       {noHistory ? (
         <div className="card-surface mt-4 max-w-3xl p-4 text-sm text-slate-300">
@@ -83,6 +90,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="No week-on-week moves yet."
+          ebaySource="movers-panel"
         />
         <MoverList
           title="Biggest drops this week"
@@ -96,6 +104,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="No week-on-week moves yet."
+          ebaySource="movers-panel"
         />
         <MoverList
           title="Best value right now"
@@ -113,6 +122,7 @@ export default async function MoversPage() {
           setById={cat.setById}
           spark={spark}
           empty="Appears once a card has fallen from a recorded high."
+          ebaySource="movers-panel"
         />
       </div>
       {/* Straight after the lists (RiftCompare): a reader who has just seen a
@@ -124,6 +134,21 @@ export default async function MoversPage() {
       <div className="mt-6">
         <MoversToolsCta />
       </div>
+      <section className="mt-8" aria-label="Browse prices by set">
+        <h2 className="mb-3 text-lg font-bold text-white">Browse prices by set</h2>
+        <div className="flex flex-wrap gap-2">
+          {releasedSets(cat.sets, ["booster", "extra", "premium"]).slice(0, 12).map((s) => (
+            <Link key={s.id} href={`/sets/${s.slug}`} className="chip border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:text-white">
+              {s.code} {s.name}
+            </Link>
+          ))}
+          <Link href="/sets" className="chip border border-brand-500/40 text-brand-400 hover:text-brand-300">
+            All sets →
+          </Link>
+        </div>
+      </section>
+      <HubFaq faqs={MOVERS_FAQ} />
+      <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
       <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />
     </div>
   );

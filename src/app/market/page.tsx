@@ -10,7 +10,17 @@ import {
 } from "@/components/ui";
 import { getCatalog, getIndexSeries } from "@/lib/data";
 import { int, longDate, money } from "@/lib/format";
-import { releasedSets } from "@/lib/selectors";
+import { movers, releasedSets } from "@/lib/selectors";
+import CardQuickLink from "@/components/CardQuickLink";
+import { IndexConstituents } from "@/components/IndexConstituents";
+import { IndexStats } from "@/components/IndexStats";
+import { MarketSectionNav } from "@/components/MarketSectionNav";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { JsonLd } from "@/components/ui";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { breadcrumbLd } from "@/lib/jsonld";
+import { computeStats, indexConstituents, indexSentence } from "@/lib/market-stats";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 import { DATA_TABLE } from "@/components/prose";
 
@@ -51,8 +61,27 @@ export default async function MarketPage() {
     },
   );
 
+  const { rows: constituents, basketCount } = indexConstituents(cat.cards, (id) => cat.setById.get(id)?.code ?? "");
+  // Breadth over the WHOLE basket (every card at US$1+), not just the table rows.
+  const basketAll = cat.cards.filter((c) => (c.marketUsd ?? 0) >= 100).map((c) => ({ priceCents: c.marketUsd!, d7pct: c.change7d }));
+  const stats = computeStats(series, basketAll);
+  const gainers = movers(cat.cards, "up", 5);
+  const fallers = movers(cat.cards, "down", 5);
+  const d7 = change(series, 7);
+  const sentence = last ? indexSentence({ day: longDate(last.day), value: last.value, d7, advancing: stats.advancing, counted: stats.advancing + stats.declining }) : null;
+  const guides = guidesForCatalogue("market");
+  const sections = [
+    { id: "index", label: "Index" },
+    { id: "stats", label: "Statistics" },
+    { id: "movers", label: "Gainers & fallers" },
+    { id: "constituents", label: "Constituents" },
+    { id: "sets", label: "Value by set" },
+    { id: "cite", label: "Cite" },
+  ];
+
   return (
     <div>
+      <JsonLd data={breadcrumbLd([{ name: "Market index", path: "/market" }])} />
       <Breadcrumbs items={[{ label: "Market index" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">The OP Compare Index</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -75,7 +104,12 @@ export default async function MarketPage() {
           show where the same card costs less in another market.
         </p>
       </div>
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {sentence ? <p className="mt-4 max-w-3xl text-[15px] font-semibold text-white">{sentence}</p> : null}
+      <p className="mt-1 text-xs text-slate-500">US$ · TCGplayer market</p>
+      <div className="mt-4">
+        <MarketSectionNav sections={sections} />
+      </div>
+      <div id="index" className="mt-6 grid scroll-mt-40 grid-cols-2 gap-3 xl:scroll-mt-36 lg:grid-cols-4">
         <StatTile
           label="Index"
           value={last ? last.value.toFixed(1) : "—"}
@@ -113,7 +147,48 @@ export default async function MarketPage() {
           direction, not a price you can buy at.
         </InShort>
       </div>
-      <section className="mt-10">
+      <section id="stats" className="mt-8 scroll-mt-40 xl:scroll-mt-36">
+        <IndexStats stats={stats} startDay={series[0]?.day ?? "the first day"} />
+        <p className="mt-2 text-xs text-slate-500">
+          Basket: the {int(basketCount)} printings priced at US$1 or more, one of each. Breadth counts every one of them, not only the table below.
+        </p>
+      </section>
+
+      <section id="movers" className="mt-8 scroll-mt-40 xl:scroll-mt-36">
+        <SectionHeader title="Top gainers and fallers" sub="The biggest 7-day moves among cards worth US$1 or more. The full list is on this week's movers." action={<Link href="/movers" className="btn-ghost">All movers →</Link>} />
+        <div className="grid gap-4 md:grid-cols-2">
+          {[
+            { title: "Gainers", rows: gainers },
+            { title: "Fallers", rows: fallers },
+          ].map((col) => (
+            <div key={col.title} className="card-surface p-4">
+              <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-400">{col.title}</h3>
+              <ol className="divide-y divide-ink-800">
+                {col.rows.map((x) => (
+                  <li key={x.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <CardQuickLink slug={x.slug} className="min-w-0 truncate text-slate-100 hover:text-brand-400 hover:underline">
+                      {x.name}
+                      {x.variant ? ` (${x.variant})` : ""} <span className="num text-xs text-slate-500">{x.number}</span>
+                    </CardQuickLink>
+                    <span className="flex shrink-0 items-baseline gap-2">
+                      <span className="num text-xs text-slate-400">{money(x.marketUsd, "US")}</span>
+                      <Delta v={x.change7d} className="text-xs" />
+                    </span>
+                  </li>
+                ))}
+                {!col.rows.length ? <li className="py-3 text-sm text-slate-500">No moves yet.</li> : null}
+              </ol>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="constituents" className="mt-8 scroll-mt-40 xl:scroll-mt-36">
+        <SectionHeader title="Index constituents" sub={`The ${int(constituents.length)} most valuable cards in the basket, by TCGplayer market price. Weight is a card's share of the whole one-of-each basket.`} />
+        <IndexConstituents constituents={constituents} />
+      </section>
+
+      <section id="sets" className="mt-10 scroll-mt-40 xl:scroll-mt-36">
         <SectionHeader
           title="Value by set"
           sub="Every printing in each released booster set at TCGplayer's market price, and its value-weighted 7-day move."
@@ -153,6 +228,16 @@ export default async function MarketPage() {
           </table>
         </div>
       </section>
+      <section id="cite" className="card-surface mt-10 scroll-mt-40 p-5 xl:scroll-mt-36">
+        <h2 className="text-lg text-white">Cite the OP Compare Index</h2>
+        <p className="mt-1 max-w-3xl text-sm text-slate-400">
+          You are welcome to quote the index with a link back. The method is stated above: a chained, value-weighted measure over TCGplayer market prices of cards at US$1 or more, 1,000 on its first day.
+        </p>
+        <pre className="mt-3 overflow-x-auto rounded-lg border border-ink-800 bg-ink-950/60 p-3 text-xs text-slate-300">
+          {`OP Compare Index${last ? `, ${last.day}: ${last.value.toFixed(1)}` : ""}. ${SITE_NAME}, ${SITE_URL}/market`}
+        </pre>
+      </section>
+      <RelatedGuides guides={guides} className="card-surface mt-6 p-5" />
     </div>
   );
 }

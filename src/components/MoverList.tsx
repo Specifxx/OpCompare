@@ -4,8 +4,9 @@ import { money } from "@/lib/format";
 import { Sparkline } from "./Sparkline";
 import { cardImage } from "@/lib/images";
 import CardQuickLink from "./CardQuickLink";
+import { EbayCardSearchRow } from "./EbayCardSearchRow";
 
-export function MoverList({ title, sub, tone, rows, setById, empty, spark }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string; spark?: Record<number, number[]> }) {
+export function MoverList({ title, sub, tone, rows, setById, empty, spark, ebaySource }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string; spark?: Record<number, number[]>; /** Adds a "Search eBay" row naming the top three cards (the /movers page). */ ebaySource?: string }) {
   return (
     <div className="card-surface min-w-0">
       <div className="border-b border-ink-800 px-4 py-3">
@@ -44,6 +45,11 @@ export function MoverList({ title, sub, tone, rows, setById, empty, spark }: { t
       ) : (
         <p className="px-4 py-10 text-center text-sm text-slate-500">{empty}</p>
       )}
+      {ebaySource && rows.length >= 2 ? (
+        <div className="px-4 pb-3">
+          <EbayCardSearchRow names={rows.slice(0, 3).map((r) => r.card.name)} source={ebaySource} page="movers" />
+        </div>
+      ) : null}
     </div>
   );
 }
