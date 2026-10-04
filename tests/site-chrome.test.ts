@@ -123,3 +123,12 @@ test("the account menu: dashboard first, Pricing for non-members, Admin for admi
   assert.match(menu, /invalidateMe\(\);\s*invalidateWatchlist\(\);/);
   assert.match(menu, /Sign up<span className="hidden min-\[420px\]:inline">&nbsp;free<\/span>/);
 });
+
+test("the root layout carries one Organization + WebSite node, and the WebSite searches /browse", () => {
+  const src = read("src/app/layout.tsx");
+  assert.equal((src.match(/"@type": "Organization"/g) ?? []).length, 1);
+  assert.match(src, /"@type": "WebSite"/);
+  assert.match(src, /urlTemplate: `\$\{SITE_URL\}\/browse\?q=\{search_term_string\}`/);
+  // No Discord sameAs unless the owner has configured a Discord URL.
+  assert.match(src, /DISCORD_URL \? \{ sameAs: \[DISCORD_URL\] \} : \{\}/);
+});

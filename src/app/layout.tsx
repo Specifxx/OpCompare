@@ -19,7 +19,7 @@ import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { stripeEnabled } from "@/lib/stripe";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
@@ -85,6 +85,28 @@ export const metadata: Metadata = {
 // meta for a dark-theme visitor.
 export const viewport: Viewport = { themeColor: "#f4f6f8" };
 
+// RiftCompare's site-wide Organization node (its layout.tsx orgJsonLd), with
+// OP Compare's facts: the entity and the six markets it serves, no per-locale URLs.
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: SITE_NAME,
+      alternateName: ["OPCompare", "OP Compare App"],
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon-512.png`,
+      ...(DISCORD_URL ? { sameAs: [DISCORD_URL] } : {}),
+      knowsAbout: ["One Piece Card Game", "One Piece Card Game price comparison", "Trading card game prices", "Sealed trading card products"],
+      areaServed: ["United States", "Australia", "United Kingdom", "Singapore", "Canada", "European Union"].map((name) => ({ "@type": "Country", name })),
+      contactPoint: { "@type": "ContactPoint", contactType: "customer support", email: CONTACT_EMAIL, availableLanguage: "English" },
+    },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: SITE_NAME, publisher: { "@id": `${SITE_URL}/#org` },
+      potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/browse?q={search_term_string}` }, "query-input": "required name=search_term_string" } },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // No cookie, header or session read here (RiftCompare's static layout): the
   // chrome renders for DEFAULT_COUNTRY and CountryProvider resolves the real
@@ -109,6 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         {/* Route-change progress bar: the dark brand-400 red, 2px, no spinner.
             zIndex 200 matches the skip link — it wins over every overlay. */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
         <NextTopLoader color="#ff6b6b" height={2} showSpinner={false} shadow={false} zIndex={200} />
         {/* The Plus/Premium dialog and its account state (RiftCompare's
             PremiumProvider + PremiumDialogProvider). checkoutOpen is an

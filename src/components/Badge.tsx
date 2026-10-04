@@ -97,7 +97,7 @@ export function PrintingBadge({ printing, variant }: { printing: string; variant
         style={{ background: "linear-gradient(90deg,#ff0080,#ffea00,#00ffd5,#7a5cff,#ff0080)", color: "#0a0d13" }}
         title={`Special foil (${label})`}
       >
-        ✦ {label}
+        <span className="truncate">✦ {label}</span>
       </span>
     );
   }
@@ -105,8 +105,10 @@ export function PrintingBadge({ printing, variant }: { printing: string; variant
   if (!c) return null;
   return (
     <span className="chip font-semibold uppercase" style={{ backgroundColor: c.bg, color: c.ink }} title={label}>
-      {c.mark}
-      {label}
+      <span className="truncate">
+        {c.mark}
+        {label}
+      </span>
     </span>
   );
 }
