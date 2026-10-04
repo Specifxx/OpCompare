@@ -141,3 +141,14 @@ test("the report step never fails the import", () => {
   const script = fs.readFileSync(path.resolve(__dirname, "../scripts/store-health.ts"), "utf8");
   assert.match(script, /process\.exit\(0\)/);
 });
+
+test("non-Shopify stores: the platform is shown and a failed read says why", () => {
+  const stores: StoreInfo[] = [{ key: "sp", name: "SP", base: "https://sp.example", country: "US", collections: [], platform: "shadowpos" }, STORES[0]!];
+  const history = new Map([["sp", [app({ failed: true, products: 0, cards: 0, note: "HTTP 503" })]]]);
+  const h = computeStoreHealth(stores, history, new Map([["sp", offers()]]), NOW);
+  assert.equal(h[0]!.platform, "shadowpos");
+  assert.equal(h[1]!.platform, "shopify");
+  assert.deepEqual(h[0]!.alerts.map((a) => a.kind), ["last-read-failed"]);
+  assert.match(h[0]!.alerts[0]!.text, /HTTP 503/);
+  assert.match(storeAlerts([app({ products: 0, cards: 0, note: "robots.txt disallows the search" })], offers(), NOW).find((a) => a.kind === "empty-read")!.text, /robots\.txt disallows the search/);
+});

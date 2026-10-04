@@ -1233,3 +1233,98 @@ comparison while the header said "1 store". RiftCompare's `computeMarket`
 counts every in-stock retailer in the comparison, TCGplayer included. This
 reverses the stores-only count from "Store matching: SKU numbers, …" earlier
 today; eBay stays out per CLAUDE.md ("never counted as a store").
+
+## 2026-10-03 — Workflows push the schema through `scripts/db-push-safe.sh`
+
+**Decision.** The import and eBay workflows run `scripts/db-push-safe.sh`
+instead of a bare `prisma db push`. It retries with `--accept-data-loss` only
+when every warning Prisma prints is "A unique constraint covering the columns …
+will be added"; any other warning (a dropped column or table, a type change) still
+fails the run.
+
+**Why.** The wave-2 schema adds `User.collectionShareId @unique`, a new nullable
+column whose rows are all NULL. Postgres lets any number of NULLs share a
+unique index, so nothing can be lost, but Prisma still demands the flag, and the
+first import after the merge failed before touching the database. Passing the
+flag unconditionally would also let a real drop through unattended.
+## 2026-10-03 — More stores: 119 Shopify + ShadowPOS/Ecwid/BigCommerce adapters
+
+**Decision.** The registry grows from 235 to 386 stores: 119 Shopify stores
+from a third, per-market verification pass, 30 ShadowPOS stores (US), one
+Ecwid store (Mighty Toys, AU) and one BigCommerce store (Grand J Games, AU).
+`StoreInfo` gains `platform` (omitted = `shopify`) and, for Ecwid,
+`ecwidStoreId`; `fetchStoreListings()` (lib/store-import.ts) picks the reader.
+Every reader returns the Shopify listing shape plus the listing's own URL, so
+each listing goes through the same `matchStoreProduct`, best in-stock variant,
+market-currency, plausibility and 72 h staleness rules; a read that fails
+keeps the store's existing rows, as a failed Shopify collection does, and says
+why (`note`, shown on /admin/store-health with the platform).
+
+- **Shopify: 127 verified lines, 120 stores.** Seven RiftCompare-overlap lines
+  duplicated the market files by host and myshopify domain and were registered
+  once. Manathril (US) was then removed: 3 listings in stock, and its sold-out
+  rows priced at ~30% of TCGplayer's market (78 refused as implausible).
+  Added per market: US 40, CA 51 (incl. La Crypte), AU 12, UK 7, EU 9. The
+  Shopify reader's page cap rose from 30 to 40 × 250: Card Brawlers' One Piece
+  collection is 7,355 products, exactly past the old cap.
+- **ShadowPOS** (lib/shadowpos.ts): `/api/advanced-search?game=onepiece&
+  inStockOnly=true`, the storefront's own search, 100 products a request; the
+  title is TCGplayer's ("Absalom (OP06-081 — Alternate Art)") and the set
+  name goes in trailing brackets, the shape the matcher already reads. The
+  payload states no currency, so the reader refuses a non-US store
+  (tests/stores.test.ts pins that every ShadowPOS store is US). The shops share
+  the platform's servers: at most two are read at once, pages a second apart.
+  Evolution Games (evolutiontcg.com, TX) is `evolutiongamestx`, not the UK
+  `evolutiontcg`; the two Lotus Games are different shops (CT, MT).
+- **Ecwid** (lib/ecwid.ts): app.ecwid.com/api/v3 with a public token read from
+  the storefront HTML on every run (the first one /profile accepts; on Mighty
+  Toys that is an app's public token, which Ecwid publishes for client-side
+  catalogue reads), sent as a Bearer header. /profile's currency must be the
+  market's or nothing is read. The store's own robots.txt disallows its `/api/`
+  path (Ecwid's generated list); the API host's robots.txt is empty.
+- **BigCommerce** (lib/bigcommerce.ts): the server-rendered category page,
+  `?limit=100&page=N` (Grand J Games: ~50 requests for ~5,000 singles), title,
+  price text ("22.00$ AUD", any other ISO code is refused) and the "Add to
+  Cart" / "Out of stock" button. Its URLs end in TCGplayer product ids; that
+  is not used — the title goes through the matcher like every other.
+- **WooCommerce** (lib/woocommerce.ts): ported from RiftCompare (Store API,
+  `currency_code` checked per product, a variable product's top price as Near
+  Mint) and tested, but **no store registered**: the only One Piece candidates
+  were collectstoys.com (French-edition set names, English not established)
+  and kadomart.com.au (SiteGround captcha on the first request).
+- **nopCommerce** (lib/nopcommerce.ts): built and tested — category pages with
+  the store's own "Stock Status = In Stock" filter (`?specs=<id>`), every price
+  required to carry the market's symbol — but Unicorn Cards (UK) is **not
+  registered**: it prices in the visitor's location's currency (a US runner is
+  served USD), and the currency switch (/changecurrency) is disallowed by its
+  robots.txt. Only curl's and Googlebot's user agents get GBP; we do not
+  impersonate either.
+- **Skipped**: GameNerdz (BigCommerce, ~6,000 numbered URLs): its category
+  grid is rendered client-side (StorePass), so reading it means one product
+  page per card, ~6,000 requests a run. The same goes for the sitemap +
+  JSON-LD stores (chobanovgamesltd.com, cardgamecorner.com — which also asks
+  ClaudeBot for a 10 s crawl delay — card-z.com, tcg-cards.nl, magictime.it,
+  asheretrocollectibles.com) and nakamagames.com (PrestaShop, language only on
+  the product page). gate-to-the-games.de (JTL) stocks English OP01–OP03 only,
+  mixed with Japanese pages. None is polite and bounded at twice a day.
+
+**Measured** (local full import against the same TCGCSV catalogue, before →
+after; "printings" = cards with an in-stock store listing updated in the last
+72 h):
+
+| Market | Stores in registry | Stores with stock | Printings in stock | In-stock store offers |
+|---|---|---|---|---|
+| US | 73 → 143 | 73 → 143 | 6,269 → 6,451 | 52,306 → 83,948 |
+| CA | 57 → 108 | 57 → 108 | 6,014 → 6,355 | 54,071 → 99,234 |
+| AU | 50 → 64 | 49 → 63 | 5,737 → 5,826 | 43,889 → 55,158 |
+| UK | 30 → 37 | 29 → 36 | 3,847 → 3,886 | 11,907 → 13,549 |
+| EU | 24 → 33 | 22 → 31 | 3,645 → 3,787 | 12,983 → 21,225 |
+| SG | 1 → 1 | 0 → 0 | 0 → 0 | 0 → 0 |
+
+ShadowPOS: 16,198 listings read, 14,478 matched, 14,429 in stock (49 US
+printings are in stock only there). Grand J Games: 4,981 read, 3,984 matched,
+2,354 in stock. Mighty Toys: 746 read, all matched, 318 printings (it lists
+copies as separate products). Every new store matched at least 16 listings; the
+full import took 13 minutes (8 before). PokéBox (AU, an existing store) failed
+on a different collection in each of the two runs; it also failed in two
+earlier runs today, so it is not this change.

@@ -32,8 +32,8 @@ export default async function StoresPage() {
       </p>
       <div className="mt-6">
         <InShort>
-          Want your store listed? Stores on Shopify with card numbers in their
-          product titles can usually be added in a day —{" "}
+          Want your store listed? Stores on Shopify or ShadowPOS with card
+          numbers in their product titles can usually be added in a day —{" "}
           <Link href="/stores/suggest" className="text-brand-400 hover:underline">
             suggest a store
           </Link>

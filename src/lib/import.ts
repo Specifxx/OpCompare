@@ -42,8 +42,8 @@ import {
   type SealedRef,
   type StoreMatchIndexes,
 } from "./match";
-import { STORES, type StoreInfo } from "./stores";
-import { fetchStoreProducts, productUrl } from "./store-import";
+import { STORES, platformOf, type StorePlatform, type StoreInfo } from "./stores";
+import { fetchStoreListings, productUrl, type StoreRead } from "./store-import";
 import { SITE_URL } from "./site";
 import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
 import { historyDir, readBucket, readIndex, recentOf, writeBucket, writeDay, writeIndex, writeRecentBucket } from "./history-store";
@@ -260,12 +260,15 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
 export interface StoreResult {
   key: string;
   country: Country;
+  platform: StorePlatform;
   products: number;
   cards: number;
   sealed: number;
   inStock: number;
   failed: boolean;
   skipped?: string;
+  /** Why a read failed (or found nothing), in the reader's words. */
+  note?: string;
   misses: Record<string, number>;
 }
 
@@ -308,7 +311,7 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
   if (opts.market) stores = stores.filter((s) => s.country === opts.market);
 
   return pool(stores, 8, async (store): Promise<StoreResult> => {
-    const res: StoreResult = { key: store.key, country: store.country, products: 0, cards: 0, sealed: 0, inStock: 0, failed: false, misses: {} };
+    const res: StoreResult = { key: store.key, country: store.country, platform: platformOf(store), products: 0, cards: 0, sealed: 0, inStock: 0, failed: false, misses: {} };
     // A store configured to charge in another currency cannot be priced in this
     // market (RiftCompare's offer-currency rule).
     const cur = currencyOf(store.country);
@@ -316,17 +319,17 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
       res.skipped = `charges ${store.currency}, market is ${cur}`;
       return res;
     }
-    let fetched;
+    let fetched: StoreRead;
     try {
-      fetched = await fetchStoreProducts(store);
+      fetched = await fetchStoreListings(store);
     } catch (e) {
-      fetched = { products: [], failed: true, handles: [] };
-      log(`  ⚠ ${store.name}: ${(e as Error).message}`);
+      fetched = { products: [], failed: true, handles: [], note: (e as Error).message };
     }
     res.products = fetched.products.length;
+    if (fetched.note) res.note = fetched.note.slice(0, 200);
     if (fetched.failed) {
       res.failed = true;
-      log(`  ⚠ ${store.name} (${store.country}): a configured collection could not be read — keeping its existing rows.`);
+      log(`  ⚠ ${store.name} (${store.country}, ${res.platform}): ${fetched.note ?? "a configured collection could not be read"} — keeping its existing rows.`);
       return res;
     }
     const drafts = new Map<number, OfferDraft>();
@@ -364,7 +367,7 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
     res.cards = rows.filter((r) => !isSealed.has(r.productId)).length;
     res.sealed = rows.filter((r) => isSealed.has(r.productId)).length;
     res.inStock = rows.filter((r) => r.inStock).length;
-    log(`  ${store.country} ${store.name}: ${res.products} products → ${res.cards} cards, ${res.sealed} sealed (${res.inStock} in stock)`);
+    log(`  ${store.country} ${store.name}${res.platform === "shopify" ? "" : ` [${res.platform}]`}: ${res.products} products → ${res.cards} cards, ${res.sealed} sealed (${res.inStock} in stock)${fetched.note ? ` — ${fetched.note}` : ""}`);
     return res;
   });
 }

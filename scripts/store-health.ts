@@ -26,7 +26,7 @@ async function main() {
   const alerting = health.filter((h) => h.alerts.length).sort((a, b) => b.alerts.length - a.alerts.length || a.name.localeCompare(b.name));
   const total = alerting.reduce((a, h) => a + h.alerts.length, 0);
   console.log(`Store health: ${STORES.length} stores, ${alerting.length} alerting, ${total} alerts.`);
-  for (const h of alerting) console.log(`  ${h.country} ${h.name} (${h.key}): ${h.alerts.map((a) => a.text).join("; ")}`);
+  for (const h of alerting) console.log(`  ${h.country} ${h.name} (${h.key}, ${h.platform}): ${h.alerts.map((a) => a.text).join("; ")}`);
 
   let n = 0;
   outer: for (const h of alerting) {
@@ -40,10 +40,10 @@ async function main() {
   if (summaryFile) {
     const lines = [`## Store health`, ``, `${STORES.length} stores · ${alerting.length} alerting · ${total} alerts`, ``];
     if (alerting.length) {
-      lines.push(`| Store | Market | Latest products / matched | Alerts |`, `|---|---|---|---|`);
+      lines.push(`| Store | Market | Platform | Latest products / matched | Alerts |`, `|---|---|---|---|---|`);
       for (const h of alerting) {
         const l = h.latest ? `${h.latest.products} / ${h.latest.cards + h.latest.sealed}` : "–";
-        lines.push(`| ${cell(h.name)} | ${h.country} | ${l} | ${cell(h.alerts.map((a) => a.text).join("<br>"))} |`);
+        lines.push(`| ${cell(h.name)} | ${h.country} | ${h.platform} | ${l} | ${cell(h.alerts.map((a) => a.text).join("<br>"))} |`);
       }
     } else {
       lines.push("Every store looks healthy.");

@@ -27,6 +27,7 @@ type AppearanceRow = {
   inStock: number | null;
   failed: boolean | null;
   skipped: string | null;
+  note: string | null;
   misses: Record<string, number> | null;
 };
 
@@ -39,12 +40,13 @@ type AppearanceRow = {
  */
 export async function loadAppearances(): Promise<Map<string, StoreAppearance[]>> {
   const rows = await prisma.$queryRaw<AppearanceRow[]>`
-    SELECT "runId", at, key, products, cards, sealed, "inStock", failed, skipped,
+    SELECT "runId", at, key, products, cards, sealed, "inStock", failed, skipped, note,
            CASE WHEN rn = 1 THEN misses END AS misses
     FROM (
       SELECT r.id AS "runId", r."finishedAt" AS at, s->>'key' AS key,
              (s->>'products')::int AS products, (s->>'cards')::int AS cards, (s->>'sealed')::int AS sealed,
              (s->>'inStock')::int AS "inStock", (s->>'failed')::boolean AS failed, s->>'skipped' AS skipped,
+             s->>'note' AS note,
              s->'misses' AS misses,
              row_number() OVER (PARTITION BY s->>'key' ORDER BY r.id DESC) AS rn
       FROM "ImportRun" r CROSS JOIN LATERAL jsonb_array_elements(r.summary->'stores') s
@@ -64,6 +66,7 @@ export async function loadAppearances(): Promise<Map<string, StoreAppearance[]>>
         inStock: r.inStock ?? 0,
         failed: r.failed === true,
         ...(r.skipped ? { skipped: r.skipped } : {}),
+        ...(r.note ? { note: r.note } : {}),
         ...(r.misses ? { misses: r.misses } : {}),
       })),
   );

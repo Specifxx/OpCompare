@@ -69,7 +69,7 @@ jobs:
       # than dropping data.
       - name: Sync schema
         if: steps.gate.outputs.run == 'true'
-        run: npx prisma db push --skip-generate && npx prisma generate
+        run: bash scripts/db-push-safe.sh && npx prisma generate
       # The history lives on the `data` branch, not in Postgres. Check it out
       # into .data (an orphan branch, created on the first run).
       - name: Check out the history branch
