@@ -32,7 +32,7 @@ export default async function MoversPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Price movers" }]} />
+      <Breadcrumbs trail={[{ name: "Price movers" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece price movers — this week
       </h1>

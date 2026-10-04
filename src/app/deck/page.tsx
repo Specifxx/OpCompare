@@ -6,7 +6,7 @@ import { COUNTRIES } from "@/lib/country";
 import { priceDeck } from "@/lib/deck-price";
 import { money } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { ipKey, rateLimit } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
@@ -69,7 +69,6 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
   const c = COUNTRIES[getCountry()];
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }, { name: "Deck Price Calculator", path: "/deck" }])} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -82,7 +81,7 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
         }}
       />
       <JsonLd data={faqLd(FAQS)} />
-      <Breadcrumbs items={[{ href: "/tools", label: "Tools" }, { label: "Deck Price Calculator" }]} />
+      <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Deck Price Calculator" }]} />
       <h1 className="mb-4 text-3xl text-white sm:text-4xl">Deck Price Calculator</h1>
       <DeckPricer initialList={readList(searchParams)} />
       <div className="mt-8">

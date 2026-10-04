@@ -1,227 +1,142 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import CardQuickLink from "@/components/CardQuickLink";
-import { CardSearch } from "@/components/CardSearch";
-import { CardTile } from "@/components/CardTile";
-import { MarketPills } from "@/components/CountrySelect";
-import { Icon } from "@/components/Icon";
-import { HatMark, Wordmark } from "@/components/Logo";
-import { SealedTile } from "@/components/SealedTile";
-import { TodaysTopDeals } from "@/components/TodaysTopDeals";
-import { Faq, JsonLd, SectionHeader } from "@/components/ui";
-import { COLORS, COLOR_KEYS } from "@/lib/constants";
-import { COUNTRIES } from "@/lib/country";
-import { getCatalog, getSealedCatalog, getSiteStats } from "@/lib/data";
-import { ago, int, longDate } from "@/lib/format";
-import { getCountry } from "@/lib/get-country";
-import { boosterBoxes, mostValuable, movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
-import { storesIn } from "@/lib/stores";
-import { getTopDeals } from "@/lib/top-deals";
+import { Archivo } from "next/font/google";
+import { CinematicHero } from "@/components/home/CinematicHero";
+import { EditorialHub } from "@/components/home/EditorialHub";
+import { HomeSections } from "@/components/home/HomeSections";
+import { HomeTopDeals } from "@/components/home/HomeTopDeals";
+import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
+import { loadHomeData } from "@/components/home/home-data";
+import { DEFAULT_COUNTRY } from "@/lib/country";
+import { getSiteStats } from "@/lib/data";
+import { homeFaqs } from "@/lib/home-faq";
+import { homeMetadata } from "@/lib/home-metadata";
+import { faqPage, ldJson, webApplication, webPage } from "@/lib/jsonld";
+
+// The homepage — RiftCompare's app/page.tsx, section for section: the
+// cinematic hero, the editorial band, Today's Top Deals, the price-guide
+// callout, HomeSections and the About + FAQ card, with WebPage /
+// WebApplication / FAQPage JSON-LD.
+//
+// STATIC: no cookie or header read. One cached HTML (ISR, hourly) carries every
+// market's figures and the client localises to the visitor's market
+// (CountryProvider). Archivo is loaded here only, for the homepage's display
+// face (`.rb-display-sans`, globals.css).
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-riftbound",
+  display: "swap",
+});
+
+export const revalidate = 3600;
+
+export function generateMetadata(): Promise<Metadata> {
+  return homeMetadata();
+}
 
 export default async function HomePage() {
-  const country = getCountry();
-  const c = COUNTRIES[country];
-  const [cat, sealed, stats, deals] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats(), getTopDeals(country)]);
-  const newest = newestBoosterSet(cat.sets);
-  const chase = newest ? mostValuable(cat.cards, 6, (x) => x.setId === newest.id) : [];
-  const rising = movers(cat.cards, "up", 5);
-  // Trending: this week's biggest risers once there is a week of history; until
-  // then the most valuable standard prints of the newest set (not the chase row).
-  const trending = rising.length >= 6 ? movers(cat.cards, "up", 6) : newest ? mostValuable(cat.cards, 6, (x) => x.setId === newest.id && x.printing === "standard") : [];
-  const boxes = boosterBoxes(sealed, cat.setById).slice(0, 6);
-  const next = upcomingSets(cat.sets)[0];
-  const storeCount = storesIn(country).length + (country === "US" ? 1 : 0);
-  const priced = cat.cards.filter((x) => x.low[country] != null).length;
-
+  const [data, site] = await Promise.all([loadHomeData(), getSiteStats().catch(() => null)]);
+  const faqs = homeFaqs({ ebayLive: site?.ebayLive ?? false });
+  const storeCount = data.stats.statsByCountry[DEFAULT_COUNTRY].stores;
   return (
-    <>
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: SITE_NAME,
-          url: SITE_URL,
-          potentialAction: { "@type": "SearchAction", target: `${SITE_URL}/browse?q={query}`, "query-input": "required name=query" },
-        }}
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
+      <CinematicHero
+        totalCards={data.stats.totalCards}
+        statsByCountry={data.stats.statsByCountry}
+        trendingCards={data.trending}
+        updatedAt={data.stats.updatedAt}
+        renderedAt={data.renderedAt}
       />
-      {/* ── Hero ── */}
-      {/* Full-bleed hero inside the layout's container: RiftCompare's
-          CinematicHero breakout (left-1/2 + w-screen, shifted back by half the
-          rail so it starts at x=0), with the rail reserved again inside. The
-          wave-2 design track replaces this hero with CinematicHero itself. */}
-      <section className="relative left-1/2 -mt-6 w-screen translate-x-[calc(-50%-var(--sidenav-w)/2)] overflow-hidden border-b border-ink-800 bg-ink-950">
-        <div className="w-full pl-[var(--sidenav-w)]">
-        <div className="container-app relative flex flex-col items-center py-5 text-center sm:py-10">
-          <Link href="/" className="mb-5 flex items-center gap-2" aria-label={SITE_NAME}>
-            <HatMark size={40} />
-            <Wordmark className="text-xl" />
+      <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
+      <HomeTopDeals dealsByCountry={data.dealsByCountry} />
+      <PriceGuideCallout totalCards={data.stats.totalCards} />
+      <HomeSections data={data} storeCount={storeCount} />
+      <section className="card-surface p-6">
+        <h2 className="text-xl font-extrabold text-white">
+          One Piece card prices in the US, Australia, the UK, Singapore, Canada and the EU — all in one place
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          OP Compare is a free, independent price comparison site for the One Piece Card Game. We track live prices for One Piece cards across
+          local stores in the US, Australia, the UK, Singapore, Canada and the EU, plus TCGplayer, so you can buy One Piece cards for less —
+          whether you&apos;re chasing singles for a deck or sealed booster boxes.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Store prices come from each store&apos;s own listings, imported twice a day and matched to the exact printing, and each card&apos;s
+          comparison lists them cheapest first by item price —{" "}
+          <Link href="/methodology" className="text-brand-300 underline-offset-2 hover:underline">
+            how prices are collected
+          </Link>{" "}
+          and{" "}
+          <Link href="/stores" className="text-brand-300 underline-offset-2 hover:underline">
+            which stores we track
+          </Link>{" "}
+          each have a page of their own. OP Compare is paid for by affiliate commission (the eBay Partner Network and TCGplayer) and Plus and
+          Premium subscriptions, and none of them can buy a store a better place in a comparison. More on{" "}
+          <Link href="/about" className="text-brand-300 underline-offset-2 hover:underline">
+            who runs OP Compare
+          </Link>{" "}
+          and in our{" "}
+          <Link href="/editorial-policy" className="text-brand-300 underline-offset-2 hover:underline">
+            editorial policy
           </Link>
-          <h1 className="mx-auto max-w-4xl text-2xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-            <span className="text-brand-400">One Piece</span> Card Prices
-          </h1>
-          <p className="mt-4 text-lg font-semibold text-white sm:text-xl">Buy One Piece cards at the best price</p>
-          <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-slate-300 sm:text-base">
-            Price check any card and find the cheapest place to buy — live One Piece Card Game prices from every {c.adjective} store we track, plus five
-            more markets in their own currency: the US, Australia, the UK, Singapore, Canada and Europe, updated twice a day.
-          </p>
-          <div className="mt-7 w-full max-w-2xl">
-            <CardSearch size="lg" placeholder="Search any One Piece card…" />
-          </div>
-          {trending.length ? (
-            <div className="mt-5 w-full max-w-2xl">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Trending</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {trending.map((t) => (
-                  <CardQuickLink key={t.id} slug={t.slug} className="truncate rounded-md border border-ink-700 bg-ink-900/80 px-3 py-3 text-sm font-medium text-slate-100 hover:border-ink-600 hover:bg-ink-850">
-                    <span data-card-name>{t.name}</span>
-                    {t.variant ? <span className="text-slate-400"> · {t.variant.split(" · ")[0]}</span> : null}
-                  </CardQuickLink>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          <p className="num mt-5 text-sm text-slate-400">
-            {int(cat.cards.length)} cards · {storeCount} {c.adjective} {storeCount === 1 ? "store" : "stores"} ·{" "}
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              prices updated {ago(stats.lastImportAt)}
-            </span>
-          </p>
-          <Link href="/browse" className="mt-4 text-[15px] font-semibold text-white hover:text-brand-400">
-            All {int(cat.cards.length)} cards in the database →
-          </Link>
-          <div className="mt-6">
-            <MarketPills />
-          </div>
-        </div>
+          .
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Two tools go further than a single card: the{" "}
+          <Link href="/deck" className="text-brand-300 underline-offset-2 hover:underline">
+            Deck Builder &amp; Pricer
+          </Link>{" "}
+          prices a whole decklist at the cheapest in-stock store for every card, and the{" "}
+          <Link href="/tools/deal-finder" className="text-brand-300 underline-offset-2 hover:underline">
+            Deal Finder
+          </Link>{" "}
+          lists the cards selling below TCGplayer&apos;s market price in your market right now.
+        </p>
+        <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
+          {faqs.map((f) => (
+            <details key={f.q} className="group py-1">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
+                <span>{f.q}</span>
+                <svg className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <p className="pb-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </details>
+          ))}
         </div>
       </section>
-
-      <div className="mt-10 space-y-14">
-        {/* ── Deals: Today's Top Deals (lib/top-deals.ts; the Plus rows come from /api/top-deals/savings) ── */}
-        <TodaysTopDeals deals={deals} />
-
-        {/* ── Newest set ── */}
-        {newest ? (
-          <section>
-            <SectionHeader
-              title={`${newest.name} — chase cards`}
-              sub={`${newest.code} · released ${longDate(newest.releasedOn)}. The most valuable printings from the newest booster set, cheapest listing in ${c.place}.`}
-              action={
-                <Link href={`/sets/${newest.slug}`} className="btn-ghost">
-                  Full {newest.code} card list →
-                </Link>
-              }
-            />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {chase.map((card) => (
-                <CardTile key={card.id} card={card} setCode={newest.code} country={country} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ── Sealed ── */}
-        {boxes.length ? (
-          <section>
-            <SectionHeader
-              title="Booster boxes"
-              sub="Every booster box we price, newest set first — with the per-pack cost where the pack count is certain."
-              action={
-                <Link href="/sealed" className="btn-ghost">
-                  All sealed products →
-                </Link>
-              }
-            />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {boxes.map((s) => (
-                <SealedTile key={s.id} s={s} country={country} setCode={cat.setById.get(s.setId!)?.code} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ── Colours ── */}
-        <section>
-          <SectionHeader title="Browse by colour" sub="Every One Piece card belongs to one or two of six colours. Each colour page lists its cards with live prices." />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {COLOR_KEYS.map((k) => {
-              const n = cat.cards.filter((x) => x.colors.includes(k)).length;
-              return (
-                <Link key={k} href={`/colors/${COLORS[k].slug}`} className="card-surface group relative overflow-hidden p-4 hover:border-ink-600">
-                  <span className="absolute inset-x-0 top-0 h-1" style={{ background: COLORS[k].hex }} />
-                  <p className="text-lg font-bold text-white group-hover:text-brand-400">{k}</p>
-                  <p className="text-xs text-slate-400">{COLORS[k].tagline}</p>
-                  <p className="num mt-2 text-xs text-slate-500">{int(n)} printings</p>
-                </Link>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-sm text-slate-400">
-            Building around a Leader? <Link href="/leaders" className="text-brand-400 hover:underline">Every Leader card, priced</Link>.
-          </p>
-        </section>
-
-        {/* ── How it works ── */}
-        <section>
-          <SectionHeader title="How OP Compare works" />
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { icon: "search", t: "Search any card", d: "Every One Piece printing TCGplayer lists — base, Parallel, Manga, SP, Treasure Rare and promo — with its set and card number." },
-              { icon: "store", t: "We read every store", d: `${int(priced)} cards have a live ${c.adjective} listing right now. Stores are read twice a day; TCGplayer's market price is shown as a reference.` },
-              { icon: "tag", t: "Buy at the best price", d: "Offers are ranked cheapest first by item price, in your own currency. Click through and buy from the store directly." },
-            ].map((s) => (
-              <div key={s.t} className="card-surface p-5">
-                <span className="grid h-10 w-10 place-items-center rounded-md bg-brand-500/15 text-brand-400">
-                  <Icon name={s.icon} className="h-5 w-5" />
-                </span>
-                <h3 className="mt-3 text-lg text-white">{s.t}</h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-slate-300">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── FAQ ── */}
-        <section>
-          <SectionHeader title="Questions" />
-          <Faq
-            items={[
-              {
-                q: "Where do the prices come from?",
-                a: (
-                  <>
-                    From the public product listings of the stores on <Link href="/stores" className="text-brand-400 hover:underline">our stores page</Link>, read twice a day, and from
-                    TCGplayer (the cheapest listing in the US, plus its market price as a reference everywhere).{" "}
-                    {stats.ebayLive ? (
-                      <>
-                        Twice a day we also look up the cheapest matching eBay Buy It Now listing for cards worth US$20 or more and sealed worth US$30 or more,
-                        shown as an asking price among the stores; the eBay button on a card searches your own eBay for more.
-                      </>
-                    ) : (
-                      <>The eBay button on a card searches your own eBay for it.</>
-                    )}
-                  </>
-                ),
-              },
-              {
-                q: "Which printings does OP Compare price?",
-                a: "Every English One Piece Card Game printing TCGplayer lists: the standard print, Parallels and alternate arts, Manga rares, SP cards, Treasure Rares, special foils, reprints, promos and DON!! cards. Each has its own page, because their prices differ by orders of magnitude.",
-              },
-              {
-                q: "Why does a card show “≈” instead of a price?",
-                a: `No store we track in ${c.place} has a listing for it right now, so we show TCGplayer's market price converted to ${c.currency} as a reference. It is not a price you can buy at.`,
-              },
-              next
-                ? {
-                    q: "When is the next One Piece set?",
-                    a: `${next.name} (${next.code}) is listed for ${longDate(next.releasedOn)}. Its card list and pre-order prices fill in on its set page as TCGplayer adds them.`,
-                  }
-                : { q: "How often are prices updated?", a: "Twice a day, at 07:00 and 19:00 UTC." },
-            ]}
-          />
-        </section>
-      </div>
-    </>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: ldJson(
+            webPage({
+              name: "OP Compare — One Piece Card Game Price Comparison",
+              href: "/",
+              description:
+                "One Piece Card Game prices compared across stores in the US, UK, Australia, Canada, Singapore and the EU — cheapest first by item price, in your own currency.",
+            }),
+            webApplication({
+              id: "#app",
+              name: "OP Compare — One Piece Card Game price comparison",
+              href: "/",
+              applicationCategory: "ShoppingApplication",
+              description:
+                "Compare One Piece Card Game prices across stores in six markets: live prices for every One Piece single card and sealed product, cheapest first by item price.",
+              featureList: [
+                "Compare live One Piece single-card prices across stores in the US, Australia, the UK, Singapore, Canada and the EU, plus TCGplayer",
+                "Every printing priced separately: standard, Parallel, Manga, SP, Treasure Rare and promo",
+                "Sealed product price comparison: booster boxes, packs, starter decks and collections",
+                "Deck Builder & Pricer: price a whole decklist at the cheapest in-stock store price",
+                "Prices in local currency: USD, AUD, GBP, SGD, CAD and EUR",
+                "Price history charts for every card",
+              ],
+            }),
+            faqPage(faqs),
+          ),
+        }}
+      />
+    </div>
   );
 }

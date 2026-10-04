@@ -8,7 +8,6 @@ import { affiliateUrl, outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { getCatalog, getSealedCatalog, getStoreListings, getStoreStats, type Catalog, type SealedLite, type StoreListing } from "@/lib/data";
 import { int, money } from "@/lib/format";
-import { breadcrumbLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { STORE_BY_KEY, STORES, type StoreInfo } from "@/lib/stores";
 
@@ -99,9 +98,8 @@ export default async function StorePage({ params }: Props) {
 
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Stores we track", path: "/stores" }, { name: s.name, path: page }])} />
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Store", name: s.name, url: s.base, areaServed: place.label }} />
-      <Breadcrumbs items={[{ href: "/stores", label: "Stores we track" }, { label: s.name }]} />
+      <Breadcrumbs trail={[{ href: "/stores", name: "Stores we track" }, { name: s.name }]} />
       <h1 className="text-3xl text-white sm:text-4xl">{s.name}</h1>
       <p className="mt-2 text-sm text-slate-400">
         {place.label} · prices in {s.currency ?? place.currency} ·{" "}

@@ -47,7 +47,7 @@ export default async function ColorPage({ params, searchParams }: Props) {
   return (
     <div>
       <Breadcrumbs
-        items={[{ href: "/colors", label: "Colours" }, { label: k }]}
+        trail={[{ href: "/colors", name: "Colours" }, { name: k }]}
       />
       <div className="flex items-center gap-3">
         <span
@@ -95,11 +95,7 @@ export default async function ColorPage({ params, searchParams }: Props) {
             />
           ))}
         </div>
-        <Pagination
-          page={page}
-          pages={pages}
-          href={(p) => `/colors/${COLORS[k].slug}${p > 1 ? `?page=${p}` : ""}`}
-        />
+        <Pagination page={page} totalPages={pages} params={{}} basePath={`/colors/${COLORS[k].slug}`} />
       </section>
     </div>
   );

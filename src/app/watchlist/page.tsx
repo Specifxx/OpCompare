@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function WatchlistPage() {
   return (
     <div>
-      <Breadcrumbs items={[{ label: "My watchlist" }]} />
+      <Breadcrumbs trail={[{ name: "My watchlist" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">My watchlist</h1>
       <p className="mt-3 max-w-3xl text-[15px] text-slate-300">
         Cards and sealed products you have hearted, with today&apos;s cheapest price in your market. Your watchlist is saved in this browser — no account

@@ -18,7 +18,7 @@ export default async function ColorsPage() {
   const cat = await getCatalog();
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Colours" }]} />
+      <Breadcrumbs trail={[{ name: "Colours" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece cards by colour
       </h1>

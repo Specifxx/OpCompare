@@ -28,7 +28,7 @@ export default async function BlogIndex() {
   }));
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Blog" }]} />
+      <Breadcrumbs trail={[{ name: "Blog" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Blog</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>

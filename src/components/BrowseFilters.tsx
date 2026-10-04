@@ -124,6 +124,10 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
         ) : null}
       </div>
       {q.q ? <input type="hidden" name="q" value={q.q} /> : null}
+      {/* Sort and page size live in the results bar (SortSelect / PageSizeSelect,
+          which navigate on their own); carried here so applying a filter keeps them. */}
+      <input type="hidden" name="sort" value={q.sort} />
+      <input type="hidden" name="per" value={String(q.per)} />
       <Section title={`Price (${c.currency})`} open>
         <div className="flex items-center gap-2">
           <input

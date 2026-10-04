@@ -1328,3 +1328,83 @@ copies as separate products). Every new store matched at least 16 listings; the
 full import took 13 minutes (8 before). PokéBox (AU, an existing store) failed
 on a different collection in each of the two runs; it also failed in two
 earlier runs today, so it is not this change.
+
+## 2026-10-03 — Wave 2 design track: RiftCompare's chrome, card tile and homepage
+
+**Decision.** The header (`NavbarShell` + a server `Navbar`), the desktop rail
+(`SideNav`), `nav-groups.ts` in RiftCompare's shape, the phone menu
+(`MegaMenuProvider` + `CinematicNavMenu`), the ⌘K launcher, the account menu
+(`UserMenu`), `CountrySwitcher` / `CountryHeroToggle` / `RegionToggle`, the
+footer, `BrandLogo`, `Breadcrumbs`, the card tile, `Pagination` /
+`SortSelect` / `PageSizeSelect`, `Reveal` / `CountUp` / `template.tsx` /
+`RouteLoading`, the 404 and error pages, `AuthForm`, consent-gated analytics
+and the feedback widget are RiftCompare's markup and classes, rebranded. The
+homepage is RiftCompare's page section for section, and `/au /uk /ca /sg /eu`
+are its region homes. `MobileMenu`, `CountrySelect`, `MarketPills`,
+`AuthButtons`, `Wordmark` and `BrandLockup` are gone.
+
+**Deliberate differences from RiftCompare.**
+- *Brand.* `BrandLogo` masks `/logo-mask.svg` (the straw hat with the band cut
+  out, so it still reads as a hat in one colour) with the red ramp
+  `#ff6b6b → #d92b33`. Every active fill on red (the phone menu's current
+  link, the current page, the region toggle) uses white ink.
+- *Pricing in the header* stays hidden for Plus/Premium accounts (wave 1's
+  rule), through `HeaderPricingLink` (a `PremiumNavLink`).
+- *The rail* highlights only the most specific matching link. RiftCompare's
+  prefix test lit `/cards` and `/cards/all` (and `/market` + `/market/records`)
+  at once; OP Compare has more nested rail links.
+- *No games, no "For stores", no Riftbound-only pages* in the nav. Routes the
+  other wave-2 tracks build (`/watching`, `/dashboard`, `/portfolio`,
+  `/tools/best-basket`, `/guides`, …) are linked now;
+  `tests/nav-routes.test.ts` lists them in `IN_FLIGHT` and fails once one of
+  them exists, so the integrator empties the list after the merges.
+- *The country picker* has no UK GBP→EUR display toggle, and the signed-in
+  `preferredCountry` sync is not ported (`/api/me` carries no market yet).
+- *Consent.* OP Compare has no CMP, so `useConsent()` takes the no-CMP path
+  (grant after 2.5 s) for Vercel Analytics only. Unlike RiftCompare it does not
+  push a gtag consent update on that path: OP Compare's region-scoped GA
+  defaults (analytics denied in the EEA, the UK and Switzerland) must stand when
+  nobody was asked. GA4 now sends page views only from `GAPageViewTracker`
+  (`send_page_view:false`), never on `/admin`. Speed Insights is not shipped.
+- *Login.* `AuthForm`'s perks are what a free account really gets here
+  (Watchlist, Binder, Top 3 deals) and no line promises an email. OP Compare
+  was always OAuth-only, so the "signed up with a password before?" note is
+  dropped. The Plus/Premium dialog's signed-out state embeds `AuthForm`
+  (`compact bare`), so a visitor signs in without leaving the dialog.
+- *Feedback.* `/api/feedback` takes the widget's optional reply address
+  (validated, stored in `Feedback.email`, never public). It is a manual reply
+  address, like the contact form's, not an email capture for sending.
+
+**The static root layout.** The layout no longer calls `getCountry()`: the
+chrome renders for `DEFAULT_COUNTRY` and `CountryProvider` resolves the
+market on the client from the `country` cookie, its localStorage mirror, then
+one `/api/geo` call (RiftCompare's model). A visitor whose stored market
+disagrees with the region home they open is sent to their own. Pages that
+price server-side still call `getCountry()` themselves; `CardTile` takes their
+`country` as a prop, and falls back to the provider's market on the static
+pages.
+
+## 2026-10-03 — The homepage: one cached HTML for six markets
+
+**Decision.** `/` (and each region home) is ISR, hourly, with no cookie or
+session read. It carries every market's hero stats and Today's Top Deals and
+the client shows the visitor's. The data is composed from the cached loaders
+in `data.ts` (block `wave2:design`): `getHomeStats()` reuses `getSiteStats()`
+and the catalogue (no new query), stores = in-stock `store:*` sources plus
+TCGplayer in the US, never eBay.
+
+- **"Most popular" needs a real counter.** `getPopular()` reads the most
+  searched cards (`Card.searchCount`, written by the tools track). Until six
+  cards have a count, the tab is labelled "Chase cards" (the newest booster's
+  most valuable printings) and nothing says "most searched".
+- **"Recently updated"** diffs the two newest daily history files
+  (`history/days/*.json`, already in the fetch cache) on TCGplayer's market
+  price, with RiftCompare's outlier guard (+300% / −80%) and a US$1 floor at
+  both ends, where a few cents read as a huge percentage.
+- **"Biggest movers"** is TCGplayer's 7-day change, one worldwide figure.
+- **"Explore the database"** shows the twelve newest booster and extra-booster
+  sets (two rows of six) with New / Coming soon chips, then the six colours;
+  every other set is one link away.
+- **FAQ claims are built from constants** (`src/lib/home-faq.ts`): the markets
+  and currencies from `COUNTRY_LIST`, the cadence from `IMPORT_CADENCE`, and eBay
+  listings only while the eBay pass is live. `tests/home.test.ts` pins them.

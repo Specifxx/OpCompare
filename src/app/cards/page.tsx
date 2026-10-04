@@ -50,7 +50,7 @@ export default async function CardsHub() {
   };
   return (
     <div>
-      <Breadcrumbs items={[{ label: "By type & rarity" }]} />
+      <Breadcrumbs trail={[{ name: "By type & rarity" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece cards by type, rarity &amp; printing
       </h1>

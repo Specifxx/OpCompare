@@ -7,7 +7,7 @@ import { COUNTRY_LIST } from "@/lib/country";
 import { getCatalog } from "@/lib/data";
 import { PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/facets";
 import { int, money } from "@/lib/format";
-import { breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { STORES } from "@/lib/stores";
 
@@ -48,9 +48,8 @@ export default async function SinglesPage() {
   const sets = [...cat.sets].filter((s) => s.kind === "booster" || s.kind === "extra").sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")).slice(0, 8);
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "Singles", path: "/singles" }])} />
       <JsonLd data={faqLd(FAQS)} />
-      <Breadcrumbs items={[{ label: "Singles" }]} />
+      <Breadcrumbs trail={[{ name: "Singles" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece singles, compared</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {int(singles.length)} One Piece Card Game printings, each priced at the cheapest in-stock listing among {int(STORES.length)} stores in six

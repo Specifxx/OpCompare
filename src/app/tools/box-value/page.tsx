@@ -48,9 +48,9 @@ export default async function BoxValue({
   return (
     <div>
       <Breadcrumbs
-        items={[
-          { href: "/tools", label: "Tools" },
-          { label: "Box value" },
+        trail={[
+          { href: "/tools", name: "Tools" },
+          { name: "Box value" },
         ]}
       />
       <h1 className="text-3xl text-white sm:text-4xl">Booster box value</h1>

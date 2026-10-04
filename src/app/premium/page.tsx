@@ -73,7 +73,7 @@ export default function Premium() {
           mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
         }}
       />
-      <Breadcrumbs items={[{ label: "Plus & Premium" }]} />
+      <Breadcrumbs trail={[{ name: "Plus & Premium" }]} />
       <div className="mx-auto max-w-2xl text-center">
         <h1 className="text-2xl text-white sm:text-4xl">Find the deals. Buy them for less.</h1>
         <p className="mt-1.5 text-sm text-slate-300 sm:text-[15px]">Comparing prices is free. Plus shows every deal with no ads; Premium plans your list.</p>

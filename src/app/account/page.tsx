@@ -35,7 +35,7 @@ export default async function Account({
   const lapsed = !tier && user.premiumUntil != null;
   return (
     <div className="mx-auto max-w-3xl">
-      <Breadcrumbs items={[{ label: "Your account" }]} />
+      <Breadcrumbs trail={[{ name: "Your account" }]} />
       {searchParams.welcome ? (
         <p className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-300">
           Welcome aboard, {user.displayName}! Your free account is ready.

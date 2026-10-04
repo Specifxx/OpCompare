@@ -61,7 +61,7 @@ export default async function SetPage({ params, searchParams }: Props) {
   return (
     <div>
       <Breadcrumbs
-        items={[{ href: "/sets", label: "Sets" }, { label: set.name }]}
+        trail={[{ href: "/sets", name: "Sets" }, { name: set.name }]}
       />
       <p className="rb-eyebrow text-slate-500">
         {set.code} · {kind}

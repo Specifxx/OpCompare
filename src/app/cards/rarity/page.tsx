@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
-import { Breadcrumbs, InShort, JsonLd } from "@/components/ui";
+import { Breadcrumbs, InShort } from "@/components/ui";
 import { RARITIES } from "@/lib/constants";
 import { getCatalog } from "@/lib/data";
 import { RARITY_FACETS } from "@/lib/facets";
 import { int, money } from "@/lib/format";
-import { breadcrumbLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { median } from "@/lib/selectors";
 import { DATA_TABLE } from "@/components/prose";
@@ -29,8 +28,7 @@ export default async function RarityHub() {
   });
   return (
     <div>
-      <JsonLd data={breadcrumbLd([{ name: "By type & rarity", path: "/cards" }, { name: "Rarities", path: "/cards/rarity" }])} />
-      <Breadcrumbs items={[{ href: "/cards", label: "By type & rarity" }, { label: "Rarities" }]} />
+      <Breadcrumbs trail={[{ href: "/cards", name: "By type & rarity" }, { name: "Rarities" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece card rarities</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         The rarity is the letter printed on the card. It says how often a card is pulled, but the printing (Parallel, Manga, SP) often moves the price

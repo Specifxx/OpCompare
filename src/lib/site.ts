@@ -15,3 +15,7 @@ export const SITE_DESCRIPTION =
 export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "opcompareofficial@gmail.com";
 // The owner's sister site for Riftbound, linked from About and the footer.
 export const SISTER_SITE = { name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound" };
+// OP Compare's Discord invite. Unset by default: the header icon, the footer
+// link and the nav entry render only when NEXT_PUBLIC_DISCORD_URL is set, so
+// there is never a dead invite on the page.
+export const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "";

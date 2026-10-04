@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { CardLinkGrid } from "./CardLinkGrid";
 import { Pagination } from "./Pagination";
-import { Breadcrumbs, InShort, JsonLd, SectionHeader } from "./ui";
+import { Breadcrumbs, InShort, SectionHeader } from "./ui";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { CardLite, Catalog } from "@/lib/data";
 import type { Facet } from "@/lib/facets";
 import { paginate } from "@/lib/facets";
 import { int, money } from "@/lib/format";
-import { breadcrumbLd } from "@/lib/jsonld";
 import { median } from "@/lib/selectors";
 
 export const FACET_PER_PAGE = 48;
@@ -47,8 +46,7 @@ export function CardFacetPage({
   const top = sorted[0];
   return (
     <div>
-      <JsonLd data={breadcrumbLd(crumbs.map((c) => ({ name: c.label, path: c.href ?? path })))} />
-      <Breadcrumbs items={crumbs} />
+      <Breadcrumbs trail={crumbs.map((c) => ({ href: c.href, name: c.label }))} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece {facet.title.charAt(0).toLowerCase() + facet.title.slice(1)}</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {facet.intro} {int(cards.length)} printings across {int(sets)} sets, most valuable first; prices are the cheapest in-stock listing in{" "}
@@ -80,7 +78,7 @@ export function CardFacetPage({
       <section className="mt-8">
         <SectionHeader title={`Every ${facet.label.toLowerCase()} printing`} sub={pages > 1 ? `page ${page} of ${pages}` : undefined} />
         {slice.length ? <CardLinkGrid cards={slice} cat={cat} country={country} /> : <p className="text-slate-400">No cards yet.</p>}
-        <Pagination page={page} pages={pages} href={(p) => `${path}${p > 1 ? `?page=${p}` : ""}`} />
+        <Pagination page={page} totalPages={pages} params={{}} basePath={path} />
       </section>
       <nav className="mt-10" aria-label="Related groups">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">More groups</h2>

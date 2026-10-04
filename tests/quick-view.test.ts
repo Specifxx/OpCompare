@@ -151,9 +151,17 @@ test("wiring: the provider sits in the root layout, which still reads no session
   assert.match(read("src/app/api/card/[slug]/route.ts"), /getCardDetail/);
 });
 
+test("wiring: the card tile opens QuickView on a plain click and keeps the card page as its href", () => {
+  // RiftCompare's CardTile (design track): its own click handler, with the drag
+  // and modifier-key guards, instead of a CardQuickLink wrapper.
+  const tile = read("src/components/CardTileClient.tsx");
+  assert.match(tile, /href=\{`\/card\/\$\{card\.slug\}`\}/);
+  assert.match(tile, /e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey \|\| e\.button !== 0/);
+  assert.match(tile, /qv\.open\(card\.slug/);
+});
+
 test("wiring: every card surface this track owns links through CardQuickLink", () => {
   for (const f of [
-    "src/components/CardTile.tsx",
     "src/components/MoverList.tsx",
     "src/app/price-guide/page.tsx",
     "src/app/sets/[slug]/page.tsx",

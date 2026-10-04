@@ -33,7 +33,7 @@ export default async function AllCardsPage() {
   return (
     <div>
       <Breadcrumbs
-        items={[{ href: "/cards", label: "Cards" }, { label: "A–Z" }]}
+        trail={[{ href: "/cards", name: "Cards" }, { name: "A–Z" }]}
       />
       <h1 className="text-3xl text-white sm:text-4xl">
         Every One Piece card, A–Z

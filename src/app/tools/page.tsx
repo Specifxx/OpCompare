@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, Faq, JsonLd } from "@/components/ui";
-import { breadcrumbLd, faqLd, itemListLd } from "@/lib/jsonld";
+import { faqLd, itemListLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { FREE_DEAL_ROWS } from "@/lib/plans";
 
@@ -108,10 +108,9 @@ export default function ToolsHub() {
   const all = GROUPS.flatMap((g) => g.tools);
   return (
     <div className="mx-auto max-w-5xl">
-      <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }])} />
       <JsonLd data={itemListLd("OP Compare tools", "/tools", all.map((t) => ({ name: t.title, path: t.href })))} />
       <JsonLd data={faqLd(FAQS)} />
-      <Breadcrumbs items={[{ label: "Tools" }]} />
+      <Breadcrumbs trail={[{ name: "Tools" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">Tools &amp; calculators</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         Every OP Compare tool in one place. Price a deck, check whether a box is worth opening, work out what you keep when you sell, and find the

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { Tier } from "@/lib/plans";
 import { firePlanClick } from "@/lib/nudge-surface";
+import type { OAuthProvider } from "@/lib/oauth";
 import { PlanDialog } from "./PlanDialog";
 
 // The site-wide Plus/Premium dialog (RiftCompare's PremiumDialogProvider), so a
@@ -26,7 +27,9 @@ export function usePlanDialog(): PlanDialogApi | null {
   return useContext(PlanDialogContext);
 }
 
-export function PlanProvider({ checkoutOpen, children }: { checkoutOpen: boolean; children: React.ReactNode }) {
+// `providers` (enabledProviders(), also an environment read) feeds the
+// dialog's signed-out AuthForm.
+export function PlanProvider({ checkoutOpen, providers = [], children }: { checkoutOpen: boolean; providers?: OAuthProvider[]; children: React.ReactNode }) {
   const [state, setState] = useState<{ tier: Tier; surface: string } | null>(null);
   const open = useCallback((surface: string, opts?: { tier?: Tier }) => {
     const tier: Tier = opts?.tier === "premium" ? "premium" : "plus";
@@ -39,7 +42,7 @@ export function PlanProvider({ checkoutOpen, children }: { checkoutOpen: boolean
   return (
     <PlanDialogContext.Provider value={api}>
       {children}
-      {state ? <PlanDialog initialTier={state.tier} surface={state.surface} checkoutOpen={checkoutOpen} onClose={close} /> : null}
+      {state ? <PlanDialog initialTier={state.tier} surface={state.surface} checkoutOpen={checkoutOpen} providers={providers} onClose={close} /> : null}
     </PlanDialogContext.Provider>
   );
 }

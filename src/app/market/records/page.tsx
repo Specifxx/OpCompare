@@ -141,15 +141,6 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
         data={[
           {
             "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-              { "@type": "ListItem", position: 2, name: "Market index", item: `${SITE_URL}/market` },
-              { "@type": "ListItem", position: 3, name: "Price records", item: `${SITE_URL}/market/records` },
-            ],
-          },
-          {
-            "@context": "https://schema.org",
             "@type": "FAQPage",
             mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
           },
@@ -157,7 +148,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
       />
       <div className="mx-auto max-w-4xl space-y-8">
         <header>
-          <Breadcrumbs items={[{ href: "/market", label: "Market index" }, { label: "Price records" }]} />
+          <Breadcrumbs trail={[{ href: "/market", name: "Market index" }, { name: "Price records" }]} />
           <h1 className="text-3xl text-white sm:text-4xl">One Piece price records &amp; market gaps</h1>
           <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
             Where the same printing costs less in another market than in {info.place}, and which cards are at a 90-day high or furthest below
