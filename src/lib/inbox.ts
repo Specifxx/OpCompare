@@ -4,7 +4,8 @@
 // here reads the session (routes pass the user id), stores an IP address or
 // sends email. Every read is one narrow lookup by key.
 import { prisma } from "./db";
-import type { ContactInput, FeedbackInput, PriceReportInput, StoreSuggestionInput } from "./inbox-rules";
+import { formatTicketNumber, nextNumber, type CounterClient } from "./order-number";
+import type { SupportInput, ContactInput, FeedbackInput, PriceReportInput, StoreSuggestionInput } from "./inbox-rules";
 import { STORES, sourceLabel } from "./stores";
 
 /**
@@ -76,4 +77,19 @@ export async function createFeedback(v: FeedbackInput, userId: string | null): P
 export async function createContactMessage(v: ContactInput, userId: string | null): Promise<{ ok: true }> {
   await prisma.contactMessage.create({ data: { name: v.name, email: v.email, subject: v.subject, category: v.category, message: v.message, userId } });
   return { ok: true };
+}
+
+/**
+ * A support ticket. The number comes from order-number.ts inside the SAME
+ * transaction as the insert, so a failed write never burns a number. Shown on
+ * screen as OC-<n>; no email is sent until a mailer exists (the owner replies
+ * from their own mail client).
+ */
+export async function createSupportTicket(v: SupportInput, userId: string | null): Promise<{ ok: true; ticket: string; number: number }> {
+  const number = await prisma.$transaction(async (tx) => {
+    const n = await nextNumber("support", tx as unknown as CounterClient);
+    await tx.supportTicket.create({ data: { number: n, userId, email: v.email, name: v.name, category: v.category, subject: v.subject, message: v.message } });
+    return n;
+  });
+  return { ok: true, ticket: formatTicketNumber(number)!, number };
 }

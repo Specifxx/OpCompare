@@ -22,6 +22,10 @@ export default function Contact() {
         listing to us.
       </p>
       <ContactForm />
+      <h2>Payment or account problems</h2>
+      <p>
+        A charge you don&apos;t recognise, or a plan that didn&apos;t switch on? <Link href="/support">Open a support ticket</Link>: it gets a number you can quote.
+      </p>
       <h2>Stores</h2>
       <p>
         Stores on Shopify whose One Piece singles carry the card number in the

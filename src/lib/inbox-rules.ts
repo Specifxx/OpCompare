@@ -28,6 +28,9 @@ export const CONTACT_CATEGORY_LABELS: Record<ContactCategory, string> = {
   PRICE_OR_STORE: "A price or a store",
   OTHER: "Something else",
 };
+export const SUPPORT_CATEGORIES = ["PAYMENT", "ACCOUNT", "OTHER"] as const;
+export const SUPPORT_CATEGORY_LABELS: Record<SupportCategory, string> = { PAYMENT: "Payment / billing", ACCOUNT: "Account", OTHER: "Something else" };
+export const SUPPORT_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 export const FEEDBACK_ACTIONS = ["approve", "hide", "spam", "reopen", "delete"] as const;
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
@@ -35,6 +38,8 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number];
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 export type ContactCategory = (typeof CONTACT_CATEGORIES)[number];
+export type SupportCategory = (typeof SUPPORT_CATEGORIES)[number];
+export type SupportStatus = (typeof SUPPORT_STATUSES)[number];
 export type FeedbackAction = (typeof FEEDBACK_ACTIONS)[number];
 
 export const MAX_CLAIM_CENTS = 10_000_000;
@@ -55,6 +60,10 @@ export const LIMITS = {
   contactSubject: 150,
   contactMessageMin: 10,
   contactMessageMax: 4000,
+  supportSubjectMin: 3,
+  supportSubjectMax: 150,
+  supportMessageMin: 10,
+  supportMessageMax: 4000,
 } as const;
 
 export const SOURCE_RE = /^(tcgplayer|ebay|ebay_us|store:[a-z0-9-]{1,60})$/;
@@ -244,4 +253,30 @@ export function parseContactMessage(body: unknown): Parsed<ContactInput> {
   if (message.length < LIMITS.contactMessageMin) return fail(`Message must be at least ${LIMITS.contactMessageMin} characters`);
   if (message.length > LIMITS.contactMessageMax) return fail(`Message is too long (max ${LIMITS.contactMessageMax} characters)`);
   return { ok: true, value: { name, email, subject: subject.value, category, message } };
+}
+
+// ── Support ticket ──────────────────────────────────────────────────────────
+export interface SupportInput {
+  name: string;
+  email: string;
+  category: SupportCategory;
+  subject: string;
+  message: string;
+}
+
+/** A /support submission. An unknown or retired category (an old ?category=ORDER link) is "Something else", never an error. */
+export function parseSupportTicket(body: unknown): Parsed<SupportInput> {
+  const b = rec(body);
+  if (!b) return fail("Invalid request");
+  const name = typeof b.name === "string" ? b.name.trim() : "";
+  if (!name || name.length > LIMITS.contactNameMax) return fail(`Name must be 1–${LIMITS.contactNameMax} characters`);
+  const email = typeof b.email === "string" ? b.email.trim() : "";
+  if (!email || email.length > LIMITS.contactEmail || !EMAIL_RE.test(email)) return fail("Enter a valid email address");
+  const category: SupportCategory = isIn(SUPPORT_CATEGORIES, b.category) ? b.category : "OTHER";
+  const subject = typeof b.subject === "string" ? b.subject.trim() : "";
+  if (subject.length < LIMITS.supportSubjectMin || subject.length > LIMITS.supportSubjectMax) return fail(`Subject must be ${LIMITS.supportSubjectMin}–${LIMITS.supportSubjectMax} characters`);
+  const message = typeof b.message === "string" ? b.message.trim() : "";
+  if (message.length < LIMITS.supportMessageMin) return fail(`Message must be at least ${LIMITS.supportMessageMin} characters`);
+  if (message.length > LIMITS.supportMessageMax) return fail(`Message is too long (max ${LIMITS.supportMessageMax} characters)`);
+  return { ok: true, value: { name, email, category, subject, message } };
 }
