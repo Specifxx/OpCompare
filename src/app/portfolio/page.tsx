@@ -171,7 +171,9 @@ export default async function PortfolioPage() {
 
       {/* Headline value — always shown, even before the first card is added,
           so a brand-new free account has a reason to come back. */}
-      <section className="card-surface overflow-hidden bg-gradient-to-br from-brand-600/15 via-ink-850 to-gold/10 p-5">
+      {/* overflow-hidden only once there are holdings: the zero state's quick-add
+          suggestions drop below the card, and RiftCompare's clipped them. */}
+      <section className={`card-surface ${portfolio.holdings.length > 0 ? "overflow-hidden " : ""}bg-gradient-to-br from-brand-600/15 via-ink-850 to-gold/10 p-5`}>
         {portfolio.holdings.length > 0 ? (
           <>
             <div className="flex flex-wrap items-end justify-between gap-4">

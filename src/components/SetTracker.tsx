@@ -368,7 +368,7 @@ function Notes({ setSlug, setName, freeLimit }: { setSlug: string; setName: stri
       <p className="mt-1">
         Ticked a card by mistake? Change its quantity in <Link href="/portfolio#collection" className="text-brand-400 hover:underline">My binder</Link>.
         Bringing in a whole binder? Import a CSV (a TCGplayer export with its Product ID, or a card number and printing) from the same
-        place: it keeps the printing and tells you what it skipped. To price the delivered order for what&apos;s missing, use &quot;Plan the purchase&quot; above, or paste the copied list into{" "}
+        place: it keeps the printing and tells you what it skipped. To price the delivered order for what&apos;s missing, use &quot;Plan the purchase&quot; at the bottom of the missing list, or paste the copied list into{" "}
         <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link>.
       </p>
       <p className="mt-1">
