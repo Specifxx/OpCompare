@@ -2,82 +2,83 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
 import { Pagination } from "@/components/Pagination";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { BrowseFilters } from "@/components/BrowseFilters";
+import { FilterChips } from "@/components/FilterChips";
+import { HubFaq } from "@/components/HubFaq";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { GuideBusy } from "@/components/price-guide/GuideBusy";
+import { PriceGuideToolbar } from "@/components/price-guide/PriceGuideToolbar";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
-import { Breadcrumbs, Delta, StatTile } from "@/components/ui";
+import { Breadcrumbs, Delta, JsonLd, StatTile } from "@/components/ui";
 import { rarityLabel } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog } from "@/lib/data";
 import { int, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
-import { headline, sortPrice } from "@/lib/price";
+import { headline } from "@/lib/price";
 import { median, releasedSets } from "@/lib/selectors";
+import { breadcrumbLd, faqLd, itemListLd } from "@/lib/jsonld";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { PRICE_GUIDE_FAQ } from "@/lib/content/price-guide-faq";
+import { GUIDE_DEFAULT_SIZE, GUIDE_DEFAULT_SORT, guideHref, guideRobots, guideStats, isGuideDefault, parseGuide, runGuide } from "@/lib/price-guide-query";
+import type { SearchParams } from "@/lib/browse";
+import { SITE_URL } from "@/lib/site";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { GuideBuyLinks } from "./GuideBuyLinks";
 import { DATA_TABLE } from "@/components/prose";
 
-export const metadata: Metadata = {
-  title: "One Piece Price Guide — Every Card's Price in One Table",
-  description:
-    "Every One Piece Card Game printing in one sortable table with the cheapest in-stock price in your market, how many stores have it, and its 7-day move.",
-  alternates: { canonical: "/price-guide" },
-  openGraph: pageOgOwnImage("/price-guide"),
-};
+const TITLE = "One Piece Price Guide — Every Card's Price in One Table";
+const DESCRIPTION =
+  "Every One Piece Card Game printing in one sortable table with the cheapest in-stock price in your market, how many stores have it, and its 7-day move.";
 
-type SP = { page?: string; sort?: string; set?: string };
-const PER = 100;
+// The plain guide (and a single set's) is indexable; any filter, search, sort,
+// size, market override or page after the first is noindex,follow with the
+// canonical on /price-guide. A page title carries its page number.
+export function generateMetadata({ searchParams }: { searchParams: SearchParams }): Metadata {
+  const q = parseGuide(searchParams);
+  return {
+    title: q.page > 1 ? `${TITLE} (page ${q.page})` : TITLE,
+    description: DESCRIPTION,
+    alternates: { canonical: "/price-guide" },
+    openGraph: pageOgOwnImage("/price-guide"),
+    robots: guideRobots(q),
+  };
+}
 
-export default async function PriceGuidePage({
-  searchParams,
-}: {
-  searchParams: SP;
-}) {
-  const country = getCountry();
+export default async function PriceGuidePage({ searchParams }: { searchParams: SearchParams }) {
+  const own = getCountry();
+  const gq = parseGuide(searchParams);
+  const country = gq.market ?? own;
   const c = COUNTRIES[country];
   const cat = await getCatalog();
-  const set = searchParams.set
-    ? cat.setBySlug.get(searchParams.set)
-    : undefined;
-  let rows = set ? cat.cards.filter((x) => x.setId === set.id) : cat.cards;
-  const sort = searchParams.sort ?? "price";
-  rows = [...rows].sort((a, b) => {
-    if (sort === "name") return a.name.localeCompare(b.name);
-    if (sort === "move")
-      return (b.change7d ?? -Infinity) - (a.change7d ?? -Infinity);
-    if (sort === "stores") return b.stores[country] - a.stores[country];
-    return (sortPrice(b, country) ?? -1) - (sortPrice(a, country) ?? -1);
-  });
-  const pages = Math.max(1, Math.ceil(rows.length / PER));
-  const page = Math.min(
-    Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1),
-    pages,
-  );
-  const slice = rows.slice((page - 1) * PER, page * PER);
+  const result = runGuide(cat.cards, cat.sets, cat.setById, gq, country);
+  const { items: slice, pages, page, show30d } = result;
+  const set = gq.browse.sets.length === 1 ? cat.setBySlug.get(gq.browse.sets[0]) : undefined;
+  const stats = guideStats(cat.cards, country);
   const priced = cat.cards.filter((x) => x.low[country] != null);
-  const lows = priced.map((x) => x.low[country]!);
-  const med = median(lows);
-  const under1 = lows.filter((v) => v < 100).length;
-  // Only cards TCGplayer can value: a lone listing with no sales behind it (a
-  // serial-numbered print at US$199,999) is not "the dearest card".
-  const dearest = [...priced]
-    .filter((x) => x.marketUsd != null)
-    .sort((a, b) => b.low[country]! - a.low[country]!)[0];
   const sets = releasedSets(cat.sets, ["booster", "extra", "premium"]);
-  const href = (p: Record<string, string | undefined>) => {
-    const u = new URLSearchParams();
-    const merged = {
-      sort: searchParams.sort,
-      set: searchParams.set,
-      page: undefined as string | undefined,
-      ...p,
-    };
-    for (const [k, v] of Object.entries(merged)) if (v) u.set(k, v);
-    const s = u.toString();
-    return s ? `/price-guide?${s}` : "/price-guide";
-  };
+  const faqs = PRICE_GUIDE_FAQ;
+  const filtered = !isGuideDefault({ ...gq, sort: GUIDE_DEFAULT_SORT, size: GUIDE_DEFAULT_SIZE, market: null, page: 1 });
+  const hrefSet = (slug: string) => guideHref(searchParams, { set: slug });
+  const sortHref = (asc: string, desc: string) => guideHref(searchParams, { sort: gq.sort === desc ? asc : desc });
+  const guides = guidesForCatalogue("price-guide");
+  const setsByCode = Object.fromEntries(cat.sets.flatMap((x) => [[x.slug, `${x.name} (${x.code})`], [x.code.toLowerCase(), `${x.name} (${x.code})`]]));
 
   return (
     <div>
+      <JsonLd data={breadcrumbLd([{ name: "Price guide", path: "/price-guide" }])} />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: TITLE,
+          url: `${SITE_URL}/price-guide`,
+          mainEntity: itemListLd("One Piece card prices", "/price-guide", slice.slice(0, 50).map((x) => ({ name: `${x.name}${x.variant ? ` (${x.variant})` : ""} ${x.number ?? ""}`.trim(), path: `/card/${x.slug}` }))),
+        }}
+      />
+      <JsonLd data={faqLd(faqs)} />
       <Breadcrumbs items={[{ label: "Price guide" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece Price Guide</h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
@@ -113,127 +114,57 @@ export default async function PriceGuidePage({
         />
         <StatTile
           label="Median price"
-          value={med != null ? money(med, country) : "—"}
+          value={stats.medianCents != null ? money(stats.medianCents, country) : "—"}
           sub={
-            lows.length
-              ? `${Math.round((under1 / lows.length) * 100)}% of priced cards cost under ${c.symbol}1`
+            stats.underOneShare != null
+              ? `${Math.round(stats.underOneShare * 100)}% of priced cards cost under ${c.symbol}1`
               : undefined
           }
         />
         <StatTile
           label="Dearest card"
-          value={dearest ? money(dearest.low[country], country) : "—"}
+          value={stats.dearest ? money(stats.dearest.low[country], country) : "—"}
           sub={
-            dearest ? (
-              <CardQuickLink slug={dearest.slug} className="text-brand-400 hover:underline">
-                {dearest.name}
-                {dearest.variant ? ` (${dearest.variant})` : ""}{" "}
-                {dearest.number}
+            stats.dearest ? (
+              <CardQuickLink slug={stats.dearest.slug} className="text-brand-400 hover:underline">
+                {stats.dearest.name}
+                {stats.dearest.variant ? ` (${stats.dearest.variant})` : ""} {stats.dearest.number}
               </CardQuickLink>
             ) : undefined
           }
         />
       </div>
 
-      <section className="card-surface mt-6 overflow-hidden">
-        <div className="border-b border-ink-800 px-5 py-4">
-          <h2 className="text-xl text-white">Prices by set</h2>
-          <p className="text-sm text-slate-400">
-            How each released booster set prices in {c.place}, in {c.currency}.
-            A set&apos;s name opens its own price guide.
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className={`${DATA_TABLE} min-w-[640px]`}>
-            <thead>
-              <tr>
-                <th>Set</th>
-                <th className="text-right">Priced</th>
-                <th className="text-right">Median</th>
-                <th>Dearest card</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sets.map((s) => {
-                const cs = cat.cards.filter((x) => x.setId === s.id);
-                const ps = cs.filter((x) => x.low[country] != null);
-                const top = [...ps].sort(
-                  (a, b) => b.low[country]! - a.low[country]!,
-                )[0];
-                return (
-                  <tr key={s.id}>
-                    <td>
-                      <Link
-                        href={href({ set: s.slug })}
-                        className="font-semibold text-brand-400 hover:underline"
-                      >
-                        {s.name}
-                      </Link>{" "}
-                      <span className="text-xs text-slate-500">{s.code}</span>
-                    </td>
-                    <td className="num text-right text-slate-300">
-                      {ps.length}/{cs.length}
-                    </td>
-                    <td className="num text-right font-semibold text-accent">
-                      {money(median(ps.map((x) => x.low[country]!)), country)}
-                    </td>
-                    <td className="truncate text-slate-200">
-                      {top ? (
-                        <CardQuickLink
-                          slug={top.slug}
-                          className="hover:text-brand-400 hover:underline"
-                        >
-                          {top.name}
-                          {top.variant ? ` (${top.variant})` : ""}{" "}
-                          <span className="num text-xs text-slate-400">
-                            {money(top.low[country], country)}
-                          </span>
-                        </CardQuickLink>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <PriceGuideToolbar sort={gq.sort} size={gq.size} q={gq.browse.q} shownMarket={country} ownMarket={own} />
 
-      <section className="card-surface mt-6 overflow-hidden">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="min-w-0">
+          <input type="checkbox" id="guide-filters-toggle" className="peer sr-only" />
+          <label htmlFor="guide-filters-toggle" className="btn-ghost w-full cursor-pointer lg:hidden">
+            Filters
+          </label>
+          <div className="mt-3 hidden peer-checked:block lg:mt-0 lg:block">
+            <BrowseFilters q={gq.browse} sets={cat.sets} country={country} action="/price-guide" />
+          </div>
+        </aside>
+        <div className="min-w-0">
+          <FilterChips basePath="/price-guide" sets={setsByCode} symbol={c.symbol} adjective={c.adjective} />
+          <GuideBusy>
+      <section className="card-surface mt-4 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 px-5 py-4">
           <div>
-            <h2 className="text-xl text-white">
-              {set ? `${set.name} (${set.code}) prices` : "Every card"}
-            </h2>
+            <h2 className="text-xl text-white">{set ? `${set.name} (${set.code}) prices` : filtered ? "Matching cards" : "Every card"}</h2>
             <p className="text-sm text-slate-400">
-              {int(rows.length)} printings · page {page} of {pages}
-              {set ? (
+              {int(result.total)} printings · page {page} of {pages}
+              {filtered ? (
                 <>
                   {" · "}
                   <Link href="/price-guide" className="text-brand-400 hover:underline">
-                    All sets
+                    Clear filters
                   </Link>
                 </>
               ) : null}
             </p>
-          </div>
-          <div className="flex flex-wrap gap-1 text-sm">
-            {[
-              ["price", "Price"],
-              ["move", "7-day move"],
-              ["stores", "Stores"],
-              ["name", "Name"],
-            ].map(([k, l]) => (
-              <Link
-                key={k}
-                href={href({ sort: k === "price" ? undefined : k })}
-                className={`rounded-md border px-3 py-1.5 font-semibold ${sort === k ? "border-brand-500 bg-brand-500/15 text-white" : "border-ink-700 text-slate-300 hover:border-ink-600"}`}
-              >
-                {l}
-              </Link>
-            ))}
           </div>
         </div>
         {/* One table at every width, never a horizontal scroll: fixed layout,
@@ -247,9 +178,10 @@ export default async function PriceGuidePage({
                 <th>Card</th>
                 <th className="hidden w-32 md:table-cell">Set · No.</th>
                 <th className="hidden w-28 xl:table-cell">Rarity</th>
-                <th className="w-[5.5rem] text-right sm:w-28">Price ({c.currency})</th>
-                <th className="hidden w-16 text-right sm:table-cell">Stores</th>
-                <th className="hidden w-20 text-right sm:table-cell">7 days</th>
+                <SortTh href={sortHref("price-asc", "price-desc")} active={gq.sort === "price-desc" ? "desc" : gq.sort === "price-asc" ? "asc" : null} className="w-[5.5rem] text-right sm:w-28">Price ({c.currency})</SortTh>
+                <SortTh href={guideHref(searchParams, { sort: "stores" })} active={gq.sort === "stores" ? "desc" : null} className="hidden w-16 text-right sm:table-cell">Stores</SortTh>
+                <SortTh href={sortHref("falling", "rising")} active={gq.sort === "rising" ? "desc" : gq.sort === "falling" ? "asc" : null} className="hidden w-20 text-right sm:table-cell">7 days</SortTh>
+                {show30d ? <SortTh href={sortHref("falling30", "rising30")} active={gq.sort === "rising30" ? "desc" : gq.sort === "falling30" ? "asc" : null} className="hidden w-20 text-right lg:table-cell">30 days</SortTh> : null}
                 <th className="w-[6.5rem] text-right sm:w-40 xl:w-60">Buy</th>
               </tr>
             </thead>
@@ -320,6 +252,11 @@ export default async function PriceGuidePage({
                     <td className="hidden text-right sm:table-cell">
                       <Delta v={x.change7d} className="text-xs" />
                     </td>
+                    {show30d ? (
+                      <td className="hidden text-right lg:table-cell">
+                        <Delta v={x.change30d} className="text-xs" />
+                      </td>
+                    ) : null}
                     <td className="px-2 text-right">
                       <GuideBuyLinks
                         id={x.id}
@@ -345,12 +282,91 @@ export default async function PriceGuidePage({
           purchases — at no extra cost to you.
         </p>
       </section>
-      <Pagination
-        page={page}
-        pages={pages}
-        href={(p) => href({ page: p > 1 ? String(p) : undefined })}
-      />
+          </GuideBusy>
+          <Pagination page={page} pages={pages} href={(p) => guideHref(searchParams, { page: p > 1 ? String(p) : null })} />
+        </div>
+      </div>
+
+      <section className="card-surface mt-6 overflow-hidden">
+        <div className="border-b border-ink-800 px-5 py-4">
+          <h2 className="text-xl text-white">Prices by set</h2>
+          <p className="text-sm text-slate-400">
+            How each released booster set prices in {c.place}, in {c.currency}.
+            A set&apos;s name opens its own price guide.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className={`${DATA_TABLE} min-w-[640px]`}>
+            <thead>
+              <tr>
+                <th>Set</th>
+                <th className="text-right">Priced</th>
+                <th className="text-right">Median</th>
+                <th>Dearest card</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sets.map((s) => {
+                const cs = cat.cards.filter((x) => x.setId === s.id);
+                const ps = cs.filter((x) => x.low[country] != null);
+                const top = [...ps].sort(
+                  (a, b) => b.low[country]! - a.low[country]!,
+                )[0];
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      <Link
+                        href={hrefSet(s.slug)}
+                        className="font-semibold text-brand-400 hover:underline"
+                      >
+                        {s.name}
+                      </Link>{" "}
+                      <span className="text-xs text-slate-500">{s.code}</span>
+                    </td>
+                    <td className="num text-right text-slate-300">
+                      {ps.length}/{cs.length}
+                    </td>
+                    <td className="num text-right font-semibold text-accent">
+                      {money(median(ps.map((x) => x.low[country]!)), country)}
+                    </td>
+                    <td className="truncate text-slate-200">
+                      {top ? (
+                        <CardQuickLink
+                          slug={top.slug}
+                          className="hover:text-brand-400 hover:underline"
+                        >
+                          {top.name}
+                          {top.variant ? ` (${top.variant})` : ""}{" "}
+                          <span className="num text-xs text-slate-400">
+                            {money(top.low[country], country)}
+                          </span>
+                        </CardQuickLink>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <HubFaq faqs={faqs} />
+      <RelatedGuides guides={guides} />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>
+  );
+}
+
+function SortTh({ href, active, className, children }: { href: string; active: "asc" | "desc" | null; className?: string; children: React.ReactNode }) {
+  return (
+    <th className={className} aria-sort={active === "asc" ? "ascending" : active === "desc" ? "descending" : "none"}>
+      <Link href={href} scroll={false} className="inline-flex items-center gap-1 hover:text-white">
+        {children}
+        <span aria-hidden className={active ? "text-brand-400" : "text-slate-600"}>{active === "asc" ? "↑" : active === "desc" ? "↓" : "↕"}</span>
+      </Link>
+    </th>
   );
 }
