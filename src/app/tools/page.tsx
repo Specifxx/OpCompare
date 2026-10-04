@@ -1,144 +1,231 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Breadcrumbs, Faq, JsonLd } from "@/components/ui";
-import { breadcrumbLd, faqLd, itemListLd } from "@/lib/jsonld";
+import { SITE_URL } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
+import { breadcrumbLd, faqLd, itemListLd } from "@/lib/jsonld";
+import { Breadcrumbs } from "@/components/ui";
+import { HubFaq } from "@/components/HubFaq";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
+import { DECK_WATCH_LIMIT, FREE_DEMAND_ROWS, FREE_PORTFOLIO_LIMIT, FREE_RISING_ROWS, FREE_WATCHLIST_LIMIT, SEALED_CHECK_CADENCE, SEALED_WATCH_LIMIT_PLUS } from "@/lib/tier-limits";
 import { FREE_DEAL_ROWS } from "@/lib/plans";
 
-// /tools — every OP Compare tool in one place (RiftCompare's /tools hub). The
-// badges state who can use each tool, the same gating its own page applies:
-// Deal Finder's full list is Plus (a free account sees the top rows), the
-// Buy List Planner's store plan is Premium (a free account sees its total),
-// and everything else needs no account.
+// /tools — every OP Compare tool in one place (RiftCompare's /tools hub, its
+// groups, names and FAQ, for One Piece). The badges state who can use each
+// tool, the same gating its own page applies. OP Compare has Plus configured,
+// so RiftCompare's LIST_BADGE is "Plus" here: Deal Finder's and Rising Cards'
+// full lists are Plus; Best Basket's per-store plan and the full Demand Finder
+// are Premium.
+//
+// Email is OFF until it is configured (wave-2 plan §1): alerts land in the
+// account's notifications, so nothing here promises an email.
+const LIST_BADGE = "Plus";
+
+export const revalidate = 86400;
+
+const TITLE = "Free One Piece TCG Tools & Calculators | OP Compare";
+const DESCRIPTION =
+  "Every OP Compare tool in one place: box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards, Best Basket for buying a whole list for less, and Demand Finder for what players are searching for.";
+
 export const metadata: Metadata = {
-  title: "One Piece Card Game Tools & Calculators",
-  description:
-    "Every OP Compare tool: a free One Piece deck price calculator, box value, selling fees and market records, plus Deal Finder and the Buy List Planner for buying a whole list for less.",
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: { canonical: "/tools" },
-  openGraph: pageOg("/tools"),
+  keywords: ["one piece tcg tools", "one piece card game calculator", "one piece card value calculator", "one piece box ev"],
+  openGraph: pageOg("/tools", {
+    title: "Free One Piece TCG Tools & Calculators",
+    description: "Box EV, deck and list pricing and trade calculators free for everyone, plus Deal Finder, Rising Cards, Best Basket and Demand Finder.",
+  }),
 };
 
-type Badge = "Free" | "Plus" | "Premium";
+// The questions this hub should own in an answer engine. Kept next to the tool
+// list so a new tool and its answer move together. THE REAL ACCESS, stated per
+// level: emitted as FAQPage JSON-LD too, so a wrong answer here is a wrong
+// rich result.
+const FAQS = [
+  {
+    q: "Are the OP Compare tools free?",
+    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator, selling fee calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top ${FREE_DEAL_ROWS} deals and top ${FREE_RISING_ROWS} rising cards with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium. Demand Finder shows everyone the top ${FREE_DEMAND_ROWS} most searched cards of the week; its full most-searched and most-viewed lists are part of Premium.`,
+  },
+  {
+    q: "What does the Deal Finder do?",
+    a: `It lists every One Piece card a real store sells for less than TCGplayer's US market price, converted into your currency and ranked by how far below it is, and you can filter it by store and, with ${LIST_BADGE}, narrow it to only the cards on your watchlist. Signed out it shows nothing, a free account sees the top ${FREE_DEAL_ROWS}, and ${LIST_BADGE} shows every row.`,
+  },
+  {
+    q: "Do I need an account to use OP Compare tools?",
+    a: `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top rows of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an alert when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), Best Basket's store-by-store plan (at the minimum condition you set) and the full Demand Finder.`,
+  },
+  {
+    q: "Which One Piece tool should I use to buy a whole decklist?",
+    a: "Best Basket. It searches store combinations for the lowest total including postage, and with Premium shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from.",
+  },
+  {
+    q: "Is a One Piece booster box worth opening?",
+    a: "Use the box EV calculator: it compares a sealed box's live price against the expected value of its pulls at current singles prices. Bandai publishes no pull rates, so its rates are community estimates set low on purpose, and you can change every one. As a rule, buying the singles you actually want is cheaper than opening product for them.",
+  },
+];
+
 interface Tool {
   href: string;
   title: string;
   desc: string;
-  badge: Badge;
-  note?: string;
+  badge?: string;
+}
+interface ToolGroup {
+  label: string;
+  tools: Tool[];
 }
 
-const GROUPS: { label: string; tools: Tool[] }[] = [
+const GROUPS: ToolGroup[] = [
   {
     label: "Buying & value",
     tools: [
       {
         href: "/tools/deal-finder",
         title: "Deal Finder",
-        desc: "One Piece cards a store sells for less than TCGplayer's market price, in your currency, biggest saving first.",
-        badge: "Plus",
-        note: `Top ${FREE_DEAL_ROWS} free with an account`,
+        desc: `Underpriced vs TCGplayer: the cards a real store sells for less, in your currency, biggest saving first — narrowed, with ${LIST_BADGE}, to only the cards you watch.`,
+        badge: LIST_BADGE,
       },
       {
-        href: "/tools/buy-list",
-        title: "Buy List Planner",
-        desc: "Paste a decklist or use your watchlist: the cheapest single store and the cheapest split across stores in your market, at the condition you want.",
+        href: "/tools/rising",
+        title: "Rising Cards",
+        desc: "Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks.",
+        badge: LIST_BADGE,
+      },
+      {
+        href: "/tools/best-basket",
+        title: "Best Basket",
+        desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included, at the condition you'll play — see your total free with an account.",
         badge: "Premium",
-        note: "Your total free with an account",
       },
       {
-        href: "/market/records",
-        title: "Market records",
-        desc: "The biggest gaps between markets and the all-time price records, from the six markets OP Compare reads.",
-        badge: "Free",
+        href: "/tools/demand",
+        title: "Demand Finder",
+        desc: `The cards players are searching for and opening most, over 7 or 30 days. The top ${FREE_DEMAND_ROWS} most searched this week are free.`,
+        badge: "Premium",
       },
     ],
   },
   {
-    label: "Decks & sealed",
+    label: "Your collection",
+    tools: [
+      {
+        href: "/portfolio/sets",
+        title: "Set checklist",
+        desc: `Tick what's in your binder and see what a set is missing and the cheapest listing for each card, before postage. Free for your first ${FREE_PORTFOLIO_LIMIT} cards; Plus removes the limit.`,
+      },
+    ],
+  },
+  {
+    label: "Sealed & boxes",
+    tools: [
+      {
+        href: "/tools/box-ev",
+        title: "Box EV calculator",
+        desc: "Is ripping a booster box worth it? Compare a box's price against the expected pull value.",
+      },
+      {
+        href: "/sealed",
+        title: "Sealed prices",
+        desc: `Booster boxes, packs, starter decks and premium products priced across stores — and, with Plus, a watch that alerts you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,
+      },
+    ],
+  },
+  {
+    label: "Decks, trading & selling",
     tools: [
       {
         href: "/deck",
-        title: "Deck price calculator",
-        desc: "Paste any One Piece decklist and price every card at the cheapest in-stock store, with each printing, a total and a share link.",
-        badge: "Free",
+        title: "Deck builder & list pricer",
+        desc: "Build a deck, or paste any card list, and price every card across stores as you go.",
       },
       {
-        href: "/tools/box-value",
-        title: "Box value",
-        desc: "Is a booster box worth opening? The box price beside the value of its set's cards, and how concentrated that value is.",
-        badge: "Free",
+        href: "/trade",
+        title: "Trade calculator",
+        desc: "Value both sides of a card trade fairly before you commit.",
       },
-    ],
-  },
-  {
-    label: "Selling",
-    tools: [
       {
         href: "/tools/selling-fees",
         title: "Selling fee calculator",
-        desc: "What you keep selling a One Piece card on TCGplayer, eBay or Cardmarket, after commission, processing and postage.",
-        badge: "Free",
+        desc: "What you actually keep selling a card on TCGplayer or eBay, after commission, processing and postage.",
       },
     ],
   },
 ];
 
-const FAQS = [
-  {
-    q: "Are the OP Compare tools free?",
-    a: `Most of them. The deck price calculator, box value, selling fee calculator and market records need no account. Deal Finder shows nothing when you're signed out, the top ${FREE_DEAL_ROWS} deals with a free account, and every deal with Plus or Premium. The Buy List Planner shows any signed-in account its own total; which stores to buy from is part of Premium.`,
-  },
-  {
-    q: "Which tool should I use to buy a whole One Piece deck?",
-    a: "Start with the deck price calculator: paste the list and it prices every card at the cheapest in-stock store in your market, grouped by store. The Buy List Planner (Premium) adds the cheapest single-store orders and a minimum condition.",
-  },
-  {
-    q: "Is a One Piece booster box worth opening?",
-    a: "Use Box value: it puts a box's live price beside the value of its set's cards. Bandai does not publish pull rates, so it shows the facts you can check rather than a guessed expected value.",
-  },
-];
+export default function ToolsHubPage() {
+  const tools = GROUPS.flatMap((g) => g.tools);
+  // CollectionPage ties the hub to the site graph; ItemList and FAQPage as on RiftCompare.
+  const collectionLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "One Piece TCG Tools & Calculators",
+    url: `${SITE_URL}/tools`,
+    description: "Every OP Compare tool and calculator for One Piece Card Game players, buyers and collectors.",
+    isPartOf: { "@type": "WebSite", name: "OP Compare", url: SITE_URL },
+  };
+  const ld = [
+    collectionLd,
+    itemListLd("OP Compare Tools & Calculators", "/tools", tools.map((t) => ({ name: t.title, path: t.href }))),
+    faqLd(FAQS),
+    breadcrumbLd([{ name: "Tools", path: "/tools" }]),
+  ];
 
-const BADGE_CLASS: Record<Badge, string> = {
-  Free: "bg-brand-500/15 text-brand-300",
-  Plus: "bg-slate-500/20 text-slate-200",
-  Premium: "bg-gold/20 text-gold",
-};
-
-export default function ToolsHub() {
-  const all = GROUPS.flatMap((g) => g.tools);
   return (
-    <div className="mx-auto max-w-5xl">
-      <JsonLd data={breadcrumbLd([{ name: "Tools", path: "/tools" }])} />
-      <JsonLd data={itemListLd("OP Compare tools", "/tools", all.map((t) => ({ name: t.title, path: t.href })))} />
-      <JsonLd data={faqLd(FAQS)} />
+    <div className="mx-auto max-w-4xl">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <Breadcrumbs items={[{ label: "Tools" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">Tools &amp; calculators</h1>
-      <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
-        Every OP Compare tool in one place. Price a deck, check whether a box is worth opening, work out what you keep when you sell, and find the
-        cheapest way to buy a list. Most need no sign-up; a free account adds the top Deal Finder deals and your Buy List total, Plus shows every deal
-        with no ads, and <span className="text-gold">Premium</span> plans which stores to buy a whole list from.
+
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+        Every OP Compare tool in one place. Price-check a card, work out whether a box is worth ripping, and build or
+        price decks for less — most need no sign-up at all. A free account adds a watchlist of up to{" "}
+        {FREE_WATCHLIST_LIMIT} cards, a portfolio of up to {FREE_PORTFOLIO_LIMIT} and the top rows of each deal list;{" "}
+        Plus lifts those limits and shows every deal with no ads, and{" "}
+        <span className="text-gold">Premium</span> works out the cheapest way to buy a whole want-list.
       </p>
-      {GROUPS.map((g) => (
-        <section key={g.label} className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{g.label}</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {g.tools.map((t) => (
-              <Link key={t.href} href={t.href} className="card-surface group flex flex-col gap-1 p-4 hover:border-ink-600">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold text-white group-hover:text-brand-400">{t.title}</span>
-                  <span className={`chip text-[10px] font-semibold ${BADGE_CLASS[t.badge]}`}>{t.badge}</span>
-                </span>
-                <span className="text-sm leading-relaxed text-slate-400">{t.desc}</span>
-                {t.note ? <span className="text-xs text-slate-500">{t.note}</span> : null}
+      <HubIntro path="/tools" />
+
+      {GROUPS.map((group) => (
+        <section key={group.label} className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{group.label}</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {group.tools.map((t) => (
+              <Link
+                key={t.href}
+                href={t.href}
+                className="card-surface group flex gap-3 p-4 transition-colors hover:border-ink-600"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white group-hover:text-brand-300">{t.title}</h3>
+                    {t.badge && (
+                      <span
+                        className={`chip text-[10px] font-semibold ${
+                          t.badge === "Premium"
+                            ? "bg-gold/20 text-gold"
+                            : t.badge === "Plus"
+                              ? "bg-slate-500/20 text-slate-300"
+                              : "bg-brand-500/15 text-brand-300"
+                        }`}
+                      >
+                        {t.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{t.desc}</p>
+                </div>
               </Link>
             ))}
           </div>
         </section>
       ))}
-      <section className="mt-10 max-w-3xl">
-        <h2 className="mb-3 text-2xl text-white">Questions</h2>
-        <Faq items={FAQS} />
-      </section>
+
+      {/* The guides that show the tools in use, after the tool list. */}
+      <RelatedGuides guides={guidesForTool("/tools")} className="card-surface mt-8 p-5" />
+
+      <HubFaq faqs={FAQS} />
     </div>
   );
 }
