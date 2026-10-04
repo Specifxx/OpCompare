@@ -8,6 +8,7 @@ import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { SealedTile } from "@/components/SealedTile";
 import { cardEbayQuery, onePieceEbayQuery } from "@/lib/affiliate";
+import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { Breadcrumbs, InShort, SectionHeader, StatTile } from "@/components/ui";
 import { SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -87,6 +88,8 @@ export default async function SetPage({ params, searchParams }: Props) {
           store&apos;s price.
         </p>
       </div>
+
+      <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="set" className="mt-6 max-w-2xl" />
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile

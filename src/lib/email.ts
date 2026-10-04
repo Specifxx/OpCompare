@@ -44,9 +44,9 @@ export const EMAIL_COLORS = {
   inset: "#0e1116",
   border: "#252b38",
   rule: "#1b2029",
-  text: "${C.text}",
-  muted: "${C.muted}",
-  link: "${C.link}",
+  text: "#b8c0cc",
+  muted: "#8b95a5",
+  link: "#ff8a8a",
   white: "#ffffff",
   accent: "#ff6b6b", // --c-brand-400 (dark): prices and inline links
   button: "#d92b33", // the brand red fill, with white ink (DECISIONS: white on red)

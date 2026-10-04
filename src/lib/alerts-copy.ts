@@ -21,7 +21,7 @@ export interface AlertsFaq {
   a: string;
 }
 
-/** "at least 5% (and at least 50 cents or pence)" */
+// e.g. "at least 5% (and at least 50 cents or pence)", built below from the constants
 const MATERIAL = `at least ${DROP_MIN_PCT}% (and at least ${DROP_MIN_CENTS} cents or pence)`;
 
 const TRIGGER =

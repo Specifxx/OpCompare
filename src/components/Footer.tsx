@@ -2,12 +2,17 @@ import Link from "next/link";
 import { CONTACT_EMAIL, SISTER_SITE, SITE_NAME } from "@/lib/site";
 import { HatMark, Wordmark } from "./Logo";
 import { NAV_GROUPS } from "./nav-groups";
+import { EmailOnly } from "./EmailOnly";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 export function Footer() {
   const year = new Date().getUTCFullYear();
   return (
     <footer className="border-t border-ink-800 bg-ink-950" style={{ paddingLeft: "var(--sidenav-w)" }}>
       <div className="container-app py-10">
+        <EmailOnly>
+          <NewsletterSignup siteName={SITE_NAME} />
+        </EmailOnly>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">

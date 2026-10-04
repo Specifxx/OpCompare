@@ -6,6 +6,7 @@ import { getCatalog } from "@/lib/data";
 import { int, longDate } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
 import { DATA_TABLE } from "@/components/prose";
+import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 
 export const metadata: Metadata = {
   title: "One Piece TCG Release Dates — Next Set & Every Past Set",
@@ -58,6 +59,7 @@ export default async function ReleaseDates() {
           </InShort>
         </div>
       ) : null}
+      {next ? <ReleaseAlertSlot setSlug={next.slug} setName={next.name} releasedOn={next.releasedOn} source="release-dates" className="mt-6 max-w-2xl" /> : null}
       {upcoming.length ? (
         <section className="mt-8">
           <SectionHeader title="Coming up" />

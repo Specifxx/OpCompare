@@ -705,7 +705,7 @@ export async function getSparklines(ids: number[], days = 30): Promise<Record<nu
 
 // ── wave2:foundation ──
 // EMAIL STATUS. Every send is script-side (GitHub Actions) and happens only
-// when RESEND_API_KEY and EMAIL_FROM are both set there (isEmailEnabled()); the
+// when both mail secrets are set there (isEmailEnabled()); the
 // site never holds those secrets, so the alert workflow records what it found
 // in Meta key "email" ("on" | "off"). Pages decide what to promise from this:
 // while it is "off", no copy promises email and no email field renders, and

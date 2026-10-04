@@ -403,7 +403,7 @@ export interface AlertRunDeps {
   notify?: (userId: string, type: string, title: string, body: string, href?: string | null) => Promise<void>;
   now?: Date;
   notifyUsers?: boolean;
-  // Defaults to isEmailEnabled() (RESEND_API_KEY and EMAIL_FROM both set).
+  // Defaults to isEmailEnabled() (both mail secrets set).
   emailEnabled?: boolean;
   // Defaults to alertDailyBudget() (env ALERT_DAILY_BUDGET, else 50).
   dailyBudget?: number;

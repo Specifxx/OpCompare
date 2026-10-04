@@ -8,7 +8,10 @@
 // unguessable token (an alert row's unsubToken, a release alert's unsubToken)
 // or by the signed-in account's own address, select-limited and capped. Called
 // only from those routes and pages, never from a cached loader or the layout.
+import { randomUUID } from "crypto";
 import { prisma } from "./db";
+import { normalizeCountry, type Country } from "./country";
+import { RELEASE_ALERT_SOURCES, isUnreleased, releaseAlertSets, type ReleaseAlertSource } from "./release-alerts";
 import { isPremium } from "./premium";
 import { isAdminEmail } from "./admin-emails";
 import { performAlertAction, type AlertActionDb, type AlertActionResult } from "./alert-actions";
@@ -50,6 +53,68 @@ export async function releaseAlertsForToken(token: string): Promise<ReleaseToken
   const sets = await prisma.set.findMany({ where: { slug: { in: [...new Set(rows.map((r) => r.setSlug))] } }, select: { slug: true, name: true } });
   const name = new Map(sets.map((s) => [s.slug, s.name]));
   return { active: true, sets: rows.map((r) => ({ setSlug: r.setSlug, setName: name.get(r.setSlug) ?? r.setSlug, scope: r.scope })) };
+}
+
+const RELEASE_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export interface ReleaseSignupBody {
+  email: string;
+  setSlug: string;
+  cardId: number | null;
+  market: Country;
+  source: ReleaseAlertSource | null;
+  honeypot: boolean;
+}
+
+/** Pure: a release-alert signup body, or null when it is not one. */
+export function parseReleaseBody(body: unknown): ReleaseSignupBody | null {
+  if (!body || typeof body !== "object") return null;
+  const b = body as Record<string, unknown>;
+  const email = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
+  if (!email || email.length > 200 || !RELEASE_EMAIL_RE.test(email)) return null;
+  const setSlug = typeof b.setSlug === "string" ? b.setSlug.trim().toLowerCase() : "";
+  if (!/^[a-z0-9-]{1,80}$/.test(setSlug)) return null;
+  let cardId: number | null = null;
+  if (b.cardId != null && b.cardId !== "") {
+    const n = typeof b.cardId === "number" ? b.cardId : Number(b.cardId);
+    if (!Number.isSafeInteger(n) || n <= 0) return null;
+    cardId = n;
+  }
+  const source = typeof b.source === "string" && (RELEASE_ALERT_SOURCES as readonly string[]).includes(b.source) ? (b.source as ReleaseAlertSource) : null;
+  const market = normalizeCountry(typeof b.market === "string" ? b.market : null);
+  return { email, setSlug, cardId, market, source, honeypot: typeof b.website === "string" && b.website.length > 0 };
+}
+
+/**
+ * The one-field "email me when {set} lands" signup. Only for a set that takes
+ * release alerts (unreleased, or released within the window); a card scope
+ * must be a card of that set, and its singles email waits for that card's
+ * first store price.
+ * Idempotent per (email, set, scope); one token per address, so the email's
+ * unsubscribe stops every release alert for that address. Nothing is sent here.
+ */
+export async function subscribeRelease(body: ReleaseSignupBody, now = new Date()): Promise<{ status: number; body: Record<string, unknown> }> {
+  const set = await prisma.set.findUnique({ where: { slug: body.setSlug }, select: { id: true, releasedOn: true } });
+  const today = now.toISOString().slice(0, 10);
+  const releasedOn = set?.releasedOn ? set.releasedOn.toISOString().slice(0, 10) : null;
+  if (!set || !releaseAlertSets([{ releasedOn }], today).length) return { status: 400, body: { error: "Unknown set." } };
+  let scope = "set";
+  if (body.cardId != null) {
+    const card = await prisma.card.findUnique({ where: { id: body.cardId }, select: { setId: true } });
+    if (card?.setId !== set.id) return { status: 400, body: { error: "Unknown card." } };
+    scope = String(body.cardId);
+  }
+  try {
+    const existing = await prisma.setReleaseAlert.findFirst({ where: { email: body.email }, select: { unsubToken: true } });
+    await prisma.setReleaseAlert.upsert({
+      where: { email_setSlug_scope: { email: body.email, setSlug: body.setSlug, scope } },
+      create: { email: body.email, setSlug: body.setSlug, scope, market: body.market, source: body.source, unsubToken: existing?.unsubToken ?? randomUUID() },
+      update: {},
+    });
+  } catch {
+    return { status: 500, body: { error: "Couldn't sign you up right now — please try again." } };
+  }
+  return { status: 200, body: { ok: true, unreleased: isUnreleased(releasedOn, today) } };
 }
 
 /** Stop every release alert on a token. Idempotent. */

@@ -6,8 +6,8 @@
 //   npx tsx scripts/alerts.ts --mode=paid       # both imports: Plus/Premium triggers, deck and sealed watches, release alerts
 //   npx tsx scripts/alerts.ts --mode=baseline   # a manual re-import after a matcher change: baselines only, nothing sent
 //
-// EMAIL IS OFF UNTIL CONFIGURED (lib/email.ts isEmailEnabled: RESEND_API_KEY
-// and EMAIL_FROM both set, as GitHub Actions secrets). Off, the run is a green
+// EMAIL IS OFF UNTIL CONFIGURED (lib/email.ts isEmailEnabled: both mail secrets
+// set, as GitHub Actions secrets). Off, the run is a green
 // no-op for mail that still does its work: baselines advance and every trigger
 // for an account is delivered in-app (a Notification, lastFlaggedAt). It
 // records Meta "email" = on/off first (lib/email-status.ts), so the site's

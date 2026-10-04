@@ -34,6 +34,7 @@ import { getCardDetail, getCatalog, getProductHistory } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
+import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
@@ -284,6 +285,8 @@ export default async function CardPage({ params }: Props) {
               card={card.slug}
             />
           ) : null}
+
+          <ReleaseAlertSlot setSlug={card.set.slug} setName={card.set.name} releasedOn={card.set.releasedOn} source="card" cardId={card.id} cardName={title} unreleasedOnly />
 
           <p className="text-right text-xs text-slate-400">
             Cheapest first by item price; postage is added at each store&apos;s
