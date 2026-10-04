@@ -15,6 +15,7 @@ import { LineChart } from "./LineChart";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { WatchButton } from "./WatchButton";
+import { AddToCollectionButton } from "./AddToCollectionButton";
 
 // The QuickView panel (RiftCompare's QuickViewModal, adapted): art and the
 // "Open full page" link on the left; on the right the printing, the visitor's
@@ -293,6 +294,9 @@ export function QuickView({ slug, thumb, label, onClose }: { slug: string; thumb
                   <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebay} →</span>
                 </a>
               )}
+
+              {/* Add to collection — track & value your whole binder (collection-alerts, wave 2). */}
+              <AddToCollectionButton cardId={data.id} cardPath={`/card/${data.slug}`} />
 
               {/* Every market's cheapest open listing, the visitor's own marked. */}
               <div className="mt-4">

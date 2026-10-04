@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardTile } from "@/components/CardTile";
+import { SetOwnedProvider, SetOwnedStatus, SetTickLayer } from "@/components/SetOwned";
+import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { SealedTile } from "@/components/SealedTile";
 import { cardEbayQuery, onePieceEbayQuery } from "@/lib/affiliate";
@@ -206,7 +208,11 @@ export default async function SetPage({ params, searchParams }: Props) {
             </div>
           }
         />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {/* The owned overlay (collection-alerts, wave 2): a client island that
+            learns the visitor from /api/me; the page reads no session. */}
+        <SetOwnedProvider setSlug={set.slug} enabled={!future}>
+          <SetOwnedStatus setName={set.name} trackerHref={`/portfolio/sets/${set.slug}`} freeLimit={FREE_PORTFOLIO_LIMIT} />
+        <div data-tick-grid className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {sorted.map((card) => (
             <CardTile
               key={card.id}
@@ -216,6 +222,8 @@ export default async function SetPage({ params, searchParams }: Props) {
             />
           ))}
         </div>
+          <SetTickLayer tileIds={sorted.map((c) => c.id)} rowIds={[]} scanKey={byValue ? "value" : "number"} />
+        </SetOwnedProvider>
         <p className="mt-6 text-sm text-slate-400">
           Filter this set by colour, rarity or printing in the{" "}
           <Link href={`/browse?set=${set.slug}`} className="text-brand-400 hover:underline">

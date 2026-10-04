@@ -46,7 +46,7 @@ import { STORES, type StoreInfo } from "./stores";
 import { fetchStoreProducts, productUrl } from "./store-import";
 import { SITE_URL } from "./site";
 import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
-import { historyDir, readBucket, readIndex, writeBucket, writeDay, writeIndex } from "./history-store";
+import { historyDir, readBucket, readIndex, recentOf, writeBucket, writeDay, writeIndex, writeRecentBucket } from "./history-store";
 
 type Log = (...a: unknown[]) => void;
 
@@ -446,6 +446,7 @@ export async function recordHistory(log: Log, today: Date = utcDay()): Promise<H
     // A product TCGplayer no longer lists keeps its series until it ages out.
     for (const [k, series] of Object.entries(file.p)) if (!series.length || series[series.length - 1][0] <= addDays(dn, -KEEP_DAYS)) delete file.p[k];
     writeBucket(b, file);
+    writeRecentBucket(b, recentOf(file, dn)); // the binder chart's 120-day read (collection-alerts)
   }
   writeDay(dayFile);
   const row = nextIndex(prev, pairs, total, n, day);

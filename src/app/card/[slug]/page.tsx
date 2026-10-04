@@ -16,6 +16,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { WatchButton } from "@/components/WatchButton";
+import { AddToCollectionButton } from "@/components/AddToCollectionButton";
 import {
   Breadcrumbs,
   ColorBadge,
@@ -234,6 +235,8 @@ export default async function CardPage({ params }: Props) {
               </div>
             </div>
             <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
+            {/* Add to collection (collection-alerts, wave 2): a client island; the page reads no session. */}
+            <AddToCollectionButton cardId={card.id} cardPath={`/card/${card.slug}`} src="card" />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">

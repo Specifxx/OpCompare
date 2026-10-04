@@ -734,3 +734,125 @@ export async function getEmailStatus(): Promise<EmailStatus> {
   }
 }
 // ── end wave2:foundation ──
+
+// ── wave2:collection-alerts ──
+// THE BINDER'S VALUE HISTORY (/portfolio, lib/collection-server.ts getPortfolio).
+// Read like getProductHistory and getSparklines — GitHub raw, pinned to
+// historyRef, so Next's fetch cache keeps each file for a month and the database
+// is asked only for the 40-byte ref — but from history/recent/<bb>.json (the
+// last 120 days, lib/history-store.ts recentOf, ~150 KB), falling back to the
+// full products/<bb>.json before the import has written a recent file. Not an
+// unstable_cache: the fetch cache already holds every file, and each is well
+// under its 2 MB item ceiling. A binder can touch many buckets, so the ids are
+// capped (RECENT_HISTORY_MAX_IDS; the caller passes its dearest cards first)
+// and the files are fetched in small batches.
+import { priceMapFromPoints } from "./portfolio-performance";
+
+export const RECENT_HISTORY_MAX_IDS = 500;
+const RECENT_FETCH_BATCH = 16;
+
+/** {cardId → {day ms → US cents}} for up to RECENT_HISTORY_MAX_IDS ids (market price, else the cheapest US listing). */
+export async function getRecentHistory(ids: number[]): Promise<Map<number, Map<number, number>>> {
+  const want = [...new Set(ids)].slice(0, RECENT_HISTORY_MAX_IDS);
+  const buckets = [...new Set(want.map(bucketOf))];
+  const files = new Map<string, BucketFile | null>();
+  for (let i = 0; i < buckets.length; i += RECENT_FETCH_BATCH) {
+    const batch = buckets.slice(i, i + RECENT_FETCH_BATCH);
+    const got = await Promise.all(
+      batch.map(async (b) => (await historyFile<BucketFile>(`recent/${b}.json`)) ?? (await historyFile<BucketFile>(`products/${b}.json`))),
+    );
+    batch.forEach((b, j) => files.set(b, got[j]));
+  }
+  const out = new Map<number, Map<number, number>>();
+  for (const id of want) {
+    const m = priceMapFromPoints(files.get(bucketOf(id))?.p[String(id)]);
+    if (m.size) out.set(id, m);
+  }
+  return out;
+}
+// THE SET CHECKLIST'S CATALOGUE (/portfolio/sets/**, lib/set-scope.ts): every
+// card of one set with its cheapest in-stock STORE listing in one market.
+// Card.low<M> includes eBay, so summing it for a cost to finish — or reading
+// "has a price" as "in stock" — would let an eBay-only card count as available.
+// So the cached half is ONE Offer groupBy for the set's product ids, by
+// (product, source), min price: in stock, in the market, refreshed within the
+// last 72 hours, priced, and never an eBay row (TCGplayer is a US store here, as
+// the card page counts it). Its entry holds only [id, min, stores] tuples — a
+// few KB a set — keyed per (set, market), tag "prices" (purged by the import),
+// created on demand and never prewarmed. The card facts come from getCatalog,
+// called OUTSIDE the cache (never a loader inside an unstable_cache callback).
+// The result is the same for every reader in a market: no user data. Who owns
+// what is the per-user, uncached lib/set-owned.ts.
+import type { ChecklistCard } from "./set-scope";
+import { promoOutsideSet } from "./set-scope";
+
+const SET_CARD_CAP = 2000;
+
+/** Pure: fold the per-(card, store) minimums into a card's min price and store count. */
+export function foldStoreRows(rows: readonly { productId: number; _min: { priceCents: number | null } }[]): Map<number, { minCents: number; stores: number }> {
+  const out = new Map<number, { minCents: number; stores: number }>();
+  for (const r of rows) {
+    const p = r._min.priceCents;
+    if (p == null || p <= 0) continue;
+    const prev = out.get(r.productId);
+    if (!prev) out.set(r.productId, { minCents: p, stores: 1 });
+    else {
+      prev.stores++;
+      if (p < prev.minCents) prev.minCents = p;
+    }
+  }
+  return out;
+}
+
+const loadSetStoreMins = (setId: number, market: Country) =>
+  unstable_cache(
+    async (): Promise<[number, number, number][]> => {
+      const ids = (await prisma.card.findMany({ where: { setId }, select: { id: true }, take: SET_CARD_CAP })).map((c) => c.id);
+      if (!ids.length) return [];
+      const groups = await prisma.offer.groupBy({
+        by: ["productId", "source"],
+        where: {
+          productId: { in: ids },
+          market,
+          inStock: true,
+          priceCents: { gt: 0 },
+          updatedAt: { gt: new Date(Date.now() - STALE_MS) },
+          NOT: { source: { startsWith: "ebay" } },
+        },
+        _min: { priceCents: true },
+      });
+      return [...foldStoreRows(groups)].map(([id, v]) => [id, v.minCents, v.stores]);
+    },
+    ["set-checklist-v1", String(setId), market],
+    { tags: [PRICES_TAG], revalidate: TTL },
+  )();
+
+/** One set's cards with each one's cheapest store listing in `market` (lib/set-scope.ts ChecklistCard). */
+export async function getSetChecklist(setId: number, market: Country): Promise<ChecklistCard[]> {
+  const [mins, cat] = await Promise.all([loadSetStoreMins(setId, market), getCatalog()]);
+  const set = cat.setById.get(setId);
+  if (!set) return [];
+  const byId = new Map(mins.map(([id, min, stores]) => [id, { min, stores }]));
+  return cat.cards
+    .filter((c) => c.setId === setId)
+    .map((c): ChecklistCard => {
+      const hit = byId.get(c.id);
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        number: c.number,
+        variant: c.variant,
+        printing: c.printing,
+        rarity: c.rarity,
+        setCode: set.code,
+        hasImage: c.hasImage,
+        isPromo: promoOutsideSet(c.printing, set.kind),
+        minCents: hit?.min ?? null,
+        stores: hit?.stores ?? 0,
+        // The market's own lowest column says something is listed, but no store has it: eBay.
+        otherSource: !hit && c.low[market] != null,
+      };
+    });
+}
+// ── end wave2:collection-alerts ──
