@@ -26,6 +26,7 @@ export const SIGNUP_SOURCES = new Set<string>([
   "quickview",
   "watchlist_drawer", // the drawer's "Sign in to sync and get alerts"
   "watch_toast", // the toast after a signed-out heart
+  "launch_promo", // the free-month popup (lib/launch-promo-shared.ts)
   "feedback",
   "article_intro",
   "article_end",

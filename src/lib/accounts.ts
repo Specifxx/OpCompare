@@ -6,11 +6,12 @@ import { prisma } from "./db";
 import type { OAuthProfile, OAuthProvider } from "./oauth";
 import { isCountry } from "./country";
 import { claimAlertsForUser } from "./alerts";
+import { claimLaunchPromo } from "./launch-promo";
 
 // `signupSource` (wave 2): the whitelisted sign-up surface from the
 // oc_signup_src cookie (lib/signup-source-shared.ts parseSignupSource),
 // stamped on a NEW account only — never rewritten on a later sign-in.
-export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, opts: { signupSource?: string | null } = {}): Promise<{ id: string; isNew: boolean } | null> {
+export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, opts: { signupSource?: string | null } = {}): Promise<{ id: string; isNew: boolean; promo: boolean } | null> {
   if (!p.providerId || !p.email) return null;
   const link = provider === "google" ? { googleId: p.providerId } : { discordId: p.providerId };
   const byProvider = await prisma.user.findFirst({ where: link, select: { id: true, avatarUrl: true, emailVerified: true } });
@@ -20,7 +21,7 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
       data: { lastLoginAt: new Date(), avatarUrl: byProvider.avatarUrl ?? p.avatar, emailVerified: byProvider.emailVerified ?? (p.emailVerified ? new Date() : null) },
     });
     await claimAlertsForUser(byProvider.id, p.email); // anonymous watches made before signing in (lib/alerts.ts)
-    return { id: byProvider.id, isNew: false };
+    return { id: byProvider.id, isNew: false, promo: false };
   }
   if (!p.emailVerified) return null;
   const byEmail = await prisma.user.findUnique({ where: { email: p.email }, select: { id: true, avatarUrl: true, emailVerified: true } });
@@ -30,7 +31,7 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
       data: { ...link, lastLoginAt: new Date(), avatarUrl: byEmail.avatarUrl ?? p.avatar, emailVerified: byEmail.emailVerified ?? new Date() },
     });
     await claimAlertsForUser(byEmail.id, p.email);
-    return { id: byEmail.id, isNew: false };
+    return { id: byEmail.id, isNew: false, promo: false };
   }
   const created = await prisma.user.create({
     data: {
@@ -45,7 +46,10 @@ export async function upsertOAuthUser(provider: OAuthProvider, p: OAuthProfile, 
     select: { id: true },
   });
   await claimAlertsForUser(created.id, p.email);
-  return { id: created.id, isNew: true };
+  // The launch promotion (lib/launch-promo.ts): the first 50 NEW accounts get a
+  // month of Premium. Only here, only for a row created just now.
+  const promo = await claimLaunchPromo(created.id);
+  return { id: created.id, isNew: true, promo };
 }
 
 /**

@@ -25,7 +25,12 @@ const dialogListeners = new Set<(open: boolean) => void>();
 
 export function anyDialogOpen(): boolean {
   if (typeof document === "undefined") return false;
-  return document.body.dataset.ocDialog === "1" || document.querySelector('[aria-modal="true"]') !== null;
+  if (document.body.dataset.ocDialog === "1") return true;
+  // An aria-modal element only counts while it is actually showing: the phone
+  // nav menu stays mounted when closed, wrapped in aria-hidden/inert, and must
+  // not read as "a dialog is open" (it silenced every corner nudge, the launch
+  // popup included).
+  return Array.from(document.querySelectorAll('[aria-modal="true"]')).some((el) => !el.closest('[aria-hidden="true"], [inert]'));
 }
 
 function ensureWatchers(): void {

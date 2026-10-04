@@ -78,6 +78,8 @@ layout or a public page; `tests/app-no-db-import.test.ts` pins the set):
 `src/lib/{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server}.ts`.
 The collection-alerts libraries do the same, for token- or per-request reads and writes only:
 `src/lib/{alert-routes,alert-subscribe,alert-mute,alert-actions,newsletter-signup}.ts`
+and `src/lib/launch-promo.ts` (called from `accounts.ts` at sign-up; the popup reads the counter
+through `/api/promo` and `getLaunchPromo()` in `data.ts`, never the table)
 (the unsubscribe and action tokens, the anonymous watch door and the newsletter signup; none imports
 the mail module). Nothing under `src/app` imports `src/lib/email.ts` or a module that sends
 (`tests/no-email-api.test.ts`): every email is sent script-side from GitHub Actions, only once
@@ -97,8 +99,13 @@ Prisma, and never push to `data` by hand — it is the workflow's.
 ## Plus & Premium (Stripe)
 
 Entitlement is `User.premiumUntil` + `premiumTier`, written only by the webhook,
-the daily reconcile and the admin grant/revoke routes (`src/lib/admin-billing.ts`,
-admin session only, audited), extend-only except an explicit admin revoke, and
+the daily reconcile, the admin grant/revoke routes (`src/lib/admin-billing.ts`,
+admin session only, audited) and the launch promotion's single claim
+(`src/lib/launch-promo.ts`: the first 50 NEW accounts get 30 days of Premium,
+taken by one atomic capped upsert on the `Counter` row `launch-promo` in the
+same transaction as the grant, called only from `upsertOAuthUser` for the row it
+just created; `tests/launch-promo.test.ts` pins it), extend-only except an
+explicit admin revoke, and
 Stripe writes only for subscriptions whose Price or metadata says
 `site=opcompare` (`src/lib/stripe-entitlement.ts`). `past_due`
 never entitles. Prices live in `src/lib/plans.ts` and reach Stripe through

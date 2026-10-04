@@ -1912,3 +1912,43 @@ What the review found, and what was decided (items not listed were fixed as writ
   RC's eighteen rows (prices are untouched); the Stripe product text follows it on
   the next `stripe-setup` run. The shipping-rates workflow only uploads an
   artifact, and its header now says so.
+
+## 2026-10-04 — Launch offer: the first 50 accounts get 30 days of Premium free
+
+**Decision.** A popup invites signed-out visitors to create a free account, with
+a live counter ("13 of 50 free months left"). The first 50 NEW accounts get 30
+days of Premium, no card. When the counter reaches 50 the popup disappears.
+
+**How.**
+- *The grant* is `claimLaunchPromo()` (`src/lib/launch-promo.ts`), called once
+  from `upsertOAuthUser` for a row that was just created. One transaction: an
+  `INSERT … ON CONFLICT DO UPDATE … WHERE value < 50 RETURNING` on the `Counter`
+  row `launch-promo`, then the `premiumUntil` write. Concurrency is safe by
+  construction (60 simultaneous claims against the local DB granted exactly
+  50), a failed grant gives its slot back, and a failed promo never fails a
+  sign-in. It stacks like an admin grant (max(now, current) + 30 days), takes the
+  tier "premium" only for a lapsed or free account, and never touches Stripe.
+- *The popup* (`LaunchPromoPopup`, mounted once in the root layout, client-only,
+  no session read) uses the nudge machinery: signed-out visitors only, from the
+  2nd page view, 8 s after it became eligible, never over another dialog or
+  while typing, once per visit, 3 days' rest after a dismissal and gone after
+  three, never on /login, /premium or account pages. It reads the counter from
+  `/api/promo` (`getLaunchPromo()` in `data.ts`, 30 s cache, fails closed to "none
+  left") only once it could actually show.
+- *The welcome* toast says the 30 days have started (`?promo=1` from the OAuth
+  callback, stripped like `?welcome=`).
+
+**Entitlement rule amended.** CLAUDE.md's list of Premium writers gains this
+one claim (owner's request). It is not a trial policy change: subscriptions,
+prices and the Stripe flow are untouched, and Premium shows "Opening soon" for
+purchases until Stripe is set up regardless.
+
+**Known limits.** One person with several Google accounts could take more than
+one slot; the cap (50 × 30 days) is the whole exposure. Accounts that existed
+before this shipped do not qualify. To end the offer early, set `LAUNCH_PROMO_ENABLED = false` in
+`src/lib/launch-promo-shared.ts`: grants stop and the popup disappears together.
+
+**Also fixed.** `anyDialogOpen()` treated the always-mounted, aria-hidden phone
+menu (`[aria-modal="true"]`) as an open dialog, which silenced every corner nudge,
+the Premium slide-in included, since the wave-2 design merge. It now ignores
+aria-modal elements inside `aria-hidden` or `inert`.

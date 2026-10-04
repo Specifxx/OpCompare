@@ -52,6 +52,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   if (!p.providerId || !p.email) return fail(req, "oauth_noemail");
 
   let isNew = false;
+  let promo = false;
   try {
     // Wave 2: the whitelisted sign-up surface (oc_signup_src), stamped on a
     // NEW account only, and the referral cookie (attribution only: it
@@ -60,6 +61,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
     const user = await upsertOAuthUser(provider, p, { signupSource: signupSource ?? "login" });
     if (!user) return fail(req, "oauth_unverified");
     isNew = user.isNew;
+    promo = user.promo;
     if (signupSource) cookies().set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
     if (isNew) await applyReferral(user.id);
     await createSession(user.id);
@@ -70,5 +72,6 @@ export async function GET(req: Request, { params }: { params: { provider: string
   cookies().set(`oauth_next_${provider}`, "", { path: "/", maxAge: 0 });
   const dest = new URL(next ?? POST_SIGN_IN_FALLBACK, req.url);
   if (isNew) dest.searchParams.set("welcome", provider);
+  if (promo) dest.searchParams.set("promo", "1");
   return NextResponse.redirect(dest);
 }

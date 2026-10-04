@@ -42,8 +42,18 @@ function SignupWelcomeInner() {
     fired.current = true;
     trackEvent("sign_up", { method: welcome });
     markSignupSession();
-    // On /dashboard the page itself says it; anywhere else, one quiet toast.
-    if (pathname !== "/dashboard") {
+    // The launch promotion (lib/launch-promo.ts): the callback adds ?promo=1 when
+    // this new account took one of the free Premium months. Say so everywhere,
+    // /dashboard included.
+    const promo = searchParams?.get("promo") === "1";
+    if (promo) {
+      const msg = "Your free account is ready, and your 30 days of Premium have started.";
+      setToast(msg);
+      setToastAction({ href: "/premium", label: "See what's included →" });
+      setTimeout(() => setToast((t) => (t === msg ? null : t)), 10000);
+      trackEvent("launch_promo_granted", { method: welcome });
+    } else if (pathname !== "/dashboard") {
+      // On /dashboard the page itself says it; anywhere else, one quiet toast.
       setToast("Your free account is ready.");
       setToastAction({ href: "/dashboard", label: "Get set up →" });
       setTimeout(() => setToast((t) => (t === "Your free account is ready." ? null : t)), 8000);
@@ -56,6 +66,7 @@ function SignupWelcomeInner() {
     }
     const rest = new URLSearchParams(searchParams.toString());
     rest.delete("welcome");
+    rest.delete("promo");
     const qs = rest.toString();
     router.replace(qs ? `${pathname}?${qs}` : (pathname ?? "/"), { scroll: false });
   }, [searchParams, pathname, router]);
