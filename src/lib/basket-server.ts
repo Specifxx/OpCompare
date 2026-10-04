@@ -20,7 +20,10 @@ import { prisma } from "./db";
 import type { Country } from "./country";
 import type { BasketCard } from "./basket";
 import { meetsMinCondition, parseBasketPrefs, type BasketPrefs, type MinCondition } from "./basket-condition";
-import { BASKET_ID_CHUNK, getBasketListings, getCatalog, type BasketListingTuple } from "./data";
+import { BASKET_ID_CHUNK, getBasketListings, getCatalog, getSetChecklist, type BasketListingTuple } from "./data";
+import { ownedBySet, ownedDb } from "./set-owned";
+import { missingIn, planSetGap, preReleaseGapMessage, revealedWithoutListing, type SetGapOptions, type SetGapPlan, type SetGapPrice } from "./set-gap";
+import { stockOf, type ChecklistCard, type OwnedMap, type SetScope } from "./set-scope";
 import { basketStoreKey } from "./shipping";
 
 export { basketStoreKey };
@@ -185,4 +188,98 @@ export async function loadBinderHoldings(userId: string, country: Country): Prom
   const ranked = [...merged.values()].sort((a, b) => b.valueCents - a.valueCents);
   const wanted = ranked.slice(0, MAX_HOLDINGS);
   return { wanted, skipped: ranked.length - wanted.length, empty: merged.size === 0 };
+}
+
+// ── Finish this set (source "set") ───────────────────────────────────────────
+// RiftCompare's loadSetGapLines, for OP Compare. The set's cards and the
+// account's owned map are the SET TRACKER's own readers (getSetChecklist, the
+// cached catalogue half; ownedBySet, one narrow per-user groupBy), so "missing"
+// here is exactly what /portfolio/sets/<set> shows as missing.
+//
+// The price used to RANK and to apply the member's ceiling is what the PLAN
+// would pay, not the checklist's cheapest listing (any condition, any real
+// store, postage-less stores included): the cheapest copy at the member's
+// minimum condition among the stores whose postage we can price. So "your 200
+// cheapest" are the 200 the plan can buy, and a card only a postage-less store
+// stocks, or only below the floor, is counted apart (lib/set-gap.ts) instead of
+// taking a chunk slot and coming back "not covered". The plan itself is priced
+// afterwards by loadStoreListings, unchanged, for at most SET_GAP_CHUNK ids.
+//
+// EGRESS. loadSetGapPrices reads the self-cached getBasketListings loader (the
+// same Data Cache entries a basket run reads, 40 cards a chunk), never Postgres,
+// and only the set source calls it.
+export interface SetGapDeps {
+  checklist: (setId: number, country: Country) => Promise<ChecklistCard[]>;
+  owned: (userId: string, setId: number) => Promise<OwnedMap>;
+  prices: (cardIds: number[], country: Country, stores: string[], minCondition: MinCondition) => Promise<Map<number, SetGapPrice>>;
+}
+const setGapDeps: SetGapDeps = {
+  checklist: getSetChecklist,
+  owned: async (userId, setId) => ownedBySet(await ownedDb(), userId, setId),
+  prices: (ids, country, stores, floor) => loadSetGapPrices(ids, country, stores, floor),
+};
+
+/**
+ * Per card: its cheapest in-stock copy at `minCondition` and its cheapest in any
+ * condition, both at `stores` (the ones the plan can price postage for). A card
+ * with no row at all has no entry. Throws on failure, like loadStoreListings.
+ */
+export async function loadSetGapPrices(
+  cardIds: number[],
+  country: Country,
+  stores: string[],
+  minCondition: MinCondition,
+  read: BasketListingReader = getBasketListings,
+): Promise<Map<number, SetGapPrice>> {
+  const out = new Map<number, SetGapPrice>();
+  const ids = [...new Set(cardIds.filter((n) => Number.isInteger(n) && n > 0))].sort((a, b) => a - b);
+  if (!ids.length || !stores.length) return out;
+  const ok = new Set(stores);
+  const chunks: number[][] = [];
+  for (let i = 0; i < ids.length; i += BASKET_ID_CHUNK) chunks.push(ids.slice(i, i + BASKET_ID_CHUNK));
+  const rows = (await Promise.all(chunks.map((c) => read(country, c)))).flat();
+  for (const [productId, source, priceCents, condition] of rows) {
+    const retailer = basketStoreKey(source);
+    if (!retailer || !ok.has(retailer)) continue;
+    const cur = out.get(productId) ?? { floorCents: null, anyCents: null };
+    if (cur.anyCents == null || priceCents < cur.anyCents) cur.anyCents = priceCents;
+    if (meetsMinCondition(condition, minCondition) && (cur.floorCents == null || priceCents < cur.floorCents)) cur.floorCents = priceCents;
+    out.set(productId, cur);
+  }
+  return out;
+}
+
+export type SetGapLoad =
+  | { ok: true; setName: string; plan: SetGapPlan }
+  | { ok: false; reason: "unknown-set" | "preorder"; message: string };
+
+/** What the plan can buy with: the stores whose postage we can price for this buyer, and the floor. */
+export interface SetGapBuy {
+  stores: string[];
+  minCondition: MinCondition;
+}
+
+export async function loadSetGapLines(
+  userId: string,
+  setSlug: string,
+  scope: SetScope,
+  country: Country,
+  opts: Omit<SetGapOptions, "scope" | "prices">,
+  buy: SetGapBuy,
+  deps: SetGapDeps = setGapDeps,
+): Promise<SetGapLoad> {
+  const cat = await getCatalog();
+  const set = cat.setBySlug.get(setSlug);
+  if (!set) return { ok: false, reason: "unknown-set", message: "That set isn't one we track." };
+  const cards = await deps.checklist(set.id, country);
+  // A set that has not released has no total to finish: the answer is how many
+  // revealed cards have no listing yet, never a plan.
+  if (set.releasedOn && set.releasedOn > new Date().toISOString().slice(0, 10)) {
+    return { ok: false, reason: "preorder", message: preReleaseGapMessage(set.name, revealedWithoutListing(cards)) };
+  }
+  const owned = await deps.owned(userId, set.id);
+  const { missing } = missingIn(cards, owned, { scope, rarity: opts.rarity });
+  const listedIds = missing.filter((c) => stockOf(c) === "store").map((c) => c.id);
+  const prices = await deps.prices(listedIds, country, buy.stores, buy.minCondition);
+  return { ok: true, setName: set.name, plan: planSetGap(set.code, cards, owned, { ...opts, scope, prices }) };
 }

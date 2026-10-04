@@ -28,7 +28,10 @@ test("the cookie is cleared on use, the grant is extend-only and logged, and the
   assert.equal(REFERRAL_COOKIE, "oc_ref");
   const src = read("src/lib/referral.ts");
   assert.match(src, /jar\.set\(REFERRAL_COOKIE, "", \{ path: "\/", maxAge: 0 \}\)/);
-  assert.match(src, /grantedUntil\(referrer\.premiumUntil, days\)/);
+  assert.match(src, /grantReferralDays\(referrerId, days\)/);
+  // The entitlement write is admin-billing's, extend-only, never in referral.ts itself.
+  assert.doesNotMatch(src, /prisma\.user\.update|premiumUntil:/);
+  assert.match(read("src/lib/admin-billing.ts"), /export async function grantReferralDays[\s\S]*grantedUntil\(referrer\.premiumUntil, days, now\)/);
   assert.match(src, /if \(!referrerId \|\| days === 0\) return;/);
   assert.match(read("src/app/profile/page.tsx"), /\{referralDays > 0 && <ReferralLinkCard/);
   assert.match(read("src/components/ReferralCapture.tsx"), /captureEntrySource\(\)/);

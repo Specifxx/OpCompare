@@ -68,7 +68,7 @@ test("the page and the list promise an email only while email is on", () => {
 });
 
 test("every card heart is PriceWatchButton; sealed hearts are SealedWatchButton", () => {
-  for (const p of ["src/components/CardTile.tsx", "src/components/QuickView.tsx", "src/components/CardStickyBuyBar.tsx", "src/app/card/[slug]/page.tsx"]) {
+  for (const p of ["src/components/CardTileClient.tsx", "src/components/QuickView.tsx", "src/components/CardStickyBuyBar.tsx", "src/app/card/[slug]/page.tsx"]) {
     assert.match(code(p), /<PriceWatchButton/, p);
     assert.doesNotMatch(code(p), /<WatchButton\b/, p);
   }

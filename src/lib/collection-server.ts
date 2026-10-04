@@ -562,56 +562,35 @@ export function lowsFor(card: CardLite): Record<Country, number | null> {
 }
 
 // ── Replacement cost (/api/portfolio/replacement) ───────────────────────────
-// Behind a button, never on the page render: it reads every eligible listing
-// for every card held, a far bigger query than the page's own. Scoped the way
-// lib/db.ts requires: this user's card ids only, at most REPLACEMENT_MAX_HOLDINGS
-// of them (the dearest), in stock, one market, refreshed within 72 hours,
-// real stores and TCGplayer only — never eBay — and an explicit select.
+// Behind a button, never on the page render: the route reads every eligible
+// listing for every card held (lib/basket-server.ts loadStoreListings), a far
+// bigger query than the page's own. This half is the binder side only: this
+// user's holdings, one line per card, at most REPLACEMENT_MAX_HOLDINGS of them
+// (the dearest), each with what it contributes to the headline value.
 export const REPLACEMENT_MAX_HOLDINGS = 200;
-const REPLACEMENT_ROWS_PER_CARD = 40;
-const OFFER_FRESH_MS = 72 * 3600_000;
 
-export async function replacementInputs(userId: string, country: Country): Promise<{
-  wanted: { cardId: number; name: string; slug: string; qty: number; valueCents: number }[];
+export async function replacementWanted(userId: string, country: Country): Promise<{
+  wanted: { cardId: number; name: string; slug: string; setCode: string; collectorNumber: string; qty: number; valueCents: number }[];
   skipped: number;
   empty: boolean;
-  listings: Map<number, { source: string; storeName: string; priceCents: number; url: string }[]>;
 }> {
-  const p = await getPortfolio(userId, country);
-  if (!p.holdings.length) return { wanted: [], skipped: 0, empty: true, listings: new Map() };
+  const [p, cat] = await Promise.all([getPortfolio(userId, country), getCatalog()]);
+  if (!p.holdings.length) return { wanted: [], skipped: 0, empty: true };
   // One line per card (conditions summed): stores sell what they have, so a
   // replacement is priced at the listed condition rather than yours.
-  const byCard = new Map<number, { cardId: number; name: string; slug: string; qty: number; valueCents: number }>();
+  const byCard = new Map<number, { cardId: number; name: string; slug: string; setCode: string; collectorNumber: string; qty: number; valueCents: number }>();
   for (const h of p.holdings) {
-    const w = byCard.get(h.cardId) ?? byCard.set(h.cardId, { cardId: h.cardId, name: h.name, slug: h.slug, qty: 0, valueCents: 0 }).get(h.cardId)!;
+    const c = cat.byId.get(h.cardId);
+    const w =
+      byCard.get(h.cardId) ??
+      byCard
+        .set(h.cardId, { cardId: h.cardId, name: h.name, slug: h.slug, setCode: c ? (cat.setById.get(c.setId)?.code ?? "") : "", collectorNumber: c?.number ?? "", qty: 0, valueCents: 0 })
+        .get(h.cardId)!;
     w.qty += h.quantity;
     w.valueCents += h.valueCents;
   }
   const all = [...byCard.values()].sort((a, b) => b.valueCents - a.valueCents);
-  const wanted = all.slice(0, REPLACEMENT_MAX_HOLDINGS);
-  const ids = wanted.map((w) => w.cardId);
-  const rows = await prisma.offer.findMany({
-    where: {
-      productId: { in: ids },
-      market: country,
-      inStock: true,
-      updatedAt: { gt: new Date(Date.now() - OFFER_FRESH_MS) },
-      OR: [{ source: { startsWith: "store:" } }, { source: "tcgplayer" }],
-    },
-    select: { productId: true, source: true, priceCents: true, url: true },
-    orderBy: { priceCents: "asc" },
-    take: ids.length * REPLACEMENT_ROWS_PER_CARD,
-  });
-  const listings = new Map<number, { source: string; storeName: string; priceCents: number; url: string }[]>();
-  for (const r of rows) {
-    (listings.get(r.productId) ?? listings.set(r.productId, []).get(r.productId)!).push({
-      source: r.source,
-      storeName: sourceLabel(r.source, country),
-      priceCents: r.priceCents,
-      url: r.url,
-    });
-  }
-  return { wanted, skipped: all.length - wanted.length, empty: false, listings };
+  return { wanted: all.slice(0, REPLACEMENT_MAX_HOLDINGS), skipped: Math.max(0, all.length - REPLACEMENT_MAX_HOLDINGS), empty: false };
 }
 
 // ── Import (/api/collection/import) ─────────────────────────────────────────

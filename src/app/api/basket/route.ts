@@ -13,6 +13,7 @@ import {
   cardInfoFor,
   loadBinderHoldings,
   loadOwnedQty,
+  loadSetGapLines,
   loadStoreListings,
   saveMinConditionPref,
   type BasketCardInfo,
@@ -20,6 +21,8 @@ import {
 import type { MinCondition } from "@/lib/basket-condition";
 import { FREE_BASKET_TOTALS_PER_DAY } from "@/lib/tier-limits";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
+import { NOT_STOCKED_LIST_CAP, nothingPricedMessage, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
+import { COUNTRIES } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +45,10 @@ export const dynamic = "force-dynamic";
 // WHAT CAN BE SENT. { source: "deck" } with a pasted `text` and/or exact
 // `lines` ({ cardId, qty }); { source: "watchlist", ids } — the card ids the
 // shared watchlist store holds (lib/use-watchlist.ts), one copy each. The
-// binder and Finish-a-set sources wait for the collection track
-// (BASKET_COLLECTION_SOURCES); until then they answer 400.
+// binder source is the account's collection at the quantities held; "set"
+// (Finish this set, `set` = the set's slug, with scope, rarity, maxPriceCents
+// and a paging cursor) is the cards the account is MISSING from one released
+// set, one copy each, in chunks of SET_GAP_CHUNK (lib/set-gap.ts).
 //
 // SOURCES. The tracked stores' fresh in-stock listings in the market and, in
 // the US, TCGplayer's own cheapest listing — never eBay (CLAUDE.md), and never
@@ -108,7 +113,7 @@ const fail = (error: string, status: number): Outcome => ({ res: NextResponse.js
 async function buildBasket(
   userId: string,
   full: boolean,
-  { source, skipOwned, text, picked, ids }: BasketRequest,
+  { source, skipOwned, text, picked, ids, setSlug, scope, rarity, maxPriceCents, after }: BasketRequest,
   minCondition: MinCondition,
   country: Country,
   postageOpts: PostageOptions,
@@ -121,16 +126,49 @@ async function buildBasket(
     const fuzzy: { raw: string; matchedAs: string }[] = [];
     let skippedHoldings = 0;
     let skippedOwned = 0;
+    // Finish this set: what the chunk was cut from, for the answer's `setGap`.
+    let setGap: SetGapAnswer | null = null;
     const add = (cardId: string, qty: number) => wanted.set(cardId, clampQty((wanted.get(cardId) ?? 0) + qty));
 
     if ((source === "binder" || source === "set") && !BASKET_COLLECTION_SOURCES) {
       return fail(source === "binder" ? "Pricing your binder arrives with the portfolio." : "Finish a set arrives with the set checklist.", 400);
     }
-    if (source === "set") return fail("Finish a set arrives with the set checklist.", 400);
 
     if (source === "watchlist") {
       if (!ids.length) return fail("Your watchlist has no cards yet.", 400);
       for (const id of ids) add(id, 1);
+    } else if (source === "set") {
+      // Ranked and ceilinged on what THIS plan buys: the stores that post to this
+      // buyer, at this floor (lib/set-gap.ts), not the checklist's any-condition price.
+      const buyStores = Object.entries(basketStoresFor(country, postageOpts))
+        .filter(([, st]) => !st.unavailable)
+        .map(([key]) => key);
+      const gap = await loadSetGapLines(userId, setSlug, scope, country, { rarity, maxPriceCents, after }, { stores: buyStores, minCondition });
+      if (!gap.ok) return fail(gap.message, 400);
+      const { plan, setName } = gap;
+      const s = plan.summary;
+      if (!s.gapTotal) return fail(`You already own every ${s.rarity ? `${s.rarity} ` : ""}card in this list for ${setName}.`, 400);
+      if (!plan.chunk.length) {
+        // Nothing to price: every missing card is unstocked, unpriceable, or over the ceiling.
+        return fail(
+          s.candidates === 0 && s.stocked > 0
+            ? `Every missing card with a store listing is dearer than your per-card price limit (${s.overCeiling} ${s.overCeiling === 1 ? "card" : "cards"}).`
+            : nothingPricedMessage(s, COUNTRIES[country].place),
+          400,
+        );
+      }
+      // The gap already excludes what is owned, so step 2 below is not run for a set.
+      for (const c of plan.chunk) {
+        const id = String(c.id);
+        wanted.set(id, 1);
+        info.set(id, { name: basketCardName(c), slug: c.slug, setCode: c.setCode, collectorNumber: c.number ?? "" });
+      }
+      skippedOwned = s.ownedInScope;
+      setGap = {
+        summary: s,
+        setName,
+        notStocked: plan.notStocked.slice(0, NOT_STOCKED_LIST_CAP).map((c) => ({ name: basketCardName(c), setCode: c.setCode, number: c.number })),
+      };
     } else if (source === "binder") {
       const binder = await loadBinderHoldings(userId, country);
       if (binder.empty) return fail("Nothing in your binder yet.", 400);
@@ -161,7 +199,7 @@ async function buildBasket(
     }
 
     // 2. "Skip copies I already own."
-    if (skipOwned && wanted.size) {
+    if (skipOwned && source !== "set" && wanted.size) {
       const owned = await loadOwnedQty(userId, [...wanted.keys()]);
       for (const [id, qty] of [...wanted]) {
         const have = Math.min(owned.get(id) ?? 0, qty);
@@ -202,14 +240,16 @@ async function buildBasket(
     if (!full) {
       const preview = basketPreview(optimizeBasket(basketCards, stores), unmatched, region);
       return {
-        res: NextResponse.json({ ...preview, shipping }, { headers: { "Cache-Control": "no-store" } }),
+        // Counts only for the set source: how many were priced, how many are not
+        // included, how many are not stocked. No name, store, line or link.
+        res: NextResponse.json({ ...preview, shipping, ...(setGap ? setGapFields(false, setGap) : {}) }, { headers: { "Cache-Control": "no-store" } }),
         priced: preview.covered > 0,
       };
     }
     const { plan, alternatives } = planBasket(basketCards, stores, { loc: "/tools/best-basket" });
     return {
       res: NextResponse.json(
-        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping, minCondition },
+        { ...basketPreview(plan, unmatched, region), plan, alternatives, fuzzy, skippedOwned, skippedHoldings, source, shipping, minCondition, ...(setGap ? setGapFields(true, setGap) : {}) },
         { headers: { "Cache-Control": "no-store" } },
       ),
       priced: plan.coveredCopies > 0,

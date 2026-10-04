@@ -1,5 +1,8 @@
 import { DECK_LINE_CAP } from "./deck";
 import { parseMinCondition, type MinCondition } from "./basket-condition";
+import { RARITY_KEYS } from "./constants";
+import { parseCursor, type SetGapCursor } from "./set-gap";
+import { parseScope, type SetScope } from "./set-scope";
 
 // What a Best Basket request may send, parsed the same way for every caller
 // (RiftCompare's lib/basket-request.ts). Pure (no database), so the tier story
@@ -12,14 +15,13 @@ import { parseMinCondition, type MinCondition } from "./basket-condition";
 //   • "watchlist" carries the watched card ids in the body (`ids`, from the
 //     shared watchlist store, lib/use-watchlist.ts): signed in that is the
 //     account list, signed out there is no basket at all.
-//   • "binder" (replacement cost) and "set" (Finish a set) need the portfolio
-//     and the set checklist, which arrive with the collection track. Until
-//     BASKET_COLLECTION_SOURCES is switched on they are refused with a 400 and
-//     the page hides their tabs and the "skip copies I own" box.
+//   • "binder" (replacement cost) and "set" (Finish a set) read the portfolio
+//     and the set checklist (the collection track, merged). The set is named by
+//     its SLUG (`set`), the one the set tracker links with.
 export type BasketSourceKind = "deck" | "watchlist" | "binder" | "set";
 
 /** Binder, Finish a set and "skip copies I own" (wave2-plan Track 3 item 1: on once the collection routes exist). */
-export const BASKET_COLLECTION_SOURCES = false;
+export const BASKET_COLLECTION_SOURCES = true;
 
 export interface PickedLine {
   cardId: string;
@@ -39,6 +41,15 @@ export interface BasketRequest {
   minCondition: MinCondition;
   // The member changed the switch: remember it (User.basketPrefs).
   saveMinCondition: boolean;
+  // The "set" source's own inputs (ignored by every other source): the set's
+  // slug ("" = none or malformed; the route checks it is a known, released
+  // set), which printings count, an optional rarity and per-card price ceiling,
+  // and the cursor a later chunk starts strictly after (null = the cheapest end).
+  setSlug: string;
+  scope: SetScope;
+  rarity: string | null;
+  maxPriceCents: number | null;
+  after: SetGapCursor | null;
 }
 
 // A pasted or picked quantity, clamped server-side whatever the client sends.
@@ -54,6 +65,9 @@ export function parseBasketRequest(raw: unknown): BasketRequest {
   // would leave nothing — it is ignored there. Finishing a set is the opposite:
   // it prices only what is missing, so skipping copies you own is locked ON.
   const skipOwned = BASKET_COLLECTION_SOURCES && (source === "set" ? true : body.skipOwned === true && source !== "binder");
+  const setSlug = typeof body.set === "string" && /^[a-z0-9-]{1,80}$/i.test(body.set) ? body.set.toLowerCase() : "";
+  const rarity = typeof body.rarity === "string" && RARITY_KEYS.includes(body.rarity) ? body.rarity : null;
+  const ceiling = typeof body.maxPriceCents === "number" && Number.isFinite(body.maxPriceCents) ? Math.floor(body.maxPriceCents) : 0;
   const text = typeof body.text === "string" ? body.text.slice(0, 20_000) : "";
   const picked: PickedLine[] = Array.isArray(body.lines)
     ? body.lines
@@ -71,5 +85,10 @@ export function parseBasketRequest(raw: unknown): BasketRequest {
     ids: source === "watchlist" ? ids : [],
     minCondition: parseMinCondition(body.minCondition, "any"),
     saveMinCondition: body.saveMinCondition === true,
+    setSlug: source === "set" ? setSlug : "",
+    scope: parseScope(body.scope),
+    rarity: source === "set" ? rarity : null,
+    maxPriceCents: source === "set" && ceiling > 0 && ceiling <= 10_000_000 ? ceiling : null,
+    after: source === "set" ? parseCursor(body.after) : null,
   };
 }

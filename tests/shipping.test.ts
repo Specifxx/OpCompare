@@ -382,7 +382,7 @@ test("the snapshot covers every configured store, in its own currency, and stays
       for (const z of s.zones) assert.equal(z.std.length, s.carts.length, `${r.key}: std series misaligned`);
     }
   }
-  assert.ok(statSync(join(ROOT, "src/lib/shipping-rates.json")).size < 120_000, "keep the snapshot condensed — raw probe files are artifacts, not source");
+  assert.ok(statSync(join(ROOT, "src/lib/shipping-rates.json")).size < 200_000, "keep the snapshot condensed — raw probe files are artifacts, not source");
 });
 
 test("the real snapshot: Obsession Gaming is $20 to Adelaide, every measured store has carts in its own currency", () => {

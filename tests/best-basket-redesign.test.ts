@@ -578,7 +578,7 @@ test("the basket route withholds the plan from non-Premium callers", () => {
   assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched, region\)/);
   // The aggregate, plus where delivery was priced to (no store in it) and, for a
   // set, the tier-safe counts (setGapFields(false, …), 2026-09-29).
-  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping \}, /);
+  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping/);
   assert.doesNotMatch(branch, /plan|alternatives|fuzzy/, "the preview branch returns nothing but the aggregate");
   // The full plan's store links carry the page for the affiliate sub-id.
   assert.match(code, /planBasket\(basketCards, stores, \{ loc: "\/tools\/best-basket" \}\)/);
@@ -675,6 +675,7 @@ test("skipOwned subtracts owned copies (and doesn't apply to the binder itself),
   // signed-in caller may send — the tier only decides the answer.
   assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true, ids: [12, "13", "x"] }), {
     source: "watchlist", skipOwned: BASKET_COLLECTION_SOURCES, text: "", picked: [], ids: ["12", "13"], minCondition: "any", saveMinCondition: false,
+    setSlug: "", scope: "base", rarity: null, maxPriceCents: null, after: null,
   });
   assert.equal(parseBasketRequest({ source: "deck", skipOwned: true, text: "1 Nami" }).skipOwned, BASKET_COLLECTION_SOURCES);
   assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder prices replacement; skip is ignored");
@@ -731,7 +732,7 @@ test("the UI: tracked store links, the free preview's own-numbers copy, and its 
   for (const t of ["Cheapest split", "Best single store", "Best two stores"]) assert.ok(ui.includes(t), `plan card "${t}"`);
   assert.match(ui, /l\.condition \?\? "Condition not stated"/, "condition on every line");
   // Changing an input clears the answer on screen…
-  assert.match(ui, /function touched\(\) \{\s*setResult\(null\);/);
+  assert.match(ui, /function touched\(\) \{\s*(?:chunkStart\.current = null;\s*)?setResult\(null\);/);
   assert.match(ui, /<QtyInput/);
   // …including one still in flight: a response for older inputs is dropped.
   const touched = ui.slice(ui.indexOf("function touched()"), ui.indexOf("\n  }", ui.indexOf("function touched()")));

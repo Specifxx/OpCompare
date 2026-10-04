@@ -22,11 +22,27 @@ import { useMe } from "@/lib/use-me";
 import { useWatchedIds } from "@/lib/use-watchlist";
 import { basketSavingPitch } from "@/lib/basket-saving";
 import { planPrice } from "@/lib/plans";
-import { BASKET_COLLECTION_SOURCES } from "@/lib/basket-request";
+import { RARITY_KEYS, rarityLabel } from "@/lib/constants";
+import { SET_SCOPES, type SetScope } from "@/lib/set-scope";
+import { SET_GAP_CHUNK, nextChunkLabel, setGapNote, type SetGapSummary } from "@/lib/set-gap";
 import { FREE_BASKET_TOTALS_PER_DAY } from "@/lib/tier-limits";
 import { DEFAULT_MIN_CONDITION, MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, playedCopiesNote, type MinCondition } from "@/lib/basket-condition";
 
 export type BasketSource = "deck" | "watchlist" | "binder" | "set";
+
+// "Finish a set": the sets the picker offers (the slug is what a request
+// carries), and what a link into the source hands in (?source=set&set=&scope=&rarity=).
+export interface BasketSetOption {
+  code: string;
+  slug: string;
+  name: string;
+  released: boolean;
+}
+export interface BasketSetStart {
+  slug: string;
+  scope: SetScope;
+  rarity: string | null;
+}
 
 interface PickedLine {
   card: PickerCard;
@@ -46,6 +62,7 @@ export interface BasketRegionOption {
 
 // What /api/basket returns to Premium: the preview numbers plus the plans.
 interface FullResult extends BasketPreview {
+  setGap?: SetGapSummary;
   plan: BasketPlan;
   alternatives: BasketAlternatives;
   fuzzy: { raw: string; matchedAs: string }[];
@@ -53,21 +70,23 @@ interface FullResult extends BasketPreview {
   skippedHoldings: number;
   // The floor the plan was priced at (Premium's; lib/basket-condition.ts).
   minCondition?: MinCondition;
+  // Finish this set: the set's name and (Premium only) the missing cards no
+  // real store has in stock, named.
+  setName?: string;
+  notStocked?: { name: string; setCode: string; number: string | null }[];
 }
-type Result = BasketPreview | FullResult;
+// A non-Premium answer to the set source adds counts only: no store, line or link.
+type Result = (BasketPreview & { setGap?: SetGapSummary }) | FullResult;
 const isFull = (r: Result): r is FullResult => "plan" in r;
 
 type PlanKey = "split" | "single" | "two";
 
-// Binder and Finish a set need the portfolio and the set checklist (the
-// collection track); until BASKET_COLLECTION_SOURCES is on they are not shown.
-const ALL_TABS: { key: BasketSource; label: string }[] = [
+const TABS: { key: BasketSource; label: string }[] = [
   { key: "deck", label: "Paste a list" },
   { key: "watchlist", label: "My watchlist" },
   { key: "binder", label: "My binder" },
   { key: "set", label: "Finish a set" },
 ];
-const TABS = BASKET_COLLECTION_SOURCES ? ALL_TABS.filter((t) => t.key !== "set") : ALL_TABS.filter((t) => t.key === "deck" || t.key === "watchlist");
 
 // The Best Basket tool (RiftCompare's BestBasket, for OP Compare). One list in
 // — pasted (or searched card by card) or your watchlist — and the cheapest
@@ -97,6 +116,8 @@ export function BestBasket({
   initialList,
   initialSource = "deck",
   initialSkipOwned = false,
+  sets = [],
+  initialSet = null,
   initialMinCondition = DEFAULT_MIN_CONDITION,
   autoRun = false,
   market,
@@ -112,6 +133,10 @@ export function BestBasket({
   initialList?: string;
   initialSource?: BasketSource;
   initialSkipOwned?: boolean;
+  // "Finish a set": the sets the picker offers, and the set, scope and rarity a
+  // link handed in.
+  sets?: BasketSetOption[];
+  initialSet?: BasketSetStart | null;
   // The starting minimum condition: the member's last choice, "LP or better"
   // for a new session, or a saved watch's own floor. Premium's switch; anyone
   // else is priced at any condition (the route ignores it).
@@ -137,6 +162,14 @@ export function BestBasket({
   const [picked, setPicked] = useState<PickedLine[]>([]);
   const [pasteText, setPasteText] = useState(initialList ?? "");
   const [skipOwned, setSkipOwned] = useState(initialSkipOwned);
+  // Finish a set. `chunkStart` is what run() sends as `after` (the cursor the
+  // last answer gave for its next chunk): set in the same tick as a step to the
+  // next chunk, and put back to null by any other change.
+  const [setSlug, setSetSlug] = useState(initialSet?.slug ?? "");
+  const [setScope, setSetScope] = useState<SetScope>(initialSet?.scope ?? "base");
+  const [setRarity, setSetRarity] = useState(initialSet?.rarity ?? "");
+  const [ceilingText, setCeilingText] = useState("");
+  const chunkStart = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -192,6 +225,7 @@ export function BestBasket({
   // screen always belongs to the inputs above it — including an answer still
   // on its way for the inputs as they were.
   function touched() {
+    chunkStart.current = null;
     setResult(null);
     setError(null);
     reqSeq.current++;
@@ -215,6 +249,19 @@ export function BestBasket({
   const listLines = tab === "deck" ? picked.length + pastedLines : 0;
   const overCap = listLines > DECK_LINE_CAP;
 
+  // The per-card ceiling, in whole cents; empty or unreadable = no ceiling.
+  const ceilingCents = (() => {
+    const n = parseFloat(ceilingText.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
+  })();
+
+  // "Plan the next 200": the same set, scope, rarity and ceiling, strictly after
+  // the last card of the chunk on screen (a cursor, not a rank).
+  function nextChunk(cursor: string) {
+    chunkStart.current = cursor;
+    void run();
+  }
+
   async function run() {
     const seq = ++reqSeq.current;
     setLoading(true);
@@ -232,10 +279,13 @@ export function BestBasket({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           source: tab,
-          skipOwned: BASKET_COLLECTION_SOURCES && tab !== "binder" && skipOwned,
+          skipOwned: tab === "set" || (tab !== "binder" && skipOwned),
           ...(full ? { minCondition: floor.current, saveMinCondition: saveMin } : {}),
           ...(tab === "deck" ? { text: pasteText, lines: picked.map((p) => ({ cardId: String(p.card.id), qty: p.qty })) } : {}),
           ...(tab === "watchlist" ? { ids: [...(watchedIds ?? [])].slice(0, DECK_LINE_CAP) } : {}),
+          ...(tab === "set"
+            ? { set: setSlug, scope: setScope, rarity: setRarity || undefined, maxPriceCents: ceilingCents ?? undefined, after: chunkStart.current ?? undefined }
+            : {}),
         }),
       });
       const d = await res.json().catch(() => null);
@@ -272,6 +322,7 @@ export function BestBasket({
     if (!autoRun || autoRan.current) return;
     if (initialSource === "deck" && !initialList?.trim()) return;
     if (initialSource === "watchlist" && watchedIds == null) return;
+    if (initialSource === "set" && !initialSet?.slug) return;
     autoRan.current = true;
     void run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -329,7 +380,7 @@ export function BestBasket({
   const places = joinList(measuredTo);
   const postageView: PostageView = { regionLabel, regionOpt, measuredAt, places };
 
-  const canRun = tab === "watchlist" ? (watchedIds?.size ?? 0) > 0 : tab !== "deck" || pasteText.trim().length > 0 || picked.length > 0;
+  const canRun = tab === "watchlist" ? (watchedIds?.size ?? 0) > 0 : tab === "set" ? !!setSlug : tab !== "deck" || pasteText.trim().length > 0 || picked.length > 0;
   const adjective = COUNTRIES[country].adjective;
 
   return (
@@ -427,22 +478,39 @@ export function BestBasket({
           </p>
         )}
 
-        {BASKET_COLLECTION_SOURCES && (
-          <label className={`mt-4 flex items-center gap-2 text-sm ${tab === "binder" ? "text-slate-600" : "text-slate-300"}`}>
-            <input
-              type="checkbox"
-              checked={tab !== "binder" && skipOwned}
-              disabled={tab === "binder"}
-              onChange={(e) => {
-                touched();
-                setSkipOwned(e.target.checked);
-              }}
-              className="h-4 w-4 accent-brand-500"
-            />
-            Skip copies I already own
-            {tab === "binder" && <span className="text-xs">(not for the binder itself)</span>}
-          </label>
+        {tab === "set" && (
+          <SetSourcePanel
+            sets={sets}
+            slug={setSlug}
+            scope={setScope}
+            rarity={setRarity}
+            ceiling={ceilingText}
+            currency={COUNTRIES[country].currency}
+            onChange={(next) => {
+              touched();
+              if (next.slug !== undefined) setSetSlug(next.slug);
+              if (next.scope !== undefined) setSetScope(next.scope);
+              if (next.rarity !== undefined) setSetRarity(next.rarity);
+              if (next.ceiling !== undefined) setCeilingText(next.ceiling);
+            }}
+          />
         )}
+
+        <label className={`mt-4 flex items-center gap-2 text-sm ${tab === "binder" ? "text-slate-600" : "text-slate-300"}`}>
+          <input
+            type="checkbox"
+            checked={tab === "set" || (tab !== "binder" && skipOwned)}
+            disabled={tab === "binder" || tab === "set"}
+            onChange={(e) => {
+              touched();
+              setSkipOwned(e.target.checked);
+            }}
+            className="h-4 w-4 accent-brand-500"
+          />
+          Skip copies I already own
+          {tab === "binder" && <span className="text-xs">(not for the binder itself)</span>}
+          {tab === "set" && <span className="text-xs">(always on: only what you&apos;re missing is priced)</span>}
+        </label>
 
         {/* Delivery: where it is going, and whether untracked letters count. */}
         <div className="mt-4 flex flex-wrap items-end gap-x-4 gap-y-2 rounded-lg border border-ink-800 p-2.5">
@@ -541,6 +609,7 @@ export function BestBasket({
         )}
       </div>
 
+      {result && result.setGap && <SetGapNotes gap={result.setGap} place={COUNTRIES[country].place} fmt={fmt} full={full} onNext={nextChunk} busy={loading} />}
       {result && !isFull(result) && <PreviewCard r={result} fmt={fmt} adjective={adjective} overCap={overCap} postage={postageView} />}
       {result && !isFull(result) && tab === "deck" && (
         <DiscoveryTip id="basket-watch" surface="tip:basket" tier="premium" cta="See Premium">
@@ -560,6 +629,9 @@ export function BestBasket({
           overCap={overCap}
           postage={postageView}
         />
+      )}
+      {result && isFull(result) && result.notStocked && result.setGap && (
+        <NotStockedList items={result.notStocked} total={result.setGap.notStockedCount} place={COUNTRIES[country].place} />
       )}
       {/* Watch this list (Premium, 2026-09-29): saves the pasted / picked list
           with a delivered-price target for the paid run (lib/deck-watch.ts).
@@ -602,6 +674,197 @@ export function BestBasket({
   );
 }
 
+// FINISH A SET: the picker. Set, which printings count, an optional rarity, an
+// optional per-card price limit. Everything is a request field; the route
+// checks the set is a known, released one.
+function SetSourcePanel({
+  sets,
+  slug,
+  scope,
+  rarity,
+  ceiling,
+  currency,
+  onChange,
+}: {
+  sets: BasketSetOption[];
+  slug: string;
+  scope: SetScope;
+  rarity: string;
+  ceiling: string;
+  currency: string;
+  onChange: (next: { slug?: string; scope?: SetScope; rarity?: string; ceiling?: string }) => void;
+}) {
+  const picked = sets.find((x) => x.slug === slug) ?? null;
+  return (
+    <div className="space-y-3" data-set-source>
+      <p className="text-sm text-slate-400">
+        Prices the cards you&apos;re missing from a set: the set checklist&apos;s list, one copy of each, with everything you already own left
+        out. Listings at real stores. One plan holds up to {SET_GAP_CHUNK} cards; if you&apos;re missing more, it plans the {SET_GAP_CHUNK}{" "}
+        cheapest first and offers the next {SET_GAP_CHUNK}, so a whole master set is planned in steps, not in one order.
+        {picked?.released && (
+          <>
+            {" "}
+            <Link href={`/portfolio/sets/${picked.slug}`} className="text-brand-400 hover:underline">
+              See what&apos;s missing →
+            </Link>
+          </>
+        )}
+      </p>
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-400">
+          Set
+          <select value={slug} onChange={(e) => onChange({ slug: e.target.value })} className="input py-1 sm:text-sm" aria-label="Set to finish">
+            <option value="">Choose a set…</option>
+            {sets.map((x) => (
+              <option key={x.slug} value={x.slug} disabled={!x.released}>
+                {x.code} {x.name}
+                {x.released ? "" : " (not out yet)"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div role="group" aria-label="Which printings count" className="flex flex-wrap gap-1.5">
+          {SET_SCOPES.map((x) => (
+            <button
+              key={x.key}
+              type="button"
+              aria-pressed={scope === x.key}
+              title={x.hint}
+              onClick={() => onChange({ scope: x.key })}
+              className={`min-h-9 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                scope === x.key ? "border-brand-500 bg-brand-500/15 text-white" : "border-ink-700 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {x.label}
+            </button>
+          ))}
+        </div>
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-400">
+          Rarity
+          <select value={rarity} onChange={(e) => onChange({ rarity: e.target.value })} className="input py-1 sm:text-sm" aria-label="Rarity">
+            <option value="">All rarities</option>
+            {RARITY_KEYS.map((k) => (
+              <option key={k} value={k}>
+                {rarityLabel(k)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-400">
+          Leave out cards dearer than ({currency}, optional)
+          <input
+            type="text"
+            inputMode="decimal"
+            value={ceiling}
+            onChange={(e) => onChange({ ceiling: e.target.value })}
+            placeholder="No limit"
+            aria-label="Most you'd pay for one card"
+            className="input w-32 py-1 sm:text-sm"
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+// What a set answer says about itself, before the plan: the one chunk line (the
+// gap is never silently partial), the step to the next chunk, the cards left out
+// by the member's own ceiling, and the cards no store has. Counts only, so it is
+// safe for a non-Premium answer; the not-stocked names are Premium's list below.
+function SetGapNotes({
+  gap,
+  place,
+  fmt,
+  full,
+  onNext,
+  busy,
+}: {
+  gap: SetGapSummary;
+  place: string;
+  fmt: (c: number) => string;
+  full: boolean;
+  onNext: (cursor: string) => void;
+  busy: boolean;
+}) {
+  const note = setGapNote(gap);
+  return (
+    <div className="card-surface p-4 text-sm text-slate-300" data-set-gap>
+      <p>
+        You&apos;re missing {gap.gapTotal} {plural(gap.gapTotal, "card", "cards")} in this list; {gap.stocked}{" "}
+        {plural(gap.stocked, "has", "have")} a listing we can price delivered in {place}.
+      </p>
+      {note && (
+        <p className="mt-1.5 font-semibold text-amber-300" data-set-chunk-note>
+          {note}
+        </p>
+      )}
+      {gap.nextCursor != null && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => onNext(gap.nextCursor!)} disabled={busy} className="btn-ghost text-xs disabled:opacity-50" data-set-next>
+            {nextChunkLabel(gap)} →
+          </button>
+          {!full && <span className="text-xs text-slate-500">Another total, another of today&apos;s runs.</span>}
+        </div>
+      )}
+      {gap.overCeiling > 0 && gap.maxPriceCents != null && (
+        <p className="mt-1.5 text-xs text-slate-400">
+          {gap.overCeiling} {plural(gap.overCeiling, "card is", "cards are")} dearer than your {fmt(gap.maxPriceCents)} limit and{" "}
+          {plural(gap.overCeiling, "isn't", "aren't")} in this plan.
+        </p>
+      )}
+      {gap.noPostageCount > 0 && (
+        <p className="mt-1.5 text-xs text-slate-400" data-set-no-postage>
+          {gap.noPostageCount} {plural(gap.noPostageCount, "card is", "cards are")} only stocked at stores we can&apos;t price postage for, so{" "}
+          {plural(gap.noPostageCount, "it isn't", "they aren't")} in the total. The set list shows their listing prices.
+        </p>
+      )}
+      {gap.belowFloorCount > 0 && (
+        <p className="mt-1.5 text-xs text-slate-400" data-set-below-floor>
+          {gap.belowFloorCount} {plural(gap.belowFloorCount, "card is", "cards are")} only in stock below your minimum condition, so{" "}
+          {plural(gap.belowFloorCount, "it isn't", "they aren't")} in the total. Choose Anything above to include {plural(gap.belowFloorCount, "it", "them")}.
+        </p>
+      )}
+      {gap.notStockedCount > 0 && (
+        <p className="mt-1.5 text-xs text-slate-400" data-set-not-stocked>
+          {gap.notStockedCount} {plural(gap.notStockedCount, "card isn't", "cards aren't")} stocked at a tracked store in {place}, so{" "}
+          {plural(gap.notStockedCount, "it isn't", "they aren't")} in the total.{full ? "" : " Premium lists them."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Premium's list of the missing cards no real store has in stock: named, never
+// dropped, with the eBay search the other unbuyable lists carry.
+function NotStockedList({ items, total, place }: { items: { name: string; setCode: string; number: string | null }[]; total: number; place: string }) {
+  const { country } = useCountry();
+  if (!items.length) return null;
+  return (
+    <div className="card-surface p-4 text-sm" data-set-not-stocked-list>
+      <p className="font-semibold text-slate-300">Not stocked in {place}:</p>
+      <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">
+        {items.map((u, i) => (
+          <li key={i}>
+            <a
+              href={ebaySearchUrl(country as Country, onePieceEbayQuery(u.name), "basket-set-not-stocked")}
+              target="_blank"
+              rel={outboundRel()}
+              data-retailer="ebay_basket"
+              data-page="best_basket"
+              className="font-medium text-brand-400 hover:underline"
+            >
+              {u.name} →
+            </a>
+          </li>
+        ))}
+      </ul>
+      {total > items.length && <p className="mt-2 text-xs text-slate-500">…and {total - items.length} more.</p>}
+      <p className="mt-2 text-xs text-slate-500">No tracked store has these in stock right now. They are not in the plan or its total.</p>
+      <AffiliateDisclosure partner="ebay" tight />
+    </div>
+  );
+}
+
 function plural(n: number, one: string, many: string) {
   return n === 1 ? one : many;
 }
@@ -622,7 +885,7 @@ interface PostageView {
 // are the quantities held), so the event leaves them out rather than guess.
 function listSize(r: Result, tab: BasketSource, pricedLines: number): { lines?: number; matched?: number } {
   if (tab === "deck") return { lines: pricedLines, matched: pricedLines - r.unmatched.length };
-  if (tab === "watchlist") return { lines: r.requested, matched: r.requested };
+  if (tab === "watchlist" || tab === "set") return { lines: r.requested, matched: r.requested };
   if (isFull(r)) {
     const cards = r.plan.matchedCards + r.plan.unbuyable.length;
     return { lines: cards, matched: cards };

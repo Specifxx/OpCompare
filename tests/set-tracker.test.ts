@@ -22,7 +22,7 @@ test("/sets/[slug] never reads the session: the owned overlay is client-side", (
   assert.doesNotMatch(c, /getCurrentUser|@\/lib\/auth|\bcookies\(|useMe\b/, "a session read here would make the page per-user");
   assert.doesNotMatch(c, /collectionCard|ownedBySet|set-owned/, "no per-request owned read on the page");
   assert.match(c, /<SetOwnedProvider setSlug=\{set\.slug\} enabled=\{!future\}>/, "only a released set gets the ticks");
-  assert.match(c, /<SetTickLayer tileIds=\{sorted\.map\(\(c\) => c\.id\)\}/);
+  assert.match(c, /<SetTickLayer tileIds=\{grid\.items\.map\(\(c\) => c\.id\)\}/);
   assert.match(c, /data-tick-grid/, "one marker on the grid");
   assert.doesNotMatch(c, /<OwnedTick/, "no tick component per tile in the server HTML");
   assert.match(c, /<SetOwnedStatus /);

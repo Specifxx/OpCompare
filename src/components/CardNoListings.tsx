@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { CardPriceState } from "@/lib/card-price-state";
-import { WatchButton } from "./WatchButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 
 // "No live listings for X yet" / "Why there's no price" (RiftCompare's empty
 // state, card-price-state.ts). A card with no open listing is not a shell: this
@@ -9,6 +9,7 @@ import { WatchButton } from "./WatchButton";
 // the set) instead of an empty table. Shown only when nothing in the visitor's
 // market, or anywhere, has a copy; never claims a price will appear.
 export function CardNoListings({
+  cardId,
   name,
   slug,
   country,
@@ -18,6 +19,7 @@ export function CardNoListings({
   preRelease,
   inStockPrintings,
 }: {
+  cardId: number;
   name: string;
   slug: string;
   country: Country;
@@ -52,7 +54,7 @@ export function CardNoListings({
       <h2 className="font-bold text-white">{heading}</h2>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">{body}</p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {state.noRetailChannel ? null : <WatchButton slug={slug} kind="card" name={name} variant="button" />}
+        {state.noRetailChannel ? null : <PriceWatchButton cardId={cardId} slug={slug} name={name} variant="full" />}
         {inStockPrintings > 0 ? (
           <a href="#printings" className="btn-ghost">
             See printings in stock ({inStockPrintings}) →

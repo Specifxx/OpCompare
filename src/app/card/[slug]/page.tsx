@@ -435,7 +435,7 @@ export default async function CardPage({ params }: Props) {
           </p>
 
           {!state.hasListings || (state.noRetailChannel && !state.inMarket) ? (
-            <CardNoListings name={title} slug={card.slug} country={country} state={state} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
+            <CardNoListings cardId={card.id} name={title} slug={card.slug} country={country} state={state} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
           ) : null}
 
           <PriceBoard

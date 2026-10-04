@@ -8,14 +8,12 @@
 // CLAUDE.md allows only the webhook, the daily reconcile and the admin
 // grant/revoke routes to make one. So REFERRAL_PREMIUM_DAYS defaults to 0 and
 // nothing is granted until the owner approves the program AND amends
-// CLAUDE.md's writer list. When on, the grant is extend-only (grantedUntil,
-// the admin grant's own rule) and logged like an admin grant.
+// CLAUDE.md. When on, the write is admin-billing's grantReferralDays (the
+// entitlement writer stays in that one file), extend-only and logged.
 //
 // Server-only. Best-effort — it must never block or fail signup.
 import { cookies } from "next/headers";
-import { prisma } from "./db";
-import { grantedUntil } from "./admin-billing";
-import { isTier } from "./plans";
+import { grantReferralDays } from "./admin-billing";
 import { REFERRAL_COOKIE } from "./referral-cookie";
 
 export { REFERRAL_COOKIE };
@@ -41,13 +39,10 @@ export async function applyReferral(newUserId: string): Promise<void> {
     const referrerId = referralCandidate(code ? decodeURIComponent(code) : null, newUserId);
     const days = referralPremiumDays();
     if (!referrerId || days === 0) return;
-    const referrer = await prisma.user.findUnique({ where: { id: referrerId }, select: { id: true, premiumUntil: true, premiumTier: true } });
-    if (!referrer || referrer.id === newUserId) return;
-    // Extend-only, at the referrer's own tier (a free referrer gets Plus).
-    const until = grantedUntil(referrer.premiumUntil, days);
-    const tier = referrer.premiumUntil && referrer.premiumUntil > new Date() && isTier(referrer.premiumTier) ? referrer.premiumTier : "plus";
-    await prisma.user.update({ where: { id: referrer.id }, data: { premiumUntil: until, premiumTier: tier } });
-    console.log("[referral]", "grant", JSON.stringify({ referrerId: referrer.id, newUserId, days, tier, until: until.toISOString() }));
+    // The write itself is admin-billing's (extend-only, the one entitlement
+    // writer beside the webhook and the reconcile).
+    const granted = await grantReferralDays(referrerId, days);
+    if (granted) console.log("[referral]", "grant", JSON.stringify({ referrerId, newUserId, days, tier: granted.tier, until: granted.until.toISOString() }));
   } catch {
     // Referral is a bonus, never a gate — swallow everything.
   }

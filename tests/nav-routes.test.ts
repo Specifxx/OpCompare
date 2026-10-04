@@ -12,22 +12,7 @@ import { FOOTER_GROUPS, NAV_GROUPS, PRIMARY_NAV } from "../src/components/nav-gr
 // merge; until their track lands they may be missing here. Once a route
 // exists, the second test fails until it is removed from the list — the
 // integrator empties IN_FLIGHT after the merges.
-const IN_FLIGHT = new Set([
-  "/tools/rising",
-  "/tools/best-basket",
-  "/tools/demand",
-  "/tools/box-ev",
-  "/trade",
-  "/decks",
-  "/watching",
-  "/dashboard",
-  "/portfolio",
-  "/portfolio/sets",
-  "/alerts",
-  "/guides",
-  "/gallery",
-  "/support",
-]);
+const IN_FLIGHT = new Set<string>([]);
 
 const APP = join(process.cwd(), "src/app");
 

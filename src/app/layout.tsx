@@ -148,7 +148,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PlanProvider checkoutOpen={stripeEnabled()} providers={enabledProviders()}>
         <CountryProvider initial={DEFAULT_COUNTRY}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
-          <QuickViewProvider>
+          <QuickViewProvider providers={enabledProviders()}>
             {/* The watchlist drawer (the header heart's slide-over); client-only state. */}
             <WatchlistDrawerProvider>
             <SealedQuickViewProvider>

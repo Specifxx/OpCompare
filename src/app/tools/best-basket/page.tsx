@@ -12,9 +12,11 @@ import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
-import { getEmailStatus } from "@/lib/data";
+import { getCatalog, getEmailStatus } from "@/lib/data";
+import { RARITY_KEYS } from "@/lib/constants";
+import { parseScope } from "@/lib/set-scope";
 import { decodeList, DECK_LINE_CAP } from "@/lib/deck";
-import { BestBasket, type BasketSource } from "@/components/BestBasket";
+import { BestBasket, type BasketSetOption, type BasketSetStart, type BasketSource } from "@/components/BestBasket";
 import { loadBasketPrefs } from "@/lib/basket-server";
 import { findOwnDeckWatch } from "@/lib/deck-watch";
 import { initialMinCondition, storedMinCondition } from "@/lib/basket-condition";
@@ -68,13 +70,24 @@ interface Params {
   list?: string;
   source?: string;
   watch?: string;
+  set?: string;
+  scope?: string;
+  rarity?: string;
+  skipOwned?: string;
 }
 
 // This page's own URL with its entry parameters, for the sign-in round trip.
 function selfHref(sp: Params): string {
   const q = new URLSearchParams();
   if (sp.list) q.set("list", sp.list);
-  if (sp.source === "watchlist") q.set("source", sp.source);
+  if (sp.source === "watchlist" || sp.source === "binder") q.set("source", sp.source);
+  if (sp.source === "set" && typeof sp.set === "string" && /^[a-z0-9-]{1,80}$/i.test(sp.set)) {
+    q.set("source", "set");
+    q.set("set", sp.set);
+    if (typeof sp.scope === "string") q.set("scope", sp.scope);
+    if (typeof sp.rarity === "string" && RARITY_KEYS.includes(sp.rarity)) q.set("rarity", sp.rarity);
+  }
+  if (sp.skipOwned === "1") q.set("skipOwned", "1");
   const qs = q.toString();
   return qs ? `/tools/best-basket?${qs}` : "/tools/best-basket";
 }
@@ -94,7 +107,32 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
   // member's last choice, else "LP or better" for a new session.
   const startFloor = watchRow ? storedMinCondition(watchRow.minCondition) : premium && user ? initialMinCondition(await loadBasketPrefs(user.id)) : initialMinCondition(null);
   const initialList = watchRow ? watchRow.listText : searchParams.list ? decodeList(searchParams.list) : undefined;
-  const initialSource: BasketSource = watchRow ? "deck" : searchParams.source === "watchlist" ? "watchlist" : "deck";
+  // "Finish a set" (?source=set&set=<slug>&scope=&rarity=, from the set checklist's
+  // "Plan the purchase"): only a known, RELEASED set starts the source; anything
+  // else is the ordinary paste tab. An unreleased set is a disabled option.
+  const today = new Date().toISOString().slice(0, 10);
+  const cat = await getCatalog();
+  const setOptions: BasketSetOption[] = [...cat.sets]
+    .filter((x) => x.cardCount > 0)
+    .sort((a, b) => (b.releasedOn ?? "9999").localeCompare(a.releasedOn ?? "9999"))
+    .map((x) => ({ code: x.code, slug: x.slug, name: x.name, released: !!x.releasedOn && x.releasedOn <= today }));
+  const wantedSet = typeof searchParams.set === "string" ? searchParams.set.toLowerCase() : "";
+  const startSet = wantedSet ? setOptions.find((x) => x.slug === wantedSet) : undefined;
+  const initialSet: BasketSetStart | null =
+    !watchRow && searchParams.source === "set" && startSet?.released
+      ? {
+          slug: startSet.slug,
+          scope: parseScope(searchParams.scope),
+          rarity: typeof searchParams.rarity === "string" && RARITY_KEYS.includes(searchParams.rarity) ? searchParams.rarity : null,
+        }
+      : null;
+  const initialSource: BasketSource = watchRow
+    ? "deck"
+    : initialSet
+      ? "set"
+      : searchParams.source === "watchlist" || searchParams.source === "binder"
+        ? searchParams.source
+        : "deck";
   const handedIn = initialSource !== "deck" || !!initialList?.trim();
   const regions = regionOptionsFor(country);
   const measuredAt = formatMeasuredDate(marketMeasuredAt(country)) || null;
@@ -161,6 +199,9 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           full={premium}
           initialList={initialList}
           initialSource={initialSource}
+          initialSkipOwned={searchParams.skipOwned === "1"}
+          sets={setOptions}
+          initialSet={initialSet}
           initialMinCondition={startFloor}
           autoRun={premium && handedIn}
           market={country}

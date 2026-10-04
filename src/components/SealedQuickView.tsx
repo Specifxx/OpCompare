@@ -10,7 +10,7 @@ import type { SealedQvPayload } from "@/lib/sealed-quick-view";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { ReportPriceButton } from "./ReportPriceButton";
-import { WatchButton } from "./WatchButton";
+import { SealedWatchButton } from "./SealedWatchButton";
 import { Dialog } from "./ui/Dialog";
 
 // Quick-view popup for sealed products (RiftCompare's SealedQuickView): a plain
@@ -128,7 +128,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
                   {storeCount} {storeCount === 1 ? "store" : "stores"} in stock
                 </p>
                 <div className="mt-3">
-                  <WatchButton slug={data.slug} kind="sealed" name={data.name} variant="button" />
+                  <SealedWatchButton sealedId={data.id} slug={data.slug} name={data.name} />
                 </div>
               </>
             ) : (
