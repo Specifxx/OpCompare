@@ -1808,3 +1808,34 @@ Not done here, by design: SetOwned ticks and ReleaseAlertSignup
 (collection-alerts), MostSearchedStrip and NewsletterSignup on `/movers` (tools,
 collection-alerts), PriceWatchButton and SealedWatchButton (member). The call
 sites use the wave-1 `WatchButton` until those merge.
+
+## 2026-10-04: Wave-2 integration, and what the merge had to decide
+
+The five wave-2 tracks were merged in plan order (design, member, tools,
+collection-alerts, catalogue). Where two tracks edited the same file the rule
+was: the design track's chrome and component APIs win (`Breadcrumbs trail`,
+`Pagination totalPages/params/basePath`, `AuthForm`, the static layout), and each
+other track's behaviour is mounted into it. Decisions the merge made:
+
+- **One sign-in form.** `AuthButtons` is gone; `/login`, `/premium/start`, the
+  Plus/Premium dialog and the price-alert modal all render `AuthForm`. It now
+  stamps the sign-up surface (`src=`, whitelisted by `parseSignupSource`) on the
+  OAuth link, so the member track's attribution survives the design track's form.
+- **Best Basket owns the binder and Finish-a-set sources.** `BASKET_COLLECTION_SOURCES`
+  is on. `source=set` is named by the set's SLUG (what the set tracker links with),
+  priced from the tracker's own readers (`getSetChecklist`, `ownedBySet`) and ranked
+  by the cheapest copy at the member's floor among stores whose postage we can price,
+  read from the cached `getBasketListings` (no new query).
+- **Replacement cost is delivered.** `/api/portfolio/replacement` now runs
+  `optimizeBasket` over the same listing reader as `/api/basket`, so postage is
+  counted once per store; the interim item-only split (`portfolio-replacement.ts`)
+  is deleted.
+- **One entitlement writer file.** The referral reward (off by default) writes
+  through `grantReferralDays` in `admin-billing.ts`, extend-only; `referral.ts`
+  no longer touches `premiumUntil`.
+- **Shipping snapshot.** The 151 stores added after the 3 Oct snapshot are listed
+  as `unmeasured` (priced as estimates, marked "est.") until the shipping-rates
+  workflow measures them; the size guard moved from 120 KB to 200 KB.
+- **History v2.** Readers written before the catalogue track's per-market points
+  (`recentMoves`, `recentOf`, the portfolio and rise predictors) accept the wider
+  point shape; `recentOf` keeps the file's own version.
