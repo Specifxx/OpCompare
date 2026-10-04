@@ -40,7 +40,7 @@ export default async function SetGalleryPage({ params }: Props) {
   return (
     <div>
       <Breadcrumbs trail={[{ href: "/sets", name: "Sets" }, { href: `/sets/${set.slug}`, name: set.name }, { name: "Gallery" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">{set.name} card gallery</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">{set.name} card gallery</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {upcoming ? (
           <>

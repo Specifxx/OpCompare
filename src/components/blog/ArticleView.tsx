@@ -112,7 +112,7 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
             </span>
           ))}
         </div>
-        <h1 className="mt-3 text-3xl leading-tight text-white sm:text-[40px]">
+        <h1 className="mt-3 text-3xl font-extrabold leading-tight text-white">
           {title}
         </h1>
         <p className="mt-2 text-sm text-slate-400">

@@ -95,7 +95,6 @@ export default async function SharedCollectionPage({ params }: { params: { token
                   <span className="block text-[11px] text-slate-500">
                     {h.card.setCode}
                     {h.card.number ? ` · ${h.card.number}` : ""} · {CONDITIONS[h.condition]?.label ?? h.condition}
-                    {h.isFoil && " · Foil"}
                     {h.quantity > 1 && ` · ×${h.quantity}`}
                   </span>
                 </span>

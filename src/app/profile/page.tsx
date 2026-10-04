@@ -4,14 +4,10 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/PricingCards";
 import { WelcomeChecklist } from "@/components/WelcomeChecklist";
-import { ReferralLinkCard } from "@/components/ReferralLinkCard";
-import { referralPremiumDays } from "@/lib/referral";
 import { touchActivity } from "@/lib/activity";
-import { SITE_URL } from "@/lib/site";
 
 // RiftCompare's /profile, ported in wave 2 (2026-10-03): who you are, sign
-// out, the setup checklist, your collection, the referral link (hidden while
-// the program is off) and Account & security. Membership and billing live on
+// out, the setup checklist, your collection and Account & security (the referral link card was removed with the reward, 2026-10-04). Membership and billing live on
 // /premium's member view; the old /account redirects here.
 export const metadata: Metadata = { title: "Your profile", robots: { index: false, follow: false } };
 
@@ -27,7 +23,6 @@ export default async function ProfilePage() {
     { label: "Google", on: !!user.googleId },
     { label: "Discord", on: !!user.discordId },
   ];
-  const referralDays = referralPremiumDays();
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -52,8 +47,6 @@ export default async function ProfilePage() {
       {/* #collection — the collection-alerts track's MyCollection renders here
           once it lands (wave2-plan, Track 2 item 17). */}
       <div id="collection" />
-
-      {referralDays > 0 && <ReferralLinkCard url={`${SITE_URL}/?ref=${user.id}`} days={referralDays} />}
 
       <div className="card-surface mt-5 p-5">
         <h2 className="font-bold text-white">Account &amp; security</h2>

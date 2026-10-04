@@ -39,7 +39,7 @@ export default async function ReleaseDates() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Release dates" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
         One Piece TCG release dates
       </h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">

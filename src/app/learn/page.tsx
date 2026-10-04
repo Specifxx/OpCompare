@@ -45,7 +45,7 @@ export default async function LearnPage() {
     <div>
       <JsonLd data={faqLd(FAQ.map((f) => ({ q: f.q, a: f.a.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") })))} />
       <Breadcrumbs trail={[{ name: "Learn" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">How to play the One Piece Card Game</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">How to play the One Piece Card Game</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         The basics in a few minutes: what is in a deck, what the Leader does, how DON!! and Life work, and what a turn looks like, then the starter decks to begin with and what they cost in your market. For anything more precise, Bandai&apos;s comprehensive rules are the authority.
       </p>

@@ -54,8 +54,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
   let isNew = false;
   try {
     // Wave 2: the whitelisted sign-up surface (oc_signup_src), stamped on a
-    // NEW account only, and the referral cookie (a no-op while
-    // REFERRAL_PREMIUM_DAYS is 0, lib/referral.ts).
+    // NEW account only, and the referral cookie (attribution only: it
+    // writes nothing, lib/referral.ts).
     const signupSource = parseSignupSource(cookies().get(SIGNUP_SOURCE_COOKIE)?.value);
     const user = await upsertOAuthUser(provider, p, { signupSource: signupSource ?? "login" });
     if (!user) return fail(req, "oauth_unverified");

@@ -32,7 +32,7 @@ export default async function GalleryHub() {
     <div>
       <JsonLd data={itemListLd("One Piece card galleries", "/gallery", sets.map((s) => ({ name: `${s.name} gallery`, path: `/sets/${s.slug}/gallery` })))} />
       <Breadcrumbs trail={[{ name: "Gallery" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece card gallery</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">One Piece card gallery</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         Every One Piece Card Game card as art, set by set: {int(cat.cards.length)} printings across {int(sets.length)} sets. Pick a set to filter its gallery by colour, rarity or printing; each card opens its live prices. Looking for prices first? The{" "}
         <Link href="/price-guide" className="text-brand-400 hover:underline">

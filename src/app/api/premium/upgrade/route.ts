@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { sameOrigin } from "@/lib/admin-guard";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { changePlan } from "@/lib/plan-change";
 import { stripeEnabled } from "@/lib/stripe";
 
@@ -16,6 +17,8 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return json(403, { error: "Cross-site request refused." });
   const user = await getCurrentUser();
   if (!user) return json(401, { error: "Sign in first." });
+  const rl = rateLimit(`plan-upgrade:${user.id}`, 10, 3_600_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
   if (!stripeEnabled()) return json(503, { error: "Subscriptions aren't open yet." });
   if (!user.stripeCustomerId) return json(404, { error: "No subscription on this account." });
   try {

@@ -382,10 +382,18 @@ export function matchCsvRows(rows: readonly CsvCopy[], catalogue: readonly Catal
 
 // ── The export (/api/portfolio/export) ───────────────────────────────────────
 
-/** One cell, quoted when it holds a delimiter, a quote or a line break. */
+/**
+ * One cell, quoted when it holds a delimiter, a quote or a line break. A text
+ * cell that starts with = + - @ (or a tab or CR) would run as a formula when
+ * the file is opened in Excel or Sheets, so it gets a leading apostrophe, which
+ * both apps show as plain text. Numbers, and strings that are only a number
+ * (a price), are never formulas and stay as they are. The importer reads no
+ * text column back, so there is nothing to strip.
+ */
 export function csvCell(v: string | number | null | undefined): string {
   if (v == null) return "";
-  const s = String(v);
+  let s = String(v);
+  if (typeof v === "string" && /^[=+\-@\t\r]/.test(s) && !/^[-+]?\d+(\.\d+)?$/.test(s)) s = `'${s}`;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

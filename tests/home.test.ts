@@ -141,8 +141,10 @@ test("the About copy names only revenue OP Compare really has", () => {
 // ── SEO ──────────────────────────────────────────────────────────────────────
 
 test("titles fit 60 characters and name the store count only when there is one", () => {
-  assert.equal(homeTitle(95), "One Piece Card Prices: Live Price Guide, 95 Stores + eBay");
-  assert.equal(homeTitle(0), "One Piece Card Prices: Live Price Guide, Stores + eBay");
+  assert.equal(homeTitle(95), "One Piece Card Prices: Live Price Guide, 95 Stores");
+  assert.equal(homeTitle(95, true), "One Piece Card Prices: Live Price Guide, 95 Stores + eBay");
+  assert.equal(homeTitle(0), "One Piece Card Prices: Live Price Guide, Stores");
+  assert.equal(homeTitle(0, true), "One Piece Card Prices: Live Price Guide, Stores + eBay");
   for (const r of ["AU", "UK", "SG", "CA", "EU"] as const) {
     assert.ok(regionHomeTitle(r, 123).length <= 60, regionHomeTitle(r, 123));
     assert.ok(regionHomeTitle(r, null).length <= 60);

@@ -122,6 +122,24 @@ test("EV is rate × average, summed, then × packs; shares sum to 1; the ratio i
   assert.equal(computeEv({ stats, rates, packs: 24, boxPriceCents: 0 }).ratio, null);
 });
 
+test("no verdict when the paying pools are mostly unpriced; chase-heavy EV is not called positive", () => {
+  const unpriced = poolStats([c("standard", "C", null), c("standard", "C", null), c("standard", "C", null), c("standard", "R", 100)]);
+  const ev = computeEv({ stats: unpriced, rates: { Common: 7, Rare: 1 }, packs: 24, boxPriceCents: 10_000 });
+  assert.equal(ev.pricedShare, 0.25);
+  const v = verdictFor(ev.ratio, { pricedShare: ev.pricedShare, chaseShare: ev.chaseShare });
+  assert.match(v!.text, /Too few cards/);
+  assert.equal(verdictFor(0.2, { pricedShare: 0.25 })!.tone, "flat", "never 'price is well above EV' on missing prices");
+  // Every card priced: the usual verdicts apply.
+  assert.equal(verdictFor(0.5, { pricedShare: 1, chaseShare: 0.1 })!.tone, "down");
+  // A $4,800 Parallel carrying the EV: positive ratio, but not a green light.
+  const skew = poolStats([c("standard", "C", 10), c("alt", "SR", 480_000)]);
+  const sk = computeEv({ stats: skew, rates: { Common: 7, Parallel: 2 / 24 }, packs: 24, boxPriceCents: 10_000 });
+  assert.ok(sk.chaseShare >= 0.9 && sk.ratio! > 1.1);
+  const sv = verdictFor(sk.ratio, { pricedShare: sk.pricedShare, chaseShare: sk.chaseShare })!;
+  assert.equal(sv.tone, "flat");
+  assert.match(sv.text, /handful of chase cards/);
+});
+
 test("verdicts at RiftCompare's thresholds; '1 in N packs' for fractional rates", () => {
   assert.equal(verdictFor(null), null);
   assert.equal(verdictFor(1.2)!.tone, "up");

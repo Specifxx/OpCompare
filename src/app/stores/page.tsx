@@ -22,7 +22,7 @@ export default async function StoresPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Stores we track" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">Stores we track</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Stores we track</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         OP Compare reads the public product listings of every store below twice
         a day and matches each listing to the exact One Piece printing it is —

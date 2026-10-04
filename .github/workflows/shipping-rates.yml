@@ -18,11 +18,13 @@ name: Shipping rates probe
 # probe's per-store request and time caps and Retry-After backoff.
 #
 # Each market's job uploads its raw probe file; the `snapshot` job then
-# rebuilds src/lib/shipping-rates.json from every market that ran and OPENS A
-# PULL REQUEST with the change report as its body (a store that newly "does
-# not post" is worth a manual check before it drops out of Best Basket). It
-# never pushes to main and its commit never carries the deploy marker: the refresh rides the
-# daily release once merged.
+# rebuilds src/lib/shipping-rates.json from every market that ran and uploads
+# the rebuilt file and the change report as a workflow artifact for review (a
+# store that newly "does not post" is worth a manual check before it drops out
+# of Best Basket). The job has contents: read only: it opens no pull request and
+# pushes nothing, so the refresh is a manual step (download the artifact, commit
+# the file with a plain subject). Until then the stores added after the last
+# snapshot stay `unmeasured`.
 #
 # max-parallel 2: Shopify throttles carts per IP (RiftCompare's first EU run hit
 # HTTP 429s on every store while the CA run was going).

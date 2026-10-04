@@ -19,6 +19,8 @@ export const dynamic = "force-dynamic";
 //   • GET ?token= — what the token covers, for the page.
 
 export async function GET(req: Request) {
+  const rl = rateLimit(`alerts:unsub-read:${ipKey(req)}`, 60, 60_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
   const token = new URL(req.url).searchParams.get("token") ?? "";
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
   const summary = await alertEmailSummaryForToken(token.slice(0, 200));

@@ -21,7 +21,7 @@ export default async function SupportPage({ searchParams }: { searchParams: { ca
   return (
     <div className="mx-auto max-w-xl">
       <Breadcrumbs trail={[{ name: "Support" }]} />
-      <h1 className="mb-2 text-3xl text-white">Support</h1>
+      <h1 className="mb-2 font-display text-2xl font-extrabold text-white">Support</h1>
       <div className="mb-4 space-y-2 text-sm leading-relaxed text-slate-400">
         <p>
           Use this page for a problem with a Plus or Premium payment or with your account: a charge you don&apos;t recognise, a plan that didn&apos;t switch on after you paid, or trouble signing in. Each message becomes a numbered ticket, shown on screen when you send it; the reply comes by email from the owner, with no response time promised.

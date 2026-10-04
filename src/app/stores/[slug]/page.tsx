@@ -100,7 +100,7 @@ export default async function StorePage({ params }: Props) {
     <div>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Store", name: s.name, url: s.base, areaServed: place.label }} />
       <Breadcrumbs trail={[{ href: "/stores", name: "Stores we track" }, { name: s.name }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">{s.name}</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">{s.name}</h1>
       <p className="mt-2 text-sm text-slate-400">
         {place.label} · prices in {s.currency ?? place.currency} ·{" "}
         <a href={out(s.base)} target="_blank" rel={outboundRel()} data-retailer={s.key} data-page="stores" className="text-brand-400 hover:underline">

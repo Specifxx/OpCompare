@@ -50,7 +50,7 @@ export default async function MoversPage() {
     <div>
       <JsonLd data={faqLd(MOVERS_FAQ)} />
       <Breadcrumbs trail={[{ name: "Price movers" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece price movers — this week
       </h1>
       <HubIntro path="/movers" />

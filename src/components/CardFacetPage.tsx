@@ -47,7 +47,7 @@ export function CardFacetPage({
   return (
     <div>
       <Breadcrumbs trail={crumbs.map((c) => ({ href: c.href, name: c.label }))} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece {facet.title.charAt(0).toLowerCase() + facet.title.slice(1)}</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">One Piece {facet.title.charAt(0).toLowerCase() + facet.title.slice(1)}</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {facet.intro} {int(cards.length)} printings across {int(sets)} sets, most valuable first; prices are the cheapest in-stock listing in{" "}
         {COUNTRIES[country].place}. Narrow them by set or colour in the{" "}

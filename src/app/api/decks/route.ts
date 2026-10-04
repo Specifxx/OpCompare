@@ -1,3 +1,4 @@
+import { sameOrigin } from "@/lib/admin-guard";
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
@@ -16,6 +17,7 @@ export const dynamic = "force-dynamic";
 // 50 cards, at most four of a number). The library is revalidated on demand
 // so the deck appears at once.
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to publish a deck." }, { status: 401 });
 

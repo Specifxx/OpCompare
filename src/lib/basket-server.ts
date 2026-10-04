@@ -3,8 +3,8 @@
 // feeds it.
 //
 // EGRESS. The listings are NOT a per-request query here: they come from the
-// self-cached data.ts loader getBasketListings (one Data Cache entry per
-// market and sorted 40-card chunk), so a list priced twice — a re-run after a
+// data.ts loader getBasketListings (one Data Cache entry per market and
+// 32-id bucket, never per pasted list), so a list priced twice — a re-run after a
 // region change, a shared deck — reads the cache, not Postgres. The only
 // per-user reads are the member's own: their remembered minimum condition
 // (User.basketPrefs, one row, one column) and, once the collection track's

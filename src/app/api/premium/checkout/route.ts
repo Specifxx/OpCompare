@@ -1,3 +1,4 @@
+import { sameOrigin } from "@/lib/admin-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { recordCheckoutStart } from "@/lib/beacons";
@@ -17,6 +18,7 @@ export const dynamic = "force-dynamic";
 // metadata, and the start is recorded as PremiumClick{source:"checkout"}
 // (RiftCompare's checkout attribution, wave 2).
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   if (!stripeEnabled()) return NextResponse.json({ error: "Subscriptions aren't open yet." }, { status: 503 });

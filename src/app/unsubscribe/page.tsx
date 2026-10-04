@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getEmailStatus } from "@/lib/data";
 import { UnsubscribeClient } from "@/components/UnsubscribeClient";
 
 // The footer of every price-alert email. Pauses by default (keeps the
@@ -11,11 +12,12 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default function UnsubscribePage({ searchParams }: { searchParams: { token?: string; mode?: string } }) {
+export default async function UnsubscribePage({ searchParams }: { searchParams: { token?: string; mode?: string } }) {
   const token = typeof searchParams.token === "string" ? searchParams.token : "";
+  const emailOn = (await getEmailStatus()) === "on";
   return (
     <div className="mx-auto max-w-md">
-      <UnsubscribeClient token={token} focus={searchParams.mode === "delete" ? "delete" : "pause"} />
+      <UnsubscribeClient token={token} focus={searchParams.mode === "delete" ? "delete" : "pause"} emailOn={emailOn} />
     </div>
   );
 }

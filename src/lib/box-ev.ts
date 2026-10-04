@@ -204,6 +204,14 @@ export interface EvResult {
   cardsPerPack: number;
   /** EV ÷ box price, or null when no price has been entered. */
   ratio: number | null;
+  /**
+   * Share of the cards in the paying pools (rate above 0) that carry a market
+   * price, 0–1. A new set with no prices yet has an EV of nearly nothing, which
+   * says nothing about the box.
+   */
+  pricedShare: number;
+  /** Share of the EV that comes from the chase pools, 0–1. */
+  chaseShare: number;
   priceCents: number;
 }
 
@@ -218,24 +226,50 @@ export function computeEv(opts: { stats: Map<PoolKey, PoolStat>; rates: Record<s
   const lines: EvLine[] = raw.map((l) => ({ ...l, contributionCents: Math.round(l.contributionCents), share: evPackExact > 0 ? l.contributionCents / evPackExact : 0 }));
   const evPackCents = Math.round(evPackExact);
   const evBoxCents = Math.round(evPackExact * Math.max(1, packs));
+  const paying = raw.filter((l) => l.rate > 0);
+  const payingTotal = paying.reduce((a, l) => a + l.total, 0);
+  const pricedShare = payingTotal > 0 ? paying.reduce((a, l) => a + l.priced, 0) / payingTotal : 0;
+  const chaseShare = lines.filter((l) => l.chase).reduce((a, l) => a + l.share, 0);
   return {
     lines,
     evPackCents,
     evBoxCents,
+    pricedShare,
+    chaseShare,
     cardsPerPack: raw.reduce((a, l) => a + l.rate, 0),
     ratio: boxPriceCents > 0 ? evBoxCents / boxPriceCents : null,
     priceCents: boxPriceCents,
   };
 }
 
+/** Below this share of priced cards in the paying pools, no verdict is given. */
+export const VERDICT_MIN_PRICED_SHARE = 0.5;
+/** At or above this, a positive verdict warns that a few chase cards carry it. */
+export const VERDICT_CHASE_HEAVY = 0.9;
+
 /**
  * Verdict shown against the box price (RiftCompare's thresholds). `ratio` is
  * EV ÷ price, so below 1 the PRICE is above the EV.
+ *
+ * Two guards RiftCompare's page does not need but a One Piece set does:
+ * - Unpriced cards count as worth nothing, so a set whose pools are mostly
+ *   unpriced (a set that has only just come out) reads far below its box price.
+ *   Under VERDICT_MIN_PRICED_SHARE that is "not enough data", never "price is
+ *   well above EV".
+ * - An EV driven by one or two chase cards (a US$4,800 Parallel in a pool
+ *   opened once in twelve packs) is a mean no single box reaches. The positive
+ *   verdicts say so when chase pools carry VERDICT_CHASE_HEAVY of the EV.
  */
-export function verdictFor(ratio: number | null) {
+export function verdictFor(ratio: number | null, opts?: { pricedShare?: number | null; chaseShare?: number | null }) {
   if (ratio == null) return null;
-  if (ratio >= 1.1) return { tone: "up" as const, emoji: "🔥", text: "EV-positive at that price — opening beats buying singles on raw value (variance still applies)." };
-  if (ratio >= 1) return { tone: "up" as const, emoji: "⚖️", text: "Just above break-even — the pulls are worth about what you'd pay, on average." };
+  const priced = opts?.pricedShare;
+  if (priced != null && priced < VERDICT_MIN_PRICED_SHARE) {
+    return { tone: "flat" as const, emoji: "⏳", text: "Too few cards in this set have a market price yet to call it. The expected value is understated until they do." };
+  }
+  const heavy = (opts?.chaseShare ?? 0) >= VERDICT_CHASE_HEAVY;
+  const caveat = heavy ? " Almost all of it is a handful of chase cards, so a typical box lands well below this average." : "";
+  if (ratio >= 1.1) return { tone: heavy ? ("flat" as const) : ("up" as const), emoji: "🔥", text: "EV-positive at that price — opening beats buying singles on raw value (variance still applies)." + caveat };
+  if (ratio >= 1) return { tone: heavy ? ("flat" as const) : ("up" as const), emoji: "⚖️", text: "Just above break-even — the pulls are worth about what you'd pay, on average." + caveat };
   if (ratio >= 0.85) return { tone: "flat" as const, emoji: "⚖️", text: "Roughly break-even — open it for the fun, not the value." };
   return { tone: "down" as const, emoji: "✋", text: "Price is well above EV — buying the singles you want is cheaper than ripping packs." };
 }

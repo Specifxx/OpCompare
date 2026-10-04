@@ -79,7 +79,7 @@ export default async function LeaderPage({ params }: Props) {
           <CardArt id={base.id} hasImage={base.hasImage} alt={`${base.name} ${base.number} One Piece Leader card`} size="large" />
         </CardQuickLink>
         <div className="min-w-0">
-          <h1 className="text-3xl text-white sm:text-4xl">
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
             {base.name} <span className="whitespace-nowrap text-slate-400">{base.number}</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">One Piece Card Game Leader · {cat.setById.get(base.setId)?.name}</p>

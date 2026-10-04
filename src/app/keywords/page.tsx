@@ -27,7 +27,7 @@ export default async function KeywordsHub() {
     <div>
       <JsonLd data={itemListLd("One Piece Card Game keywords", "/keywords", KEYWORDS.map((k) => ({ name: k.name, path: `/keywords/${k.slug}` })))} />
       <Breadcrumbs trail={[{ name: "Keywords" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece Card Game keywords</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">One Piece Card Game keywords</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         What each bracketed keyword and timing on a One Piece card means, and every card whose text carries it, priced. Counts are card numbers (all
         printings of a number share their text).

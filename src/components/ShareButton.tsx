@@ -1,28 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "./Icon";
 
-export function ShareButton({ title }: { title: string }) {
-  const [done, setDone] = useState(false);
-  const share = async () => {
-    const url = window.location.href;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setDone(true);
-      setTimeout(() => setDone(false), 1800);
-    } catch {
-      /* dismissed */
-    }
-  };
+// Copy-the-link button — TCG communities share cards in Discord constantly
+// (user feedback), so the permanent URL gets a one-tap copy.
+// A drawn icon and text-sm (2026-09-23) to match the heart button beside it
+// (was a 🔗 emoji at text-xs); `responsive` gives an icon square below sm.
+export function ShareButton({ className, responsive = false }: { className?: string; responsive?: boolean }) {
+  const [copied, setCopied] = useState(false);
   return (
-    <button type="button" onClick={share} className="btn-ghost">
-      <Icon name="external" className="h-4 w-4" />
-      {done ? "Link copied" : "Share"}
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          /* clipboard unavailable — ignore */
+        }
+      }}
+      aria-label="Copy link to this page"
+      title="Copy link"
+      className={`btn-ghost whitespace-nowrap${responsive ? " w-12 px-0 sm:w-auto sm:px-4" : ""} ${className ?? ""}`}
+    >
+      {/* The glyph swaps to a check while copied, so a phone — where the label
+          is hidden — still gets a confirmation. */}
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {copied ? (
+          <path d="M20 6 9 17l-5-5" />
+        ) : (
+          <>
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </>
+        )}
+      </svg>
+      <span className={responsive ? "hidden sm:inline" : undefined}>{copied ? "Copied!" : "Share"}</span>
     </button>
   );
 }

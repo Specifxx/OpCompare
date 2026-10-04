@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getHomeStats } from "./data";
+import { getHomeStats, getSiteStats } from "./data";
 import { MARKETS, type Country } from "./country";
 import { pageOg, pageOgOwnImage } from "./og/meta";
 import {
@@ -26,14 +26,15 @@ async function liveStats() {
 }
 
 export async function homeMetadata(): Promise<Metadata> {
-  const stats = await liveStats();
-  const title = homeTitle(stats?.liveStoresAll);
+  const [stats, site] = await Promise.all([liveStats(), getSiteStats().catch(() => null)]);
+  const ebayLive = site?.ebayLive ?? false;
+  const title = homeTitle(stats?.liveStoresAll, ebayLive);
   return {
     title: { absolute: title },
-    description: homeDescription(stats?.totalCards, stats?.liveStoresAll),
+    description: homeDescription(stats?.totalCards, stats?.liveStoresAll, ebayLive),
     alternates: { canonical: "/", languages: regionHomeHreflang() },
-    openGraph: pageOgOwnImage("/", { title: homeSocialTitle(stats?.liveStoresAll), description: homeSocialDescription(stats?.liveStoresAll) }),
-    twitter: { card: "summary_large_image", title: homeSocialTitle(stats?.liveStoresAll), description: homeSocialDescription(stats?.liveStoresAll) },
+    openGraph: pageOgOwnImage("/", { title: homeSocialTitle(stats?.liveStoresAll, ebayLive), description: homeSocialDescription(stats?.liveStoresAll, ebayLive) }),
+    twitter: { card: "summary_large_image", title: homeSocialTitle(stats?.liveStoresAll, ebayLive), description: homeSocialDescription(stats?.liveStoresAll, ebayLive) },
   };
 }
 

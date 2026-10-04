@@ -13,7 +13,7 @@ export default function SuggestStorePage() {
   return (
     <div className="mx-auto max-w-3xl">
       <Breadcrumbs trail={[{ href: "/stores", name: "Stores we track" }, { name: "Suggest a store" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">Suggest a store</h1>
+      <h1 className="text-2xl font-extrabold text-white">Suggest a store</h1>
       <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>We can add a store when it meets all of these:</p>
         <ul className="list-disc space-y-1 pl-5">

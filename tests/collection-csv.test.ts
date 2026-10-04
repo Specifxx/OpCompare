@@ -177,3 +177,14 @@ test("the import route reads 500 KB at most, and its writes stay inside a budget
   assert.match(lib, /portfolioAllowance\(limitDb, account, \[\.\.\.new Set\(list\.map\(\(r\) => r\.cardId\)\)\]\)/);
   assert.match(lib, /limitSkipped: allowance\.blocked\.length/);
 });
+
+test("the export neutralises formula-leading text cells and leaves numbers alone", async () => {
+  const { csvCell } = await import("../src/lib/collection-csv");
+  for (const lead of ["=", "+", "-", "@", "\t"]) assert.ok(csvCell(`${lead}1+1`).replace(/^"/, "").startsWith("'"), JSON.stringify(lead));
+  assert.equal(csvCell('=HYPERLINK("http://x","y")'), `"'=HYPERLINK(""http://x"",""y"")"`);
+  assert.equal(csvCell("12.50"), "12.50");
+  assert.equal(csvCell("-3.00"), "-3.00", "a negative amount is a number, not a formula");
+  assert.equal(csvCell(-3), "-3");
+  assert.equal(csvCell("Shanks, the Red-Haired"), `"Shanks, the Red-Haired"`);
+  assert.equal(csvCell(null), "");
+});

@@ -62,3 +62,24 @@ test("CLAUDE.md names every wave-2 per-user library in the accounts exception", 
   assert.match(md, /src\/lib\/\{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server\}\.ts/);
   assert.match(md, /tests\/app-no-db-import\.test\.ts/);
 });
+
+test("per-user libraries are imported only by the pages CLAUDE.md names", () => {
+  const libs = ["watchlist-server", "collection-server", "collection-share", "set-owned", "notifications", "sealed-watch", "deck-watch", "published-decks-server", "basket-server", "alert-routes", "alert-actions", "alert-subscribe", "alert-mute", "newsletter-signup"];
+  const allowed = new Set([
+    "src/app/watching/page.tsx",
+    "src/app/dashboard/page.tsx",
+    "src/app/profile/page.tsx",
+    "src/app/portfolio/page.tsx",
+    "src/app/portfolio/sets/page.tsx",
+    "src/app/portfolio/sets/[set]/page.tsx",
+    "src/app/c/[token]/page.tsx",
+    "src/app/tools/best-basket/page.tsx",
+    "src/app/alerts/action/page.tsx",
+  ]);
+  const offenders = walk(APP)
+    .filter((f) => /\.(ts|tsx)$/.test(f))
+    .map((f) => path.relative(ROOT, f))
+    .filter((rel) => !rel.startsWith("src/app/api/") && !rel.startsWith("src/app/admin/") && !allowed.has(rel))
+    .filter((rel) => specifiers(fs.readFileSync(path.join(ROOT, rel), "utf8")).some((s) => libs.some((l) => s === `@/lib/${l}` || s.endsWith(`/lib/${l}`))));
+  assert.deepEqual(offenders, [], "a page that reads per-user rows must be named in CLAUDE.md's accounts exception");
+});

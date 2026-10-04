@@ -87,7 +87,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
       ) : null}
       <Breadcrumbs trail={[{ name: "Sealed" }]} />
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
-        <h1 className="text-3xl text-white sm:text-4xl">Sealed Products</h1>
+        <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
         <HubIntro path="/sealed" />
       </div>
 

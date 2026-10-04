@@ -26,7 +26,6 @@ import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
 import { enabledProviders } from "@/lib/oauth";
-import { AddToCollectionButton } from "@/components/AddToCollectionButton";
 import {
   Breadcrumbs,
   ColorBadge,
@@ -328,9 +327,9 @@ export default async function CardPage({ params }: Props) {
               ) : null}
               <PrintingBadge printing={card.printing} variant={card.variant} />
             </div>
-            <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-3xl leading-tight text-white sm:text-4xl">
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-3 sm:mt-3">
+              <div className="min-w-0 flex-[1_1_12rem]">
+                <h1 className="text-xl font-extrabold leading-tight text-white sm:text-2xl">
                   {card.name}
                   {card.variant ? (
                     <span className="block text-lg font-bold text-slate-300 sm:text-xl">
@@ -353,9 +352,9 @@ export default async function CardPage({ params }: Props) {
                   ) : null}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex shrink-0 items-start gap-2">
                 <PriceWatchButton cardId={card.id} slug={card.slug} name={title} variant="responsive" />
-                <ShareButton title={`${title} — ${SITE_NAME}`} />
+                <ShareButton responsive />
               </div>
             </div>
             {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}
@@ -370,8 +369,6 @@ export default async function CardPage({ params }: Props) {
               preorder={preRelease}
               emailOn={emailOn}
             />
-            {/* Add to collection (collection-alerts, wave 2): a client island; the page reads no session. */}
-            <AddToCollectionButton cardId={card.id} cardPath={`/card/${card.slug}`} src="card" />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">

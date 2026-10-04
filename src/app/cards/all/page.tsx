@@ -35,7 +35,7 @@ export default async function AllCardsPage() {
       <Breadcrumbs
         trail={[{ href: "/cards", name: "Cards" }, { name: "A–Z" }]}
       />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         Every One Piece card, A–Z
       </h1>
       <p className="mt-3 max-w-3xl text-[15px] text-slate-300">

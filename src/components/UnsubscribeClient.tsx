@@ -30,7 +30,7 @@ const until = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: 
 // deleting every watch is a separate, explicit button — the old single button
 // deleted everything, targets included. `focus="delete"` (the footer's
 // "Delete all my watches" link) opens with the delete confirmation shown.
-export function UnsubscribeClient({ token, focus = "pause" }: { token: string; focus?: "pause" | "delete" | "manage" }) {
+export function UnsubscribeClient({ token, focus = "pause", emailOn = false }: { token: string; focus?: "pause" | "delete" | "manage"; emailOn?: boolean }) {
   const [state, setState] = useState<State>({ phase: "loading" });
   const [working, setWorking] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(focus === "delete");
@@ -109,7 +109,7 @@ export function UnsubscribeClient({ token, focus = "pause" }: { token: string; f
         <>
           <h1 className="font-display text-xl font-bold text-white">Link not valid</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            This link looks broken. If you keep getting emails, reply to one and we&apos;ll sort it out.
+            This link looks broken.{emailOn ? " If you keep getting emails, reply to one and we'll sort it out." : ""}
           </p>
           <Link href="/" className="btn-ghost mt-4">
             Back to OP Compare

@@ -20,7 +20,7 @@ export default async function ColorsPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Colours" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece cards by colour
       </h1>
       <HubIntro path="/colors" />

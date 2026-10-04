@@ -87,7 +87,7 @@ export type TierRow = {
 };
 
 export const TIER_COMPARISON: TierRow[] = [
-  { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
+  { feature: "Compare prices across every store", account: true, plus: true, premium: true },
   { feature: "Full card database, charts & search", account: true, plus: true, premium: true },
   { feature: "Deck & list pricer, trade calculator & box EV", account: true, plus: true, premium: true },
   { feature: "OP Compare Index & weekly price movers", account: true, plus: true, premium: true },

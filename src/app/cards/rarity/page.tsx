@@ -29,7 +29,7 @@ export default async function RarityHub() {
   return (
     <div>
       <Breadcrumbs trail={[{ href: "/cards", name: "By type & rarity" }, { name: "Rarities" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece card rarities</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">One Piece card rarities</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         The rarity is the letter printed on the card. It says how often a card is pulled, but the printing (Parallel, Manga, SP) often moves the price
         more: see the{" "}

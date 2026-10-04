@@ -257,7 +257,6 @@ export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } 
                   <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                     <span>{it.card.setCode}{it.card.number ? ` · ${it.card.number}` : ""}</span>
                     <PrintingChip printing={it.card.printing} />
-                    {it.isFoil && <span className="chip bg-gold/15 text-gold">✦ Foil</span>}
                     {unit != null && <span>· {fmt(unit)} ea</span>}
                   </div>
 

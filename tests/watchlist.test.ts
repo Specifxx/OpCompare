@@ -9,9 +9,30 @@ import { join } from "node:path";
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const code = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-test("no next.config.js redirect shadows /watching, /dashboard or /profile", () => {
+test("no next.config.js redirect shadows /watching, /dashboard or /profile for a signed-in visitor", () => {
   const cfg = read("next.config.js");
-  for (const p of ["/watching", "/dashboard", "/profile"]) assert.ok(!cfg.includes(`source: "${p}"`), p);
+  for (const p of ["/watching", "/dashboard", "/profile"]) {
+    const lines = cfg.split("\n").filter((l) => l.includes(`source: "${p}"`));
+    // The one allowed rule is the signed-out 307 to /login, which only matches
+    // when there is NO session cookie (so the page still renders for a member).
+    for (const l of lines) {
+      assert.match(l, /missing: \[\{ type: "cookie", key: "oc_session" \}\]/, p);
+      assert.match(l, /permanent: false/, p);
+      assert.ok(l.includes(`destination: "/login?next=${p}"`), p);
+    }
+  }
+});
+
+test("signed-out visits to the streamed member pages are a real 307, decided before the loading shell", () => {
+  const cfg = read("next.config.js");
+  for (const p of ["/watching", "/portfolio", "/portfolio/sets", "/portfolio/sets/:set"]) {
+    const l = cfg.split("\n").find((x) => x.includes(`source: "${p}"`));
+    assert.ok(l, p);
+    assert.match(l!, /missing: \[\{ type: "cookie", key: "oc_session" \}\]/);
+    assert.ok(l!.includes(`destination: "/login?next=${p}"`));
+  }
+  // Every route with a loading.tsx that redirects when signed out is covered.
+  for (const dir of ["watching", "portfolio"]) assert.ok(existsSync(join(process.cwd(), `src/app/${dir}/loading.tsx`)));
 });
 
 test("/watchlist and /account redirect with a 307 (never a cached 308) to /watching and /profile", () => {

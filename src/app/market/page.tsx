@@ -84,7 +84,7 @@ export default async function MarketPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Market index" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">The OP Compare Index</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">The OP Compare Index</h1>
       <HubIntro path="/market" />
       {sentence ? <p className="mt-4 max-w-3xl text-[15px] font-semibold text-white">{sentence}</p> : null}
       <p className="mt-1 text-xs text-slate-500">US$ · TCGplayer market</p>

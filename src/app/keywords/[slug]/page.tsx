@@ -49,7 +49,7 @@ export default async function KeywordPage({ params, searchParams }: Props) {
     <div>
       <JsonLd data={faqLd([{ q: `What does [${k.name}] do in the One Piece Card Game?`, a: [k.summary, ...k.body].join(" ") }])} />
       <Breadcrumbs trail={[{ href: "/keywords", name: "Keywords" }, { name: k.name }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">[{k.name}]</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">[{k.name}]</h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200">{k.summary}</p>
       <div className="mt-4 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         {k.body.map((p, i) => (

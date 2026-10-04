@@ -90,7 +90,7 @@ export default async function SetPage({ params, searchParams }: Props) {
       <p className="rb-eyebrow text-slate-500">
         {set.code} · {kind}
       </p>
-      <h1 className="mt-1 text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         {set.name} card list &amp; prices
       </h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">

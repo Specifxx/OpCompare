@@ -100,7 +100,7 @@ export default async function SetsPage() {
     <div>
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <Breadcrumbs trail={[{ name: "Sets" }]} />
-        <h1 className="text-3xl text-white sm:text-4xl">
+        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           One Piece sets — card lists &amp; prices
         </h1>
         <HubIntro path="/sets" />

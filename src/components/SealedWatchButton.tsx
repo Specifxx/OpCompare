@@ -47,6 +47,31 @@ export function SealedWatchButton({
   const [note, setNote] = useState<string | null>(null);
   const tell = me.emailOn ? "emails you" : "tells you";
 
+  // A signed-in account without Plus gets RiftCompare's lock, not a local
+  // heart: nothing a free account taps would be kept on the account, and a
+  // heart that says "Watching" while the alert run never sees it is a promise
+  // the page cannot keep. Signed-out visitors keep the browser heart below.
+  if (loaded && me.user && !member) {
+    if (compact) {
+      return (
+        <PlanButton tier="plus" surface="gate:sealed-watch" className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}>
+          <span aria-hidden="true">♡</span>
+          <span className="sr-only">Watch this product with Plus</span>
+        </PlanButton>
+      );
+    }
+    return (
+      <div className={className}>
+        <p className="text-xs text-slate-400">
+          Plus {tell} when this is back in stock or at your price, checked {SEALED_CHECK_CADENCE}.
+        </p>
+        <div className="mt-1.5">
+          <PlanButton tier="plus" surface="gate:sealed-watch" />
+        </div>
+      </div>
+    );
+  }
+
   if (!loaded || !member) {
     if (compact) return <WatchButton slug={slug} kind="sealed" name={name} />;
     return (

@@ -90,7 +90,7 @@ export default async function BrowsePage({
           </div>
         </aside>
         <div className="min-w-0">
-          <h1 className="text-3xl text-white sm:text-4xl">
+          <h1 className="font-display text-2xl font-extrabold text-white">
             {q.q ? `“${q.q}” — One Piece cards` : "One Piece Card List"}
           </h1>
           <div className="mt-2 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">

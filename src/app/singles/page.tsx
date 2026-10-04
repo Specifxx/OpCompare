@@ -50,7 +50,7 @@ export default async function SinglesPage() {
     <div>
       <JsonLd data={faqLd(FAQS)} />
       <Breadcrumbs trail={[{ name: "Singles" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece singles, compared</h1>
+      <h1 className="text-2xl font-extrabold text-white sm:text-4xl">One Piece singles, compared</h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
         {int(singles.length)} One Piece Card Game printings, each priced at the cheapest in-stock listing among {int(STORES.length)} stores in six
         markets, plus TCGplayer in the US. Find a card by name in the{" "}

@@ -8,7 +8,7 @@ type State = { phase: "loading" } | { phase: "ready"; email: string } | { phase:
 // Token-addressed unsubscribe page reached from the footer of every newsletter
 // email — RiftCompare's NewsletterUnsubscribeClient, ported in wave 2.
 // Confirms via POST so inbox link-prefetchers can't unsubscribe people.
-export function NewsletterUnsubscribeClient({ token }: { token: string }) {
+export function NewsletterUnsubscribeClient({ token, emailOn = false }: { token: string; emailOn?: boolean }) {
   const [state, setState] = useState<State>({ phase: "loading" });
   const [working, setWorking] = useState(false);
 
@@ -59,7 +59,7 @@ export function NewsletterUnsubscribeClient({ token }: { token: string }) {
         <>
           <h1 className="font-display text-xl font-bold text-white">Link not valid</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            This unsubscribe link looks broken or has already been used. If you keep getting emails, reply to one and we&apos;ll sort it out.
+            This unsubscribe link looks broken or has already been used.{emailOn ? " If you keep getting emails, reply to one and we'll sort it out." : ""}
           </p>
           <Link href="/" className="btn-ghost mt-4">
             Back to OP Compare

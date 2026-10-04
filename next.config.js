@@ -26,6 +26,16 @@ const nextConfig = {
       { source: "/tools/buy-list", destination: "/tools/best-basket?source=watchlist", permanent: true },
       { source: "/tools/box-value", destination: "/tools/box-ev", permanent: true },
       { source: "/bulk-pricer", destination: "/deck", permanent: true },
+      // A signed-out visit to a member page is a real 307 to the login page,
+      // decided before anything streams. These routes have a loading.tsx; the
+      // page's own redirect() only runs after that shell has been flushed, and
+      // swapping the shell for the redirect threw React error #310 in production
+      // (11 of 32 crawl combinations). No session cookie means the page would
+      // redirect anyway, so the page's check stays for a stale or invalid cookie.
+      { source: "/watching", missing: [{ type: "cookie", key: "oc_session" }], destination: "/login?next=/watching", permanent: false },
+      { source: "/portfolio", missing: [{ type: "cookie", key: "oc_session" }], destination: "/login?next=/portfolio", permanent: false },
+      { source: "/portfolio/sets", missing: [{ type: "cookie", key: "oc_session" }], destination: "/login?next=/portfolio/sets", permanent: false },
+      { source: "/portfolio/sets/:set", missing: [{ type: "cookie", key: "oc_session" }], destination: "/login?next=/portfolio/sets/:set", permanent: false },
     ];
   },
   async headers() {

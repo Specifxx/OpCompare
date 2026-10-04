@@ -127,7 +127,7 @@ export function PublishedDeckView(props: {
           <button type="button" onClick={copy} className="btn-ghost">
             {copied ? "✓ Copied" : "Copy list (TCGplayer Mass Entry)"}
           </button>
-          <ShareButton title={props.title} />
+          <ShareButton />
           <Link href={props.builderHref} className="btn-ghost">
             Open in deck builder
           </Link>

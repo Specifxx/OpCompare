@@ -52,7 +52,7 @@ export default async function LeadersPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Leaders" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece Leader cards
       </h1>
       <HubIntro path="/leaders" />

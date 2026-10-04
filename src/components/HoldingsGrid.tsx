@@ -35,9 +35,9 @@ export function HoldingsGrid({ holdings, country }: { holdings: Holding[]; count
                   ×{h.quantity}
                 </span>
               )}
-              {h.isFoil && (
-                <span className="absolute left-1.5 top-1.5 rounded-md bg-gold/85 px-1.5 py-0.5 text-[10px] font-bold text-ink-950 shadow">✦</span>
-              )}
+              {/* No foil mark: a holding's isFoil is the card's own TCGplayer finish
+                  (there is no foil toggle on OP Compare), and TCGplayer lists most
+                  standard One Piece cards as Foil, so the mark said nothing. */}
 
               {/* gradient footer with name + value + P&L */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 via-ink-950/85 to-transparent px-2 pb-2 pt-7">

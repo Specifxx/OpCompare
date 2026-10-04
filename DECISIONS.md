@@ -1839,3 +1839,70 @@ other track's behaviour is mounted into it. Decisions the merge made:
 - **History v2.** Readers written before the catalogue track's per-market points
   (`recentMoves`, `recentOf`, the portfolio and rise predictors) accept the wider
   point shape; `recentOf` keeps the file's own version.
+
+## 2026-10-04: QA fixes after the wave-2 review
+
+What the review found, and what was decided (items not listed were fixed as written).
+
+- **Page titles are RiftCompare's.** Every `<h1>` that exists on both sites now
+  carries RC's className verbatim (`text-2xl font-extrabold`, weight 800, with
+  RC's `sm:` step where it has one). OP's `text-3xl sm:text-4xl` without
+  `font-extrabold` fell through to the global h1 weight of 900. The card and
+  sealed headers also use RC's row (title `flex-[1_1_12rem]`, Watch and Share in
+  one `shrink-0` group, icon squares below `sm`), and `ShareButton` is RC's file.
+- **No "Add to collection" bar on the card page.** RC has none there (adding is a
+  QuickView and portfolio action), so the bar is gone from `/card/[slug]`; it stays
+  in QuickView. The signed-out QuickView add no longer fires a request that can
+  only answer 401. A holding's "Foil" mark is gone too: with no foil toggle,
+  `isFoil` is the card's own TCGplayer finish, and 969 standard cards are Foil-only
+  there, so the mark was on most of a binder and said nothing.
+- **/price-guide follows RC's order:** stats, Prices by set, filters and table,
+  Read next, "How to read this price guide", FAQ, then OP's ad and sign-up
+  prompt. The set table is long (every released booster set); RC's is shorter, and
+  we kept the full list because it is the page's set index.
+- **Signed-out member pages are a real 307.** `/watching`, `/portfolio`,
+  `/portfolio/sets` and `/portfolio/sets/:set` have a `loading.tsx`, so their own
+  `redirect()` ran after the shell was flushed and swapping it threw React error
+  #310 in production. `next.config.js` now redirects them (307, `missing` the
+  `oc_session` cookie) before anything streams. A stale or invalid cookie still
+  goes through the page's redirect; the pages' checks stay.
+- **Box EV gives no verdict it cannot back.** Under half of the paying pools'
+  cards priced (a set that has just come out) reads "too few cards priced", never
+  "price is well above EV"; a positive ratio where chase pools carry 90% or more
+  of the EV (one US$4,800 Parallel in a 1-in-12 pool) says a typical box lands well
+  below it, and is not green. The community pull-rate defaults are unchanged and
+  still the owner's call (`lib/pack-composition.ts`).
+- **Sealed.** The search box applies after a 350 ms pause (RC has no text search
+  there; the checkboxes were already instant). A signed-in free account gets RC's
+  Plus lock on a sealed product instead of a browser heart that says "Watching"
+  while the alert run never sees it; signed-out visitors keep the browser heart.
+- **eBay is named only while it is live.** The home title, description and share
+  copy say "+ eBay" only when `getSiteStats().ebayLive`; the tier table's first row
+  reads "Compare prices across every store". The card page's "Also available on
+  eBay" panel stays (it is a working affiliate search link, and says so).
+- **No email promise while email is off.** The unsubscribe and manage pages say
+  "reply to one" only when `getEmailStatus()` is `on`.
+- **Referral reward removed, not switched off.** `REFERRAL_PREMIUM_DAYS` made a
+  public OAuth sign-up an entitlement write (the code was a public `User.id`, with
+  no per-referrer or per-day cap). `grantReferralDays`, the env switch and the
+  profile card are deleted; attribution (the cookie and a log line) stays.
+  Bringing a reward back needs the owner's approval, a CLAUDE.md amendment naming
+  the writer, caps, and an account-age check.
+- **Basket listings are cached per market and 32-id bucket,** not per pasted
+  list. The key space is the catalogue's id range divided by 32 whatever anyone
+  pastes; a bucket holds at most 32 cards x about 75 sources. The wrapper
+  `getBasketListings(country, ids)` is not cached and filters the buckets.
+- **CLAUDE.md names `/tools/best-basket` and `/alerts/action`** among the pages
+  that may call per-user libraries (a member's own deck watch and remembered
+  minimum condition; a signed action token), and `tests/app-no-db-import.test.ts`
+  pins the set.
+- **Hardening.** `sameOrigin` on the session mutation routes that lacked it (deck
+  watches, decks, basket, checkout, alerts subscribe); per-user limits on
+  `/api/me`, collection edits, notification read and plan upgrade, and a per-IP
+  limit on the unsubscribe GET (all per instance, soft, like the rest); CSV
+  export prefixes a text cell that starts with `= + - @` with an apostrophe
+  (the importer reads no text column, so nothing strips it).
+- **Not changed.** The tier lineup in `plans.ts` is the owner-confirmed copy of
+  RC's eighteen rows (prices are untouched); the Stripe product text follows it on
+  the next `stripe-setup` run. The shipping-rates workflow only uploads an
+  artifact, and its header now says so.

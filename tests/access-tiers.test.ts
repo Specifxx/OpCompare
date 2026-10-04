@@ -32,7 +32,7 @@ test("eighteen rows, RiftCompare's order, Ad-free last", () => {
   assert.deepEqual(
     TIER_COMPARISON.map((r) => r.feature.split(" — ")[0]),
     [
-      "Compare prices across every store + eBay",
+      "Compare prices across every store",
       "Full card database, charts & search",
       "Deck & list pricer, trade calculator & box EV",
       "OP Compare Index & weekly price movers",

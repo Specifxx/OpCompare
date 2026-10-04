@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { tierOf } from "@/lib/premium";
 import { billingStateFor } from "@/lib/billing-state";
 import { unreadCount } from "@/lib/notifications";
@@ -26,6 +27,12 @@ export const dynamic = "force-dynamic";
 // The activity stamp (lib/activity.ts) is throttled and never awaited.
 export async function GET() {
   const user = await getCurrentUser();
+  // A page load and a tab refocus each ask once; this only stops a loop. Per
+  // signed-in account (the DB read and the activity stamp are what it costs).
+  if (user) {
+    const rl = rateLimit(`me:${user.id}`, 240, 60_000);
+    if (!rl.ok) return tooManyRequests(rl.retryAfter);
+  }
   const tier = tierOf(user);
   if (user) touchActivity(user);
   const [billing, unread, email] = await Promise.all([

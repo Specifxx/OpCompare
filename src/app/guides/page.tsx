@@ -48,7 +48,7 @@ export default async function GuidesPage() {
     <div>
       <JsonLd data={itemListLd("One Piece guides", "/guides", items.map((i) => ({ name: i.title, path: i.href })))} />
       <Breadcrumbs trail={[{ name: "Guides" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">Guides</h1>
+      <h1 className="text-2xl font-extrabold text-white">Guides</h1>
       <div className="mt-3 max-w-3xl space-y-2 text-[15px] leading-relaxed text-slate-300">
         <p>
           Guides are the reference side of OP Compare: what the rarities and printings mean, how the markets we cover compare, and how to buy without overpaying. They are revised when the data changes rather than left to date, and most point you at the tool that does what the guide describes.

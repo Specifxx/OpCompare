@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getEmailStatus } from "@/lib/data";
 import { NewsletterUnsubscribeClient } from "@/components/NewsletterUnsubscribeClient";
 
 export const metadata: Metadata = {
@@ -7,11 +8,12 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default function NewsletterUnsubscribePage({ searchParams }: { searchParams: { token?: string } }) {
+export default async function NewsletterUnsubscribePage({ searchParams }: { searchParams: { token?: string } }) {
   const token = typeof searchParams.token === "string" ? searchParams.token : "";
+  const emailOn = (await getEmailStatus()) === "on";
   return (
     <div className="mx-auto max-w-md py-10">
-      <NewsletterUnsubscribeClient token={token} />
+      <NewsletterUnsubscribeClient token={token} emailOn={emailOn} />
     </div>
   );
 }

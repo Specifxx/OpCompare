@@ -49,6 +49,15 @@ export function SealedFilters({ types, sets, currency }: { types: string[]; sets
     mutate(next);
     push(next);
   }
+  // The search applies as you type, after a pause (the checkboxes already apply
+  // instantly); Enter and blur still apply it at once.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (q.trim() !== (sp.get("q") ?? "")) update((p) => (q.trim() ? p.set("q", q.trim()) : p.delete("q")));
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
   function clearAll() {
     const next = new URLSearchParams();
     const sort = sp.get("sort");

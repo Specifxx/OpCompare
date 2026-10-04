@@ -657,11 +657,20 @@ test("the owned and binder reads are per-user, selected and capped; listings com
   const binder = code.slice(code.indexOf("export async function loadBinderHoldings"));
   assert.match(binder, /where: \{ userId \}/);
   assert.match(binder, /take: BINDER_ROW_CAP/);
-  // The listings are the data.ts loader's (cached per market and 40-id chunk), injectable for the watch run.
+  // The listings are the data.ts loader's (cached per market and 32-id bucket), injectable for the watch run.
   assert.match(code, /read: BasketListingReader = getBasketListings/);
-  const loader = read("src/lib/data.ts").slice(read("src/lib/data.ts").indexOf("export const getBasketListings"));
+  const loader = read("src/lib/data.ts").slice(read("src/lib/data.ts").indexOf("const loadBasketBucket"));
   assert.match(loader, /condition: true/, "condition is selected so every line can show it");
   assert.match(loader, /OR: \[\{ source: \{ startsWith: "store:" \} \}, \{ source: "tcgplayer" \}\]/, "stores and TCGplayer's listing, never eBay");
+});
+
+test("the basket listings cache is keyed on a market and an id bucket, never on the caller's list", () => {
+  const data = read("src/lib/data.ts");
+  const cached = data.slice(data.indexOf("const loadBasketBucket = unstable_cache("));
+  assert.match(cached, /async \(country: Country, bucket: number\)/, "the cached function's arguments are fixed units");
+  assert.match(cached, /productId: \{ gte: bucket \* BASKET_ID_BUCKET, lt: \(bucket \+ 1\) \* BASKET_ID_BUCKET \}/);
+  assert.doesNotMatch(cached.slice(0, cached.indexOf("export async function getBasketListings")), /ids: number\[\]/);
+  assert.match(data, /export async function getBasketListings\(country: Country, ids: number\[\]\)/, "the wrapper is not itself cached");
 });
 
 test("nothing per-user in Best Basket is cached; the shared listings are a data.ts loader", () => {

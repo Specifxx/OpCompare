@@ -90,7 +90,7 @@ export default async function DeckPage({ searchParams }: { searchParams: { list?
       />
       <JsonLd data={faqLd(FAQS)} />
       <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Deck Price Calculator" }]} />
-      <h1 className="mb-4 text-3xl text-white sm:text-4xl">Deck Price Calculator</h1>
+      <h1 className="mb-3 text-2xl font-extrabold text-white">Deck Price Calculator</h1>
       <DeckBuilder initialList={readList(searchParams)} emailOn={emailOn} />
       {/* The editorial intro sits BELOW the builder: /deck opens on the tool. */}
       <HubIntro path="/deck" className="mt-8 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400" />

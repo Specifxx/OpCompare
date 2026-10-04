@@ -94,22 +94,3 @@ export function parseAdminEmail(v: unknown): string | null {
 export function parseGrantDays(v: unknown): number | null {
   return typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= MAX_GRANT_DAYS ? v : null;
 }
-
-/**
- * The referral reward (lib/referral.ts), as the entitlement writer it is: it
- * lives HERE, with the other admin-billing writers, so User.premiumUntil is
- * still written only by the webhook, the reconcile and this file. Extend-only
- * (grantedUntil, the admin grant's own rule), at the referrer's own tier (a free
- * or lapsed referrer takes Plus), and logged. Off unless REFERRAL_PREMIUM_DAYS
- * is set above 0 AND the owner has approved the program (CLAUDE.md).
- */
-export async function grantReferralDays(referrerId: string, days: number, now = new Date()): Promise<{ until: Date; tier: Tier } | null> {
-  if (!Number.isInteger(days) || days < 1 || days > 31) return null;
-  const referrer = await prisma.user.findUnique({ where: { id: referrerId }, select: { id: true, premiumUntil: true, premiumTier: true } });
-  if (!referrer) return null;
-  const until = grantedUntil(referrer.premiumUntil, days, now);
-  const active = Boolean(referrer.premiumUntil && referrer.premiumUntil.getTime() > now.getTime());
-  const tier: Tier = active && isTier(referrer.premiumTier) ? referrer.premiumTier : "plus";
-  await prisma.user.update({ where: { id: referrer.id }, data: { premiumUntil: until, ...(active ? {} : { premiumTier: tier }) } });
-  return { until, tier };
-}

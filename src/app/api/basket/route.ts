@@ -1,3 +1,4 @@
+import { sameOrigin } from "@/lib/admin-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
@@ -77,6 +78,7 @@ interface Outcome {
 }
 
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   const full = isPremium(user, "premium");

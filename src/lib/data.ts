@@ -869,34 +869,51 @@ import type { RisingSnapshotData } from "./rising-snapshot";
  * eBay is never in a basket (CLAUDE.md), so it is not even read. OP Compare
  * keeps ONE row per (product, source, market), the store's best-condition copy
  * (lib/import.ts), so the member's minimum condition filters that row
- * (lib/basket-server.ts). Tuples, cheapest first; the caller chunks ids into
- * sorted groups of BASKET_ID_CHUNK, so an entry holds at most ~40 cards × the
- * market's ~75 sources (a few hundred KB at the very worst, well under 2 MB).
+ * (lib/basket-server.ts). Tuples, cheapest first.
+ *
+ * THE CACHE KEY IS A STABLE UNIT, NOT THE CALLER'S LIST. The first port keyed
+ * each entry on the exact sorted id set of a 40-card chunk, so every pasted
+ * list, watchlist, binder or set made its own entry and its own Neon read,
+ * without bound (the egress rule that kept the project alive, DECISIONS
+ * 2026-09-11). Now an entry is one market × one BASKET_ID_BUCKET-wide range of
+ * product ids (the cards of a set have near-consecutive ids, so a list from one
+ * set reads one or two entries): the key space is the catalogue's id range
+ * divided by 32, whatever anyone pastes, and an entry holds at most 32 cards ×
+ * the market's ~75 sources (well under 2 MB). The wrapper below is not cached;
+ * it combines bucket entries and drops the tuples nobody asked for.
  */
 export type BasketListingTuple = [productId: number, source: string, priceCents: number, condition: string | null, url: string];
 export const BASKET_ID_CHUNK = 40;
+export const BASKET_ID_BUCKET = 32;
 
-export const getBasketListings = unstable_cache(
-  async (country: Country, ids: number[]): Promise<BasketListingTuple[]> => {
-    const want = [...new Set(ids.filter((n) => Number.isInteger(n) && n > 0))].slice(0, BASKET_ID_CHUNK);
-    if (!want.length) return [];
+const loadBasketBucket = unstable_cache(
+  async (country: Country, bucket: number): Promise<BasketListingTuple[]> => {
+    if (!Number.isInteger(bucket) || bucket < 0) return [];
     const rows = await prisma.offer.findMany({
       where: {
         market: country,
-        productId: { in: want },
+        productId: { gte: bucket * BASKET_ID_BUCKET, lt: (bucket + 1) * BASKET_ID_BUCKET },
         inStock: true,
         updatedAt: { gt: new Date(Date.now() - STALE_MS) },
         OR: [{ source: { startsWith: "store:" } }, { source: "tcgplayer" }],
       },
       select: { productId: true, source: true, priceCents: true, condition: true, url: true },
       orderBy: { priceCents: "asc" },
-      take: want.length * 120,
+      take: BASKET_ID_BUCKET * 120,
     });
     return rows.map((r): BasketListingTuple => [r.productId, r.source, r.priceCents, r.condition, r.url]);
   },
-  ["basket-listings-v1"],
+  ["basket-listings-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
+
+export async function getBasketListings(country: Country, ids: number[]): Promise<BasketListingTuple[]> {
+  const want = new Set(ids.filter((n) => Number.isInteger(n) && n > 0));
+  if (!want.size) return [];
+  const buckets = [...new Set([...want].map((n) => Math.floor(n / BASKET_ID_BUCKET)))].sort((x, y) => x - y);
+  const rows = (await Promise.all(buckets.map((b) => loadBasketBucket(country, b)))).flat();
+  return rows.filter((t) => want.has(t[0]));
+}
 // ── The public deck library (lib/published-decks.ts) ──
 // Live decks, one compact row each; the page prices them from getCatalog()
 // (each card's low<MKT>) outside the cache, so a price import moves every

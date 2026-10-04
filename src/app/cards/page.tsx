@@ -51,7 +51,7 @@ export default async function CardsHub() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "By type & rarity" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece cards by type, rarity &amp; printing
       </h1>
       <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">

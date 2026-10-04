@@ -71,11 +71,15 @@ const TITLE_PLACE: Record<Exclude<Country, "US">, string> = {
 const TITLE_MAX = 60;
 const firstFit = (candidates: string[]) => candidates.find((t) => t.length <= TITLE_MAX) ?? candidates[candidates.length - 1];
 
-export function homeTitle(liveStores: number | null | undefined): string {
+// eBay is named in the home copy only while its Browse API is switched on
+// (`ebayLive`, from getSiteStats): until then eBay is a search link, not a
+// price we compare, and the title must not claim otherwise.
+export function homeTitle(liveStores: number | null | undefined, ebayLive = false): string {
   const n = liveStores && liveStores > 0 ? liveStores : null;
+  const e = ebayLive ? " + eBay" : "";
   return firstFit([
-    ...(n ? [`One Piece Card Prices: Live Price Guide, ${n} Stores + eBay`, `One Piece Card Prices: ${n} Stores + eBay, Updated Daily`] : []),
-    "One Piece Card Prices: Live Price Guide, Stores + eBay",
+    ...(n ? [`One Piece Card Prices: Live Price Guide, ${n} Stores${e}`, `One Piece Card Prices: ${n} Stores${e}, Updated Daily`] : []),
+    `One Piece Card Prices: Live Price Guide, Stores${e}`,
   ]);
 }
 
@@ -89,10 +93,10 @@ export function regionHomeTitle(region: Exclude<Country, "US">, liveStores: numb
   ]);
 }
 
-export function homeDescription(cards: number | null | undefined, liveStores: number | null | undefined): string {
+export function homeDescription(cards: number | null | undefined, liveStores: number | null | undefined, ebayLive = false): string {
   const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
   const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "tracked stores";
-  return `Compare One Piece Card Game prices for ${c} across ${s} + eBay — price check any card across six markets, cheapest first. Updated twice a day.`;
+  return `Compare One Piece Card Game prices for ${c} across ${s}${ebayLive ? " + eBay" : ""} — price check any card across six markets, cheapest first. Updated twice a day.`;
 }
 
 export function regionHomeDescription(region: Exclude<Country, "US">, cards: number | null | undefined, liveStores: number | null | undefined): string {
@@ -102,12 +106,12 @@ export function regionHomeDescription(region: Exclude<Country, "US">, cards: num
   return `Compare One Piece Card Game prices in ${info.place}: ${c} across ${s} in ${info.currency}, cheapest first. Updated twice a day.`;
 }
 
-export function homeSocialTitle(liveStores: number | null | undefined): string {
+export function homeSocialTitle(liveStores: number | null | undefined, ebayLive = false): string {
   const n = liveStores && liveStores > 0 ? liveStores : null;
-  return n ? `OP Compare: One Piece Card Game prices across ${n} stores + eBay` : "OP Compare: One Piece Card Game prices, compared";
+  return n ? `OP Compare: One Piece Card Game prices across ${n} stores${ebayLive ? " + eBay" : ""}` : "OP Compare: One Piece Card Game prices, compared";
 }
 
-export function homeSocialDescription(liveStores: number | null | undefined): string {
+export function homeSocialDescription(liveStores: number | null | undefined, ebayLive = false): string {
   const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "the stores we track";
-  return `Compare One Piece Card Game card and sealed prices across ${s} and eBay in six markets, cheapest first.`;
+  return `Compare One Piece Card Game card and sealed prices across ${s}${ebayLive ? " and eBay" : ""} in six markets, cheapest first.`;
 }

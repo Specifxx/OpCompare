@@ -149,7 +149,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
       <div className="mx-auto max-w-4xl space-y-8">
         <header>
           <Breadcrumbs trail={[{ href: "/market", name: "Market index" }, { name: "Price records" }]} />
-          <h1 className="text-3xl text-white sm:text-4xl">One Piece price records &amp; market gaps</h1>
+          <h1 className="text-3xl font-extrabold text-white sm:text-4xl">One Piece price records &amp; market gaps</h1>
           <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
             Where the same printing costs less in another market than in {info.place}, and which cards are at a 90-day high or furthest below
             one. Free, for every market we track.

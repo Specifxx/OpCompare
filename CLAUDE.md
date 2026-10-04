@@ -71,7 +71,10 @@ hint cookie exists). Gated rows are limited in the QUERY, never hidden with CSS.
 The wave-2 member libraries join that exception on the same terms
 (per-user or per-request, uncached, `select`-limited, called only from `/api/*`
 routes and account pages — `/watching`, `/dashboard`, `/profile`,
-`/portfolio/**`, `/c/[token]` — never from the root layout or a public page):
+`/portfolio/**`, `/c/[token]`, plus two dynamic pages that read one member's own row
+and nothing else: `/tools/best-basket` (their deck watch and remembered minimum
+condition) and `/alerts/action` (a signed action token) — never from the root
+layout or a public page; `tests/app-no-db-import.test.ts` pins the set):
 `src/lib/{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server}.ts`.
 The collection-alerts libraries do the same, for token- or per-request reads and writes only:
 `src/lib/{alert-routes,alert-subscribe,alert-mute,alert-actions,newsletter-signup}.ts`

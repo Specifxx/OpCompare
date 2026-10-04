@@ -4,6 +4,7 @@ import { useState } from "react";
 import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { trackEvent } from "@/lib/analytics";
 import { FREE_LIMIT_STATUS, parseFreeLimit, type FreeLimitBody } from "@/lib/free-limits";
+import { useMe } from "@/lib/use-me";
 import { Spinner } from "./ui/Skeleton";
 import { PortfolioLimitNotice as FreeLimitPanel } from "./PortfolioLimitNotice";
 
@@ -21,7 +22,13 @@ export function AddToCollectionButton({ cardId, cardPath, src = "quickview" }: {
   // The free portfolio limit, when "Add to collection" hit it (lib/free-limits.ts).
   const [collLimit, setCollLimit] = useState<FreeLimitBody | null>(null);
 
+  const { me, loaded } = useMe();
+
   async function addToCollection() {
+    // A signed-out visitor is asked to sign in without a request that can only
+    // answer 401 (which also logged a console error). The 401 branch below
+    // still covers a session that expired after /api/me ran.
+    if (loaded && !me.user) return setColl("signin");
     setColl("saving");
     try {
       const res = await fetch("/api/collection", {

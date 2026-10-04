@@ -158,9 +158,9 @@ export default async function SealedDetailPage({ params }: Props) {
                 </span>
               ) : null}
             </div>
-            <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-3xl leading-tight text-white sm:text-4xl">
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-3 sm:mt-3">
+              <div className="min-w-0 flex-[1_1_12rem]">
+                <h1 className="text-xl font-extrabold leading-tight text-white sm:text-2xl">
                   {s.name}
                 </h1>
                 <p className="mt-1 text-sm text-slate-400">
@@ -179,9 +179,9 @@ export default async function SealedDetailPage({ params }: Props) {
                     : ""}
                 </p>
               </div>
-              <div className="flex items-start gap-2">
+              <div className="flex shrink-0 items-start gap-2">
                 <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="max-w-xs" />
-                <ShareButton title={`${s.name} — ${SITE_NAME}`} />
+                <ShareButton responsive />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -81,7 +81,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
       />
       <JsonLd data={faqLd(faqs)} />
       <Breadcrumbs trail={[{ name: "Price guide" }]} />
-      <h1 className="text-3xl text-white sm:text-4xl">One Piece Price Guide</h1>
+      <h1 className="font-display text-2xl font-extrabold text-white">One Piece Price Guide</h1>
       <HubIntro path="/price-guide" />
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -117,6 +117,72 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
           }
         />
       </div>
+
+      <section className="card-surface mt-6 overflow-hidden">
+        <div className="border-b border-ink-800 px-5 py-4">
+          <h2 className="text-xl text-white">Prices by set</h2>
+          <p className="text-sm text-slate-400">
+            How each released booster set prices in {c.place}, in {c.currency}.
+            A set&apos;s name opens its own price guide.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className={`${DATA_TABLE} min-w-[640px]`}>
+            <thead>
+              <tr>
+                <th>Set</th>
+                <th className="text-right">Priced</th>
+                <th className="text-right">Median</th>
+                <th>Dearest card</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sets.map((s) => {
+                const cs = cat.cards.filter((x) => x.setId === s.id);
+                const ps = cs.filter((x) => x.low[country] != null);
+                const top = [...ps].sort(
+                  (a, b) => b.low[country]! - a.low[country]!,
+                )[0];
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      <Link
+                        href={hrefSet(s.slug)}
+                        className="font-semibold text-brand-400 hover:underline"
+                      >
+                        {s.name}
+                      </Link>{" "}
+                      <span className="text-xs text-slate-500">{s.code}</span>
+                    </td>
+                    <td className="num text-right text-slate-300">
+                      {ps.length}/{cs.length}
+                    </td>
+                    <td className="num text-right font-semibold text-accent">
+                      {money(median(ps.map((x) => x.low[country]!)), country)}
+                    </td>
+                    <td className="truncate text-slate-200">
+                      {top ? (
+                        <CardQuickLink
+                          slug={top.slug}
+                          className="hover:text-brand-400 hover:underline"
+                        >
+                          {top.name}
+                          {top.variant ? ` (${top.variant})` : ""}{" "}
+                          <span className="num text-xs text-slate-400">
+                            {money(top.low[country], country)}
+                          </span>
+                        </CardQuickLink>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <PriceGuideToolbar sort={gq.sort} size={gq.size} q={gq.browse.q} shownMarket={country} ownMarket={own} />
 
@@ -270,75 +336,28 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
         </div>
       </div>
 
-      <section className="card-surface mt-6 overflow-hidden">
-        <div className="border-b border-ink-800 px-5 py-4">
-          <h2 className="text-xl text-white">Prices by set</h2>
-          <p className="text-sm text-slate-400">
-            How each released booster set prices in {c.place}, in {c.currency}.
-            A set&apos;s name opens its own price guide.
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className={`${DATA_TABLE} min-w-[640px]`}>
-            <thead>
-              <tr>
-                <th>Set</th>
-                <th className="text-right">Priced</th>
-                <th className="text-right">Median</th>
-                <th>Dearest card</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sets.map((s) => {
-                const cs = cat.cards.filter((x) => x.setId === s.id);
-                const ps = cs.filter((x) => x.low[country] != null);
-                const top = [...ps].sort(
-                  (a, b) => b.low[country]! - a.low[country]!,
-                )[0];
-                return (
-                  <tr key={s.id}>
-                    <td>
-                      <Link
-                        href={hrefSet(s.slug)}
-                        className="font-semibold text-brand-400 hover:underline"
-                      >
-                        {s.name}
-                      </Link>{" "}
-                      <span className="text-xs text-slate-500">{s.code}</span>
-                    </td>
-                    <td className="num text-right text-slate-300">
-                      {ps.length}/{cs.length}
-                    </td>
-                    <td className="num text-right font-semibold text-accent">
-                      {money(median(ps.map((x) => x.low[country]!)), country)}
-                    </td>
-                    <td className="truncate text-slate-200">
-                      {top ? (
-                        <CardQuickLink
-                          slug={top.slug}
-                          className="hover:text-brand-400 hover:underline"
-                        >
-                          {top.name}
-                          {top.variant ? ` (${top.variant})` : ""}{" "}
-                          <span className="num text-xs text-slate-400">
-                            {money(top.low[country], country)}
-                          </span>
-                        </CardQuickLink>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <RelatedGuides guides={guides} />
+
+      <section className="mt-8 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400" aria-labelledby="pg-how">
+        <h2 id="pg-how" className="text-lg font-bold text-white">
+          How to read this price guide
+        </h2>
+        <p>
+          Each row is one printing, and its price is the lowest asking price we found on an in-stock listing in{" "}
+          {c.place}, in {c.currency}: the item alone, with postage on top at the seller&apos;s checkout. Open a card to see
+          every store behind that figure, cheapest first, and the delivered total wherever a store publishes its
+          postage.
+        </p>
+        <p>
+          The list opens dearest first. Sort a column header for the cheapest cards, the biggest weekly moves or the
+          printings most widely in stock, and use the filters to cut it down to one set, rarity, colour, card type or
+          printing.{filtered ? null : <> Each set&apos;s own table lives on its <Link href="/sets" className="text-brand-400 hover:underline">set page</Link>.</>}
+        </p>
       </section>
 
-      <AdSlot slot="price-guide" className="mt-8" noindex={!isGuideDefault(gq)} />
       <HubFaq faqs={faqs} />
-      <RelatedGuides guides={guides} />
+
+      <AdSlot slot="price-guide" className="mt-8" noindex={!isGuideDefault(gq)} />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>
   );

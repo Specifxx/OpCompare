@@ -176,7 +176,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
       <div className="mx-auto max-w-4xl">
         <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Deal Finder" }]} />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl text-white sm:text-4xl">Deal Finder</h1>
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Deal Finder</h1>
           <RegionToggle />
         </div>
         <p className="mb-5 mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">

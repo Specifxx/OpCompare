@@ -75,7 +75,7 @@ export default function Premium() {
       />
       <Breadcrumbs trail={[{ name: "Plus & Premium" }]} />
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-2xl text-white sm:text-4xl">Find the deals. Buy them for less.</h1>
+        <h1 className="font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">Find the deals. Buy them for less.</h1>
         <p className="mt-1.5 text-sm text-slate-300 sm:text-[15px]">Comparing prices is free. Plus shows every deal with no ads; Premium plans your list.</p>
       </div>
       <div className="mt-4 sm:mt-6" id="top-pricing">

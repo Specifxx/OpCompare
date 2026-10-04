@@ -1,3 +1,4 @@
+import { sameOrigin } from "@/lib/admin-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getEmailStatus } from "@/lib/data";
@@ -12,6 +13,7 @@ import { anonymousAlertsEnabled, parseSubscribeBody, subscribeAddress } from "@/
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   if (!anonymousAlertsEnabled(await getEmailStatus())) return NextResponse.json({ error: "Not found" }, { status: 404 });
   // Anti email-bombing: how fast one IP can create subscriptions.
   const rl = rateLimit(`alerts:sub:${ipKey(req)}`, 20, 60_000);

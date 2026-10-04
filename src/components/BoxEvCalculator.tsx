@@ -120,7 +120,7 @@ export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offer
 
   if (!set || !calc) return null;
 
-  const verdict = verdictFor(calc.ratio);
+  const verdict = verdictFor(calc.ratio, { pricedShare: calc.pricedShare, chaseShare: calc.chaseShare });
   const chaseLines = calc.lines.filter((l) => isChasePool(l.pool));
   const chaseShare = chaseLines.reduce((a, l) => a + l.share, 0);
   const poolByKey = new Map(set.pools.map((p) => [p.pool, p]));
