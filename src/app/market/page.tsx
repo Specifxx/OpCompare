@@ -1,3 +1,4 @@
+import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -210,6 +211,7 @@ export default async function MarketPage() {
           </table>
         </div>
       </section>
+      <AdSlot slot="market" className="mt-10" thin={!series.length} />
       <section id="cite" className="card-surface mt-10 scroll-mt-40 p-5 xl:scroll-mt-36">
         <h2 className="text-lg text-white">Cite the OP Compare Index</h2>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">

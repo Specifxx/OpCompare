@@ -1,3 +1,4 @@
+import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
 import { ArticleFaq } from "@/components/ArticleFaq";
@@ -188,6 +189,7 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
           ))}
         </div>
 
+        <AdSlot slot="article" className="mt-10" />
         {post.faq?.length ? <ArticleFaq faq={post.faq} /> : null}
         <ArticleSignupCta placement="article_end" />
 

@@ -1,3 +1,4 @@
+import { AdSlot } from "@/components/AdSlot";
 import { ebayJsonLdOffers } from "@/lib/board";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -535,6 +536,7 @@ export default async function CardPage({ params }: Props) {
           </section>
 
           <CardMarketsTable offers={card.offers} name={card.name} country={country} />
+          <AdSlot slot="card" thin={!state.hasListings && card.marketUsd == null} />
 
           <section className="card-surface p-5" aria-label="Do more with this price">
             <h2 className="font-bold text-white">Do more with this price</h2>

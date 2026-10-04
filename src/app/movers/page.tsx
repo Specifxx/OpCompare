@@ -1,3 +1,4 @@
+import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -131,6 +132,7 @@ export default async function MoversPage() {
           </Link>
         </div>
       </section>
+      <AdSlot slot="movers" className="mt-8" thin={noHistory} />
       <HubFaq faqs={MOVERS_FAQ} />
       <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
       <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />

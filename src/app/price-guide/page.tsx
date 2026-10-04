@@ -1,3 +1,4 @@
+import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -336,6 +337,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
         </div>
       </section>
 
+      <AdSlot slot="price-guide" className="mt-8" noindex={!isGuideDefault(gq)} />
       <HubFaq faqs={faqs} />
       <RelatedGuides guides={guides} />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
