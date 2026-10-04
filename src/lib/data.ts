@@ -812,4 +812,28 @@ export const getEbayPicks = unstable_cache(
   ["ebay-picks-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
+
+/**
+ * Sealed products that every store we track in a market lists as SOLD OUT on a
+ * fresh read (all of the product's non-eBay rows in that market updated inside
+ * 72 h, none in stock): /sealed's "Sold out at every store we track" chip and
+ * lib/sealed-offers.ts soldOutEverywhere, computed once in SQL so the page needs
+ * no per-product offer rows. No rows at all is "not tracked here", never "sold
+ * out"; one stale row keeps the chip off. A few hundred ids at most.
+ */
+export const getSealedSoldOut = unstable_cache(
+  async (): Promise<Record<Country, number[]>> => {
+    const rows = await prisma.$queryRaw<{ id: number; market: string }[]>`
+      SELECT o."productId" AS id, o.market
+      FROM "Offer" o JOIN "Sealed" s ON s.id = o."productId"
+      WHERE o.source NOT LIKE 'ebay%'
+      GROUP BY o."productId", o.market
+      HAVING NOT bool_or(o."inStock") AND MIN(o."updatedAt") > now() - make_interval(hours => ${STALE_MS / 3_600_000}::int)`;
+    const out = { US: [], AU: [], UK: [], SG: [], CA: [], EU: [] } as Record<Country, number[]>;
+    for (const r of rows) (out[r.market as Country] ?? []).push(r.id);
+    return out;
+  },
+  ["sealed-soldout-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
 // ── end wave2:catalogue ──

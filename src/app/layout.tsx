@@ -9,6 +9,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import QuickViewProvider from "@/components/QuickViewProvider";
+import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { SideNav } from "@/components/SideNav";
 import { PlanProvider } from "@/components/PlanProvider";
 import { OutboundBeacon } from "@/components/OutboundBeacon";
@@ -96,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CountryProvider initial={country}>
           {/* Card QuickView (CardQuickLink): a client island; reads no session. */}
           <QuickViewProvider>
+          <SealedQuickViewProvider>
           {/* The Plus/Premium dialog, the click beacon and the corner nudges.
               checkoutOpen is an environment read (is Stripe configured?), not
               a session read: who the visitor is comes from /api/me, client-side. */}
@@ -120,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PremiumSlideIn />
           <AnnualSwitchNudge />
           </PlanProvider>
+          </SealedQuickViewProvider>
           </QuickViewProvider>
         </CountryProvider>
         <Analytics />

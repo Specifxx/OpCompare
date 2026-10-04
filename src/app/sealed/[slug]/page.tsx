@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LineChart } from "@/components/LineChart";
+import { CardMarketsTable } from "@/components/CardMarketsTable";
+import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { PriceBoard } from "@/components/PriceBoard";
 import { SealedTile } from "@/components/SealedTile";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
@@ -242,6 +244,7 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
+          <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* TCGplayer's market price: a reference under the comparison, with
               its affiliate button — never a row in it. */}
           <TcgMarketPrice
@@ -265,6 +268,8 @@ export default async function SealedDetailPage({ params }: Props) {
               empty="The chart draws once there are two days of prices."
             />
           </section>
+          {/* Listings tab only: no graded slabs for sealed product. */}
+          <EbayCardPanel productId={s.id} country={country} query={ebayQ} name={s.name} card={s.slug} page="sealed" sealed preRelease={s.presale || isPreRelease(s.releasedOn ?? set?.releasedOn ?? null, new Date().toISOString().slice(0, 10))} />
         </div>
       </div>
       {sameSet.length ? (
