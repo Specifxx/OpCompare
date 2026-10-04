@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
@@ -45,24 +46,7 @@ export default async function MoversPage() {
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece price movers — this week
       </h1>
-      <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-        <p>
-          The One Piece singles whose price moved most this week, in three
-          lists: the biggest risers, the biggest drops, and the best value
-          against a card&apos;s own 90-day high. A move compares
-          TCGplayer&apos;s market price today with the same card about seven
-          days earlier, in US dollars, so it reads the same in every market.
-        </p>
-        <p>
-          A single week is a short window: a tournament result or a new
-          set&apos;s reveal can spike a card that settles once the meta adjusts.
-          The{" "}
-          <Link href="/market" className="text-brand-400 hover:underline">
-            OP Compare Index
-          </Link>{" "}
-          shows whether the whole market moved or one card did.
-        </p>
-      </div>
+      <HubIntro path="/movers" />
       <div className="mt-6">
         <AnswerBox>
           One Piece price movers are the cards whose TCGplayer market price changed most in the past week. Only cards worth US$1 or more are ranked, so a 10-cent common doubling never tops the list.

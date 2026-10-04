@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LineChart } from "@/components/LineChart";
@@ -84,26 +85,7 @@ export default async function MarketPage() {
       <JsonLd data={breadcrumbLd([{ name: "Market index", path: "/market" }])} />
       <Breadcrumbs items={[{ label: "Market index" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">The OP Compare Index</h1>
-      <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-        <p>
-          One number for the whole One Piece singles market. The index started
-          at 1,000 on {series[0] ? longDate(series[0].day) : "its first day"},
-          and each day it moves by how much the TCGplayer market prices of every
-          single worth US$1 or more changed since the previous day — counting
-          only cards priced on both days, so a new set joining never jolts it.
-        </p>
-        <p>
-          A card that moves a lot on its own shows up on{" "}
-          <Link href="/movers" className="text-brand-400 hover:underline">
-            this week&apos;s movers
-          </Link>
-          ; the index tells you whether the market moved with it.{" "}
-          <Link href="/market/records" className="text-brand-400 hover:underline">
-            Price records and cross-market gaps
-          </Link>{" "}
-          show where the same card costs less in another market.
-        </p>
-      </div>
+      <HubIntro path="/market" />
       {sentence ? <p className="mt-4 max-w-3xl text-[15px] font-semibold text-white">{sentence}</p> : null}
       <p className="mt-1 text-xs text-slate-500">US$ · TCGplayer market</p>
       <div className="mt-4">

@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
@@ -81,25 +82,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
       <JsonLd data={faqLd(faqs)} />
       <Breadcrumbs items={[{ label: "Price guide" }]} />
       <h1 className="text-3xl text-white sm:text-4xl">One Piece Price Guide</h1>
-      <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-        <p>
-          Every One Piece Card Game printing in one sortable table, one row per
-          printing, each with the cheapest in-stock price we track in your
-          market and how many stores have it. A price is the item price from a
-          store or TCGplayer seller, with postage added at checkout, and it is
-          an asking price on a live listing rather than a record of a sale. We
-          read every price twice a day.
-        </p>
-        <p>
-          The 7-day column is TCGplayer&apos;s market price against seven days
-          earlier. It stays blank until a card has a week of history. For why
-          printings of one card are priced so differently, see{" "}
-          <Link href="/cards" className="text-brand-400 hover:underline">
-            cards by type &amp; rarity
-          </Link>
-          .
-        </p>
-      </div>
+      <HubIntro path="/price-guide" />
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile

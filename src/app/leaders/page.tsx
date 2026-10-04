@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, ColorDots, InShort } from "@/components/ui";
@@ -54,13 +55,7 @@ export default async function LeadersPage() {
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece Leader cards
       </h1>
-      <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
-        Every Leader in the One Piece Card Game, grouped by colour. A deck is
-        built around one Leader and plays its colours, so this is the place to
-        start a build. Each row shows the Leader&apos;s life and power and the
-        cheapest price of its standard print in {COUNTRIES[country].place}; open
-        it for every printing.
-      </p>
+      <HubIntro path="/leaders" />
       <div className="mt-6">
         <InShort>
           {leaders.length} Leaders across six colours and the multicolour

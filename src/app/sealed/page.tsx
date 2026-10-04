@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DiscoveryTip } from "@/components/DiscoveryTip";
@@ -88,22 +89,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
       <Breadcrumbs items={[{ label: "Sealed" }]} />
       <div className="card-surface border-brand-500/40 p-6 sm:p-8">
         <h1 className="text-3xl text-white sm:text-4xl">Sealed Products</h1>
-        <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-          <p>
-            Booster boxes, cases, packs, starter decks, double packs and collections, priced across the stores we track in your market. A
-            tile&apos;s price is the cheapest offer you can order now in {c.place}: the item price, with postage at the store&apos;s
-            checkout, and its store count is how many have it in stock. Tap a tile for every offer, cheapest first.
-          </p>
-          <p>
-            “≈” marks TCGplayer&apos;s market price converted to {c.currency} where no {c.adjective} store lists the product. Per-pack
-            prices appear only where the pack count is certain. After particular cards? Singles are usually cheaper than opening product
-            for them: the{" "}
-            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">
-              box EV calculator
-            </Link>{" "}
-            weighs a box against its cards.
-          </p>
-        </div>
+        <HubIntro path="/sealed" />
       </div>
 
       <DiscoveryTip id="sealed-watch" surface="tip:sealed" tier="plus" className="mt-4">

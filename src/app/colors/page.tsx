@@ -1,3 +1,4 @@
+import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, InShort } from "@/components/ui";
@@ -22,11 +23,7 @@ export default async function ColorsPage() {
       <h1 className="text-3xl text-white sm:text-4xl">
         One Piece cards by colour
       </h1>
-      <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-slate-300">
-        Every One Piece card has one or two of six colours, and a deck plays the
-        colours of its Leader. Each page below lists a colour&apos;s cards, most
-        valuable first, with the cheapest live price in your market.
-      </p>
+      <HubIntro path="/colors" />
       <div className="mt-6">
         <InShort>
           Multicolour cards appear on each of their colours&apos; pages, so the
