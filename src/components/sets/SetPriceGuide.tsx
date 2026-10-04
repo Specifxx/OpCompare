@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CardQuickLink from "@/components/CardQuickLink";
 import { RARITIES } from "@/lib/constants";
 import type { Country } from "@/lib/country";
 import { money } from "@/lib/format";
@@ -34,9 +35,9 @@ export function SetPriceGuide({ setName, rows, country, adjective, currency }: {
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="px-4 py-1.5">
-                  <Link href={`/card/${r.slug}`} className="text-slate-100 hover:text-brand-300 hover:underline">
+                  <CardQuickLink slug={r.slug} className="text-slate-100 hover:text-brand-300 hover:underline">
                     {r.name}
-                  </Link>{" "}
+                  </CardQuickLink>{" "}
                   <span className="num text-xs text-slate-500">{r.number}</span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-1.5 text-slate-300">{r.rarity ? RARITIES[r.rarity]?.label ?? r.rarity : "—"}</td>

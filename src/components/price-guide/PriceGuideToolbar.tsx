@@ -33,7 +33,7 @@ export function PriceGuideToolbar({ sort, size, q, shownMarket, ownMarket }: { s
     const qs = next.toString();
     return qs ? `/price-guide?${qs}` : "/price-guide";
   };
-  const field = "h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500";
+  const field = "h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/50";
   return (
     <div className="mt-4 space-y-3">
       <div className="flex flex-wrap items-center gap-3">

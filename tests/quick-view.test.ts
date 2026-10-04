@@ -162,7 +162,7 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
     // /leaders rows open each Leader's own page (tools track); its card links are CardQuickLinks.
     "src/app/leaders/[slug]/page.tsx",
     "src/app/tools/box-value/page.tsx",
-    "src/app/blog/[slug]/page.tsx",
+    "src/components/blog/ArticleView.tsx",
     "src/components/blog/BlogBits.tsx",
   ]) {
     const src = read(f);

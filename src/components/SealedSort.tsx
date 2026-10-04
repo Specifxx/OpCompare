@@ -19,7 +19,7 @@ export function SealedSort() {
         const qs = next.toString();
         router.push(qs ? `/sealed?${qs}` : "/sealed", { scroll: false });
       }}
-      className="h-11 cursor-pointer rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500"
+      className="h-11 cursor-pointer rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/50"
       aria-label="Sort sealed products"
     >
       {(Object.entries(SEALED_SORTS) as [string, string][]).map(([v, l]) => (

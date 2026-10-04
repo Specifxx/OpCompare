@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isChasePrinting, selectPicks, type PickCard } from "../src/lib/ebay-panel";
+import { isChasePrinting, selectPicks, type PickCard } from "../src/lib/listing-panel";
 
 const L = (price: number, img: string | null = "https://i.ebayimg.com/a.jpg") => ({ priceCents: price, shippingCents: 0, currency: "USD", url: "https://x", title: "t", imageUrl: img as string });
 const c = (id: number, usd: number, listings: PickCard["listings"]): PickCard => ({ id, slug: `c${id}`, name: `C${id}`, number: null, variant: null, setCode: "OP13", marketUsd: usd, listings });

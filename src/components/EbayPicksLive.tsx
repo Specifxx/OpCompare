@@ -1,6 +1,6 @@
 import { outboundRel } from "@/lib/affiliate";
 import type { Country } from "@/lib/country";
-import { selectPicks, type PickCard } from "@/lib/ebay-panel";
+import { selectPicks, type PickCard } from "@/lib/listing-panel";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { EbayBuyCta } from "./EbayBuyCta";
 import { EbayWordmark } from "./AffiliateAds";

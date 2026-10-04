@@ -742,7 +742,7 @@ export async function getEmailStatus(): Promise<EmailStatus> {
 // support, market stats…). Every one is self-cached with the "prices" tag; never
 // wrap one in another unstable_cache and never call one from inside a cache
 // callback. Entries stay small (the largest is under 100 KB).
-import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type EbayPanelData, type PickCard } from "./ebay-panel";
+import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type EbayPanelData, type PickCard } from "./listing-panel";
 
 /**
  * One product's captured eBay listings (Listings tab) and slabs (Graded tab),

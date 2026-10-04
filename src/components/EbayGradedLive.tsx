@@ -1,7 +1,7 @@
 import { outboundRel } from "@/lib/affiliate";
 import type { Country } from "@/lib/country";
-import type { PanelGraded } from "@/lib/ebay-panel";
-import { panelTitle } from "@/lib/ebay-panel";
+import type { PanelGraded } from "@/lib/listing-panel";
+import { panelTitle } from "@/lib/listing-panel";
 
 // Graded (slabbed) eBay listings for a card (RiftCompare's EbayGradedLive). The
 // category our own comparison structurally cannot cover: no tracked store lists

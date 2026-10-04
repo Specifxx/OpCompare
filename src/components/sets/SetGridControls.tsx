@@ -14,7 +14,7 @@ export function SetGridControls({ basePath, sort, per }: { basePath: string; sor
     next.delete("page");
     router.push(`${basePath}?${next.toString()}`, { scroll: false });
   };
-  const field = "h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500";
+  const field = "h-11 rounded-md border border-ink-700 bg-ink-900 px-3 text-sm font-medium text-slate-100 outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/50";
   return (
     <div className="mt-3 flex flex-wrap items-center gap-3">
       <label className="flex items-center gap-2 text-sm text-slate-400">

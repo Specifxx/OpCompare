@@ -1,5 +1,5 @@
 import type { Country } from "@/lib/country";
-import type { EbayPanelData } from "@/lib/ebay-panel";
+import type { EbayPanelData } from "@/lib/listing-panel";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { EbayAdCarouselLive } from "./EbayAdCarouselLive";
 import { EbayGradedLive } from "./EbayGradedLive";

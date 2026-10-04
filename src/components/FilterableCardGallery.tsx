@@ -59,7 +59,7 @@ export function FilterableCardGallery({ cards, country, setCode, initialCount }:
           value={sort}
           onChange={(e) => setSort(e.target.value as "number" | "value")}
           aria-label="Sort cards"
-          className="min-h-11 flex-1 shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-base font-semibold text-slate-300 focus:border-brand-500 focus:outline-none sm:[@media(pointer:fine)]:min-h-0 sm:flex-none sm:text-xs"
+          className="min-h-11 flex-1 shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-base font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:[@media(pointer:fine)]:min-h-0 sm:flex-none sm:text-xs"
         >
           <option value="number">Sort: Card number</option>
           <option value="value">Sort: Most valuable</option>

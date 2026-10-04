@@ -1,6 +1,6 @@
 import type { Country } from "@/lib/country";
 import { getEbayPicks } from "@/lib/data";
-import type { PickCard } from "@/lib/ebay-panel";
+import type { PickCard } from "@/lib/listing-panel";
 import { EbayPicksLive } from "./EbayPicksLive";
 
 /**

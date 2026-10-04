@@ -1,6 +1,6 @@
 import type { Country } from "@/lib/country";
 import { getEbayPanel } from "@/lib/data";
-import type { EbayPanelData } from "@/lib/ebay-panel";
+import type { EbayPanelData } from "@/lib/listing-panel";
 import { EbayCardPanelLive } from "./EbayCardPanelLive";
 import { EbayPanelIntro } from "./EbayPanelIntro";
 

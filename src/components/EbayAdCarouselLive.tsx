@@ -1,7 +1,7 @@
 import { outboundRel } from "@/lib/affiliate";
 import type { Country } from "@/lib/country";
-import type { PanelListing } from "@/lib/ebay-panel";
-import { panelTitle } from "@/lib/ebay-panel";
+import type { PanelListing } from "@/lib/listing-panel";
+import { panelTitle } from "@/lib/listing-panel";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { EbayBuyCta } from "./EbayBuyCta";
 import { EbayWordmark } from "./AffiliateAds";
