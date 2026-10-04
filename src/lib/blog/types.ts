@@ -41,6 +41,8 @@ export interface Post {
   category?: "blog" | "guide";
   /** Visible FAQ and FAQPage JSON-LD from one array (ArticleFaq). */
   faq?: { q: string; a: string }[];
+  /** Show the live per-market store counts (ArticleMarketData) after the lede: where-to-buy and cheaper-abroad. */
+  marketData?: boolean;
   minutes: number;
   /** Related site pages for the "data behind this post" strip. */
   related: { href: string; label: string }[];

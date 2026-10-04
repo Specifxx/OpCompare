@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
-import { AUTHOR, POSTS } from "@/lib/blog";
+import { AUTHOR, AUTHORS, POSTS, postHref } from "@/lib/blog";
 import { SISTER_SITE } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 export default function Authors() {
   return (
     <StaticPage title="Who writes OP Compare" crumb="Authors">
-      <h2>{AUTHOR.name}</h2>
+      <h2>
+        <Link href={`/authors/${AUTHORS[0].slug}`}>{AUTHOR.name}</Link>
+      </h2>
       <p>
         Posts on the blog are bylined to the OP Compare team — the people who
         also run <a href={SISTER_SITE.url}>{SISTER_SITE.name}</a>, the{" "}
@@ -33,7 +35,7 @@ export default function Authors() {
       <ul>
         {POSTS.map((p) => (
           <li key={p.slug}>
-            <Link href={`/blog/${p.slug}`}>
+            <Link href={postHref(p)}>
               {p.description.split(":")[0].split("—")[0].trim()}
             </Link>
           </li>

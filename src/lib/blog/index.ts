@@ -24,6 +24,27 @@ export function postBySlug(slug: string): Post | undefined {
   return POSTS.find((p) => p.slug === slug);
 }
 
+export interface Author {
+  slug: string;
+  name: string;
+  /** Short role line for the byline card. */
+  role: string;
+  bio: string;
+  /** What this author covers, as the tags of the posts they write. */
+  topics: string[];
+}
+
+/** File-based authors (RiftCompare's lib/blog/authors.ts): /authors/[slug] is generated from this list. */
+export const AUTHORS: Author[] = [
+  {
+    slug: "op-compare-team",
+    name: "OP Compare",
+    role: "The team behind the site",
+    bio: "The OP Compare team builds and runs the site: the price import, the store matching and the guides. Every figure in a post comes from our own price database.",
+    topics: ["guide", "market", "buying", "collecting"],
+  },
+];
+
 export const AUTHOR = {
   name: "OP Compare",
   url: "/authors",

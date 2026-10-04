@@ -1,4 +1,4 @@
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import { getCatalog } from "@/lib/data";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -15,7 +15,7 @@ export async function GET() {
     /* no database yet: fall back to slugs */
   }
   const items = POSTS.map((p) => {
-    const url = `${SITE_URL}/blog/${p.slug}`;
+    const url = `${SITE_URL}${postHref(p)}`;
     return `<item><title>${esc(titles.get(p.slug) ?? p.slug)}</title><link>${url}</link><guid>${url}</guid><pubDate>${new Date(p.date).toUTCString()}</pubDate><description>${esc(p.description)}</description></item>`;
   }).join("");
   const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${esc(SITE_NAME)} blog</title><link>${SITE_URL}/blog</link><description>${esc(SITE_DESCRIPTION)}</description><language>en</language>${items}</channel></rss>`;

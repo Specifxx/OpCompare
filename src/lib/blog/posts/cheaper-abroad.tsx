@@ -11,6 +11,7 @@ export const cheaperAbroad: Post = {
   title: () => "Are One Piece Cards Cheaper Abroad? US vs AU, UK, CA, EU",
   description: "The same One Piece cards priced in six markets and converted to US dollars: which market is cheapest for singles, and whether importing still saves money once postage is added.",
   tags: ["prices", "markets", "analysis"],
+  marketData: true,
   date: "2026-10-03",
   minutes: 6,
   related: [

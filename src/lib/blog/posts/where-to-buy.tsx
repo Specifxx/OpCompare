@@ -11,6 +11,14 @@ export const whereToBuy: Post = {
   title: () => "Where to Buy One Piece Cards: 6 Markets Compared",
   description: "How many stores sell One Piece singles in the US, Australia, the UK, Singapore, Canada and the EU, how much of the card list each market has in stock, and how its prices compare.",
   tags: ["guide", "stores", "buying"],
+  category: "guide",
+  marketData: true,
+  faq: [
+    { q: "Where is the cheapest place to buy One Piece cards?", a: "It depends on the card and your market. OP Compare ranks every in-stock listing by item price on each card page, so the cheapest store for a given card is the first row; this guide compares the markets as a whole." },
+    { q: "Do these stores ship internationally?", a: "Generally within their own market. A price in another market is a fact about listings, not an instruction to import: postage, duty and import tax are not included, which is why Best Basket prices whole orders with each store's measured postage." },
+    { q: "How often are the prices updated?", a: "Every store is read twice a day. A listing not refreshed for 72 hours is treated as sold out rather than shown as a live price." },
+    { q: "Is TCGplayer counted as a store?", a: "TCGplayer's own listings are shown in the comparison and counted, because it is a real seller you can buy from. eBay listings are shown beside the stores but never counted as a store." },
+  ],
   date: "2026-10-03",
   minutes: 7,
   related: [

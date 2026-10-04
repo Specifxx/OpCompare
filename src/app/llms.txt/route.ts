@@ -1,4 +1,4 @@
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import { getCatalog } from "@/lib/data";
 import { KEYWORDS } from "@/lib/keywords";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -47,7 +47,7 @@ export async function GET() {
     `- [Box value](${u("/tools/box-value")}), [Deal Finder](${u("/tools/deal-finder")}), [Buy List Planner](${u("/tools/buy-list")}); all tools: [${u("/tools")}](${u("/tools")})`,
     "",
     "## Guides",
-    ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(`/blog/${p.slug}`)}): ${p.description}`),
+    ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(postHref(p))}): ${p.description}`),
     "",
     "## About",
     `- [How we compare prices](${u("/methodology")}), [About](${u("/about")}), [Editorial policy](${u("/editorial-policy")})`,
