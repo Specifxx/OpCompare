@@ -65,6 +65,7 @@ function catalogueEntries(cat: Awaited<ReturnType<typeof getCatalog>> | null, no
     "/guides",
     "/gallery",
     "/support",
+    "/learn",
     ...AUTHORS.map((a) => `/authors/${a.slug}`),
     ...(cat ? cat.sets.filter((s) => withCards.has(s.id)).map((s) => `/sets/${s.slug}/gallery`) : []),
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));

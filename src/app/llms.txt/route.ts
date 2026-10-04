@@ -51,6 +51,7 @@ export async function GET() {
     "",
     "## About",
     `- [How we compare prices](${u("/methodology")}), [About](${u("/about")}), [Editorial policy](${u("/editorial-policy")})`,
+    `- [Full reference for AI search](${u("/llms-full.txt")}): the same facts at length, with the most valuable cards, every released set and the stores per market`,
     `- Feeds: [RSS](${u("/feed.xml")}), [JSON Feed](${u("/feed.json")}); [sitemap](${u("/sitemap.xml")})`,
     "",
   ];

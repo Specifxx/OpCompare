@@ -44,6 +44,7 @@ import { pageOgOwnImage } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
+import { aliasesFor } from "@/lib/card-aliases";
 import { visitorHistory } from "@/lib/price-history-view";
 import { PRINTING_SHORT } from "@/lib/content/card-narrative";
 import { breadcrumbLd, faqLd } from "@/lib/jsonld";
@@ -89,6 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     textBit: c.effect ? c.effect.split("\n")[0].slice(0, 110) : null,
     marketUsd: c.marketUsd,
     lowUsCents: lite?.low.US ?? null,
+    aliases: aliasesFor(c.slug),
   });
   return {
     title: { absolute: title },
@@ -360,6 +362,7 @@ export default async function CardPage({ params }: Props) {
                 <ShareButton title={`${title} — ${SITE_NAME}`} />
               </div>
             </div>
+            {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}
             <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
