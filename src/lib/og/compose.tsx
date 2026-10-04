@@ -576,7 +576,7 @@ export function SealedImage(p: SealedImageProps) {
 }
 
 // ── (d) A blog post ──────────────────────────────────────────────────────────
-export function BlogImage({ title, arts }: { title: string; arts: (string | null)[] }) {
+export function BlogImage({ title, arts, badge = "BLOG", footer = "Live prices from the OP Compare price guide" }: { title: string; arts: (string | null)[]; badge?: string; footer?: string }) {
   const cards = arts.filter((a): a is string => !!a).slice(0, 3);
   const size = title.length > 70 ? 46 : title.length > 48 ? 54 : 62;
   // Back-left, back-right, then the front card last so it sits on top.
@@ -609,11 +609,11 @@ export function BlogImage({ title, arts }: { title: string; arts: (string | null
               color: "#ff8a8f",
             }}
           >
-            BLOG
+            {badge}
           </div>
         </div>
         <div style={{ display: "flex", ...F.display, fontSize: size, lineHeight: 1.06, color: OG.white, letterSpacing: -1 }}>{clip(title, 110)}</div>
-        <div style={{ display: "flex", ...F.semi, fontSize: 21, color: OG.straw }}>Live prices from the OP Compare price guide</div>
+        <div style={{ display: "flex", ...F.semi, fontSize: 21, color: OG.straw }}>{footer}</div>
       </div>
       {cards.length ? (
         <div style={{ display: "flex", position: "relative", flex: 1 }}>

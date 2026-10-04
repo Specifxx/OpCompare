@@ -20,6 +20,12 @@ const nextConfig = {
         destination: "https://opcompare.app/:path*",
         permanent: true,
       },
+      // Wave-2 tools (RiftCompare's lineup): the Buy List Planner became Best
+      // Basket, the box value page became the Box EV calculator, and the bulk
+      // pricer is /deck (RiftCompare folded its Bulk Pricer into /deck).
+      { source: "/tools/buy-list", destination: "/tools/best-basket?source=watchlist", permanent: true },
+      { source: "/tools/box-value", destination: "/tools/box-ev", permanent: true },
+      { source: "/bulk-pricer", destination: "/deck", permanent: true },
     ];
   },
   async headers() {

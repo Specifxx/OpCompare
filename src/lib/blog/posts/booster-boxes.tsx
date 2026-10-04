@@ -15,7 +15,7 @@ export const boosterBoxes: Post = {
   minutes: 6,
   related: [
     { href: "/sealed", label: "Sealed products" },
-    { href: "/tools/box-value", label: "Box value calculator" },
+    { href: "/tools/box-ev", label: "Box EV calculator" },
     { href: "/release-dates", label: "Release dates" },
   ],
   build: ({ cat, sealed, country }) => {
@@ -104,8 +104,8 @@ export const boosterBoxes: Post = {
                 smaller print runs than recent ones, and a box that is no longer printed only gets scarcer.
               </p>
               <Callout title="Is a box worth opening?">
-                Usually not as an investment — most boxes contain none of a set&apos;s most valuable cards. The <Link href="/tools/box-value">box value
-                calculator</Link> puts a box&apos;s price next to what its set&apos;s cards are worth and how concentrated that value is.
+                Usually not as an investment — most boxes contain none of a set&apos;s most valuable cards. The <Link href="/tools/box-ev">box EV
+                calculator</Link> puts a box&apos;s price next to its expected value: what the pulls are worth on average, at pull rates set low on purpose.
               </Callout>
             </>
           ),

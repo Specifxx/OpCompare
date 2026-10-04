@@ -44,7 +44,7 @@ export async function GET() {
     "## Tools",
     `- [Deck price calculator](${u("/deck")}): paste a decklist (4xOP01-016) and price every card, free`,
     `- [Selling fee calculator](${u("/tools/selling-fees")}): TCGplayer, eBay and Cardmarket fees`,
-    `- [Box value](${u("/tools/box-value")}), [Deal Finder](${u("/tools/deal-finder")}), [Buy List Planner](${u("/tools/buy-list")}); all tools: [${u("/tools")}](${u("/tools")})`,
+    `- [Box EV calculator](${u("/tools/box-ev")}), [Deal Finder](${u("/tools/deal-finder")}), [Best Basket](${u("/tools/best-basket")}); all tools: [${u("/tools")}](${u("/tools")})`,
     "",
     "## Guides",
     ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(`/blog/${p.slug}`)}): ${p.description}`),

@@ -10,6 +10,9 @@ const LINKS = [
   { href: "/admin/inbox", label: "Inbox" },
   { href: "/admin/clicks", label: "Clicks" },
   { href: "/admin/premium", label: "Interest" },
+  { href: "/admin/demand", label: "Demand" },
+  { href: "/admin/rising", label: "Rising" },
+  { href: "/admin/decks", label: "Decks" },
 ];
 
 // The admin bar's links, with the current section highlighted.

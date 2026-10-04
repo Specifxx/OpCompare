@@ -26,8 +26,10 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 | `/movers` | This week's risers, fallers and best value vs 90-day high |
 | `/market` | The OP Compare Index (chained, value-weighted) and value by set |
 | `/leaders`, `/colors`, `/cards`, `/cards/all` | Leaders by colour, colour hubs, type/rarity/printing hub, A–Z index |
-| `/tools/deal-finder`, `/tools/box-value` | Listings under market price (signed out: a preview; free account: top 3; Plus/Premium: every deal); box price vs the set's card value |
-| `/tools/buy-list` | **Premium:** the cheapest single store and cheapest split for your watchlist, per market |
+| `/tools`, `/tools/deal-finder` | The tools hub; listings under market price (signed out: a preview; free account: top 3; Plus/Premium: every deal) |
+| `/tools/best-basket` | Price a deck or your watchlist delivered, split across stores with measured postage. Free account: the delivered total (5 a day); **Premium:** the store-by-store plan, condition floor, best 1- and 2-store orders. `/tools/buy-list` redirects here |
+| `/tools/box-ev`, `/tools/rising`, `/tools/demand`, `/trade`, `/tools/selling-fees` | Box EV calculator (community pull-rate estimates; `/tools/box-value` redirects), Rising Cards, Demand Finder, trade calculator, fee calculator |
+| `/deck`, `/decks` | The deck pricer (the bulk pricer; `/bulk-pricer` redirects) and the public deck library |
 | `/premium`, `/login`, `/account` | Plus ($2.99/mo · $23.99/yr) and Premium ($4.99/mo · $39.99/yr) via Stripe; Google / Discord sign-in; manage or cancel in Stripe's portal |
 | `/stores`, `/stores/suggest` | Every store we read, per market, with today's matched listings; suggest a store |
 | `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`. Share image: the title beside three hero cards |

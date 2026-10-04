@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 // is rate-limited per IP — generously, because a real user prices a list,
 // switches a printing and re-prices.
 export async function POST(req: Request) {
-  const rl = rateLimit(`deck-price:${ipKey(req)}`, 40, 60_000);
+  const rl = rateLimit(`deck-price:${ipKey(req)}`, 30, 60_000);
   if (!rl.ok) return tooManyRequests(rl.retryAfter);
   const body = (await req.json().catch(() => null)) as { text?: unknown; add?: { slug?: unknown; qty?: unknown } } | null;
   let text = typeof body?.text === "string" ? body.text.slice(0, 20_000) : "";

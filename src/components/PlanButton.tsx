@@ -7,7 +7,7 @@ import { useMe } from "@/lib/use-me";
 import { usePlanDialog } from "./PlanProvider";
 
 // Opens the Plus/Premium dialog from a wall (RiftCompare's PremiumButton).
-//   surface  WHERE the button sits ("gate:buy-list", "nudge:movers" …,
+//   surface  WHERE the button sits ("gate:deck-watch", "nudge:movers" …,
 //            lib/nudge-surface.ts), recorded by the premium-interest beacon.
 //   tier     the LOWEST tier that unlocks what the wall guards: the dialog
 //            opens on it and the default label quotes its price. Default

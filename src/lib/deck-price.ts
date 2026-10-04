@@ -1,16 +1,17 @@
 // Pricing a pasted list on the server: lib/deck.ts's pure parser and resolver
 // over the cached catalogue, then each resolved printing's offers from the
-// cached per-card loader. Shared by /api/deck/price, the /deck page's share
-// metadata and /api/buy-list's "paste a list". Reads ONLY data.ts loaders, and
+// cached per-card loader. Shared by /api/deck/price and the /deck page's share
+// metadata. Reads ONLY data.ts loaders, and
 // none of them inside a cache callback (egress rules: lib/db.ts).
 import { affiliateUrl, cardEbayQuery, ebaySearchUrl } from "./affiliate";
 import { retailerSubId } from "./board";
-import { isBasketSource } from "./buy-list";
+import { basketStoreKey } from "./shipping";
 import { MARKETS, type Country } from "./country";
 import { getCardDetail, getCatalog, type CardLite, type Catalog, type OfferRow } from "./data";
 import {
   basePrinting,
   checkDeck,
+  QTY_CAP,
   DECK_LINE_CAP,
   formatDeckLine,
   indexCards,
@@ -68,6 +69,8 @@ export interface DeckLineOut {
   qty: number;
   how: MatchKind;
   ambiguous: boolean;
+  /** Matched only by the name-contains fallback: the words it was guessed from. */
+  fuzzyFrom: string | null;
   leader: boolean;
   card: DeckCardOut;
   /** The line's canonical text (what the share link and "send to" carry). */
@@ -119,12 +122,12 @@ export async function lineForSlug(slug: string, qty: number): Promise<string | n
   const c = cat.bySlug.get(slug);
   if (!c || c.printing === "don") return null;
   const base = c.number ? basePrinting(idx.byNumber.get(c.number) ?? [c]) : c;
-  return formatDeckLine(Math.max(1, Math.min(4, Math.floor(qty) || 1)), c, c.id !== base?.id);
+  return formatDeckLine(Math.max(1, Math.min(QTY_CAP, Math.floor(qty) || 1)), c, c.id !== base?.id);
 }
 
 /** Offers that can fill a deck line in a market: live, this market, never eBay. */
 export function basketOffers(offers: OfferRow[], market: Country): OfferRow[] {
-  return offers.filter((o) => o.market === market && o.inStock && isBasketSource(o.source));
+  return offers.filter((o) => o.market === market && o.inStock && basketStoreKey(o.source) != null);
 }
 
 export async function priceDeck(text: string, market: Country, opts: { withOffers?: boolean; page?: string } = {}): Promise<DeckPriceResult> {
@@ -173,6 +176,7 @@ export async function priceDeck(text: string, market: Country, opts: { withOffer
       qty: m.line.qty,
       how: m.how,
       ambiguous: m.ambiguous,
+      fuzzyFrom: m.fuzzy ? m.line.name || m.line.raw : null,
       leader: c.cardType === "Leader",
       card: cardOut(c, cat, low),
       text: formatDeckLine(m.line.qty, c, pinned),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { sendCardView } from "@/lib/card-views";
 import { COUNTRIES, MARKETS } from "@/lib/country";
 import { ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
 import { ago, money, usd } from "@/lib/format";
@@ -91,6 +92,7 @@ export function QuickView({
   useEffect(() => {
     if (!data || data.slug !== slug) return;
     pushRecentCard({ slug: data.slug, name: data.name, variant: data.variant, setCode: data.set.code, number: data.number, img: data.hasImage ? cardImage.thumb(data.id) : null });
+    sendCardView(data.slug, "view", String(data.id));
   }, [data, slug]);
 
   const href = `/card/${slug}`;

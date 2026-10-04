@@ -1,13 +1,10 @@
-// RiftCompare's MoveBadge (the Demand Finder / leaderboard rank change). The
-// Movement shape is RiftCompare's lib/demand-movement.ts type, inlined here so
-// the badge does not depend on the tools track's module.
-export type Movement = { kind: "up" | "down" | "same"; by: number; prev: number } | { kind: "new" };
+import type { Movement } from "@/lib/demand-movement";
 
-// Billboard-style chart movement beside a rank: ▲ climbed, ▼ fell, = held, NEW
-// had no place on the previous chart. Shared by /admin/demand, Demand Finder,
-// Rising Cards (public and admin) and the frozen Hot 40 pages, so a symbol
-// means the same thing everywhere. `newTitle` says what "NEW" means on THIS
-// chart: the demand charts rank every active card, the Hot 40 only its 40.
+// Billboard-style chart movement beside a rank (RiftCompare's MoveBadge): ▲
+// climbed, ▼ fell, = held, NEW had no place on the previous chart. Shared by
+// /admin/demand, Demand Finder, Rising Cards (public and admin) and the frozen
+// Hot 40 pages, so a symbol means the same thing everywhere. `newTitle` says
+// what "NEW" means on THIS chart.
 export function MoveBadge({ move, newTitle }: { move: Movement | null | undefined; newTitle: string }) {
   if (!move) return null;
   if (move.kind === "new") {

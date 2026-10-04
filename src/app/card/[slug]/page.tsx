@@ -12,6 +12,8 @@ import { TcgplayerBanner } from "@/components/TcgplayerBanner";
 import { LineChart } from "@/components/LineChart";
 import { PriceBoard } from "@/components/PriceBoard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { CardViewBeacon } from "@/components/CardViewBeacon";
+import { DecksUsingCard } from "@/components/decks/DecksUsingCard";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
@@ -443,6 +445,9 @@ export default async function CardPage({ params }: Props) {
         </section>
       ) : null}
 
+      <DecksUsingCard cardId={card.id} />
+
+      <CardViewBeacon slug={card.slug} cardId={card.id} cardName={card.name} rarity={card.rarity} />
       <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
       <section className="mt-10">

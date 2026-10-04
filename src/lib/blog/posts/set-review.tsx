@@ -23,7 +23,7 @@ export function setReview(code: string, slug: string, date: string): Post {
     minutes: 7,
     related: [
       { href: "/sets", label: "Every set" },
-      { href: "/tools/box-value", label: "Box value calculator" },
+      { href: "/tools/box-ev", label: "Box EV calculator" },
       { href: "/sealed?kind=Booster+Box", label: "Booster box prices" },
     ],
     build: ({ cat, sealed, country }) => {

@@ -41,7 +41,7 @@ async function main() {
     if (!product) {
       product = await stripe.products.create({
         name: `OP Compare ${TIER_NAMES[tier]}`,
-        description: tier === "plus" ? "No ads and every Deal Finder deal on opcompare.app." : "Everything in Plus, plus the Buy List Planner on opcompare.app.",
+        description: tier === "plus" ? "No ads and every Deal Finder deal on opcompare.app." : "Everything in Plus, plus Best Basket on opcompare.app.",
         metadata: { site: STRIPE_SITE, tier },
       });
       console.log(`Created product ${product.id} (${product.name})`);

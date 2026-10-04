@@ -24,3 +24,15 @@ export const writeBucket = (b: string, f: BucketFile) => writeJson(path.join(his
 export const writeDay = (f: DayFile) => writeJson(path.join(historyDir(), "days", `${f.day}.json`), f);
 export const readIndex = () => readJson<IndexFile>(path.join(historyDir(), "index.json"), { v: 1, days: [] });
 export const writeIndex = (f: IndexFile) => writeJson(path.join(historyDir(), "index.json"), f);
+
+// ── wave2:tools — demand snapshots and the Rising Cards feed ─────────────────
+// history/demand/YYYY-MM-DD.json, history/demand/days.json (lib/demand-snapshot.ts)
+// and history/rising.json (lib/rise-predictor.ts), written by lib/tools-history.ts.
+import type { DemandDayFile, DemandDaysFile } from "./demand-snapshot";
+import type { RiseFile } from "./rise-predictor";
+
+export const readDemandDay = (day: string) => readJson<DemandDayFile | null>(path.join(historyDir(), "demand", `${day}.json`), null);
+export const writeDemandDay = (f: DemandDayFile) => writeJson(path.join(historyDir(), "demand", `${f.day}.json`), f);
+export const readDemandDays = () => readJson<DemandDaysFile>(path.join(historyDir(), "demand", "days.json"), { v: 1, days: [] });
+export const writeDemandDays = (f: DemandDaysFile) => writeJson(path.join(historyDir(), "demand", "days.json"), f);
+export const writeRiseFile = (f: RiseFile) => writeJson(path.join(historyDir(), "rising.json"), f);

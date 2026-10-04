@@ -7,7 +7,7 @@ import { readEntrySource } from "@/lib/entry-source";
 
 // ONE global listener for outbound shop clicks (RiftCompare's OutboundLink
 // beacon, done once instead of per link): any click on an a[data-retailer] —
-// PriceBoard rows, eBay search links, the footer ads, the Buy List Planner —
+// PriceBoard rows, eBay search links, the footer ads, Best Basket —
 // sends {retailer, page, slug (data-card, else the page's), country} to /api/click with sendBeacon, so
 // /admin/clicks can count clicks per store and per page in our own database.
 // Mounted once in the root layout. It never delays or changes the click, and

@@ -124,10 +124,10 @@ export default async function SealedPage({
             where no {c.adjective} store lists the product. Per-pack prices
             appear only where the pack count is certain. After particular cards?
             Singles are usually cheaper than opening product for them — the{" "}
-            <Link href="/tools/box-value" className="text-brand-400 hover:underline">
-              box value calculator
+            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">
+              box EV calculator
             </Link>{" "}
-            weighs a box against its cards.
+            weighs a box against its pulls.
           </p>
         </div>
       </div>

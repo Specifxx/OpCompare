@@ -48,7 +48,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tier: Tier; heading: string; line: st
     prefixes: ["/sealed", "/sets"],
     tier: "premium",
     heading: "Premium plans which stores to buy your list from",
-    line: "Heart the cards and boxes you want and the Buy List Planner finds the cheapest single store for the lot, and the cheapest way to split it across stores.",
+    line: "Paste a deck or send your watchlist and Best Basket finds the cheapest delivered way to buy it: which store for each card, postage included.",
   },
 ];
 

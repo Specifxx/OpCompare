@@ -4,7 +4,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { storeLows } from "../src/lib/deck";
-import { cheapestGrades } from "../src/lib/buy-list-condition";
 import { pageSuffix } from "../src/lib/facets";
 
 const MK = ["US", "UK", "EU"] as const;
@@ -20,16 +19,6 @@ test("storeLows: cheapest in-stock store or TCGplayer listing per market, eBay n
 
 test("storeLows: no offers means every market is null", () => {
   assert.deepEqual(storeLows([], MK), { US: null, UK: null, EU: null });
-});
-
-test("cheapestGrades: counts items whose cheapest live copy is played, or TCGplayer's any-condition low", () => {
-  const g = cheapestGrades([
-    { offers: [{ source: "store:a", priceCents: 100, inStock: true, condition: "LP" }, { source: "store:b", priceCents: 150, inStock: true, condition: "NM" }] },
-    { offers: [{ source: "tcgplayer", priceCents: 90, inStock: true, condition: null }, { source: "store:b", priceCents: 95, inStock: true, condition: null }] },
-    { offers: [{ source: "store:a", priceCents: 50, inStock: false, condition: "HP" }, { source: "store:b", priceCents: 80, inStock: true, condition: null }] },
-    { offers: [] },
-  ]);
-  assert.deepEqual(g, { played: 1, unknown: 1 });
 });
 
 test("pageSuffix: only pages past the first get ?page=N", () => {

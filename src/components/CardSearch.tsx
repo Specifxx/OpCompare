@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ebayLabel, ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import { clearRecent, pushRecentSearch, RECENT_SEARCHES_KEY, useRecentCards, useRecentSearches } from "@/lib/recently-viewed";
 import CardQuickLink from "./CardQuickLink";
+import { sendCardView } from "@/lib/card-views";
 import { useCountry } from "./CountryProvider";
 import { Icon } from "./Icon";
 import { RecentlyViewed } from "./RecentlyViewed";
@@ -490,7 +491,7 @@ export function CardSearch({
                         click: a capture-phase close unmounts the list before
                         CardQuickLink's onClick runs, and the browser then
                         follows the href instead of opening QuickView. */}
-                    <div id={optionId(i)} role="option" aria-selected={active === i} onClick={close}>
+                    <div id={optionId(i)} role="option" aria-selected={active === i} onClick={() => { if (h.kind === "card") sendCardView(h.slug, "search"); close(); }}>
                       {onPick && h.kind === "card" ? (
                         <button
                           type="button"

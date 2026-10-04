@@ -7,7 +7,8 @@
 // sent with OG_CACHED, every fallback with OG_AFTER_ERROR (see respond.ts).
 import type { ImageResponse } from "next/og";
 import { PRINTINGS, SET_KINDS, rarityLabel } from "../constants";
-import { getCatalog, getSealedCatalog, getSiteStats } from "../data";
+import { getCatalog, getPublishedDeck, getRisingSnapshot, getSealedCatalog, getSiteStats } from "../data";
+import { hotListName } from "../rising-snapshot";
 import { cardImage } from "../images";
 import { postBySlug } from "../blog";
 import { postContext } from "../blog/context";
@@ -144,4 +145,55 @@ export async function blogOg(slug: string): Promise<ImageResponse> {
     warn(`blog(${slug})`, err);
     return fallbackOg();
   }
+}
+
+/** (e) /decks/[slug]: the deck's title and what it costs to build (US), beside its Leader and two dearest cards. */
+export async function deckOg(slug: string): Promise<ImageResponse> {
+  try {
+    const [deck, cat] = await Promise.all([getPublishedDeck(slug), getCatalog()]);
+    if (!deck) return fallbackOg();
+    let total: number | null = 0;
+    for (const l of deck.lines) {
+      const p = cat.byId.get(l.cardId)?.low.US ?? null;
+      if (p == null) {
+        total = null;
+        break;
+      }
+      total += p * l.qty;
+    }
+    const cards = deck.lines.map((l) => cat.byId.get(l.cardId)).filter((c): c is NonNullable<typeof c> => !!c && c.hasImage);
+    const leader = cards.find((c) => c.id === deck.leaderCardId);
+    const rest = cards.filter((c) => c.id !== deck.leaderCardId).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0));
+    const ids = [...(leader ? [leader] : []), ...rest].slice(0, 3).map((c) => c.id);
+    const arts = await Promise.all(ids.map((id) => ogArt(cardImage.tile(id))));
+    const title = total != null ? `${deck.title}: ${ogDollars(total)} to build` : deck.title;
+    return ogResponse(<BlogImage title={title} arts={arts} badge="DECK" footer={`${deck.leaderName} · ${deck.cardCount} cards, priced in six markets`} />, OG_CACHED);
+  } catch (err) {
+    warn(`deck(${slug})`, err);
+    return fallbackOg();
+  }
+}
+
+/**
+ * A minted Hot 40 snapshot (/rising/[token]): its frozen title beside the top
+ * three cards' art — every figure from the frozen row (getRisingSnapshot),
+ * nothing recomputed. A missing token or an empty run draws the fallback.
+ */
+export async function risingOg(token: string): Promise<ImageResponse> {
+  try {
+    const snap = await getRisingSnapshot(token);
+    if (!snap || !snap.data.picks.length) return fallbackOg();
+    const top = snap.data.picks.slice(0, 3);
+    const arts = await Promise.all(top.map((p) => (p.imageThumbUrl ? ogArt(cardImage.tile(Number(p.id))) : Promise.resolve(null))));
+    const day = new Date(snap.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+    return ogResponse(<BlogImage title={snap.title} arts={arts} badge={hotListName(snap.data.picks.length).replace("OP Compare ", "").toUpperCase()} footer={`A frozen snapshot of Rising Cards, ${day}`} />, OG_CACHED);
+  } catch (err) {
+    warn(`rising(${token.slice(0, 6)}…)`, err);
+    return fallbackOg();
+  }
+}
+
+/** US cents as "$123" / "$12.34" for an image headline. */
+function ogDollars(cents: number): string {
+  return cents >= 100_000 ? `$${Math.round(cents / 100).toLocaleString("en-US")}` : `$${(cents / 100).toFixed(2)}`;
 }

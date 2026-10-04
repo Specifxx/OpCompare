@@ -10,7 +10,12 @@ import { faqLd } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
 import { ipKey, rateLimit } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
-import { DeckPricer } from "./DeckPricer";
+import { DeckBuilder } from "@/components/DeckBuilder";
+import { HubIntro } from "@/components/HubIntro";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForTool } from "@/lib/content/tool-guides";
+import { decodeList } from "@/lib/deck";
+import { getEmailStatus } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +23,11 @@ const TITLE = "One Piece Deck Price Calculator — Price Any Decklist";
 const DESC =
   "Paste a One Piece Card Game decklist and price every card at the cheapest in-stock store in your market, with TCGplayer's market price, a total and a link to each store. Free, no account.";
 
+// ?list= is UTF-8 base64 (lib/deck.ts encodeList, the encoding Best Basket
+// decodes); a plain list from an older link still reads as itself.
 function readList(sp: { list?: string | string[] }): string {
   const v = Array.isArray(sp.list) ? sp.list[0] : sp.list;
-  return (v ?? "").slice(0, 6000);
+  return decodeList((v ?? "").slice(0, 12000));
 }
 
 // A shared list unfurls with its own total ("This One Piece deck costs $X"),
@@ -33,7 +40,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
   const list = readList(searchParams);
   if (!list.trim()) return base;
   try {
-    if (!rateLimit(`deck-price:${ipKey(new Request("http://deck.local/", { headers: headers() }))}`, 40, 60_000).ok) return base;
+    if (!rateLimit(`deck-price:${ipKey(new Request("http://deck.local/", { headers: headers() }))}`, 30, 60_000).ok) return base;
     const country = getCountry();
     const r = await priceDeck(list, country);
     const t = r.totals[country];
@@ -49,11 +56,11 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
 const FAQS = [
   {
     q: "Which decklist formats does the deck pricer read?",
-    a: "The exports of the common One Piece deck builders (4xOP01-016), plain quantities (4 OP01-016 or OP01-016 x4), names with numbers (4 Nami (OP01-016)) and names alone. Section headers such as Leader, Characters, Events and DON!! are skipped. A line it cannot match is listed under the total, never silently dropped.",
+    a: "The exports of the common One Piece deck builders (4xOP01-016, as OPTCGSim, Egman and Limitless write them), plain quantities (4 OP01-016 or OP01-016 x4), names with numbers (4 Nami (OP01-016)) and names alone, which count as one copy. Section headers such as Leader, Characters, Events and DON!! are skipped, and DON!! cards are never priced. A line it cannot match is listed under the total with a search for it, never silently dropped. Up to 200 lines are priced.",
   },
   {
     q: "Which printing does it price?",
-    a: "A card number on its own means the card's standard print. Every line has a printing switch, so you can price the Parallel, Manga, SP or a reprint instead; the switch is kept in the share link. A name without a number is matched to the card most printings share and marked as a guess.",
+    a: "A card number on its own means the card's standard print. Every line has a printing switch, so you can price the Parallel, Manga, SP or a reprint instead; the switch is kept in the share link. A name without a number is matched to the card most printings share, and a name we could only match in part is marked as a guess with a search to fix it.",
   },
   {
     q: "Where do the prices come from?",
@@ -61,12 +68,13 @@ const FAQS = [
   },
   {
     q: "Is it free?",
-    a: "Yes, with no account. The Buy List Planner, part of Premium, takes the same list further: the cheapest single-store orders and a minimum condition.",
+    a: "Yes, with no account. To buy the list, \"Buy this deck for less\" hands it to Best Basket, which prices the whole order with each store's measured postage: a free account sees its delivered total, and Premium shows which store to buy each card from.",
   },
 ];
 
-export default function DeckPage({ searchParams }: { searchParams: { list?: string | string[] } }) {
+export default async function DeckPage({ searchParams }: { searchParams: { list?: string | string[] } }) {
   const c = COUNTRIES[getCountry()];
+  const emailOn = (await getEmailStatus()) === "on";
   return (
     <div>
       <JsonLd
@@ -83,18 +91,21 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
       <JsonLd data={faqLd(FAQS)} />
       <Breadcrumbs trail={[{ href: "/tools", name: "Tools" }, { name: "Deck Price Calculator" }]} />
       <h1 className="mb-4 text-3xl text-white sm:text-4xl">Deck Price Calculator</h1>
-      <DeckPricer initialList={readList(searchParams)} />
-      <div className="mt-8">
+      <DeckBuilder initialList={readList(searchParams)} emailOn={emailOn} />
+      {/* The editorial intro sits BELOW the builder: /deck opens on the tool. */}
+      <HubIntro path="/deck" className="mt-8 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400" />
+      <div className="mt-6">
         <InShort>
-          Paste any One Piece decklist and every card is matched to its exact printing and priced at the cheapest in-stock store in {c.place}, with a
-          total, a link to each store and the same list priced in all six markets. Switch any line to its Parallel or Manga print, copy a link that loads
-          your list, or send it to the{" "}
-          <Link href="/tools/buy-list" className="text-brand-400 hover:underline">
-            Buy List Planner
-          </Link>
-          .
+          Paste any One Piece decklist and every card is matched to its exact printing and priced at the cheapest in-stock store in {c.place}, with
+          a total, a link to each store and the same list priced in all six markets. Switch any line to its Parallel or Manga print, copy a link that
+          loads your list, or hand it to{" "}
+          <Link href="/tools/best-basket" className="text-brand-400 hover:underline">
+            Best Basket
+          </Link>{" "}
+          for the cheapest delivered order.
         </InShort>
       </div>
+      <RelatedGuides guides={guidesForTool("/deck")} />
       <section className="mt-8 max-w-3xl">
         <h2 className="mb-3 text-2xl text-white">Questions</h2>
         <Faq items={FAQS} />

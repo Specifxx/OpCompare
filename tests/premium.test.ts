@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { planBuyList } from "../src/lib/buy-list";
+import { planBasket } from "../src/lib/basket";
 import { checkoutParams } from "../src/lib/checkout-params";
 import { sanitizeNextPath } from "../src/lib/next-param";
 import { normaliseProfile } from "../src/lib/oauth";
@@ -115,18 +115,20 @@ test("prices: RiftCompare's, and each tier × interval has its own lookup key", 
   assert.equal(new Set(["plus", "premium"].flatMap((t) => ["month", "year"].map((i) => lookupKey(t as "plus", i as "month")))).size, 4);
 });
 
-test("the Buy List Planner: cheapest split and best single store", () => {
-  const plan = planBuyList([
-    { slug: "a", name: "A", offers: [{ source: "store:x", priceCents: 100, url: "u", inStock: true }, { source: "store:y", priceCents: 120, url: "u", inStock: true }] },
-    { slug: "b", name: "B", offers: [{ source: "store:y", priceCents: 200, url: "u", inStock: true }, { source: "store:x", priceCents: 50, url: "u", inStock: false }] },
-    { slug: "c", name: "C", offers: [{ source: "store:z", priceCents: 10, url: "u", inStock: false }] },
-  ]);
-  assert.equal(plan.splitTotalCents, 300);
-  assert.deepEqual(plan.split.map((b) => [b.source, b.totalCents]), [["store:y", 200], ["store:x", 100]]);
-  assert.equal(plan.single[0].source, "store:y"); // stocks both A and B
-  assert.equal(plan.single[0].totalCents, 320);
-  assert.deepEqual(plan.single[1].missing, ["B"]);
-  assert.deepEqual(plan.unavailable, ["C"]);
+test("Best Basket: the cheapest split beats buying each card where it is cheapest once postage counts", () => {
+  const flat = (cents: number) => ({ name: "", postage: () => ({ cents, label: "Standard", tracked: true, basis: "measured" as const, free: false, upTo: false }) });
+  const stores = { x: { ...flat(500), name: "X" }, y: { ...flat(500), name: "Y" } };
+  const { plan, alternatives } = planBasket(
+    [
+      { cardId: "1", name: "A", slug: "a", qty: 1, listings: [{ retailer: "x", priceCents: 100, url: "https://x.example/a" }, { retailer: "y", priceCents: 120, url: "https://y.example/a" }] },
+      { cardId: "2", name: "B", slug: "b", qty: 1, listings: [{ retailer: "y", priceCents: 200, url: "https://y.example/b" }] },
+    ],
+    stores,
+  );
+  assert.equal(plan.storeCount, 1); // both from Y: 320 + 500 postage, not 300 + 1000
+  assert.equal(plan.totalCents, 820);
+  assert.equal(plan.naiveTotalCents, 1300);
+  assert.equal(alternatives.singleStore?.stores[0].key, "y");
 });
 
 const read = (p: string) => fs.readFileSync(path.resolve(__dirname, "..", p), "utf8");
@@ -138,7 +140,7 @@ test("the session is never read by the layout, and gated rows are cut in the que
   // by pageSize in the ranking call itself (tests/deals.test.ts pins the rest).
   assert.match(deal, /access === "none" \? null/);
   assert.match(deal, /pageSize: FREE_DEAL_ROWS/);
-  assert.match(read("src/app/api/buy-list/route.ts"), /isPremium\(user, "premium"\)/);
+  assert.match(read("src/app/api/basket/route.ts"), /isPremium\(user, "premium"\)/);
 });
 
 test("the proof line and the proof route agree on the count's key", () => {
