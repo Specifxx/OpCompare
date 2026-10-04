@@ -24,6 +24,7 @@ export interface EbayItem {
   itemAffiliateWebUrl?: string;
   condition?: string;
   conditionId?: string;
+  image?: { imageUrl?: string };
 }
 
 // ── Queries ──────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export interface EbayListing {
   url: string; // EPN-tagged
   condition: string | null;
   location: string | null; // seller's itemLocation.country
+  imageUrl: string | null; // Browse's own item image, for the listing panels
 }
 
 const toCents = (v: string | undefined): number | null => {
@@ -173,7 +175,44 @@ export function mapItem(it: EbayItem): EbayListing | null {
     url: ebayAffiliateUrl(href),
     condition: ebayConditionLabel(it.condition),
     location: it.itemLocation?.country?.toUpperCase() ?? null,
+    imageUrl: it.image?.imageUrl && /^https:\/\//.test(it.image.imageUrl) ? it.image.imageUrl : null,
   };
+}
+
+// ── Graded slabs ─────────────────────────────────────────────────────────────
+// A slab IS the card but is not comparable to a raw one (it trades far above),
+// so it is never a price row, an Offer or part of any comparison. The Browse
+// search the price pass already makes returns them anyway; they are captured
+// for the card page's Graded tab instead of being discarded (zero extra calls).
+export const GRADED_SLAB = /\b(psa|bgs|cgc|sgc)\b/i;
+
+export function isGradedListing(title: string): boolean {
+  return GRADED_SLAB.test(title ?? "");
+}
+
+export interface ParsedGrade {
+  grader: "PSA" | "BGS" | "CGC" | "SGC" | null;
+  grade: number | null;
+}
+
+// The grader must sit IMMEDIATELY before the number (spaces or a dash between):
+// "1 of 10 PSA graded" and "PSA graded, see photos" state no grade. Half grades
+// exist only below 10, and 10 is tried first so a PSA 10 is not read as a PSA 1.
+const GRADE_RE = /\b(PSA|BGS|CGC|SGC)\s*[-–]?\s*(10(?:\.0)?|[1-9](?:\.5)?)\b/i;
+const GRADER_ONLY_RE = /\b(PSA|BGS|CGC|SGC)\b/i;
+
+/** The grader and numeric grade in an eBay title; the grader alone when no grade follows it. */
+export function parseGrade(title: string): ParsedGrade {
+  const t = title ?? "";
+  const m = GRADE_RE.exec(t);
+  if (m) return { grader: m[1].toUpperCase() as ParsedGrade["grader"], grade: parseFloat(m[2]) };
+  const g = GRADER_ONLY_RE.exec(t);
+  return { grader: g ? (g[1].toUpperCase() as ParsedGrade["grader"]) : null, grade: null };
+}
+
+export interface GradedListing extends EbayListing {
+  grader: string;
+  grade: string; // "10", "9.5", or "Graded" when the title names a grader but no grade
 }
 
 const delivered = (l: EbayListing) => l.priceCents + (l.shippingCents ?? 0);
@@ -238,7 +277,15 @@ export function siblingPrintings(idx: CardIndex, number: string, id: number): In
  * number ranges, OP Compare's matcher over the FULL index, and the sibling-set
  * rule. Returns the reject reason, or null.
  */
-export function identityReject(title: string, target: ChooseTarget): string | null {
+export function identityReject(title: string, target: ChooseTarget, opts: { graded?: boolean } = {}): string | null {
+  // A slab's own words ("PSA 10", "gem mint", "graded") are what make it a slab,
+  // not reasons to reject it: strip them, then judge the rest as a raw single.
+  if (opts.graded) {
+    title = title
+      .replace(new RegExp(GRADE_RE.source, "gi"), " ")
+      .replace(/\b(psa|bgs|cgc|sgc|beckett|graded|slab(?:bed)?|gem\s*mint|pristine|black label)\b/gi, " ")
+      .replace(/\s+/g, " ");
+  }
   const own = ownText(target);
   if (strayWords(title, EBAY_JUNK, own).length) return "junk";
   if (strayWords(title, EBAY_FOREIGN_OR_FAKE, own).length) return "foreign-or-fake";
@@ -362,6 +409,45 @@ export function screenItems(items: EbayItem[], target: ChooseTarget, market: Cou
     }
   }
   return { survivors, rejects };
+}
+
+/**
+ * Graded slabs in a result set: identity as for a raw single (the same matcher,
+ * minus the slab words), fixed price, the market's currency, a known grader.
+ * Priced against nothing (a slab trades above raw) except one guard: below half
+ * the raw reference it is a mislabelled raw card or a bait price. Best grade
+ * first, then price; at most `limit`. Never an Offer.
+ */
+export function screenGraded(items: EbayItem[], target: ChooseTarget, market: Country, limit = 6): GradedListing[] {
+  if (target.kind !== "single") return [];
+  const cur = currencyOf(market);
+  const ref = target.marketUsd ?? target.refUsd ?? null;
+  const seen = new Set<string>();
+  const out: (GradedListing & { n: number })[] = [];
+  for (const it of items) {
+    const title = it.title ?? "";
+    if (!(it.conditionId === GRADED_CONDITION_ID || isGradedListing(title))) continue;
+    if (it.price?.currency !== cur || !(it.buyingOptions ?? []).includes("FIXED_PRICE")) continue;
+    const loc = it.itemLocation?.country?.toUpperCase();
+    if (loc && REJECT_LOCATIONS.has(loc)) continue;
+    const g = parseGrade(title);
+    if (!g.grader) continue;
+    if (identityReject(title, target, { graded: true })) continue;
+    const l = mapItem(it);
+    if (!l || seen.has(l.itemId)) continue;
+    if (ref != null && toUsdCents(l.priceCents, l.currency) < 0.5 * ref) continue;
+    seen.add(l.itemId);
+    out.push({ ...l, grader: g.grader, grade: g.grade == null ? "Graded" : String(g.grade), n: g.grade ?? -1 });
+  }
+  out.sort((a, b) => b.n - a.n || a.priceCents - b.priceCents);
+  return out.slice(0, limit).map(({ n: _n, ...rest }) => rest);
+}
+
+/** The panel's listings: the headline pick first, then the rest of the survivors, never more than `limit`. */
+export function panelListings(survivors: EbayListing[], pick: EbayListing | null, banned?: Set<string>, limit = 8): EbayListing[] {
+  const list = pruneCheapOutliers(banned?.size ? survivors.filter((l) => !banned.has(l.itemId)) : survivors);
+  const rest = list.filter((l) => l.itemId !== pick?.itemId);
+  return (pick ? [pick, ...rest] : rest).slice(0, limit);
 }
 
 /** The head of the survivors after the outlier prune, skipping item ids already claimed by another product. */

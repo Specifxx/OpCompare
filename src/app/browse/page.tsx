@@ -1,3 +1,4 @@
+import { EbayPicks } from "@/components/EbayPicks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
@@ -211,6 +212,7 @@ export default async function BrowsePage({
             pages={pages}
             href={(p) => browseHref(searchParams, { page: String(p) })}
           />
+          <EbayPicks country={country} className="mt-8" page="browse" />
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>

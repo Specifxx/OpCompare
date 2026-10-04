@@ -15,6 +15,7 @@ import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
+import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { CardNoListings } from "@/components/CardNoListings";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -607,6 +608,9 @@ export default async function CardPage({ params }: Props) {
               </a>
             </p>
           </section>
+
+          {/* The last in-column section: captured eBay listings and slabs. */}
+          <EbayCardPanel productId={card.id} country={country} query={ebayQuery} name={title} card={card.slug} rawCents={lite?.low[country] ?? null} preRelease={preRelease} />
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import { EbayPicks } from "@/components/EbayPicks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
@@ -199,6 +200,8 @@ export default async function PostPage({ params }: Props) {
             </section>
           ))}
         </div>
+
+        <EbayPicks country={country} className="mt-10" page="article" />
 
         <BlogShopStrip
           cards={shopCards}

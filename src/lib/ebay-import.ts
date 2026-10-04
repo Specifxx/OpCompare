@@ -26,8 +26,11 @@ import {
   sealedFilter,
   selfMatches,
   sealedQuery,
+  panelListings,
+  screenGraded,
   type ChooseTarget,
   type EbayListing,
+  type GradedListing,
 } from "./ebay-match";
 import {
   DEFAULT_MIN_VALUE_CENTS,
@@ -256,6 +259,7 @@ export async function runEbayPass(
   const banned = new Map<string, Set<string>>(); // market → item ids dropped for a collision
   const claimed = new Map<string, number>(); // itemId|market → productId
   const survivorsOf = new Map<string, EbayListing[]>(); // productId|market → survivors
+  const gradedOf = new Map<string, GradedListing[]>(); // productId|market → slabs (display only, never an Offer)
   const kindOf = (id: number): "single" | "sealed" => (cards.has(id) ? "single" : "sealed");
   const bannedIn = (m: string) => banned.get(m) ?? banned.set(m, new Set()).get(m)!;
 
@@ -288,6 +292,28 @@ export async function runEbayPass(
         ops.push(prisma.offer.deleteMany({ where: { productId, source: "ebay_us", market: "CA" } }));
         caWrite = "delete";
       }
+    }
+    // The listing panels (EbayListing: the first 8 survivors, headline pick
+    // first; EbayGradedListing: slabs). Replaced as one set in the SAME
+    // transaction, and only here, which only runs after a COMPLETED search.
+    const panel = panelListings(survivorsOf.get(pairKey(productId, market)) ?? [], listing, bannedIn(market));
+    const slabs = gradedOf.get(pairKey(productId, market)) ?? [];
+    ops.push(prisma.ebayListing.deleteMany({ where: { productId, market } }));
+    if (panel.length) {
+      ops.push(
+        prisma.ebayListing.createMany({
+          data: panel.map((l, rank) => ({ productId, market, rank, priceCents: l.priceCents, shippingCents: l.shippingCents, currency: l.currency, url: l.url, title: l.title, imageUrl: l.imageUrl, updatedAt: now })),
+        }),
+      );
+    }
+    ops.push(prisma.ebayGradedListing.deleteMany({ where: { productId, market } }));
+    if (slabs.length) {
+      ops.push(
+        prisma.ebayGradedListing.createMany({
+          data: slabs.map((l) => ({ productId, market, itemId: l.itemId, priceCents: l.priceCents, shippingCents: l.shippingCents, currency: l.currency, url: l.url, title: l.title, imageUrl: l.imageUrl, grader: l.grader, grade: l.grade, updatedAt: now })),
+          skipDuplicates: true,
+        }),
+      );
     }
     const res = await prisma.$transaction(ops);
     if (caWrite === "write") summary.derivedCA.written++;
@@ -369,12 +395,20 @@ export async function runEbayPass(
     const { survivors, rejects } = screenItems(r.items, r.target!, pair.market as Country);
     for (const [k, v] of Object.entries(rejects)) summary.rejects[k] = (summary.rejects[k] ?? 0) + v;
     survivorsOf.set(pairKey(pair.productId, pair.market), survivors);
+    gradedOf.set(pairKey(pair.productId, pair.market), screenGraded(r.items, r.target!, pair.market as Country));
     const listing = await settle(pair.productId, pair.market);
     const deleted = await writePair(pair.productId, pair.market, listing);
     st.searched++;
     if (pair.kind === "single") st.singles++;
     if (listing) st.matched++;
     else if (deleted) st.deleted++;
+  }
+  // Panel rows not refreshed for 72 hours are dropped: an old eBay row is never shown.
+  // (Only when a search completed: a run that failed everywhere touches nothing.)
+  if (summary.completed > 0) {
+    const sweepBefore = new Date(now.getTime() - 72 * 3600 * 1000);
+    await prisma.ebayListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
+    await prisma.ebayGradedListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
   }
   summary.spent = ebaySpentThisRun();
   summary.latched = summary.breaker ? "failures" : saw429 ? "429" : isEbayRateLimited() ? "budget" : null;
