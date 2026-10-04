@@ -493,7 +493,7 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
   return (
     <div className="mt-4 rounded-xl border border-ink-700 bg-ink-900/60 p-4">
       <label className="mb-1 block text-xs font-medium text-slate-400">
-        Paste a list — one card per line, e.g. <span className="text-slate-300">4 Monkey.D.Luffy</span> or{" "}
+        Paste a list — one card per line, e.g. <span className="text-slate-300">4 OP01-003 Monkey.D.Luffy</span> or{" "}
         <span className="text-slate-300">1 OP01-120 Shanks (Parallel)</span>. Or import a CSV (a TCGplayer export with its
         Product ID, or a card number and printing) to keep the exact printing.
       </label>
@@ -502,7 +502,7 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={5}
-        placeholder={"4 Monkey.D.Luffy\n1 OP01-120 Shanks (Parallel)\n2 ST01-012"}
+        placeholder={"4 OP01-003 Monkey.D.Luffy\n1 OP01-120 Shanks (Parallel)\n2 ST01-012"}
         className="input font-mono sm:text-sm"
       />
       <div className="mt-2 flex items-center gap-2">

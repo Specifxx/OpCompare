@@ -769,7 +769,7 @@ export async function importCollection(account: Account, text: string): Promise<
   const rawLines = text.split(/\r?\n/).filter((l) => l.trim()).slice(0, PASTE_LINE_CAP);
   const lines = [];
   for (let i = 0; i < rawLines.length; i += 100) lines.push(...parseDeckList(rawLines.slice(i, i + 100).join("\n")));
-  if (!lines.length) return err(400, "Paste a list like “4 Monkey.D.Luffy” or “1 OP01-120 Shanks (Parallel)”.");
+  if (!lines.length) return err(400, "Paste a list like “4 OP01-003 Monkey.D.Luffy” or “1 OP01-120 Shanks (Parallel)”.");
   const idx = indexCards(cat.cards);
   const wants: Want[] = [];
   const unmatched: string[] = [];
@@ -777,6 +777,14 @@ export async function importCollection(account: Account, text: string): Promise<
     const r = resolveLine(l, idx);
     if (!r.card) {
       unmatched.push(l.raw);
+      continue;
+    }
+    // A bare name shared by several cards ("Monkey.D.Luffy" is dozens) is not a
+    // card: /deck guesses and flags it, but a binder holds what the owner owns,
+    // so a guess would silently misvalue it. Skipped and reported, like an
+    // ambiguous store listing (CLAUDE.md "Matching store listings").
+    if (r.how === "name" && r.ambiguous) {
+      unmatched.push(`${l.raw} (add the card number)`);
       continue;
     }
     const base = r.card;

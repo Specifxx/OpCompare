@@ -45,8 +45,8 @@ export function NewsletterSignup({
     if (!active || active === document.body || formRef.current?.contains(active)) doneRef.current?.focus();
   }, [state]);
 
-  const label = heading ?? `Get the weekly ${siteName} market summary in your inbox`;
-  const doneMsg = done ?? "You're on the list. The first summary lands this week.";
+  const label = heading ?? `📬 Get the weekly ${siteName} market summary in your inbox`;
+  const doneMsg = done ?? "✓ You're on the list — first summary lands this week.";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,7 +102,7 @@ export function NewsletterSignup({
               Check the email and try again.
             </span>
           )}
-          {variant === "card" && <span className="text-[11px] text-slate-500">Free, weekly, unsubscribe anytime.</span>}
+          {variant === "card" && <span className="text-[11px] text-slate-500">Free, weekly-ish, unsubscribe anytime.</span>}
         </>
       )}
     </form>
