@@ -1328,3 +1328,160 @@ copies as separate products). Every new store matched at least 16 listings; the
 full import took 13 minutes (8 before). PokéBox (AU, an existing store) failed
 on a different collection in each of the two runs; it also failed in two
 earlier runs today, so it is not this change.
+
+## 2026-10-04 — My binder, the set checklist and the share link (RiftCompare parity)
+
+The owner asked for RiftCompare's portfolio, set tracker and share link
+("all the premium features"). Ported from RiftCompare's `portfolio/**`,
+`getPortfolio`, `set-scope`, `set-gap`, `collection-csv` and `share` with One
+Piece's own data; the names are "My binder" on the page and `portfolio` in the
+code and URLs.
+
+- **A card is one printing.** `CollectionCard.cardId` is `Card.id` (the
+  TCGplayer productId), so owning the standard Shanks OP01-120 does not tick its
+  Parallel or its Manga, and the quick-add and the CSV take a printing, never a
+  guess. The foil toggle is hidden (`Card.finish` decides it). Free accounts hold
+  50 cards (`FREE_PORTFOLIO_LIMIT`, the reversal recorded under "Wave-2 free
+  limits"), Plus and Premium are unlimited; the cap of 999 copies per card and the
+  2,000-row read cap are RiftCompare's.
+- **The value is the visitor's market.** `Card.low<MKT>` × the condition
+  multiplier × quantity, with 7-day and 30-day deltas. The chart walks back from
+  today's local total with `marketUsd` ratios (falling back to `lowUsd`) from the
+  new `history/recent/<bucket>.json` files (last 120 days per bucket, written by
+  the import beside the full bucket files, read by `getRecentHistory` pinned to
+  `Meta.historyRef`, falling back to `products/<bb>.json` before the first
+  import writes one). `METHODOLOGY_BREAKS` is empty: OP Compare's index has had
+  no re-basing. The chart says "daily since 2026-10-03, movement from TCGplayer
+  market prices (US), shown in your currency" because that is exactly what it is.
+- **Set checklist scopes are One Piece's.** "Base set" is the standard and reprint
+  printings, Leaders included, DON!! excluded; "Every printing we track" adds
+  Parallels, Manga, SP, Treasure Rares, special foils and DON!! cards. A promo
+  printing in a booster group is in neither. Progress counts only cards with a
+  store price, a pre-release set shows "N revealed" with no denominator, and the
+  missing list reads `1 Shanks OP01-120 (Parallel)`. `getSetChecklist` reads one
+  grouped Offer query (in stock, under 72 h old, real stores and TCGplayer,
+  never eBay).
+- **CSV keys.** A TCGplayer `Product ID` / `TCGplayer Id` column is exactly
+  `Card.id`; otherwise a number plus a printing column; a bare number matches only
+  when exactly one printing carries it, else the row is skipped with a reason
+  (the matcher rule: an ambiguous listing is skipped, not guessed). The export
+  (`opcompare-binder-YYYY-MM-DD.csv`) writes `printing` and `tcgplayer_id` and
+  round-trips. 500 KB, a write budget and limit ordering as on RiftCompare.
+- **Replacement cost is before postage until Best Basket lands.**
+  `/api/portfolio/replacement` prices each held copy at its cheapest real-store
+  or TCGplayer listing in the visitor's market and labels the total "before
+  postage"; the store-by-store plan is Premium's, through the tools track's
+  `planBasket` (the integrator swaps it in). Never eBay.
+- **The share link has no image of its own.** `/c/<token>` is noindex/nofollow,
+  valued in the viewer's market, with the token from `crypto` random, the
+  projection selecting fields by name so cost basis and notes can never appear,
+  and rotation as the only revocation (the old token 404s). It uses the root
+  fallback share image (CLAUDE.md "Share images": a per-user image would be a
+  loader and a render for every share, with the owner's collection in a public
+  PNG).
+
+## 2026-10-04 — Email: OP Compare's own Resend account, script-side, off until configured
+
+Everything RiftCompare emails (alerts, release alerts, the welcome email, the
+weekly newsletter) is ported, and **all of it is dark until the owner adds both
+`RESEND_API_KEY` and `EMAIL_FROM` as GitHub Actions secrets**. It follows the
+eBay keyset discipline (CLAUDE.md "The eBay API"):
+
+- **Script-side only.** Sends run in `scripts/alerts.ts` (after each import),
+  `scripts/email-hourly.ts` (`email.yml`, minute 23, its own concurrency group)
+  and `scripts/newsletter.ts` (`email-weekly.yml`, Fridays 21:00 UTC). A request
+  never sends: the newsletter and anonymous-watch routes write a row
+  (`welcomeSentAt` / `confirmSentAt` null) and the hourly outbox sends, under
+  the same caps. The provider hosts live only in `src/lib/email.ts`, the key
+  names only there and in `email*.yml` / `import-prices.yml`; no `src/app` file
+  imports the mail module or a module that sends; the newsletter's signup half
+  is `lib/newsletter-signup.ts` so a route imports no sending code
+  (`tests/no-email-api.test.ts`, modelled on `no-ebay-api`).
+- **Off is a green no-op, refused is red.** `isEmailEnabled()` needs both
+  secrets. Off, every runner records Meta `email` = `off` and exits 0 having
+  claimed and stamped nothing (so the first run with email on still finds every
+  pending row). A key that is set but refused by the provider (401/403) records
+  `off` again and exits 1. The runners record Meta `email` first;
+  `getEmailStatus()` is what every page reads, so **no sentence promises an
+  email and no email field renders while it says off** (`EmailOnly` wraps the
+  footer, `/movers` and article newsletter forms and the release-alert forms).
+- **Alerts are delivered in-app while email is off.** The alert run still does
+  its work: every trigger an account would have been emailed writes one
+  Notification (the member track's `notify()`) and `lastFlaggedAt`, and the
+  baselines advance exactly as after a send. `lastNotifiedAt` and
+  `lowestEmailedCents` are NEVER written by a flag (they mean "an email was
+  sent"); the weekly cap and the 20 h paid cooldown read the later of the two
+  stamps so the in-app cadence matches the email one; the send budget, the
+  per-run caps and `AlertMute` (a pause of email) do not apply to in-app
+  delivery. An anonymous watch has nowhere in-app to go, so it is held, baseline
+  kept, until email is on (and the anonymous form that creates one is itself
+  hidden: it needs email on AND `NEXT_PUBLIC_ANON_ALERTS=1`, the owner's call).
+- **Every alert email** carries a plain-text part plus `List-Unsubscribe` and
+  `List-Unsubscribe-Post`. The one-tap links (stop, snooze, target) are signed
+  with a key derived from a NEW shared secret, `EMAIL_LINK_SECRET` (label
+  `alert-action:v1`, 32+ characters), failing closed when unset: never
+  `AUTH_SECRET`, which does not go into Actions. A GET of an action link only
+  redirects to a confirm card; only its POST acts, so mail scanners are harmless.
+  The inbox's own Unsubscribe pauses (`AlertMute`, watchlist kept) and never
+  deletes.
+- **Resend's 100 a day is the binding constraint**, so the budget is RiftCompare's
+  (`ALERT_DAILY_BUDGET` 50 distinct addresses per rolling 20 h, the free run at
+  most 35, first-contact 20, first-price 25, paid cap 30, 30 confirmations a
+  day) and the welcome email has no trial variant (OP Compare offers none; its
+  copy names only what ships, from `free-limits.ts` and `plans.ts`).
+
+## 2026-10-04 — The alert engine over Offer rows
+
+RiftCompare's price-alert rules, unchanged in logic, over OP Compare's schema
+(`scripts/alerts.ts`, modes `free` / `paid` / `baseline`, an `ImportRun` row of
+kind `alerts`, red only for a refused key):
+
+- **The alert price** (`lib/alert-price.ts`) is the cheapest in-stock Near Mint
+  (or unstated-condition) copy at a real store (`source` starting `store:`) or
+  TCGplayer's cheapest US listing (`tcgplayer`), updated within 36 h; states
+  priced, sold out or unknown (a row 36–72 h old, or up to 14 days, still claims
+  stock, so an outage is never read as a sell-out). **Never `ebay*`, never
+  `Card.low<M>`** (which includes eBay). The below-market trigger reads
+  `Card.marketUsd` converted with OP's fx table; the US guard is TCGplayer's own
+  cheaper listing. Postage is not known for OP stores, so an alert says "item
+  price, postage extra" and never "delivered".
+- **Rules** (all RiftCompare's, constants quoted by `/alerts` and pinned by
+  tests): free new low ≥5% and ≥50 minor units against the emailed watermark or
+  the drop anchor, one email a week; first price and pre-order; restock after
+  ≥20 h sold out across 2 runs; a paid target (re-fires only a further 10%
+  down, re-arms above the target); below market ≥15%; a 40% outlier low held one
+  run; snooze; pause.
+- **Workflow.** `import-prices.yml` runs, after a successful import only
+  (`!cancelled() && steps.import.outcome == 'success'`): free then paid after the
+  07:07 import, paid only after 19:07, and on a manual dispatch the `alerts`
+  input (`none` the default, `baseline` after a matcher change moves every
+  baseline and sends nothing, `free` recovers a missed 07:07 run). Deck watches
+  run in the paid mode through the tools track's `runDeckWatches` (loaded by
+  name, skipped if absent), then the sealed watches and the release alerts, all
+  under one shared send cap.
+- **Sealed watches** are checked "twice a day" (the import cadence), restock
+  after ≥5 h sold out at every real store, 6 h restock cooldown and 24 h for the
+  rest, real stores only (never eBay, never the TCGplayer reference row), and no
+  at-RRP alert until there is an MSRP table.
+
+## 2026-10-04 — Release alerts and the weekly newsletter
+
+- **Release alerts** are generalised over every set whose `releasedOn` is in the
+  future or within 30 days (RiftCompare's was one hard-coded set). A signup is
+  one field, no account: singles once a `store:%` in-stock Offer exists in its
+  market (a card-page signup waits for that card's first store price), and a
+  restock of a sold-out presale product while the set is unreleased. At most two
+  emails per address per set and 40 a run; unsubscribe is POST-only. The forms
+  render only while email is on (`ReleaseAlertSlot`) on `/release-dates`, set
+  pages, presale sealed pages and unreleased card pages.
+- **Newsletter.** One edition per ISO week (`editionKey`), stamped per subscriber
+  only after a successful send, so a re-run resumes. Movers are OP Compare's own
+  (TCGplayer market against 7 days ago, `Card.change7d`, US$1+ cards; "best
+  value" is under the 90-day high), read once per run by one narrow uncached
+  query (a script has no Next.js cache) and the same for every market, each
+  market's edition adding its own cheapest listing; "new One Piece cards this
+  week" is `Card.firstSeen` in the last 7 days. No Index, peaks or articles
+  sections: each would need a cached loader the script cannot call, and every
+  figure that is there comes from rows the site shows. The sponsor slot is
+  built with an empty booking list (a labelled "sponsor this newsletter" line
+  until the owner adds one).
