@@ -15,10 +15,23 @@ import { getCountry } from "@/lib/get-country";
 import { withArticle } from "@/lib/filter-chips";
 import { median } from "@/lib/selectors";
 import { pageOgOwnImage } from "@/lib/og/meta";
+import { BrowseFilters } from "@/components/BrowseFilters";
+import { EbayPicks } from "@/components/EbayPicks";
+import { FilterChips } from "@/components/FilterChips";
+import { Pagination } from "@/components/Pagination";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { SetGridControls } from "@/components/sets/SetGridControls";
+import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
+import { JsonLd } from "@/components/ui";
+import { browseHref, parseBrowse, runBrowse, type SearchParams } from "@/lib/browse";
+import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { breadcrumbLd } from "@/lib/jsonld";
+import { setPriceGuideRows } from "@/lib/set-price-guide";
 
-type Props = { params: { slug: string }; searchParams: { sort?: string } };
+type Props = { params: { slug: string }; searchParams: SearchParams };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const cat = await getCatalog();
   const s = cat.setBySlug.get(params.slug);
   if (!s) return { title: "Set not found" };
@@ -28,6 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: `Every card in One Piece ${s.name} (${s.code}) with live prices compared across stores in six markets — the full card list, the chase cards and the set's sealed product.`,
     alternates: { canonical: `/sets/${s.slug}` },
     openGraph: pageOgOwnImage(`/sets/${s.slug}`),
+    // A filtered, sorted or paged grid is a slice of the same list: noindex, follow.
+    ...(Object.keys(searchParams).length ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -38,13 +53,20 @@ export default async function SetPage({ params, searchParams }: Props) {
   const set = cat.setBySlug.get(params.slug);
   if (!set) notFound();
   const cards = cat.cards.filter((x) => x.setId === set.id);
-  const byValue = searchParams.sort !== "number";
-  const sorted = [...cards].sort(
-    byValue
-      ? (a, b) => (b.marketUsd ?? -1) - (a.marketUsd ?? -1)
-      : (a, b) =>
-          (a.number ?? "~").localeCompare(b.number ?? "~") || a.id - b.id,
-  );
+  const bq = { ...parseBrowse(searchParams), sets: [set.slug] };
+  const grid = runBrowse(cat.cards, cat.sets, cat.setById, { ...bq, per: bq.per }, country);
+  const page = Math.min(bq.page, grid.pages);
+  const narrative = buildCollectionNarrative({
+    kind: "set",
+    label: `${set.name} (${set.code})`,
+    currency: c.currency,
+    place: c.place,
+    members: cards.map((x) => ({ name: x.name, priceCents: x.low[country], setCode: set.code, rarity: x.rarity ?? undefined, collectorNumber: x.number ?? undefined })),
+    siteMedianCents: median(cat.cards.map((x) => x.low[country]).filter((v): v is number => v != null)),
+  });
+  const guideRows = setPriceGuideRows(cards, country);
+  const guides = guidesForCatalogue("sets");
+  const setsByCode = Object.fromEntries(cat.sets.flatMap((x) => [[x.slug, `${x.name} (${x.code})`], [x.code.toLowerCase(), `${x.name} (${x.code})`]]));
   const priced = cards.filter((x) => x.low[country] != null);
   const med = median(priced.map((x) => x.low[country]!));
   const top = [...cards].sort(
@@ -60,6 +82,7 @@ export default async function SetPage({ params, searchParams }: Props) {
 
   return (
     <div>
+      <JsonLd data={breadcrumbLd([{ name: "Sets", path: "/sets" }, { name: set.name, path: `/sets/${set.slug}` }])} />
       <Breadcrumbs
         items={[{ href: "/sets", label: "Sets" }, { label: set.name }]}
       />
@@ -84,6 +107,9 @@ export default async function SetPage({ params, searchParams }: Props) {
           where no {c.adjective} store has the card. Open a card for every
           store&apos;s price.
         </p>
+        {narrative.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -185,45 +211,46 @@ export default async function SetPage({ params, searchParams }: Props) {
         </section>
       ) : null}
 
-      <section className="mt-10">
+      <div className="mt-10">
+        <SetPriceGuide setName={set.name} rows={guideRows} country={country} adjective={c.adjective} currency={c.currency} />
+      </div>
+
+      <EbayPicks country={country} setId={set.id} className="mt-10" page="set" fallbackQuery={onePieceEbayQuery(`${set.name} ${set.code}`)} />
+
+      <section id="cards" className="mt-10 scroll-mt-20">
         <SectionHeader
           title={`Every ${set.code} card`}
-          sub={`${int(cards.length)} printings`}
+          sub={`${int(grid.total)} printings · page ${page} of ${grid.pages}`}
           action={
-            <div className="flex gap-1 rounded-md border border-ink-700 bg-ink-900 p-1 text-sm">
-              <Link
-                href={`/sets/${set.slug}`}
-                className={`rounded px-3 py-1.5 font-semibold ${byValue ? "bg-ink-700 text-white" : "text-slate-400 hover:text-white"}`}
-              >
-                By value
-              </Link>
-              <Link
-                href={`/sets/${set.slug}?sort=number`}
-                className={`rounded px-3 py-1.5 font-semibold ${!byValue ? "bg-ink-700 text-white" : "text-slate-400 hover:text-white"}`}
-              >
-                By number
-              </Link>
-            </div>
+            <Link href={`/sets/${set.slug}/gallery`} className="btn-ghost">
+              Open the gallery →
+            </Link>
           }
         />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {sorted.map((card) => (
-            <CardTile
-              key={card.id}
-              card={card}
-              setCode={set.code}
-              country={country}
-            />
-          ))}
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="min-w-0">
+            <input type="checkbox" id="set-filters-toggle" className="peer sr-only" />
+            <label htmlFor="set-filters-toggle" className="btn-ghost w-full cursor-pointer lg:hidden">
+              Filters
+            </label>
+            <div className="mt-3 hidden peer-checked:block lg:mt-0 lg:block">
+              <BrowseFilters q={bq} sets={cat.sets} country={country} action={`/sets/${set.slug}`} hide={["set"]} />
+            </div>
+          </aside>
+          <div className="min-w-0">
+            <FilterChips basePath={`/sets/${set.slug}`} sets={setsByCode} symbol={c.symbol} adjective={c.adjective} />
+            <SetGridControls basePath={`/sets/${set.slug}`} sort={bq.sort} per={bq.per} />
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {grid.items.map((card) => (
+                <CardTile key={card.id} card={card} setCode={set.code} country={country} />
+              ))}
+            </div>
+            {grid.total === 0 ? <p className="mt-4 rounded-xl border border-ink-700 bg-ink-850 p-6 text-center text-sm text-slate-400">No cards match those filters.</p> : null}
+            <Pagination page={page} pages={grid.pages} href={(n) => browseHref(searchParams, { page: n > 1 ? String(n) : null }, `/sets/${set.slug}`)} />
+          </div>
         </div>
-        <p className="mt-6 text-sm text-slate-400">
-          Filter this set by colour, rarity or printing in the{" "}
-          <Link href={`/browse?set=${set.slug}`} className="text-brand-400 hover:underline">
-            card database
-          </Link>
-          .
-        </p>
       </section>
+      <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
     </div>
   );
 }
