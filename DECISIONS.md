@@ -1993,3 +1993,26 @@ the SKU path then picks the right card (or misses). In the import, products
 whose bare title is shared by several of one store's name-path matches (no SKU
 number to tell them apart) are all skipped as `name-duplicate-title`.
 Understated, never wrong. A real-title test is in `tests/match.test.ts`.
+
+## 2026-10-05 — Language tags, a universal SKU check, and Vercel buy-click events
+
+**Report.** The Card Spot (AU) priced a Japanese OP16-118 as the English card.
+The title ("OP16-118 Portgas D.Ace - One Piece TCG") carries no language; the
+Shopify `tags` ("Japanese") and body do.
+
+**Rules (all price paths, now and for future imports).**
+- `foreignByTags` (tags / product_type: Japanese, Chinese, Korean, Thai,
+  French, German, Italian, Spanish, Portuguese) is a miss `foreign`; the import
+  passes each product's `tags` and `product_type` to `matchStoreProduct`.
+- Whatever path matched, a product whose SKUs agree on a card number different
+  from the matched card's number is a miss `sku-number-mismatch`.
+- The shared-title guard counts ALL of a store's products by trimmed lowercase
+  title, not only name-path matches; a name match with no SKU number whose
+  title is shared is a miss `name-duplicate-title`.
+
+**Buy-click events.** Outbound clicks are measured with Vercel Web Analytics
+custom events: `track("buy_click", {retailer, network, page, surface, card})`
+from a capture-phase listener on `a[data-retailer]` inside the consent-gated
+analytics mount (`src/lib/buy-click.ts`). Nothing reaches our server or the
+database, so no Neon transfer. Custom events need a Vercel Pro plan; see
+Analytics → Events. The GA `buy_click` event is unchanged.

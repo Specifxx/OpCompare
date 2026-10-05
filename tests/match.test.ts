@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import {
   bestVariant,
   buildCardIndex,
@@ -14,6 +16,7 @@ import {
   matchDonTitle,
   matchSealedTitle,
   matchStoreProduct,
+  foreignByTags,
   plausibleSinglePrice,
   setCodesIn,
   skuCardNumber,
@@ -592,4 +595,37 @@ test("a bare \"Name [Set]\" title never takes a card whose SKUs name another num
   assert.notEqual(m("Monkey.D.Luffy [The Time of Battle]", "OP16-999-EN-NF-1"), "name:693419");
   // No SKU at all: the name path still answers (the import then refuses duplicated titles).
   assert.equal(m("Monkey.D.Luffy [The Time of Battle]"), "name:693419");
+});
+
+test("a store's own language tag marks a foreign card even when the title says nothing (wrong-price report: The Card Spot, OP16-118)", () => {
+  // thecardspot.com.au/products/op16-118-portgas-d-ace-one-piece-tcg-1: tags ["Japanese"], body "Language: Japanese"
+  assert.equal(foreignByTags(["Japanese"]), true);
+  assert.equal(foreignByTags("Japanese, Singles"), true);
+  assert.equal(foreignByTags(["English"]), false);
+  assert.equal(foreignByTags(["English", "Japanese"]), true, "a mixed listing is not safe to price");
+  assert.equal(foreignByTags([], "Japanese"), true);
+  assert.equal(foreignByTags(undefined), false);
+  assert.equal(foreignByTags(["Alternate Art", "OP16"]), false);
+  const ix: StoreMatchIndexes = { cards: buildCardIndex([{ id: 694932, name: "Portgas.D.Ace", number: "OP16-118", variant: null, setCode: "OP16", setName: "The Time of Battle" }]), names: buildNameIndex([]), dons: [], sealed: [] };
+  const title = "OP16-118 Portgas D.Ace - One Piece TCG";
+  const hit = matchStoreProduct(title, [], ix);
+  assert.ok("id" in hit && hit.id === 694932, "without the tag the title alone matches");
+  assert.deepEqual(matchStoreProduct(title, [], ix, { tags: ["Japanese"] }), { miss: "foreign" });
+  assert.ok("id" in matchStoreProduct(title, [], ix, { tags: ["English"] }));
+});
+
+test("every path answers to the SKU number: a title number and a SKU number that disagree is no match", () => {
+  const luffy = (id: number, number: string) => ({ id, name: "Monkey.D.Luffy", number, variant: null, setCode: "OP16", setName: "The Time of Battle" });
+  const ix: StoreMatchIndexes = { cards: buildCardIndex([luffy(1, "OP16-015"), luffy(2, "OP16-052")]), names: buildNameIndex([]), dons: [], sealed: [] };
+  const r = (t: string, ...skus: string[]) => { const x = matchStoreProduct(t, skus, ix); return "id" in x ? x.id : x.miss; };
+  assert.equal(r("Monkey.D.Luffy (OP16-015) [The Time of Battle]", "OP16-015-EN-NF-1"), 1);
+  assert.equal(r("Monkey.D.Luffy (OP16-015) [The Time of Battle]", "OP16-052-EN-NF-1"), "sku-number-mismatch");
+  assert.equal(r("Monkey.D.Luffy (OP16-015) [The Time of Battle]", "OP16-015-EN-NF-1", "OP16-052-EN-NF-2"), 1, "SKUs that disagree among themselves give no number to compare");
+});
+
+test("the import skips a bare title that a store shares between products, whatever path matched the twin", () => {
+  const src = fs.readFileSync(path.resolve(__dirname, "../src/lib/import.ts"), "utf8");
+  assert.match(src, /for \(const \{ p \} of matched\) sameTitle\.set\(/);
+  assert.match(src, /name-duplicate-title/);
+  assert.match(src, /tags: p\.tags, productType: p\.product_type/);
 });

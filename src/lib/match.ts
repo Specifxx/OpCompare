@@ -27,6 +27,20 @@ export function isForeign(title: string): boolean {
   return FOREIGN_LANG.test(title);
 }
 
+const FOREIGN_TAG = /^(?:japanese|japan|jp|jpn|chinese|simplified chinese|traditional chinese|korean|korea|thai|french|german|italian|spanish|portuguese)$/i;
+
+/**
+ * A store's own language tag: Shopify products carry "Japanese" / "English" in
+ * `tags` (or `product_type`) even when the title says neither ("OP16-118 Portgas
+ * D.Ace - One Piece TCG" tagged Japanese was priced as the English card). A
+ * foreign tag with no English tag beside it is a foreign card; both together is
+ * a mixed listing and not safe to price. Pure.
+ */
+export function foreignByTags(tags: string[] | string | null | undefined, productType?: string | null): boolean {
+  const list = (Array.isArray(tags) ? tags : typeof tags === "string" ? tags.split(",") : []).concat(productType ?? "").map((t) => t.trim()).filter(Boolean);
+  return list.some((t) => FOREIGN_TAG.test(t));
+}
+
 // ── Card numbers ─────────────────────────────────────────────────────────────
 
 /**
@@ -720,6 +734,25 @@ export type StoreMatchPath = "number" | "name" | "don" | "sku" | "sealed";
  * "name-unmatched" a "Name [Set]" title none of them knew.
  */
 export function matchStoreProduct(
+  title: string,
+  skus: (string | null | undefined)[],
+  ix: StoreMatchIndexes,
+  meta: { tags?: string[] | string | null; productType?: string | null } = {},
+): { id: number; path: StoreMatchPath } | { miss: string } {
+  if (foreignByTags(meta.tags, meta.productType)) return { miss: "foreign" };
+  const r = matchStoreProductInner(title, skus, ix);
+  if (!("id" in r)) return r;
+  // The one rule every path answers to: when the product's SKUs agree on ONE card
+  // number, the card we picked must be that number. A title that says one number
+  // and a SKU another, or a name the catalogue knows for a different card, is not
+  // safe to price (understated, never wrong).
+  const sn = skuCardNumber(skus);
+  const cn = metaOf(ix.cards).byId.get(r.id)?.number;
+  if (sn && cn && sn.toUpperCase() !== cn.toUpperCase()) return { miss: "sku-number-mismatch" };
+  return r;
+}
+
+function matchStoreProductInner(
   title: string,
   skus: (string | null | undefined)[],
   ix: StoreMatchIndexes,
