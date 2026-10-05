@@ -1334,7 +1334,7 @@ export async function getSetChecklist(setId: number, market: Country): Promise<C
 // support, market stats…). Every one is self-cached with the "prices" tag; never
 // wrap one in another unstable_cache and never call one from inside a cache
 // callback. Entries stay small (the largest is under 100 KB).
-import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type EbayPanelData, type PickCard } from "./listing-panel";
+import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type EbayPanelData, type PickCard } from "./listing-panel";
 
 /**
  * One product's captured eBay listings (Listings tab) and slabs (Graded tab),
@@ -1454,3 +1454,33 @@ export async function getLaunchPromo(): Promise<PromoStatus> {
   }
 }
 // ── end promo ──
+
+/**
+ * The chase strip's cards: the dearest chase printings across the catalogue, with
+ * art, and each market's rank-0 eBay listing where a fresh one exists. A card
+ * with no listing still ships (its tile links to an eBay SEARCH), so the strip
+ * works before the eBay keys exist. Display-only; costs no eBay call.
+ */
+export const getChaseStrip = unstable_cache(
+  async (): Promise<ChaseTile[]> => {
+    const cards = await prisma.card.findMany({
+      where: { marketUsd: { gt: 0 }, hasImage: true, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
+      orderBy: { marketUsd: "desc" },
+      take: 40,
+      select: { id: true, slug: true, name: true, number: true, variant: true, printing: true, rarity: true, marketUsd: true },
+    });
+    const chase = cards.filter(isChasePrinting).slice(0, 12);
+    if (!chase.length) return [];
+    const rows = await prisma.ebayListing.findMany({
+      where: { productId: { in: chase.map((c) => c.id) }, rank: 0, imageUrl: { not: null }, updatedAt: { gte: new Date(Date.now() - PICKS_MAX_AGE_HOURS * 3600 * 1000) } },
+      select: { productId: true, market: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
+    });
+    return chase.map((c): ChaseTile => {
+      const listings: ChaseTile["listings"] = {};
+      for (const r of rows) if (r.productId === c.id && r.imageUrl) listings[r.market] = { priceCents: r.priceCents, shippingCents: r.shippingCents, currency: r.currency, url: r.url, imageUrl: r.imageUrl };
+      return { id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, marketUsd: c.marketUsd!, imageUrl: cardImage.tile(c.id), listings };
+    });
+  },
+  ["ebay-chase-strip-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);

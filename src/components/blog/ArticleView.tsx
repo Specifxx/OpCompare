@@ -1,3 +1,4 @@
+import { EbayChase } from "@/components/EbayChase";
 import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
@@ -191,6 +192,7 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
           ))}
         </div>
 
+        <EbayChase page="article" className="mt-10" />
         <AdSlot slot="article" className="mt-10" />
         {post.faq?.length ? <ArticleFaq faq={post.faq} /> : null}
         <ArticleSignupCta placement="article_end" />

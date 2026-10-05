@@ -76,3 +76,15 @@ export function selectPicks(cards: PickCard[], market: Country, limit = 6): (Pic
 export function isChasePrinting(c: { printing: string; rarity: string | null }): boolean {
   return ["sp", "manga", "alt", "treasure"].includes(c.printing) || c.rarity === "SEC";
 }
+
+/** One tile of the chase strip: art always, an eBay listing per market when fresh. */
+export interface ChaseTile {
+  id: number;
+  slug: string;
+  name: string;
+  number: string | null;
+  variant: string | null;
+  marketUsd: number;
+  imageUrl: string;
+  listings: Partial<Record<string, { priceCents: number; shippingCents: number | null; currency: string; url: string; imageUrl: string }>>;
+}

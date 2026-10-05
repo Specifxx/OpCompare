@@ -2016,3 +2016,16 @@ from a capture-phase listener on `a[data-retailer]` inside the consent-gated
 analytics mount (`src/lib/buy-click.ts`). Nothing reaches our server or the
 database, so no Neon transfer. Custom events need a Vercel Pro plan; see
 Analytics → Events. The GA `buy_click` event is unchanged.
+
+## 2026-10-05 — The eBay chase strip, site-wide
+
+The homepage and the main hubs (price guide, movers, market, sets, sealed,
+articles) carry `EbayChaseStrip`: the twelve dearest chase printings, six shown.
+A tile is the live eBay listing in the visitor's market when the script-side
+eBay pass has a fresh one, otherwise the card's art linking to an affiliate eBay
+SEARCH for it, so the strip works before the eBay keys exist. The market is
+picked client-side (`useCountry`), so the host pages stay static. One cached
+loader (`getChaseStrip`), no eBay call from a page, labelled "Ad", disclosure
+beneath, `data-ad-placement` so ad-free members never see it. Pinned by
+`tests/ebay-chase-strip.test.ts`. The footer eBay box and the card-page banner
+are unchanged.

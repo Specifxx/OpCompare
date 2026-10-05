@@ -1,3 +1,4 @@
+import { EbayChase } from "@/components/EbayChase";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -145,6 +146,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
           ))}
         </div>
         <AffiliateDisclosure partner="ebay" />
+        <EbayChase page="sealed" className="mt-6" heading="Chase singles on eBay" />
       </section>
     </div>
   );

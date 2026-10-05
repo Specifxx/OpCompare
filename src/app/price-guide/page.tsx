@@ -1,3 +1,4 @@
+import { EbayChase } from "@/components/EbayChase";
 import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
@@ -357,6 +358,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
 
       <HubFaq faqs={faqs} />
 
+      <EbayChase page="price-guide" className="mt-8" />
       <AdSlot slot="price-guide" className="mt-8" noindex={!isGuideDefault(gq)} />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Archivo } from "next/font/google";
+import { EbayChase } from "@/components/EbayChase";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomeSections } from "@/components/home/HomeSections";
@@ -49,6 +50,7 @@ export default async function HomePage() {
         renderedAt={data.renderedAt}
       />
       <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
+      <EbayChase page="home" heading="Chase cards on eBay right now" />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} storeCount={storeCount} />

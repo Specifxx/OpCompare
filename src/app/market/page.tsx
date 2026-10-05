@@ -1,3 +1,4 @@
+import { EbayChase } from "@/components/EbayChase";
 import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
@@ -210,6 +211,7 @@ export default async function MarketPage() {
           </table>
         </div>
       </section>
+      <EbayChase page="market" className="mt-8" />
       <AdSlot slot="market" className="mt-10" thin={!series.length} />
       <section id="cite" className="card-surface mt-10 scroll-mt-40 p-5 xl:scroll-mt-36">
         <h2 className="text-lg text-white">Cite the OP Compare Index</h2>

@@ -1,3 +1,4 @@
+import { EbayChase } from "@/components/EbayChase";
 import { AdSlot } from "@/components/AdSlot";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
@@ -146,6 +147,7 @@ export default async function MoversPage() {
           <NewsletterSignup siteName="OP Compare" source="movers" variant="card" heading="Get the week's biggest movers in your inbox" cta="Email me the movers" done="Done. You'll get the movers digest each week." />
         </EmailOnly>
       </div>
+      <EbayChase page="movers" className="mt-8" />
       <AdSlot slot="movers" className="mt-8" thin={noHistory} />
       <HubFaq faqs={MOVERS_FAQ} />
       <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
