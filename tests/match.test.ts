@@ -567,3 +567,29 @@ test("a store product runs every path in order and says which one missed", () =>
   assert.equal(m("One Piece Romance Dawn Booster Box"), "sealed-ambiguous");
   assert.equal(m("Shanks OP01-120 (Japanese)"), "foreign");
 });
+
+test("a bare \"Name [Set]\" title never takes a card whose SKUs name another number (wrong-price report: Rhystic Nostalgia Gaming, OP16-015 vs OP16-052)", () => {
+  const luffy = (id: number, number: string) => ({ id, name: "Monkey.D.Luffy", number, variant: null, setCode: "OP16", setName: "The Time of Battle" });
+  const ix: StoreMatchIndexes = {
+    cards: buildCardIndex([luffy(693419, "OP16-015"), luffy(693420, "OP16-052"), luffy(693421, "OP16-095")]),
+    // The plain name is the one unique key; the other printings carry "(052)" in TCGplayer's name.
+    names: buildNameIndex([
+      { id: 693419, tcgName: "Monkey.D.Luffy", setNames: ["The Time of Battle"] },
+      { id: 693420, tcgName: "Monkey.D.Luffy (052)", setNames: ["The Time of Battle"] },
+    ]),
+    dons: [],
+    sealed: [],
+  };
+  const m = (t: string, ...skus: string[]) => {
+    const x = matchStoreProduct(t, skus, ix);
+    return "id" in x ? `${x.path}:${x.id}` : x.miss;
+  };
+  // Five products at one store, one title (rhysticnostalgiagaming.com.au, handles -1 .. -4):
+  assert.equal(m("Monkey.D.Luffy [The Time of Battle]", "OP16-015-EN-FO-1", "OP16-015-EN-FO-2"), "name:693419");
+  assert.equal(m("Monkey.D.Luffy [The Time of Battle]", "OP16-052-EN-NF-1", "OP16-052-EN-NF-2"), "sku:693420");
+  assert.equal(m("Monkey.D.Luffy [The Time of Battle]", "OP16-095-EN-FO-1"), "sku:693421");
+  // A SKU number the catalogue doesn't list is a miss, never the card the name index knows.
+  assert.notEqual(m("Monkey.D.Luffy [The Time of Battle]", "OP16-999-EN-NF-1"), "name:693419");
+  // No SKU at all: the name path still answers (the import then refuses duplicated titles).
+  assert.equal(m("Monkey.D.Luffy [The Time of Battle]"), "name:693419");
+});

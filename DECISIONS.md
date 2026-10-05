@@ -1976,3 +1976,20 @@ asked for it gone from the website and the admin.
   still in the database until someone drops it by hand.
 - `tests/no-outbound-click-tracking.test.ts` fails if any code touches the table
   or the route comes back.
+
+## 2026-10-05 — A bare "Name [Set]" title yields to the SKU number
+
+**Report.** A wrong-item price report (Rhystic Nostalgia Gaming, AU): looking at
+OP16-015, the store link went to OP16-052, "a few other stores have the same
+issue". Cause: the store lists FIVE different cards under one title,
+"Monkey.D.Luffy [The Time of Battle]" (handles `-the-time-of-battle`, `-1`
+… `-4`; SKUs OP16-015, -052, -095, -022, -034). The name path knew exactly one
+catalogue key for that title (OP16-015's plain TCGplayer name), took every
+product, and the cheapest (the OP16-052 copy at A$0.50) won the offer.
+
+**Rule.** `matchStoreProduct` ranks the SKU number above the name path: a name
+match is refused when the product's SKUs agree on a different card number, and
+the SKU path then picks the right card (or misses). In the import, products
+whose bare title is shared by several of one store's name-path matches (no SKU
+number to tell them apart) are all skipped as `name-duplicate-title`.
+Understated, never wrong. A real-title test is in `tests/match.test.ts`.

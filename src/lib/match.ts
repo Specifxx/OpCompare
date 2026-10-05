@@ -727,7 +727,14 @@ export function matchStoreProduct(
   const m = matchCardTitle(title, ix.cards);
   if ("id" in m) return { id: m.id, path: "number" };
   const byName = matchByName(title, ix.names);
-  if (byName != null) return { id: byName, path: "name" };
+  // The SKUs outrank a bare "Name [Set]" title. Stores list several different
+  // cards under the SAME title ("Monkey.D.Luffy [The Time of Battle]" is OP16-015,
+  // -052, -095 ... at one store), and the one the name index happens to know would
+  // take them all; a SKU naming another number is that other card, not this one.
+  const skuNumber = byName != null ? skuCardNumber(skus) : null;
+  const nameNumber = byName != null ? metaOf(ix.cards).byId.get(byName)?.number : null;
+  const skuDisagrees = skuNumber != null && nameNumber != null && nameNumber.toUpperCase() !== skuNumber.toUpperCase();
+  if (byName != null && !skuDisagrees) return { id: byName, path: "name" };
   let miss: string = m.miss;
   if (m.miss === "no-number") {
     if (DON_TITLE.test(title)) {

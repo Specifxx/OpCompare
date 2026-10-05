@@ -333,11 +333,20 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
       return res;
     }
     const drafts = new Map<number, OfferDraft>();
-    for (const p of fetched.products) {
-      // Card number → TCGplayer name → DON!! → SKU number → sealed (lib/match.ts).
-      const m = matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix);
+    // Card number → TCGplayer name → DON!! → SKU number → sealed (lib/match.ts).
+    const matched = fetched.products.map((p) => ({ p, m: matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix) }));
+    // A bare "Name [Set]" title that several of this store's products share is
+    // several different cards (the store numbers them -1, -2 ... in the handle),
+    // and with no SKU number to tell them apart none of them is safe to price.
+    const sameTitle = new Map<string, number>();
+    for (const { p, m } of matched) if ("id" in m && m.path === "name") sameTitle.set(p.title.trim().toLowerCase(), (sameTitle.get(p.title.trim().toLowerCase()) ?? 0) + 1);
+    for (const { p, m } of matched) {
       if (!("id" in m)) {
         res.misses[m.miss] = (res.misses[m.miss] ?? 0) + 1;
+        continue;
+      }
+      if (m.path === "name" && (sameTitle.get(p.title.trim().toLowerCase()) ?? 0) > 1) {
+        res.misses["name-duplicate-title"] = (res.misses["name-duplicate-title"] ?? 0) + 1;
         continue;
       }
       const id = m.id;
