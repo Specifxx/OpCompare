@@ -8,7 +8,6 @@ import { prisma } from "./db";
 import { demandWindowAtOrThrow } from "./data";
 import { compareDemand, chartMovement, type Movement } from "./demand-movement";
 import type { DemandWindowResult } from "./demand-snapshot";
-import { retailerLabel } from "./admin-clicks";
 import type { Country } from "./country";
 
 export const ADMIN_DEMAND_TOP_N = 50;
@@ -112,29 +111,4 @@ export async function adminDemand(range: AdminDemandRange): Promise<AdminDemandD
     prisma.card.findMany({ where: { viewCount: { gt: 0 } }, orderBy: [{ viewCount: "desc" }, { searchCount: "desc" }], take: ADMIN_DEMAND_TOP_N, select: CARD_SELECT }),
   ]);
   return { window, windowUsable, windowFailed, inWindow, searchMoves, viewMoves, topSearched: topSearched.map(toCard), topViewed: topViewed.map(toCard) };
-}
-
-export interface AdminClickRow {
-  retailer: string;
-  label: string;
-  recent: number;
-  total: number;
-}
-
-/** Outbound clicks by store in one market: in the window (exact, per row) and in all retained history. */
-export async function adminDemandClicks(country: Country, days: number | null): Promise<AdminClickRow[] | null> {
-  try {
-    const since = days != null ? new Date(Date.now() - days * 86_400_000) : null;
-    const [recent, all] = await Promise.all([
-      prisma.clickEvent.groupBy({ by: ["retailer"], where: { country, ...(since ? { createdAt: { gte: since } } : {}) }, _count: { _all: true } }),
-      prisma.clickEvent.groupBy({ by: ["retailer"], where: { country }, _count: { _all: true } }),
-    ]);
-    const recentBy = new Map(recent.map((r) => [r.retailer, r._count._all]));
-    return all
-      .map((r) => ({ retailer: r.retailer, label: retailerLabel(r.retailer), recent: recentBy.get(r.retailer) ?? 0, total: r._count._all }))
-      .sort((a, b) => b.recent - a.recent || b.total - a.total);
-  } catch (e) {
-    console.error("[admin/demand] failed to load click data:", e);
-    return null;
-  }
 }

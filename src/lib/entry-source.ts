@@ -1,9 +1,9 @@
 // How this visitor FIRST arrived in this tab session: "reddit", "search",
 // "email"… — a coarse bucket, never the referring URL itself (RiftCompare's
 // lib/entry-source.ts, ported in wave 2, 2026-10-03). Reddit is OP Compare's
-// growth channel (the owner posts there), so stamping this bucket on each
-// outbound click (ClickEvent.entry) answers "did the Reddit readers click
-// through to a store?" directly in /admin/clicks.
+// growth channel (the owner posts there). The bucket used to ride each outbound
+// click; outbound clicks are no longer recorded (DECISIONS 2026-10-05), so it
+// is only kept in the tab's sessionStorage for the sign-up surface.
 //
 // FIRST TOUCH, captured once per tab (ReferralCapture, mounted in the layout):
 // a hard navigation inside the site replaces document.referrer with our own

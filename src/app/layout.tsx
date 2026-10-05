@@ -15,7 +15,6 @@ import QuickViewProvider from "@/components/QuickViewProvider";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { SideNav } from "@/components/SideNav";
 import { PlanProvider } from "@/components/PlanProvider";
-import { OutboundBeacon } from "@/components/OutboundBeacon";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
@@ -155,7 +154,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SealedQuickViewProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>
-                <OutboundBeacon />
                 <Navbar />
                 <SideNav />
                 {/* RiftCompare's shell: the rail reservation on an OUTER wrapper,

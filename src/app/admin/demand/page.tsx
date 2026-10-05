@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { money } from "@/lib/format";
 import { normalizeCountry, currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { ADMIN_DEMAND_DEFAULT_RANGE, ADMIN_DEMAND_RANGES, ADMIN_DEMAND_TOP_N, adminDemand, adminDemandClicks, parseAdminDemandRange, type AdminDemandCard } from "@/lib/admin-demand";
+import { ADMIN_DEMAND_DEFAULT_RANGE, ADMIN_DEMAND_RANGES, ADMIN_DEMAND_TOP_N, adminDemand, parseAdminDemandRange, type AdminDemandCard } from "@/lib/admin-demand";
 import type { Movement } from "@/lib/demand-movement";
 import { MoveBadge } from "@/components/MoveBadge";
 
@@ -12,14 +12,12 @@ export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: 
 
 // Demand leaderboard (RiftCompare's /admin/demand): the popularity signals the
 // site records — searchCount (picks from the search box, the purest demand
-// metric) and viewCount (any open) — plus outbound clicks by store. Admin-only
+// metric) and viewCount (any open) Admin-only
 // (requireAdminPage) and uncached (lib/admin-demand.ts).
 //
-// The two sources window DIFFERENTLY, and the page says so: outbound clicks
-// are one ClickEvent row each, windowed exactly; searches and views are
-// cumulative counters windowed against the daily demand snapshot FILES on the
-// data branch (lib/demand-snapshot.ts), so they are daily-resolution and only
-// as deep as the snapshots reach. Demand Finder (/tools/demand) is the public,
+// Searches and views are cumulative counters windowed against the daily demand
+// snapshot FILES on the data branch (lib/demand-snapshot.ts), so they are
+// daily-resolution and only as deep as the snapshots reach. Demand Finder (/tools/demand) is the public,
 // Premium version of the same signals, scoped to what a member wants.
 export default async function AdminDemandPage({ searchParams }: { searchParams: { country?: string; range?: string } }) {
   await requireAdminPage();
@@ -27,15 +25,13 @@ export default async function AdminDemandPage({ searchParams }: { searchParams: 
   const currency = currencyOf(country);
   const range = parseAdminDemandRange(searchParams.range);
 
-  const [data, clicks] = await Promise.all([adminDemand(range), adminDemandClicks(country, range.days)]);
+  const data = await adminDemand(range);
   const { window: demandWindow, windowUsable, inWindow } = data;
   const previous = windowUsable ? demandWindow?.previous ?? null : null;
 
   const num = new Intl.NumberFormat("en-US");
   const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" });
   const day = (d: string) => dateFmt.format(new Date(`${d}T00:00:00Z`));
-  const totalClicksRecent = (clicks ?? []).reduce((s, r) => s + r.recent, 0);
-  const totalClicksAll = (clicks ?? []).reduce((s, r) => s + r.total, 0);
 
   function hrefFor(next: { country?: string; range?: string }) {
     const params = new URLSearchParams();
@@ -118,9 +114,9 @@ export default async function AdminDemandPage({ searchParams }: { searchParams: 
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Demand leaderboard</h1>
-          <p className="text-sm text-slate-400">What people are searching, viewing and clicking through to buy.</p>
+          <p className="text-sm text-slate-400">What people are searching and viewing.</p>
         </div>
-        {/* Country affects price display + the outbound-click breakdown. */}
+        {/* Country affects the price display. */}
         <div className="flex flex-wrap gap-1 rounded-lg border border-ink-700 bg-ink-850 p-1">
           {COUNTRY_LIST.map((c) => {
             const active = c.code === country;
@@ -174,8 +170,7 @@ export default async function AdminDemandPage({ searchParams }: { searchParams: 
               , measured against the daily snapshot from <span className="tabular-nums">{day(demandWindow.baselineDay)}</span>.
               {demandWindow.coveredDays !== range.days && <> You asked for {range.days} days; that&apos;s the closest snapshot available.</>}{" "}
               <span className="text-slate-500">
-                Card counters are cumulative with no per-event log, so they can only be windowed to daily resolution. Outbound clicks
-                below are exact.
+                Card counters are cumulative with no per-event log, so they can only be windowed to daily resolution.
               </span>
               <span className="mt-2 block">
                 {previous ? (
@@ -202,7 +197,6 @@ export default async function AdminDemandPage({ searchParams }: { searchParams: 
                 : demandWindow && demandWindow.totalDays === 0
                   ? "No daily demand snapshots exist yet — the price import writes one a day to the history branch, so a window becomes available once two have run."
                   : `Daily snapshots only go back ${demandWindow?.totalDays ?? 0} day${demandWindow?.totalDays === 1 ? "" : "s"}, which doesn't cover a ${range.days}-day window.`}{" "}
-              Outbound clicks below are still windowed exactly.
             </>
           )}
         </div>
@@ -234,50 +228,6 @@ export default async function AdminDemandPage({ searchParams }: { searchParams: 
         ) : (
           <CardTable rows={data.topViewed} metric="viewCount" moves={data.viewMoves} />
         )}
-      </section>
-
-      <section>
-        <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold text-white">Outbound clicks by store</h2>
-          <span className="text-xs text-slate-500">
-            {country} · buy-intent · {range.days != null ? `last ${range.label}` : "all time"} &amp; all-time
-          </span>
-        </div>
-        {clicks == null ? (
-          <Empty>Couldn&apos;t load click data right now.</Empty>
-        ) : clicks.length === 0 ? (
-          <Empty>No outbound clicks recorded for {country} yet.</Empty>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2 font-medium">Store</th>
-                  <th className="px-3 py-2 text-right font-medium">{range.days != null ? `Last ${range.label}` : "All time"}</th>
-                  <th className="px-3 py-2 text-right font-medium">All-time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clicks.map((r) => (
-                  <tr key={r.retailer} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
-                    <td className="px-3 py-2 font-medium text-white">{r.label}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-slate-300">{num.format(r.recent)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-slate-400">{num.format(r.total)}</td>
-                  </tr>
-                ))}
-                <tr className="bg-ink-800/40 font-semibold text-white">
-                  <td className="px-3 py-2">Total</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{num.format(totalClicksRecent)}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{num.format(totalClicksAll)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-        <p className="mt-3 text-xs text-slate-500">
-          Clicks are logged per store, not per card, so they show which markets and stores convert — pair them with the searched and
-          viewed cards above. &ldquo;All-time&rdquo; is everything still retained (clicks are pruned after their retention window).
-        </p>
       </section>
     </div>
   );

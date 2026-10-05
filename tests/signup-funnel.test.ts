@@ -44,12 +44,6 @@ test("entry buckets: utm_source wins, then the referrer host; our own host is in
   assert.equal(isEntrySource("https://reddit.com"), false);
 });
 
-test("the entry bucket rides every outbound click (ClickEvent.entry)", () => {
-  assert.match(read("src/components/OutboundBeacon.tsx"), /entry: readEntrySource\(\)/);
-  assert.match(read("src/lib/beacons.ts"), /entry: c\.entry \?\? null/);
-  assert.match(read("src/lib/admin-clicks.ts"), /by: \["entry"\]/);
-});
-
 test("SignupWelcome: one sign_up per ?welcome landing, the param stripped, the stashed watch completed", () => {
   const src = read("src/components/SignupWelcome.tsx");
   assert.match(src, /trackEvent\("sign_up", \{ method: welcome \}\)/);

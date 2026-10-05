@@ -147,7 +147,7 @@ Report anything that differs other than colour/logo/name.
 
 ## 9. Admin (only if I give you the admin login)
 As mastermisclick@gmail.com: /admin, /admin/accounts, /admin/store-health (look
-at the new stores: any with errors?), /admin/clicks, /admin/premium,
+at the new stores: any with errors?), /admin/premium,
 /admin/inbox, /admin/subscriptions all load. As anyone else, /admin must show a
 "not found" page.
 

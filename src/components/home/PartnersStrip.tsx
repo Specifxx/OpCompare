@@ -6,8 +6,7 @@ import { useCountry } from "@/components/CountryProvider";
 
 // RiftCompare's PartnersStrip: "Approved partners" with the eBay and TCGplayer
 // wordmarks (affiliate search links in the visitor's market) and the
-// disclosure line. Outbound clicks are recorded by OutboundBeacon through
-// data-retailer, like every other buy link.
+// disclosure line.
 export function PartnersStrip() {
   const { country } = useCountry();
   const ebayHref = ebaySearchUrl(country, "One Piece Card Game", "partners_strip");

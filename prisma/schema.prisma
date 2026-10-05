@@ -300,12 +300,11 @@ model ContactMessage {
 }
 
 // ── Beacons (ported from RiftCompare) ───────────────────────────────────────
-// One row per outbound shop click (OutboundBeacon → /api/click), read only by
-// /admin/clicks. No IP, no user agent, no URL: the retailer key and page type
-// the link already carries in data-retailer / data-page, the card or sealed
-// slug when the click came from one, the visitor's market, and the account id
-// when someone signed in clicked. No foreign key, so deleting an account never
-// cascades through the log.
+// RETIRED (owner's call, 2026-10-05): outbound shop clicks are no longer
+// recorded (OutboundBeacon, /api/click and /admin/clicks are gone: each click was
+// a database write and cost network credits). The model and its rows stay only
+// so the schema push never has to drop a table; nothing reads or writes it.
+// Drop it by hand when the old rows are no longer wanted.
 model ClickEvent {
   id        String   @id @default(cuid())
   retailer  String // data-retailer: "store:<key>", "tcgplayer", "ebay", "ebay_search", "buy_list" …

@@ -43,8 +43,8 @@ function Condition({ c }: { c: string | null }) {
   return <span className="ml-1 rounded border border-ink-700 bg-ink-850 px-1 py-px text-[10px] font-semibold text-slate-200">{c}</span>;
 }
 
-// data-card and data-surface, like every other buy surface, so /admin/clicks
-// and GA's buy_click can tell which card and which column a click came from.
+// data-card and data-surface, like every other buy surface, so GA's buy_click
+// can tell which card and which column a click came from.
 function Out({ href, retailer, card, dataSurface, className, children, label }: { href: string; retailer: string; card: string; dataSurface: string; className: string; children: React.ReactNode; label?: string }) {
   return (
     <a href={href} target="_blank" rel={outboundRel()} data-retailer={retailer} data-page={PAGE} data-card={card} data-surface={dataSurface} className={className} aria-label={label}>

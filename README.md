@@ -157,7 +157,7 @@ runs the real reader and matcher and prints what the import would keep.
 Trial reminders and inbox replies (and so RiftCompare's $1 trial), the deck
 builder, games, AdSense, social/ads marketing, the
 mobile app, support tickets, the admin tools that need data OP Compare doesn't
-collect (demand, clicks, rising snapshots, tier floor, decks, loyalty,
+collect (demand, rising snapshots, tier floor, decks, loyalty,
 consulting, store partners) and admin `?key=` links,
 and Cardmarket as an EU source (its public files carry no card numbers, and One
 Piece's many same-name printings make name-only matching unsafe — and the data

@@ -1952,3 +1952,27 @@ before this shipped do not qualify. To end the offer early, set `LAUNCH_PROMO_EN
 menu (`[aria-modal="true"]`) as an open dialog, which silenced every corner nudge,
 the Premium slide-in included, since the wave-2 design merge. It now ignores
 aria-modal elements inside `aria-hidden` or `inert`.
+
+## 2026-10-05 — Outbound click tracking removed
+
+**Decision.** The site no longer records outbound shop clicks. Removed:
+`OutboundBeacon` (the one global click listener in the root layout), `/api/click`,
+`src/lib/click-event.ts`, `/admin/clicks` (page, nav link and dashboard tile),
+the "Outbound clicks by store" panel on `/admin/demand`, and the ClickEvent
+retention step in the twice-daily import.
+
+**Why.** Every outbound click was one database write through a serverless route,
+and with the traffic the site now gets that cost Neon network credits. The owner
+asked for it gone from the website and the admin.
+
+**What stays.**
+- GA's `buy_click` (client-side, sent to Google, not to our database) is the one
+  count of outbound clicks, with the same `data-retailer` / `data-card` /
+  `data-surface` attributes on the links.
+- The Plus/Premium interest beacon (`/api/premium/click`, `PremiumClick`,
+  `/admin/premium`) is a different, low-volume signal and is untouched.
+- The `ClickEvent` model stays in the schema as a retired table (nothing reads
+  or writes it), so the schema push never has to drop a table; its old rows are
+  still in the database until someone drops it by hand.
+- `tests/no-outbound-click-tracking.test.ts` fails if any code touches the table
+  or the route comes back.
