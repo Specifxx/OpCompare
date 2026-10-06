@@ -8,7 +8,7 @@ import type { Post } from "../types";
 import { medianOf, plural } from "../util";
 
 const TIERS: { key: string; label: string }[] = [
-  { key: "alt", label: "Parallel (alt art)" },
+  { key: "alt", label: "Parallel / Full Art" },
   { key: "sp", label: "SP" },
   { key: "treasure", label: "Treasure Rare" },
   { key: "manga", label: "Manga" },
@@ -80,7 +80,7 @@ export const budgetAltArts: Post = {
       ].filter(Boolean),
       lede: (
         <p>
-          <strong>Want your deck to look the part without paying chase-card prices?</strong> Most One Piece cards have a Parallel (alternate-art) print, and
+          <strong>Want your deck to look the part without paying chase-card prices?</strong> Most One Piece cards have an alternate-art print (a Parallel or Full Art), and
           plenty of them cost little more than the standard card. We went through every alt-art print in stock in {c.place} and pulled out the cheapest in
           each colour, the cheapest alt-art Leaders, and the upgrades that cost the least over the base card.
         </p>
