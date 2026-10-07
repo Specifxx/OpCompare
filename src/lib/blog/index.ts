@@ -1,3 +1,4 @@
+import { setConcentration } from "./posts/set-concentration";
 import { budgetAltArts } from "./posts/budget-alt-arts";
 import { boosterBoxes } from "./posts/booster-boxes";
 import { cheapLeaders } from "./posts/cheap-leaders";
@@ -11,6 +12,7 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  setConcentration,
   budgetAltArts,
   setReview("OP17", "op17-worlds-strongest-warriors-chase-cards", "2026-10-03"),
   mostExpensive,
