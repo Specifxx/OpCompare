@@ -40,7 +40,7 @@ import {
 import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES, isoCountry } from "@/lib/country";
-import { getCardDetail, getCatalog, getEmailStatus, getProductHistory } from "@/lib/data";
+import { getCardDetail, getCatalog, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
@@ -259,12 +259,16 @@ export default async function CardPage({ params }: Props) {
   const guides = guidesForCatalogue("card");
 
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
-  // Each market's cheapest in-stock eBay row (the daily eBay pass) for the big button at the top.
+  // Each market's headline eBay listing (the daily eBay pass's rank-0 row, the
+  // same data as the listings panel and the homepage strip) for the big button.
   const ebayTop: Partial<Record<string, EbayTopListing>> = {};
-  for (const o of card.offers) {
-    if (!o.inStock || !o.source.startsWith("ebay") || !o.url) continue;
-    const cur = ebayTop[o.market];
-    if (!cur || o.priceCents < cur.priceCents) ebayTop[o.market] = { priceCents: o.priceCents, currency: o.currency, url: o.url };
+  try {
+    const panel = await getEbayPanel(card.id);
+    for (const l of panel.listings) {
+      if (!ebayTop[l.market]) ebayTop[l.market] = { priceCents: l.priceCents, currency: l.currency, url: l.url };
+    }
+  } catch {
+    /* the button falls back to an eBay search */
   }
   return (
     <div>
