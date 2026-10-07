@@ -119,7 +119,7 @@ test("healthy searches: every planned pair completes and the run is green", asyn
 
 test("foreign spend: the run spends at most 50 calls and says so on the run page", async () => {
   searchStatus = 200;
-  remaining = 3000; // 2,000 used today, none of it ours
+  remaining = 800; // 4,200 used today, none of it ours: beyond the other site's expected 2,500
   const { summary, verdict } = await run();
   assert.equal(summary.foreignSpendWarning, true);
   assert.equal(summary.budget, 50);

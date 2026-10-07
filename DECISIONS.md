@@ -2094,3 +2094,18 @@ are: the chase cards first, the floor lowered.
 - The first day's spend is split: 50 (smoke test) + ~450 (first full run) on
   2026-10-07, then a 400-call top-up the same evening; the 05:37 run on the 8th
   takes whatever the rolling 24h leaves.
+
+## 2026-10-07 (later still) — the eBay keyset is shared; its 5,000 a day are split
+
+The production keyset's 5,000 Browse calls a day are shared with another site;
+OP Compare's half is `DAILY_CALL_CAP` (2,500). eBay's live count therefore
+reports 5,000 and the other site's use, which is expected.
+
+- The foreign-spend guard (a pasted RiftCompare keyset would silently spend its
+  quota) now allows `dailyLimit − DAILY_CALL_CAP` of other use before it warns:
+  used > ourSpend24h + 300 slack + 2,500. Without that allowance every run would
+  have been cut to 50 calls once the other site spent its share. Use beyond it
+  still trips the warning and the 50-call cap.
+- The run budget still takes `liveRemaining − reserve` into account, so when the
+  other site has taken more than its half, our run shrinks to what is really left
+  rather than starving it.

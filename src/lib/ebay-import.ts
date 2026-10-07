@@ -33,6 +33,7 @@ import {
   type GradedListing,
 } from "./ebay-match";
 import {
+  DAILY_CALL_CAP,
   DEFAULT_MIN_VALUE_CENTS,
   EBAY_MARKETS,
   FOREIGN_SPEND_BUDGET,
@@ -95,10 +96,21 @@ export interface EbayPassSummary {
 /** Our own spend over the last 24h + this much slack before we suspect someone else spends this keyset. */
 export const FOREIGN_SPEND_SLACK = 300;
 
-/** dailyLimit − remaining > ourSpend24h + slack → another app is spending this keyset. */
-export function foreignSpend(remaining: number | null, dailyLimit: number, ourSpend24h: number): boolean {
+/**
+ * dailyLimit − remaining > ourSpend24h + slack + the other site's allowance →
+ * something else is spending this keyset. The keyset is SHARED with another
+ * site by design (owner, 2026-10-07: the key's 5,000 a day are split, OP Compare
+ * takes DAILY_CALL_CAP of them), so that site's share is expected, not foreign;
+ * only use beyond it, such as a pasted RiftCompare keyset, trips the warning.
+ */
+export function foreignSpend(
+  remaining: number | null,
+  dailyLimit: number,
+  ourSpend24h: number,
+  otherSiteAllowance: number = Math.max(0, dailyLimit - DAILY_CALL_CAP),
+): boolean {
   if (remaining == null) return false;
-  return dailyLimit - remaining > ourSpend24h + FOREIGN_SPEND_SLACK;
+  return dailyLimit - remaining > ourSpend24h + FOREIGN_SPEND_SLACK + otherSiteAllowance;
 }
 
 interface CardRow {

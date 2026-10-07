@@ -236,6 +236,10 @@ test("foreign-spend warning: someone else's use of this keyset, never our own", 
   const { foreignSpend } = await import("../src/lib/ebay-import");
   assert.equal(foreignSpend(null, 5000, 0), false); // unknown count: skipped
   assert.equal(foreignSpend(2800, 5000, 2200), false); // our own run
-  assert.equal(foreignSpend(2800, 5000, 1800), true); // 400 unexplained
-  assert.equal(foreignSpend(9000, 10000, 700), false); // a Growth Check limit, not 5,000
+  // The key is shared with another site: 5,000 − our 2,500 ceiling = 2,500 of its use is expected.
+  assert.equal(foreignSpend(2800, 5000, 1800), false); // 2,200 used, well inside ours + the other site's share
+  assert.equal(foreignSpend(2500, 5000, 0), false); // the other site used its whole 2,500
+  assert.equal(foreignSpend(800, 5000, 500), true); // 4,200 used: 1,400 beyond ours + the other site's share
+  assert.equal(foreignSpend(2800, 5000, 1800, 0), true); // with no other site, 400 unexplained
+  assert.equal(foreignSpend(9000, 10000, 700), false); // a larger limit, not 5,000
 });
