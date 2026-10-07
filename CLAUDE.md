@@ -15,7 +15,8 @@ say so. A commit BODY may discuss the marker; it does not deploy.
 ## The eBay API: OP Compare's own keyset, script-side only
 
 - It runs only from `scripts/ebay.ts`, via `.github/workflows/ebay-prices.yml`
-  (05:37 and 17:37 UTC). No page, route, Vercel cron or the store import calls
+  (once a day, 05:37 UTC; at most 500 Browse calls in any 24h, `DAILY_CALL_CAP`
+  in `src/lib/ebay-plan.ts`). No page, route, Vercel cron or the store import calls
   or imports it.
 - eBay API hosts appear only in `src/lib/ebay*.ts`; the `EBAY_CLIENT_*`
   credentials only there and in `ebay-prices.yml` (`tests/no-ebay-api.test.ts`).

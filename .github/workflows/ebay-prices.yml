@@ -1,12 +1,13 @@
 name: eBay prices
 
-# The twice-daily eBay pass (scripts/ebay.ts): searches OP Compare's OWN eBay
+# The daily eBay pass (scripts/ebay.ts): searches OP Compare's OWN eBay
 # application's Browse API for the (product, market) pairs that are due, and
 # writes each pair's row as soon as its search completes.
-#   05:37 UTC — done by ~06:20, before the 07:07 import aggregates, records history
+#   05:37 UTC — done well before the 07:07 import aggregates, records history
 #               and revalidates with the fresh eBay rows
-#   17:37 UTC — the same before the 19:07 import
-# Each run spends at most min(EBAY_MAX_CALLS, liveRemaining − EBAY_QUOTA_RESERVE).
+# At most 500 Browse calls in any 24h (lib/ebay-plan.ts DAILY_CALL_CAP, owner
+# 2026-10-07), counting a dispatch on the same day; each run spends at most
+# min(EBAY_MAX_CALLS, liveRemaining − EBAY_QUOTA_RESERVE, 500 − our 24h spend).
 #
 # OFF until the repository secrets EBAY_CLIENT_ID and EBAY_CLIENT_SECRET hold OP
 # Compare's own App ID and Cert ID (never RiftCompare's, never on Vercel): the
@@ -23,7 +24,6 @@ name: eBay prices
 on:
   schedule:
     - cron: "37 5 * * *"
-    - cron: "37 17 * * *"
   workflow_dispatch:
     inputs:
       force:

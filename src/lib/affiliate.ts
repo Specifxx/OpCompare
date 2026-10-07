@@ -5,7 +5,7 @@
 // ── eBay: search links everywhere, API prices from the script side only ─────
 // Every eBay link built HERE is a SEARCH link, which costs no quota. eBay
 // listing prices come from OP Compare's own eBay application (not RiftCompare's)
-// through the twice-daily eBay pass (scripts/ebay.ts, lib/ebay*.ts), which runs
+// through the daily eBay pass (scripts/ebay.ts, lib/ebay*.ts), which runs
 // only in GitHub Actions. This file never calls eBay. tests/no-ebay-api.test.ts
 // fails if an eBay API host or credential appears outside src/lib/ebay*.ts.
 //

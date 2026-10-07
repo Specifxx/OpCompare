@@ -3,12 +3,12 @@ import type { ChaseTile } from "@/lib/listing-panel";
 import { EbayChaseStrip } from "./EbayChaseStrip";
 
 /** Server wrapper: one cached loader, any error renders nothing. */
-export async function EbayChase({ page, heading, limit, className }: { page: string; heading?: string; limit?: number; className?: string }) {
+export async function EbayChase({ page, heading, limit, className, variant }: { page: string; heading?: string; limit?: number; className?: string; variant?: "strip" | "banner" }) {
   let tiles: ChaseTile[] = [];
   try {
     tiles = await getChaseStrip();
   } catch {
     tiles = [];
   }
-  return <EbayChaseStrip tiles={tiles} page={page} {...(heading ? { heading } : {})} {...(limit ? { limit } : {})} {...(className ? { className } : {})} />;
+  return <EbayChaseStrip tiles={tiles} page={page} {...(heading ? { heading } : {})} {...(limit ? { limit } : {})} {...(className ? { className } : {})} {...(variant ? { variant } : {})} />;
 }

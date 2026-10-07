@@ -40,7 +40,7 @@ export interface EbayPanelData {
 /** Rows not refreshed within this window are not served (the importer sweeps at 72 h too). */
 export const PANEL_MAX_AGE_HOURS = 72;
 /** EbayPicks tiles must be this fresh: an old asking price sends a buyer to a dead page. */
-export const PICKS_MAX_AGE_HOURS = 48;
+export const PICKS_MAX_AGE_HOURS = 72; // one daily run refreshes the dearest cards every 48h (2026-10-07)
 
 export const panelTitle = (s: string, n = 70): string => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 

@@ -2,13 +2,17 @@
 // what order, within what budget. PURE — no network, no database — and pinned
 // by tests/ebay-plan.test.ts, which is the build-enforced quota model.
 //
-// OP Compare's own eBay application has 5,000 Browse calls a day. Two runs a day
-// (05:37 and 17:37 UTC, .github/workflows/ebay-prices.yml) each spend at most
-// min(EBAY_MAX_CALLS, liveRemaining − EBAY_QUOTA_RESERVE), split across markets
-// by fixed shares, and inside each market by the product's TCGplayer market
-// value: singles of US$100+ every 24h, singles from the floor (US$20; US$50 in
-// the EU) every 48h, sealed of US$30+ every 48h. Below the floor: never searched,
-// the visitor gets the eBay search link instead.
+// OP Compare spends at most DAILY_CALL_CAP (500) Browse calls a day, whatever
+// eBay's own limit (owner, 2026-10-07). ONE run a day (05:37 UTC,
+// .github/workflows/ebay-prices.yml) spends at most
+// min(EBAY_MAX_CALLS, liveRemaining − EBAY_QUOTA_RESERVE, 500 − our last-24h
+// spend), split across markets by fixed shares (US-weighted: the largest EPN
+// payouts), and inside each market by the product's TCGplayer market value:
+// singles of US$150+ every 48h, singles from the floor (US$40; US$75 in the
+// EU) every 72h, sealed of US$60+ every 72h. Rows live 72h, so a pair that is
+// refreshed on time never goes dark; when the day's 500 run out the dearest
+// cards come first and the rest wait. Below the floor: never searched, the
+// visitor gets the eBay search link instead.
 //
 // Changing a floor, share or interval changes the arithmetic: update
 // tests/ebay-plan.test.ts, the methodology copy (a test reads it) and DECISIONS.
@@ -18,7 +22,7 @@ export type EbayMarket = "US" | "UK" | "AU" | "EU" | "CA" | "SG";
 export const EBAY_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU", "CA", "SG"];
 
 /** Share of each run's budget. Modelled in DECISIONS (2026-10-03, eBay Browse API). */
-export const MARKET_SHARES: Record<EbayMarket, number> = { US: 0.26, UK: 0.26, AU: 0.26, EU: 0.19, CA: 0.03, SG: 0 };
+export const MARKET_SHARES: Record<EbayMarket, number> = { US: 0.6, UK: 0.2, AU: 0.15, EU: 0.05, CA: 0, SG: 0 };
 
 /** Markets searched for singles. CA singles are DERIVED from the US search (0 calls); SG is search-link only. */
 export const SINGLES_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU"];
@@ -26,19 +30,21 @@ export const SINGLES_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU"];
 export const SEALED_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU", "CA"];
 
 // ── Defaults (env-overridable, parsed with envInt) ───────────────────────────
-export const DEFAULT_MAX_CALLS = 2200; // EBAY_MAX_CALLS: per-run cap, and the budget when the live count can't be read
+export const DEFAULT_MAX_CALLS = 500; // EBAY_MAX_CALLS: per-run cap, and the budget when the live count can't be read
+/** The hard daily ceiling (owner, 2026-10-07): no run, dispatch or env var can spend more than this in 24h. */
+export const DAILY_CALL_CAP = 500;
 export const DEFAULT_QUOTA_RESERVE = 600; // EBAY_QUOTA_RESERVE: never spent today
-export const DEFAULT_MIN_VALUE_CENTS = 2000; // EBAY_MIN_VALUE_CENTS: singles floor, US/UK/AU
+export const DEFAULT_MIN_VALUE_CENTS = 4000; // EBAY_MIN_VALUE_CENTS: singles floor, US/UK/AU
 
 // ── Tiers ────────────────────────────────────────────────────────────────────
-export const S1_MIN_CENTS = 10000; // singles of US$100+ — daily
-export const EU_MIN_VALUE_CENTS = 5000; // the EU singles floor is max(floor, this)
-export const SEALED_MIN_CENTS = 3000; // sealed of US$30+
+export const S1_MIN_CENTS = 15000; // singles of US$150+ — every 48h
+export const EU_MIN_VALUE_CENTS = 7500; // the EU singles floor is max(floor, this)
+export const SEALED_MIN_CENTS = 6000; // sealed of US$60+
 export const LAUNCH_WINDOW_DAYS = 60; // unpriced products are searched only this long after release (or in presale), and only with a store reference price
 export const DUE_GRACE_HOURS = 3; // a 24h pair checked at 05:39 yesterday is due at 05:37 today
 
 export type Tier = "S1" | "S2" | "SU" | "P1";
-export const TIER_INTERVAL_HOURS: Record<Tier, number> = { S1: 24, S2: 48, SU: 48, P1: 48 };
+export const TIER_INTERVAL_HOURS: Record<Tier, number> = { S1: 48, S2: 72, SU: 72, P1: 72 };
 /** S1 < S2 = P1 < SU. */
 export const TIER_PRIORITY: Record<Tier, number> = { S1: 1, S2: 2, P1: 2, SU: 3 };
 
@@ -97,6 +103,9 @@ export function budgetFor(
   ({ cap, reserve } = clampLimits(cap, reserve, dailyLimit, log));
   const left = remaining ?? dailyLimit - (opts.ourSpend24h ?? 0);
   let b = Math.max(0, Math.min(cap, left - reserve));
+  // The hard daily ceiling: never more than DAILY_CALL_CAP in any 24h, counting
+  // what earlier runs (a scheduled one, a dispatch) already spent.
+  b = Math.min(b, Math.max(0, DAILY_CALL_CAP - (opts.ourSpend24h ?? 0)));
   if (dispatchCap != null && String(dispatchCap).trim() !== "") {
     const d = envInt(String(dispatchCap));
     if (d != null && d > 0 && d <= cap) b = Math.min(b, d);
@@ -109,7 +118,7 @@ export function budgetFor(
 export const DEFAULT_DAILY_LIMIT = 5000;
 
 /** Runs a day (.github/workflows/ebay-prices.yml); the cap is at most the spendable day split between them. */
-export const RUNS_PER_DAY = 2;
+export const RUNS_PER_DAY = 1;
 
 /**
  * EBAY_QUOTA_RESERVE below 0 → 0. EBAY_MAX_CALLS below 0 → 0; above

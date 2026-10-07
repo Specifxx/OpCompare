@@ -46,7 +46,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Secret | `STRIPE_SECRET_KEY` | OP Compare's Stripe secret key (`sk_live_…`), used by the *Stripe setup* workflow | **New** account (see 6) |
 | Secret | `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` | Optional. The Production App ID and Cert ID of OP Compare's **own** eBay application, used only by *eBay prices*. Never Vercel | **New** app (see 6a), never RiftCompare's |
 | Secret | `EBAY_AFFILIATE_CAMPAIGN` | Optional. The EPN campaign id (defaults to RiftCompare's) | **Reuse** (optional) |
-| Variable | `EBAY_QUOTA_RESERVE` / `EBAY_MAX_CALLS` / `EBAY_MIN_VALUE_CENTS` | Optional eBay tuning; defaults `600` / `2200` / `2000` (see 6a) | New |
+| Variable | `EBAY_QUOTA_RESERVE` / `EBAY_MAX_CALLS` / `EBAY_MIN_VALUE_CENTS` | Optional eBay tuning; defaults `600` / `500` / `4000` (see 6a); nothing can raise a day past 500 calls | New |
 | Variable | `SITE_URL` | `https://opcompare.app` (also the workflows' default) | New |
 | Variable | `GSC_PROPERTY` | `sc-domain:opcompare.app` (the default), or `https://opcompare.app/` for a URL-prefix property | New |
 | Variable | `INDEXNOW_KEY` | `43ac93dd97a44d4894bedf52d621c57c` | **Reuse**: RiftCompare's public key (keys are verified per host) |
@@ -59,7 +59,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
-| eBay prices | 05:37 and 17:37 UTC, or Run workflow (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
+| eBay prices | 05:37 UTC daily, or Run workflow (a dispatch shares the same 500-a-day ceiling) (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
 
 Each workflow is a no-op until its values exist.
 
@@ -192,7 +192,7 @@ spends at most 50 calls, but it stays green.
 | `EBAY_DELETION_ENDPOINT` | **Vercel**, Production | `""` → 500 | Exactly `https://opcompare.app/api/ebay/marketplace-deletion` |
 | `EBAY_AFFILIATE_CAMPAIGN` | Optional, GitHub secret and Vercel | `5339155912` | EPN campaign (search links and the Browse `affiliateCampaignId`) |
 | `EBAY_QUOTA_RESERVE` | Optional GitHub **variable** | `600` | Calls never spent today (a negative value is 0) |
-| `EBAY_MAX_CALLS` | Optional GitHub variable | `2200` | Per-run cap; never more than half of (eBay's live daily limit − reserve), so one run can't take both runs' share. Raise it only after a Growth Check raises the limit |
+| `EBAY_MAX_CALLS` | Optional GitHub variable | `500` | Per-run cap; it can only lower the run, never raise a day past the hard 500-call ceiling (DAILY_CALL_CAP). Raise it only after a Growth Check raises the limit |
 | `EBAY_MIN_VALUE_CENTS` | Optional GitHub variable | `2000` | Singles floor (US/UK/AU; EU uses at least 5000) |
 | `force` / `only_market` / `max_calls` | *eBay prices* dispatch inputs | off / all / none | `EBAY_FORCE=1` (after a matching change), one market, a lower budget |
 
@@ -233,7 +233,7 @@ the last 24h (from the eBay `ImportRun` rows). Searches that fail without a 429
    source. Never paste the values from RiftCompare's repository.
 6. Run *eBay prices* by hand with `only_market=US` and `max_calls=50`. Read the
    `eBay quota:` line, the funnel and any foreign-spend warning (a yellow
-   *eBay keyset* annotation on the run page). The 05:37 and 17:37 UTC schedules
+   *eBay keyset* annotation on the run page). The 05:37 UTC schedule
    take over. The site's eBay copy (methodology, home FAQ, about, editorial
    policy) switches on by itself after the first successful run.
 7. Read eBay's current API License Agreement (call limits; storing and

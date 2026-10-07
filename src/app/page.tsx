@@ -49,8 +49,8 @@ export default async function HomePage() {
         updatedAt={data.stats.updatedAt}
         renderedAt={data.renderedAt}
       />
+      <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
       <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
-      <EbayChase page="home" heading="Chase cards on eBay right now" />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} storeCount={storeCount} />

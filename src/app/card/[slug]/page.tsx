@@ -8,6 +8,7 @@ import { CardStickyBuyBar } from "@/components/CardStickyBuyBar";
 import { CardTopBuy } from "@/components/CardTopBuy";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { EbayCardBanner } from "@/components/EbayCardBanner";
+import { EbayTopButton, type EbayTopListing } from "@/components/EbayTopButton";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
 import { TcgplayerBanner } from "@/components/TcgplayerBanner";
 import { LineChart } from "@/components/LineChart";
@@ -258,6 +259,13 @@ export default async function CardPage({ params }: Props) {
   const guides = guidesForCatalogue("card");
 
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
+  // Each market's cheapest in-stock eBay row (the daily eBay pass) for the big button at the top.
+  const ebayTop: Partial<Record<string, EbayTopListing>> = {};
+  for (const o of card.offers) {
+    if (!o.inStock || !o.source.startsWith("ebay") || !o.url) continue;
+    const cur = ebayTop[o.market];
+    if (!cur || o.priceCents < cur.priceCents) ebayTop[o.market] = { priceCents: o.priceCents, currency: o.currency, url: o.url };
+  }
   return (
     <div>
       <JsonLd
@@ -298,6 +306,8 @@ export default async function CardPage({ params }: Props) {
         ]}
       />
 
+      {/* Phones: the eBay button first, above the art (the header copy is lg only). */}
+      <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mb-4 lg:hidden" />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* ── Art + card text ── */}
         <div className="min-w-0 space-y-4">
@@ -358,6 +368,7 @@ export default async function CardPage({ params }: Props) {
               </div>
             </div>
             {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}
+            <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mt-4 hidden lg:block" />
             <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
             <PriceDropAlertCta
               cardId={card.id}

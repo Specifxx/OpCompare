@@ -1,12 +1,14 @@
 // The eBay quota model, enforced by the build (RiftCompare's
 // affiliate-priority.test.ts pattern). If a floor, share or interval changes in
-// src/lib/ebay-plan.ts, these numbers must still fit OP Compare's own 5,000
-// Browse calls a day — and the methodology copy must say the same thing.
+// src/lib/ebay-plan.ts, no run may ever spend more than DAILY_CALL_CAP (500)
+// Browse calls in 24h (owner, 2026-10-07) — and the methodology copy must say
+// the same thing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  DAILY_CALL_CAP,
   DEFAULT_MAX_CALLS,
   DEFAULT_MIN_VALUE_CENTS,
   DEFAULT_QUOTA_RESERVE,
@@ -65,21 +67,19 @@ test("the model's retry rate is the plan's", () => {
   assert.equal(PLAN_RETRY_RATE, RETRY_RATE);
 });
 
-test("the modelled day fits the spendable quota and two capped runs", () => {
+test("the daily ceiling: 500 calls, whatever the runs, dispatches or env vars", () => {
+  assert.equal(DAILY_CALL_CAP, 500);
+  assert.equal(CAP, 500);
+  // A scheduled run and two dispatches land in one day, eBay reporting plenty left each time.
+  let spent = 0;
+  for (let run = 0; run < 3; run++) spent += budgetFor(5000 - spent, 4400, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: spent });
+  assert.equal(spent, DAILY_CALL_CAP);
+  // The catalogue wants more than the day allows, so the plan's priority order decides.
   for (const counts of [OP_COMPARE, TCGCSV]) {
     const { total, byMarket } = modelDailyCalls(counts);
-    assert.ok(total <= SPENDABLE, `modelled ${total} > spendable ${SPENDABLE}`);
-    assert.ok(total <= 2 * CAP, `modelled ${total} > two runs of ${CAP}`);
+    assert.ok(total > DAILY_CALL_CAP, "budget-bound by design: the dearest cards come first");
     assert.equal(byMarket.SG, 0);
   }
-  assert.ok(2 * CAP <= SPENDABLE, "two runs at the cap must leave the reserve untouched");
-  // The spec's worked arithmetic (§2.4): 910 / 654 / 121 a day; 3,984 in all.
-  const m = modelDailyCalls(TCGCSV);
-  assert.equal(Math.round(m.byMarket.US - 121), 910);
-  assert.equal(Math.round(m.byMarket.EU - 121), 654);
-  assert.equal(Math.round(m.byMarket.CA), 121);
-  // The spec rounds sealed to 120 a market (3,984); unrounded it is 3,989.
-  assert.equal(Math.round(m.total), 3989);
 });
 
 test("shares sum to 1; SG has none; CA singles cost nothing", () => {
@@ -93,9 +93,9 @@ test("shares sum to 1; SG has none; CA singles cost nothing", () => {
   assert.equal(modelDailyCalls({ s1: 1000, s2Low: 0, s2High: 0, su: 0, sealed: 0 }).byMarket.CA, 0);
 });
 
-test("the longest interval can slip one run and stay inside the 72h freshness window", () => {
-  const maxInterval = Math.max(...Object.values(TIER_INTERVAL_HOURS));
-  assert.ok(maxInterval + 12 < STALE_HOURS, `${maxInterval}h + 12h must be < ${STALE_HOURS}h`);
+test("every interval fits the 72h freshness window; S1 (the chase cards) can slip a whole daily run", () => {
+  for (const h of Object.values(TIER_INTERVAL_HOURS)) assert.ok(h <= STALE_HOURS, `${h}h > ${STALE_HOURS}h`);
+  assert.ok(TIER_INTERVAL_HOURS.S1 + 24 <= STALE_HOURS, "S1 + one missed daily run stays fresh");
 });
 
 test("one capped run fits the workflow's timeout with a 25% margin", () => {
@@ -106,8 +106,8 @@ test("one capped run fits the workflow's timeout with a 25% margin", () => {
 test("budgetFor: live count minus reserve, capped per run; a dispatch cap only lowers it", () => {
   assert.equal(budgetFor(null), CAP);
   assert.equal(budgetFor(5000), CAP);
-  assert.equal(budgetFor(2800), 2200);
-  assert.equal(budgetFor(500), 0);
+  assert.equal(budgetFor(800), 200);
+  assert.equal(budgetFor(600), 0);
   assert.equal(budgetFor(5000, CAP, RESERVE, "50"), 50);
   assert.equal(budgetFor(5000, CAP, RESERVE, 50), 50);
   assert.equal(budgetFor(700, CAP, RESERVE, "50"), 50);
@@ -119,35 +119,32 @@ test("budgetFor: live count minus reserve, capped per run; a dispatch cap only l
 });
 
 test("budgetFor: a negative reserve is 0, never a budget above the live count", () => {
-  assert.equal(budgetFor(1000, CAP, -1000), 1000);
-  assert.equal(budgetFor(1000, CAP, -1000, null, undefined, { dailyLimit: 5000 }), 1000);
+  assert.equal(budgetFor(300, CAP, -1000), 300);
+  assert.equal(budgetFor(300, CAP, -1000, null, undefined, { dailyLimit: 5000 }), 300);
   const logs: string[] = [];
   assert.deepEqual(clampLimits(CAP, -1000, 5000, (m) => logs.push(m)), { cap: CAP, reserve: 0 });
   assert.match(logs.join("\n"), /negative/);
 });
 
-test("budgetFor: a cap above half the spendable day is lowered, against the LIVE limit", () => {
+test("budgetFor: EBAY_MAX_CALLS can never raise a day past DAILY_CALL_CAP", () => {
+  // One run a day: the per-run clamp is the whole spendable day…
+  assert.deepEqual(clampLimits(4400, RESERVE, 5000), { cap: 4400, reserve: RESERVE });
+  // …but the daily ceiling still holds, whatever the variable or eBay's limit.
+  assert.equal(budgetFor(5000, 4400, RESERVE, null, undefined, { dailyLimit: 5000 }), DAILY_CALL_CAP);
+  assert.equal(budgetFor(10000, 9000, RESERVE, null, undefined, { dailyLimit: 10000 }), DAILY_CALL_CAP);
   const logs: string[] = [];
-  // EBAY_MAX_CALLS=4400 would let the first run after eBay's reset take the whole day.
-  assert.deepEqual(clampLimits(4400, RESERVE, 5000, (m) => logs.push(m)), { cap: 2200, reserve: RESERVE });
+  assert.deepEqual(clampLimits(9000, RESERVE, 5000, (m) => logs.push(m)), { cap: 4400, reserve: RESERVE });
   assert.equal(logs.length, 1);
-  assert.equal(budgetFor(5000, 4400, RESERVE, null, undefined, { dailyLimit: 5000 }), 2200);
-  // After a Growth Check (a 10,000 limit) the same variable is allowed.
-  assert.deepEqual(clampLimits(4400, RESERVE, 10000), { cap: 4400, reserve: RESERVE });
-  assert.equal(budgetFor(10000, 4400, RESERVE, null, undefined, { dailyLimit: 10000 }), 4400);
-  // The defaults sit exactly at the bound.
-  assert.deepEqual(clampLimits(CAP, RESERVE, DAILY_LIMIT), { cap: CAP, reserve: RESERVE });
 });
 
-test("budgetFor: an unknown live count is bounded by our own last-24h spend, so 3 runs in a day can't pass the limit", () => {
+test("budgetFor: our own last-24h spend counts against the 500, known live count or not", () => {
   assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 0 }), CAP);
-  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 2200 }), 2200);
-  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 4400 }), 0);
-  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 3000 }), 1400);
-  // Three runs land in one eBay day (two schedules and a dispatch), the count unreadable every time.
+  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 300 }), 200);
+  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 500 }), 0);
+  assert.equal(budgetFor(4000, CAP, RESERVE, null, undefined, { ourSpend24h: 450 }), 50);
   let spent = 0;
   for (let run = 0; run < 3; run++) spent += budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: spent });
-  assert.ok(spent <= DAILY_LIMIT - RESERVE, `${spent} > ${DAILY_LIMIT - RESERVE}`);
+  assert.ok(spent <= DAILY_CALL_CAP, `${spent} > ${DAILY_CALL_CAP}`);
 });
 
 test("the failure breaker: 10 failed searches in a row, or over half after 50, stop the run", () => {
@@ -175,7 +172,7 @@ test("the run's verdict: red on a refused token, a tripped breaker, or calls spe
   assert.equal(ebayRunVerdict({ latched: "budget", spent: 40, completed: 0 }).ok, false);
 });
 
-test("steady state: the 24h/48h tiers settle into a 4-run cycle, and no run plans past the cap", () => {
+test("steady state: one run a day, never past the cap, the dearest pairs never starved", () => {
   // OP_COMPARE's tier counts as products; each run searches every pair it planned.
   const products: PlanProduct[] = [];
   let id = 1;
@@ -183,28 +180,22 @@ test("steady state: the 24h/48h tiers settle into a 4-run cycle, and no run plan
     for (let i = 0; i < n; i++) products.push({ id: id++, kind: "single", marketUsd, number: "OP01-001", launch: false, ...extra });
   };
   add(OP_COMPARE.s1, 20000);
-  add(OP_COMPARE.s2Low, 3000);
-  add(OP_COMPARE.s2High, 7000);
-  add(OP_COMPARE.su, null, { launch: true, refUsd: 3000 });
+  add(OP_COMPARE.s2Low, 5000);
+  add(OP_COMPARE.s2High, 9000);
+  add(OP_COMPARE.su, null, { launch: true, refUsd: 5000 });
   for (let i = 0; i < OP_COMPARE.sealed; i++) products.push({ id: id++, kind: "sealed", marketUsd: 9000, sealedKind: "Booster Box", launch: false });
   const checks = new Map<string, Date>();
-  const t0 = new Date("2026-10-04T05:37:00Z").getTime();
-  const modelled: number[] = [];
-  for (let run = 0; run < 16; run++) {
-    const at = new Date(t0 + run * 12 * 3600_000);
+  const t0 = new Date("2026-10-08T05:37:00Z").getTime();
+  for (let run = 0; run < 10; run++) {
+    const at = new Date(t0 + run * 24 * 3600_000);
     const due = Object.fromEntries(EBAY_MARKETS.map((m) => [m, duePairs(products, m, checks, at)]));
     const plan = planRun(due, CAP, at);
     assert.ok(plan.modelled <= CAP, `run ${run}: ${plan.modelled} > ${CAP}`);
     for (const p of plan.order) checks.set(pairKey(p.productId, p.market), at);
-    modelled.push(Math.round(plan.modelled));
   }
-  // From the third day the plan repeats every 4 runs, and 3 of the 4 plan at the cap
-  // (DECISIONS: first-week slip in those runs is expected; the alarm is S2 past 60h).
-  const tail = modelled.slice(8);
-  for (let i = 4; i < tail.length; i++) assert.ok(Math.abs(tail[i] - tail[i - 4]) <= 2, modelled.join(" "));
-  const day = tail.slice(0, 4);
-  assert.ok(day.filter((m) => m >= CAP - 2).length >= 2, modelled.join(" "));
-  assert.ok(day.reduce((a, b) => a + b, 0) / 2 <= 2 * CAP, modelled.join(" "));
+  // After ten days every US S1 card has been searched: the top of the catalogue is never starved.
+  const s1Ids = products.filter((p) => p.marketUsd === 20000).map((p) => p.id);
+  assert.ok(s1Ids.every((i) => checks.has(pairKey(i, "US"))), "every US S1 pair searched");
 });
 
 test("envInt treats an empty GitHub variable as unset, never 0", () => {
@@ -253,10 +244,10 @@ test("isDue: never searched, then interval minus a 3h grace; force ignores inter
   const now = new Date("2026-10-03T05:37:00Z");
   const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
   assert.ok(isDue(null, "S1", now));
-  assert.ok(isDue(ago(23.97), "S1", now)); // checked 05:39 yesterday
-  assert.ok(!isDue(ago(20), "S1", now));
-  assert.ok(isDue(ago(45), "S2", now));
-  assert.ok(!isDue(ago(44), "S2", now));
+  assert.ok(isDue(ago(47.97), "S1", now)); // checked 05:39 two days ago
+  assert.ok(!isDue(ago(44), "S1", now));
+  assert.ok(isDue(ago(69), "S2", now));
+  assert.ok(!isDue(ago(68), "S2", now));
   assert.ok(isDue(ago(1), "S2", now, true));
 });
 
@@ -265,14 +256,14 @@ const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
 
 test("due order: S1 before S2, never-searched before stale, then most overdue, then value", () => {
   const products: PlanProduct[] = [
-    { id: 1, kind: "single", marketUsd: 3000, number: "OP01-001", launch: false }, // S2, never
-    { id: 2, kind: "single", marketUsd: 20000, number: "OP01-002", launch: false }, // S1, stale 30h
+    { id: 1, kind: "single", marketUsd: 5000, number: "OP01-001", launch: false }, // S2, never
+    { id: 2, kind: "single", marketUsd: 20000, number: "OP01-002", launch: false }, // S1, stale 55h
     { id: 3, kind: "single", marketUsd: 15000, number: "OP01-003", launch: false }, // S1, never
-    { id: 4, kind: "single", marketUsd: 90000, number: "OP01-004", launch: false }, // S1, stale 25h
+    { id: 4, kind: "single", marketUsd: 90000, number: "OP01-004", launch: false }, // S1, stale 50h
     { id: 5, kind: "single", marketUsd: null, number: "OP16-001", launch: true, refUsd: 4000 }, // SU, never
     { id: 6, kind: "sealed", marketUsd: 12000, sealedKind: "Booster Box", launch: false }, // P1, never
   ];
-  const checks = new Map([["2|US", ago(30)], ["4|US", ago(25)]]);
+  const checks = new Map([["2|US", ago(55)], ["4|US", ago(50)]]);
   const due = duePairs(products, "US", checks, now);
   assert.deepEqual(due.map((p) => p.productId), [3, 2, 4, 6, 1, 5]);
 });
@@ -328,11 +319,12 @@ test("the methodology page states the plan's floors and intervals", () => {
   assert.ok(page.includes(`worth ${usd(DEFAULT_MIN_VALUE_CENTS)} or more`), "singles floor");
   assert.ok(page.includes(`(${usd(EU_MIN_VALUE_CENTS)} in the EU)`), "EU floor");
   assert.ok(page.includes(`sealed products worth ${usd(SEALED_MIN_CENTS)} or more`), "sealed floor");
-  assert.ok(page.includes(`cards of ${usd(S1_MIN_CENTS)} and up daily`), "S1");
-  assert.equal(TIER_INTERVAL_HOURS.S1, 24);
-  assert.ok(page.includes("the rest every two days"));
-  assert.equal(TIER_INTERVAL_HOURS.S2, 48);
-  assert.equal(TIER_INTERVAL_HOURS.P1, 48);
-  assert.ok(page.includes("Twice a day"));
-  assert.equal((read(".github/workflows/ebay-prices.yml").match(/- cron:/g) ?? []).length, 2);
+  assert.ok(page.includes(`cards of ${usd(S1_MIN_CENTS)} and up every two days`), "S1");
+  assert.equal(TIER_INTERVAL_HOURS.S1, 48);
+  assert.ok(page.includes("the rest every three days"));
+  assert.equal(TIER_INTERVAL_HOURS.S2, 72);
+  assert.equal(TIER_INTERVAL_HOURS.P1, 72);
+  assert.ok(page.includes("Once a day"));
+  assert.ok(page.includes("fixed daily budget"));
+  assert.equal((read(".github/workflows/ebay-prices.yml").match(/- cron:/g) ?? []).length, 1);
 });

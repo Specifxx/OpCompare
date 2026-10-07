@@ -24,23 +24,49 @@ export function EbayChaseStrip({
   page,
   limit = 6,
   className = "",
+  variant = "strip",
 }: {
   tiles: ChaseTile[];
   heading?: string;
   page: string;
   limit?: number;
   className?: string;
+  /** "banner": the homepage's framed ad unit under the hero, with a shop-all button. */
+  variant?: "strip" | "banner";
 }) {
   const { country } = useCountry();
   if (!tiles.length) return null;
   // Live listings in this market first, then the dearest cards.
   const ordered = [...tiles].sort((a, b) => Number(!!b.listings[country]) - Number(!!a.listings[country]) || b.marketUsd - a.marketUsd).slice(0, limit);
   return (
-    <section data-ad-placement="chase-strip" className={className} aria-label={heading}>
-      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <EbayWordmark className="text-sm" />
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad · {ebayLabel(country)}</span>
-        <span className="text-sm font-bold text-white">{heading}</span>
+    <section
+      data-ad-placement="chase-strip"
+      className={
+        variant === "banner"
+          ? `relative overflow-hidden rounded-2xl border border-[#0064d2]/30 bg-gradient-to-br from-[#0064d2]/[0.08] via-transparent to-[#f5af02]/[0.06] p-4 sm:p-5 ${className}`
+          : className
+      }
+      aria-label={heading}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <EbayWordmark className={variant === "banner" ? "text-2xl" : "text-sm"} />
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad · {ebayLabel(country)}</span>
+          <span className={variant === "banner" ? "text-base font-extrabold text-white sm:text-lg" : "text-sm font-bold text-white"}>{heading}</span>
+        </div>
+        {variant === "banner" ? (
+          <a
+            href={ebaySearchUrl(country, "One Piece Card Game", "chase-banner")}
+            target="_blank"
+            rel={outboundRel()}
+            data-retailer="ebay_chase_banner"
+            data-page={page}
+            data-surface="ebay_chase"
+            className="rounded-lg bg-[#0064d2] px-3.5 py-2 text-sm font-extrabold text-[#ffffff] shadow-md shadow-[#0064d2]/25 transition hover:brightness-110"
+          >
+            Shop One Piece on eBay →
+          </a>
+        ) : null}
       </div>
       <ul className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
         {ordered.map((t) => {

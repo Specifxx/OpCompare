@@ -13,10 +13,10 @@ const YML = fs.readFileSync(path.join(ROOT, ".github/workflows/ebay-prices.yml")
 const IMPORT = fs.readFileSync(path.join(ROOT, ".github/workflows/import-prices.yml"), "utf8");
 const crons = (y: string) => [...y.matchAll(/- cron:\s*"(\d+) (\d+) \* \* \*"/g)].map((m) => Number(m[2]) * 60 + Number(m[1]));
 
-test("exactly two scheduled runs, each at least 60 minutes before an import", () => {
+test("exactly one scheduled run a day, at least 60 minutes before an import", () => {
   const ebay = crons(YML);
   const imports = crons(IMPORT);
-  assert.equal(ebay.length, 2);
+  assert.equal(ebay.length, 1);
   assert.ok(imports.length >= 2);
   for (const e of ebay) {
     const next = imports.filter((i) => i > e).sort((a, b) => a - b)[0];

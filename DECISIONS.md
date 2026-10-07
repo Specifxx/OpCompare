@@ -2049,3 +2049,27 @@ features.
   and the deck pages' signup prompts say the same. The admin demand and rising
   pages and the daily demand snapshot files (data branch, `history/demand/`)
   were already in place.
+
+## 2026-10-07 — eBay: 500 calls a day, one run, the dearest cards first
+
+**Owner's call.** OP Compare's eBay keys arrive with a hard budget: at most
+500 Browse calls a day, one run a day, spent where affiliate revenue is
+largest; cheap cards are never searched.
+
+- `DAILY_CALL_CAP = 500` in `lib/ebay-plan.ts`. `budgetFor` caps every run at
+  500 minus our own spend in the last 24h (from the ImportRun history), so a
+  scheduled run plus any dispatches can never pass 500, and no
+  `EBAY_MAX_CALLS` value can raise it. `DEFAULT_MAX_CALLS` 500, one cron
+  (05:37 UTC), `RUNS_PER_DAY` 1.
+- Shares: US 60%, UK 20%, AU 15%, EU 5% (CA singles stay derived from the US
+  search for 0 calls; SG none). A market's unused share spills to the others.
+- Floors: singles US$40+ (US$75 in the EU), sealed US$60+. Tiers: US$150+
+  every 48h (S1, first in line), the rest every 72h. Rows still live 72h; S1 can
+  miss a whole daily run and stay fresh. The catalogue wants more than 500 a
+  day, so the plan is budget-bound by design: S1 before S2, then most overdue,
+  then dearest. `PICKS_MAX_AGE_HOURS` is 72h to match.
+- On the site: the eBay chase-card banner (real listings, eBay's own photos,
+  card art and a search link where there is none yet) sits directly under the
+  homepage hero; every card page opens with a big filled eBay button (the
+  cheapest fresh listing "from <price>" in the visitor's market, else a search
+  for the card), above the art on phones and in the header card on desktop.
