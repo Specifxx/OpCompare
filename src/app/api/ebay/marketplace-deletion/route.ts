@@ -20,10 +20,26 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const token = process.env.EBAY_VERIFICATION_TOKEN ?? "";
-  const endpoint = process.env.EBAY_DELETION_ENDPOINT ?? "";
+  // Trimmed: a value pasted into Vercel with a trailing space or newline would
+  // otherwise change the hash and fail eBay's validation silently.
+  const token = (process.env.EBAY_VERIFICATION_TOKEN ?? "").trim();
+  const endpoint = (process.env.EBAY_DELETION_ENDPOINT ?? "").trim();
+  const url = new URL(req.url);
+  // ?status=1: a setup check with nothing secret in it (the endpoint is a public
+  // URL; the token only by its length and whether it uses eBay's allowed characters).
+  if (url.searchParams.get("status") === "1") {
+    return NextResponse.json(
+      {
+        endpoint: endpoint || null,
+        endpointOk: endpoint === "https://opcompare.app/api/ebay/marketplace-deletion",
+        tokenLength: token.length,
+        tokenOk: /^[A-Za-z0-9_-]{32,80}$/.test(token),
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
   if (!token || !endpoint) return NextResponse.json({ error: "not configured" }, { status: 500 });
-  const code = new URL(req.url).searchParams.get("challenge_code");
+  const code = url.searchParams.get("challenge_code");
   if (!code) return NextResponse.json({ error: "missing challenge_code" }, { status: 400 });
   // ORDER matters: challenge code, then token, then endpoint.
   const challengeResponse = createHash("sha256").update(code).update(token).update(endpoint).digest("hex");
