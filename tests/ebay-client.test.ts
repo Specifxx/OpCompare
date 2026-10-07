@@ -52,7 +52,7 @@ test("no log line can carry the token, the secret or the Basic header", () => {
 type Call = { url: string; init: RequestInit };
 let calls: Call[] = [];
 let tokenStatus = 200;
-let remaining: number | null = 5000;
+let remaining: number | null = 2500;
 let searchStatus: number[] = [];
 const realFetch = globalThis.fetch;
 const env = { ...process.env };
@@ -67,7 +67,7 @@ function mock(): void {
     if (url.includes("/developer/analytics/")) {
       if (remaining == null) return new Response("{}", { status: 500 });
       return new Response(
-        JSON.stringify({ rateLimits: [{ apiContext: "buy", apiName: "Browse", resources: [{ name: "buy.browse", rates: [{ count: 5000 - remaining, limit: 5000, remaining, reset: "2026-10-04T07:00:00.000Z", timeWindow: 86400 }] }] }] }),
+        JSON.stringify({ rateLimits: [{ apiContext: "buy", apiName: "Browse", resources: [{ name: "buy.browse", rates: [{ count: 2500 - remaining, limit: 2500, remaining, reset: "2026-10-04T07:00:00.000Z", timeWindow: 86400 }] }] }] }),
         { status: 200 },
       );
     }
@@ -81,7 +81,7 @@ beforeEach(() => {
   resetEbayClientForTests();
   calls = [];
   tokenStatus = 200;
-  remaining = 5000;
+  remaining = 2500;
   searchStatus = [];
   process.env.EBAY_CLIENT_ID = "test-app-id";
   process.env.EBAY_CLIENT_SECRET = "test-cert-id";
@@ -120,10 +120,10 @@ test("prime: live count → budget; the dispatch cap lowers it; spend stops at i
   process.env.EBAY_DISPATCH_CAP = "2";
   const logs: string[] = [];
   const p = await primeEbayBudget((m) => logs.push(m));
-  assert.equal(p.remaining, 5000);
-  assert.equal(p.dailyLimit, 5000);
+  assert.equal(p.remaining, 2500);
+  assert.equal(p.dailyLimit, 2500);
   assert.equal(p.budget, 2);
-  assert.match(logs.join("\n"), /eBay quota: 5000\/5000 remaining → budget 2 \(cap 500, reserve 600\)/);
+  assert.match(logs.join("\n"), /eBay quota: 2500\/2500 remaining → budget 2 \(cap 2000, reserve 300\)/);
   assert.doesNotMatch(logs.join("\n"), /tok-test|test-cert-id|test-app-id/);
   assert.equal((await searchBrowse(query)).status, "ok");
   assert.equal((await searchBrowse(query)).status, "ok");
@@ -144,30 +144,30 @@ test("prime: unknown live count → the cap; an empty variable is unset, not 0",
   process.env.EBAY_MAX_CALLS = "";
   const p = await primeEbayBudget();
   assert.equal(p.remaining, null);
-  assert.equal(p.budget, 500);
-  assert.equal(p.reserve, 600);
+  assert.equal(p.budget, 2000);
+  assert.equal(p.reserve, 300);
 });
 
 test("prime: unknown live count → bounded by our own last-24h spend", async () => {
   remaining = null;
   const logs: string[] = [];
-  const p = await primeEbayBudget((m) => logs.push(m), { ourSpend24h: 300 });
-  assert.equal(p.budget, 200); // the 500-a-day ceiling minus our 300
-  assert.match(logs.join("\n"), /unknown \(assumed 5000 a day, 300 spent by us in 24h\)/);
-  const none = await primeEbayBudget(() => {}, { ourSpend24h: 500 });
+  const p = await primeEbayBudget((m) => logs.push(m), { ourSpend24h: 800 });
+  assert.equal(p.budget, 1400); // 2500 − our 800 spent − the 300 reserve
+  assert.match(logs.join("\n"), /unknown \(assumed 2500 a day, 800 spent by us in 24h\)/);
+  const none = await primeEbayBudget(() => {}, { ourSpend24h: 2500 });
   assert.equal(none.budget, 0);
   assert.equal(isEbayRateLimited(), true);
 });
 
-test("prime: a negative reserve is 0, and no EBAY_MAX_CALLS raises a day past 500", async () => {
+test("prime: a negative reserve is 0, and no EBAY_MAX_CALLS raises a run past the day's ceiling", async () => {
   remaining = 300;
   process.env.EBAY_QUOTA_RESERVE = "-1000";
   assert.equal((await primeEbayBudget()).budget, 300); // never above what eBay says is left
-  remaining = 5000;
+  remaining = 2500;
   process.env.EBAY_QUOTA_RESERVE = "";
-  process.env.EBAY_MAX_CALLS = "4400";
+  process.env.EBAY_MAX_CALLS = "9000";
   const p = await primeEbayBudget();
-  assert.equal(p.budget, 500);
+  assert.equal(p.budget, 2200); // clamped to the spendable day (2500 − 300), under the ceiling
 });
 
 test("capEbayBudget only lowers what is left (the foreign-spend guard)", async () => {
@@ -180,7 +180,7 @@ test("capEbayBudget only lowers what is left (the foreign-spend guard)", async (
 });
 
 test("prime: below the reserve → 0 calls and the latch", async () => {
-  remaining = 550;
+  remaining = 250;
   const p = await primeEbayBudget();
   assert.equal(p.budget, 0);
   assert.equal(isEbayRateLimited(), true);

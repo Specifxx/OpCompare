@@ -2073,3 +2073,24 @@ largest; cheap cards are never searched.
   homepage hero; every card page opens with a big filled eBay button (the
   cheapest fresh listing "from <price>" in the visitor's market, else a search
   for the card), above the art on phones and in the header card on desktop.
+
+## 2026-10-07 (later) — eBay: 2,500 a day after a second approved account
+
+**Owner's call.** A second approved eBay account lifts the allowance to 2,500
+Browse calls a day, replacing the 500-a-day plan above. Spend it where clicks
+are: the chase cards first, the floor lowered.
+
+- `DAILY_CALL_CAP` 2,500; `EBAY_MAX_CALLS` 2,000 a run; `EBAY_QUOTA_RESERVE` 300
+  (a run at the cap leaves 200 of headroom for a dispatch); the assumed eBay
+  limit when the live count can't be read is 2,500. Still one run a day
+  (05:37 UTC) and the ceiling still counts our own last-24h spend, so a
+  dispatch plus the schedule cannot pass 2,500.
+- Floors: singles US$20+ (US$40 in the EU), sealed US$30+. Tiers: US$100+ every
+  48h (S1: all the chase printings, first in line), the rest every 72h.
+- Shares: US 50%, UK 18%, AU 17%, EU 11%, CA 4% (sealed only). Modelled demand
+  is about 2,200–2,400 calls a day for the whole catalogue, just above one
+  2,000-call run, so the plan stays budget-bound at the edge: the dearest cards
+  first, then most overdue, and the cheapest eligible waits a day.
+- The first day's spend is split: 50 (smoke test) + ~450 (first full run) on
+  2026-10-07, then a 400-call top-up the same evening; the 05:37 run on the 8th
+  takes whatever the rolling 24h leaves.

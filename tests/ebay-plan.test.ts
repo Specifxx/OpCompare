@@ -45,7 +45,7 @@ const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
 // ── The model's constants ────────────────────────────────────────────────────
-const DAILY_LIMIT = 5000; // OP Compare's own application. Raise with EBAY_MAX_CALLS after a Growth Check.
+const DAILY_LIMIT = 2500; // OP Compare's approved Browse allowance (owner, 2026-10-07). Raise DAILY_CALL_CAP with it.
 const RESERVE = DEFAULT_QUOTA_RESERVE;
 const CAP = DEFAULT_MAX_CALLS;
 const SPENDABLE = DAILY_LIMIT - RESERVE;
@@ -60,24 +60,25 @@ const TIMEOUT_MIN = Number(/timeout-minutes:\s*(\d+)/.exec(read(".github/workflo
 // 2026-10-03 (Card.marketUsd / Sealed.marketUsd; sealed = kinds the eBay pass
 // searches). TCGCSV: the spec's TCGCSV product counts (a more pessimistic sealed
 // count, since it includes kinds we never search). Both must fit.
-const OP_COMPARE = { s1: 388, s2Low: 409, s2High: 199, su: 76, sealed: 140 };
-const TCGCSV = { s1: 386, s2Low: 409, s2High: 200, su: 75, sealed: 242 };
+const OP_COMPARE = { s1: 390, s2Low: 341, s2High: 268, su: 76, sealed: 140 };
+const TCGCSV = { s1: 390, s2Low: 341, s2High: 268, su: 75, sealed: 242 };
 
 test("the model's retry rate is the plan's", () => {
   assert.equal(PLAN_RETRY_RATE, RETRY_RATE);
 });
 
-test("the daily ceiling: 500 calls, whatever the runs, dispatches or env vars", () => {
-  assert.equal(DAILY_CALL_CAP, 500);
-  assert.equal(CAP, 500);
+test("the daily ceiling: 2,500 calls, whatever the runs, dispatches or env vars", () => {
+  assert.equal(DAILY_CALL_CAP, 2500);
+  assert.equal(CAP, 2000);
+  assert.ok(CAP + RESERVE <= DAILY_LIMIT, "a run at the cap leaves the reserve untouched");
   // A scheduled run and two dispatches land in one day, eBay reporting plenty left each time.
   let spent = 0;
-  for (let run = 0; run < 3; run++) spent += budgetFor(5000 - spent, 4400, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: spent });
-  assert.equal(spent, DAILY_CALL_CAP);
-  // The catalogue wants more than the day allows, so the plan's priority order decides.
+  for (let run = 0; run < 3; run++) spent += budgetFor(DAILY_LIMIT - spent, 9000, RESERVE, null, undefined, { dailyLimit: DAILY_LIMIT, ourSpend24h: spent });
+  assert.ok(spent <= DAILY_LIMIT - RESERVE, `${spent} > ${DAILY_LIMIT - RESERVE}`);
+  // The modelled catalogue fits the day; the 2,000-call run takes the dearest first and the rest wait.
   for (const counts of [OP_COMPARE, TCGCSV]) {
     const { total, byMarket } = modelDailyCalls(counts);
-    assert.ok(total > DAILY_CALL_CAP, "budget-bound by design: the dearest cards come first");
+    assert.ok(total <= DAILY_CALL_CAP, `modelled ${total} > ${DAILY_CALL_CAP}`);
     assert.equal(byMarket.SG, 0);
   }
 });
@@ -105,17 +106,17 @@ test("one capped run fits the workflow's timeout with a 25% margin", () => {
 
 test("budgetFor: live count minus reserve, capped per run; a dispatch cap only lowers it", () => {
   assert.equal(budgetFor(null), CAP);
-  assert.equal(budgetFor(5000), CAP);
-  assert.equal(budgetFor(800), 200);
-  assert.equal(budgetFor(600), 0);
-  assert.equal(budgetFor(5000, CAP, RESERVE, "50"), 50);
-  assert.equal(budgetFor(5000, CAP, RESERVE, 50), 50);
+  assert.equal(budgetFor(2500), CAP);
+  assert.equal(budgetFor(800), 500);
+  assert.equal(budgetFor(300), 0);
+  assert.equal(budgetFor(2500, CAP, RESERVE, "50"), 50);
+  assert.equal(budgetFor(2500, CAP, RESERVE, 50), 50);
   assert.equal(budgetFor(700, CAP, RESERVE, "50"), 50);
-  assert.equal(budgetFor(620, CAP, RESERVE, "50"), 20);
+  assert.equal(budgetFor(320, CAP, RESERVE, "50"), 20);
   const logs: string[] = [];
-  for (const bad of ["9999", "0", "-5", "abc"]) assert.equal(budgetFor(5000, CAP, RESERVE, bad, (m) => logs.push(m)), CAP);
+  for (const bad of ["9999", "0", "-5", "abc"]) assert.equal(budgetFor(2500, CAP, RESERVE, bad, (m) => logs.push(m)), CAP);
   assert.equal(logs.length, 4);
-  assert.equal(budgetFor(5000, CAP, RESERVE, ""), CAP);
+  assert.equal(budgetFor(2500, CAP, RESERVE, ""), CAP);
 });
 
 test("budgetFor: a negative reserve is 0, never a budget above the live count", () => {
@@ -126,22 +127,23 @@ test("budgetFor: a negative reserve is 0, never a budget above the live count", 
   assert.match(logs.join("\n"), /negative/);
 });
 
-test("budgetFor: EBAY_MAX_CALLS can never raise a day past DAILY_CALL_CAP", () => {
-  // One run a day: the per-run clamp is the whole spendable day…
+test("budgetFor: EBAY_MAX_CALLS is clamped to the spendable day, and DAILY_CALL_CAP holds whatever eBay's limit", () => {
+  const logs: string[] = [];
+  assert.deepEqual(clampLimits(4400, RESERVE, 2500, (m) => logs.push(m)), { cap: 2200, reserve: RESERVE });
+  assert.equal(logs.length, 1);
+  assert.equal(budgetFor(2500, 4400, RESERVE, null, undefined, { dailyLimit: 2500 }), 2200);
+  // A bigger eBay allowance later still cannot pass our own ceiling until DAILY_CALL_CAP is raised.
   assert.deepEqual(clampLimits(4400, RESERVE, 5000), { cap: 4400, reserve: RESERVE });
-  // …but the daily ceiling still holds, whatever the variable or eBay's limit.
   assert.equal(budgetFor(5000, 4400, RESERVE, null, undefined, { dailyLimit: 5000 }), DAILY_CALL_CAP);
   assert.equal(budgetFor(10000, 9000, RESERVE, null, undefined, { dailyLimit: 10000 }), DAILY_CALL_CAP);
-  const logs: string[] = [];
-  assert.deepEqual(clampLimits(9000, RESERVE, 5000, (m) => logs.push(m)), { cap: 4400, reserve: RESERVE });
-  assert.equal(logs.length, 1);
 });
 
-test("budgetFor: our own last-24h spend counts against the 500, known live count or not", () => {
+test("budgetFor: our own last-24h spend counts against the day, known live count or not", () => {
   assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 0 }), CAP);
-  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 300 }), 200);
-  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 500 }), 0);
-  assert.equal(budgetFor(4000, CAP, RESERVE, null, undefined, { ourSpend24h: 450 }), 50);
+  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 800 }), 1400); // 2500 − 800 − the 300 reserve
+  assert.equal(budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: 2300 }), 0);
+  // eBay says plenty is left, but we already spent 2,000 in 24h: the ceiling leaves 500.
+  assert.equal(budgetFor(4000, CAP, RESERVE, null, undefined, { ourSpend24h: 2000 }), 500);
   let spent = 0;
   for (let run = 0; run < 3; run++) spent += budgetFor(null, CAP, RESERVE, null, undefined, { ourSpend24h: spent });
   assert.ok(spent <= DAILY_CALL_CAP, `${spent} > ${DAILY_CALL_CAP}`);
