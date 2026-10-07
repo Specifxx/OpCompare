@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 // well, not speculating.
 const TITLE = "Rising Cards — One Piece Cards With Rising Demand | OP Compare";
 const DESCRIPTION =
-  "One Piece Card Game cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Plus shows every pick, ad-free. Not financial advice.";
+  "One Piece Card Game cards ranked by demand and price-timing signals: search interest that is high or rising on cards whose price hasn't moved up yet, with the reason for every pick. Free accounts see the top three; Premium shows every pick. Not financial advice.";
 export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 };
 
 // How many ranked picks a signed-in FREE account sees (lib/tier-limits.ts).
-// Plus and Premium see all of them.
+// Premium sees all of them (Plus no longer does: owner, 2026-10-07).
 const FREE_PREVIEW_ROWS = FREE_RISING_ROWS;
 
 const RISING_FAQS = [
@@ -54,8 +54,8 @@ const RISING_FAQS = [
     a: "No. It is a screen of public price and demand data, not a prediction, and no track record is published yet. Use it as a starting point and check a card's full price history before you buy.",
   },
   {
-    q: "Do I need Plus?",
-    a: `Not to start. A free account shows the top ${FREE_PREVIEW_ROWS} ranked picks with their reasons. Plus (${planPrice("plus", "month")}/month) shows every ranked pick, in every market or Global, and removes ads from every page.`,
+    q: "Do I need Premium?",
+    a: `Not to start. A free account shows the top ${FREE_PREVIEW_ROWS} ranked picks with their reasons. Premium (${planPrice("premium", "month")}/month) shows every ranked pick, in every market or Global.`,
   },
   {
     q: "How often does it update?",
@@ -200,9 +200,10 @@ function TableHead({ priceLabel, showMove }: { priceLabel: string; showMove: boo
 
 export default async function RisingPage({ searchParams }: { searchParams: { scope?: string } }) {
   const user = await getCurrentUser();
-  const premium = isPremium(user);
-  // THREE LEVELS (RiftCompare, 2026-09-23). Plus and Premium see every pick; a
-  // signed-in FREE account sees the top FREE_PREVIEW_ROWS; signed out sees no
+  // PREMIUM ONLY (owner, 2026-10-07): Plus no longer unlocks the full list.
+  const premium = isPremium(user, "premium");
+  // THREE LEVELS (RiftCompare, 2026-09-23). Premium sees every pick; a
+  // signed-in FREE or Plus account sees the top FREE_PREVIEW_ROWS; signed out sees no
   // pick, only the ask for a free account. The slice happens HERE, on the
   // server: only the rows a visitor is entitled to are rendered, and nothing
   // below passes `analysis` to a client component, so the rest of the ranking
@@ -324,8 +325,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <div>
               <p className="text-sm font-bold text-white">See the top {FREE_PREVIEW_ROWS} rising cards, free</p>
               <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                A free account shows the {FREE_PREVIEW_ROWS} highest-ranked picks and why each one ranks. Plus shows all{" "}
-                {Math.min(40, analysis.picks.length)}, in every market or Global, with no ads on any page.
+                A free account shows the {FREE_PREVIEW_ROWS} highest-ranked picks and why each one ranks. Premium shows all{" "}
+                {Math.min(40, analysis.picks.length)}, in every market or Global.
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                 <Link href="/login?next=/tools/rising&src=tool_preview" rel="nofollow" className="btn-primary text-sm">Create a free account</Link>
@@ -373,10 +374,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
               <p className="text-sm text-slate-300">
                 <strong className="text-white">{hiddenCount} more ranked picks</strong>
-                {where} — Plus shows every one with no ads, and can alert you when one hits your price.
+                {where} — Premium shows every one, in every market or Global.
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <PlanButton tier="plus" surface="gate:rising" />
+                <PlanButton tier="premium" surface="gate:rising" />
                 <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
               </div>
             </div>

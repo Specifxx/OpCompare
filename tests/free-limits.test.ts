@@ -133,7 +133,7 @@ test("tier-limits.ts is the one home of the wave-2 tier constants", () => {
   assert.equal(tiers.FREE_RISING_ROWS, 3);
   assert.equal(tiers.FREE_DEMAND_ROWS, 10);
   assert.equal(tiers.PREMIUM_DEMAND_ROWS, 25);
-  assert.equal(tiers.FREE_BASKET_TOTALS_PER_DAY, 5);
+  assert.equal((tiers as Record<string, unknown>).FREE_BASKET_TOTALS_PER_DAY, undefined, "Best Basket is Premium only (2026-10-07)");
   assert.equal(tiers.SET_GAP_CHUNK, 200);
   assert.equal(tiers.FREE_WATCHLIST_LIMIT, FREE_WATCHLIST_LIMIT);
   assert.equal(tiers.FREE_PORTFOLIO_LIMIT, FREE_PORTFOLIO_LIMIT);

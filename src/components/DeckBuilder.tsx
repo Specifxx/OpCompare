@@ -567,8 +567,8 @@ export function DeckBuilder({ initialList, emailOn = false }: { initialList: str
         {result && result.lines.length > 0 && (
           <InlineSignupPrompt
             surface="inline-deck"
-            title="See what this list costs delivered"
-            body={`A free account shows what this list costs delivered in Best Basket, postage included, and how much less that is than buying each card's cheapest copy separately. You can also watch up to ${FREE_WATCHLIST_LIMIT} of its cards for a price drop.`}
+            title="Watch this list's cards for a price drop"
+            body={`A free account watches up to ${FREE_WATCHLIST_LIMIT} of its cards and tells you when one hits a new low. Premium's Best Basket finds the cheapest delivered way to buy the whole list, store by store.`}
             next={`/deck?list=${listParam}`}
           />
         )}

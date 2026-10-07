@@ -20,14 +20,14 @@ import { BestBasket, type BasketSetOption, type BasketSetStart, type BasketSourc
 import { loadBasketPrefs } from "@/lib/basket-server";
 import { findOwnDeckWatch } from "@/lib/deck-watch";
 import { initialMinCondition, storedMinCondition } from "@/lib/basket-condition";
-import { FREE_BASKET_TOTALS_PER_DAY } from "@/lib/tier-limits";
+import PlanButton from "@/components/PlanButton";
 import { formatMeasuredDate, marketHasZonePricing, marketMeasuredAt, marketMeasuredPlaces, regionFromGeo, regionOptionsFor } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a One Piece Deck | OP Compare";
 const DESCRIPTION =
-  "Paste a One Piece Card Game decklist, or send your watchlist, and get the cheapest delivered way to buy it across stores — each store's measured postage included. Premium shows the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
+  "Paste a One Piece Card Game decklist, or send your watchlist, and get the cheapest delivered way to buy it across stores — each store's measured postage included. A Premium tool: the store-by-store plan beside the best one-store and two-store orders, at the minimum condition you set.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: `Partly. Any signed-in account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to ${FREE_BASKET_TOTALS_PER_DAY} times a day. The store-by-store plan, with the best one-store and two-store orders beside it and a link for every card, is an OP Compare Premium tool.`,
+    a: "No. Best Basket is an OP Compare Premium tool: the delivered total, the store-by-store plan with a link for every card, and the best one-store and two-store orders beside it. The deck and list pricer at /deck stays free and shows every card's cheapest price.",
   },
   {
     q: "Does it account for shipping?",
@@ -58,11 +58,11 @@ const FAQS = [
   },
   {
     q: "What does minimum condition do?",
-    a: "Premium lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. Each store's price is the best-condition copy it lists, so if nothing at that grade is in stock the card is shown as not covered rather than filled with a played copy. Without Premium your total counts each store's copy in any condition and tells you how many played copies that includes. A new session starts on Lightly Played or better, and your last choice is remembered.",
+    a: "Premium lets you set the lowest condition you'll accept: Near Mint only, Lightly Played or better, or anything. Best Basket and the deck price watch then only use listings at or above it, so the cheapest plan can't quietly include a heavily played copy. Each line still shows its condition. Each store's price is the best-condition copy it lists, so if nothing at that grade is in stock the card is shown as not covered rather than filled with a played copy. A new session starts on Lightly Played or better, and your last choice is remembered.",
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",
-    a: "No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-by-store plan.",
+    a: "No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket.",
   },
 ];
 
@@ -189,14 +189,14 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or card list — not just the lowest price per
           card, but the lowest <strong className="text-slate-200">delivered total</strong> across {info.adjective} stores once each store&apos;s
           real postage is counted — measured from its own checkout, not guessed. Buying each card from its cheapest store usually spreads your
-          order over a dozen stores and buries you in postage; this searches for a better split. With Premium it shows that split store by store,
-          beside the best one-store and two-store orders.
+          order over a dozen stores and buries you in postage; this searches for a better split and shows it store by store,
+          beside the best one-store and two-store orders. A Premium tool.
         </p>
       </div>
 
-      {user ? (
+      {user && premium ? (
         <BestBasket
-          full={premium}
+          full
           initialList={initialList}
           initialSource={initialSource}
           initialSkipOwned={searchParams.skipOwned === "1"}
@@ -213,12 +213,25 @@ export default async function BestBasketPage({ searchParams }: { searchParams: P
           watch={watchRow ? { id: watchRow.id, name: watchRow.name, region: watchRow.region, trackedOnly: !!watchRow.trackedOnly, minCondition: storedMinCondition(watchRow.minCondition) } : null}
           emailOn={emailOn}
         />
+      ) : user ? (
+        <div className="card-surface p-6 text-center">
+          <h2 className="text-lg font-extrabold text-white">Best Basket is a Premium tool</h2>
+          <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
+            Premium finds the cheapest delivered way to buy your whole list across {info.adjective} stores, postage included, and shows which store to
+            buy each card from, beside the best one-store and two-store orders.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <PlanButton surface="gate:basket" tier="premium" />
+            <Link href="/deck" className="btn-ghost text-sm">
+              Free deck and list pricer
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Sign in to price your list, delivered</h2>
+          <h2 className="text-lg font-extrabold text-white">Sign in to use Best Basket</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            A free account shows what your list costs delivered, from how many stores, and how much less that is than buying each card&apos;s
-            cheapest copy. Premium adds the store-by-store plan.
+            Best Basket is part of OP Compare Premium: the cheapest delivered order for your whole list, store by store, postage included.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <Link href={`/login?next=${encodeURIComponent(selfHref(searchParams))}&src=tool_gate`} rel="nofollow" className="btn-primary text-sm">

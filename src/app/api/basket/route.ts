@@ -6,7 +6,7 @@ import { getCountry } from "@/lib/get-country";
 import { DECK_LINE_CAP, mergeLines, parseDeckList, resolveDeck } from "@/lib/deck";
 import { deckIndex } from "@/lib/deck-price";
 import { BASKET_COLLECTION_SOURCES, clampQty, parseBasketRequest, type BasketRequest } from "@/lib/basket-request";
-import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
 import { basketPreview, optimizeBasket, planBasket, type BasketCard, type PreviewRegion } from "@/lib/basket";
 import {
@@ -20,7 +20,6 @@ import {
   type BasketCardInfo,
 } from "@/lib/basket-server";
 import type { MinCondition } from "@/lib/basket-condition";
-import { FREE_BASKET_TOTALS_PER_DAY } from "@/lib/tier-limits";
 import { basketStoresFor, postageContextFor, postageOptionsFrom, type PostageOptions } from "@/lib/shipping";
 import { NOT_STOCKED_LIST_CAP, nothingPricedMessage, setGapFields, type SetGapAnswer } from "@/lib/set-gap";
 import { COUNTRIES } from "@/lib/country";
@@ -31,8 +30,9 @@ export const dynamic = "force-dynamic";
 // market's stores (RiftCompare's /api/basket, lib/basket.ts's open-store
 // search).
 //
-// WHO GETS WHAT. Any signed-in account can run it; the ANSWER is tiered here,
-// server-side, not in the page:
+// WHO GETS WHAT. Premium only since 2026-10-07 (owner): anyone else gets a 403
+// with premium: "required". The tiered preview below is kept for the code path
+// but no longer reachable. Historically the answer was tiered here:
 //   • Premium (isPremium(user, "premium")): the full plan — every store, every
 //     line with its condition and link — beside the best one-store and
 //     two-store orders, plus the unmatched and name-matched lines.
@@ -41,7 +41,7 @@ export const dynamic = "force-dynamic";
 //     and the saving, cards covered out of requested, the played-copies count
 //     and the lines we couldn't match. No store names, lines or URLs are in the
 //     response at all (withheld, not hidden). Click-only in the UI, and
-//     FREE_BASKET_TOTALS_PER_DAY (5) a day here.
+//     five totals a day.
 //
 // WHAT CAN BE SENT. { source: "deck" } with a pasted `text` and/or exact
 // `lines` ({ cardId, qty }); { source: "watchlist", ids } — the card ids the
@@ -70,7 +70,6 @@ export const dynamic = "force-dynamic";
 // never refunded. In-memory per instance (lib/rate-limit.ts), so soft.
 
 const HOUR = 3_600_000;
-const DAY = 86_400_000;
 
 interface Outcome {
   res: NextResponse;
@@ -81,20 +80,15 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  const full = isPremium(user, "premium");
-
-  if (!full) {
-    const tries = rateLimit(`basket-try:${user.id}`, 20, HOUR);
-    if (!tries.ok) return tooManyRequests(tries.retryAfter);
+  // PREMIUM ONLY (owner, 2026-10-07): no free or Plus totals any more.
+  if (!isPremium(user, "premium")) {
+    return NextResponse.json({ error: "Best Basket is part of OP Compare Premium.", premium: "required" }, { status: 403 });
   }
-  const rl = full ? rateLimit(`basket-premium:${user.id}`, 30, HOUR) : rateLimit(`basket:${user.id}`, FREE_BASKET_TOTALS_PER_DAY, DAY);
+  const full = true;
+  const rl = rateLimit(`basket-premium:${user.id}`, 30, HOUR);
   if (!rl.ok) {
     return NextResponse.json(
-      {
-        error: full
-          ? "That's a lot of baskets in an hour — give it a few minutes and try again."
-          : `Without Premium you get ${FREE_BASKET_TOTALS_PER_DAY} basket totals a day, and you've used today's. Try again tomorrow.`,
-      },
+      { error: "That's a lot of baskets in an hour — give it a few minutes and try again." },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -105,8 +99,6 @@ export async function POST(req: Request) {
   const request = parseBasketRequest(await req.json().catch(() => null));
   const out = await buildBasket(user.id, full, request, full ? request.minCondition : "any", country, postageOpts);
   if (full && request.saveMinCondition && out.res.status === 200) void saveMinConditionPref(user.id, request.minCondition);
-  // Only a run that came back with a total counts against the free five.
-  if (!full && !out.priced) refundRateLimit(`basket:${user.id}`);
   return out.res;
 }
 

@@ -27,7 +27,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
     title: "Rising Cards",
     desc: "Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks.",
     href: "/tools/rising",
-    tier: "plus",
+    tier: "premium",
     freeTaste: `Top ${FREE_RISING_ROWS} free`,
   },
   {
@@ -35,7 +35,6 @@ export const DASHBOARD_TOOLS: DashTool[] = [
     desc: "The cheapest delivered order for a whole list, or the rest of a set, across your country's stores, skipping cards you own, at the minimum condition you set.",
     href: "/tools/best-basket",
     tier: "premium",
-    freeTaste: "See your total free",
   },
   {
     title: "Demand Finder",

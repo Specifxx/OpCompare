@@ -14,9 +14,9 @@ import { FREE_DEAL_ROWS } from "@/lib/plans";
 // /tools — every OP Compare tool in one place (RiftCompare's /tools hub, its
 // groups, names and FAQ, for One Piece). The badges state who can use each
 // tool, the same gating its own page applies. OP Compare has Plus configured,
-// so RiftCompare's LIST_BADGE is "Plus" here: Deal Finder's and Rising Cards'
-// full lists are Plus; Best Basket's per-store plan and the full Demand Finder
-// are Premium.
+// so RiftCompare's LIST_BADGE is "Plus" here: Deal Finder's full list is Plus;
+// Rising Cards' full list, Best Basket and the full Demand Finder are Premium
+// (owner, 2026-10-07).
 //
 // Email is OFF until it is configured (wave-2 plan §1): alerts land in the
 // account's notifications, so nothing here promises an email.
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Are the OP Compare tools free?",
-    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator, selling fee calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top ${FREE_DEAL_ROWS} deals and top ${FREE_RISING_ROWS} rising cards with a free account, and every row with ${LIST_BADGE}, which is also ad-free. Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium. Demand Finder shows everyone the top ${FREE_DEMAND_ROWS} most searched cards of the week; its full most-searched and most-viewed lists are part of Premium.`,
+    a: `Most of them. The box EV calculator, deck builder and list pricer, trade calculator, selling fee calculator and sealed prices need no account at all. Deal Finder and Rising Cards show nothing when you're signed out, the top ${FREE_DEAL_ROWS} deals and top ${FREE_RISING_ROWS} rising cards with a free account; every Deal Finder row comes with ${LIST_BADGE}, which is also ad-free, and every Rising Cards pick with Premium. Best Basket is a Premium tool. Demand Finder shows everyone the top ${FREE_DEMAND_ROWS} most searched cards of the week; its full most-searched and most-viewed lists are part of Premium.`,
   },
   {
     q: "What does the Deal Finder do?",
@@ -54,11 +54,11 @@ const FAQS = [
   },
   {
     q: "Do I need an account to use OP Compare tools?",
-    a: `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, the top rows of Deal Finder and Rising Cards, and your own Best Basket total. Plus adds an unlimited watchlist and portfolio (a whole set fits), every row of both lists, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an alert when a box is back in stock or at RRP) and an ad-free site; Premium adds a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists), Best Basket's store-by-store plan (at the minimum condition you set) and the full Demand Finder.`,
+    a: `Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds a watchlist of up to ${FREE_WATCHLIST_LIMIT} cards with new-low alerts, a portfolio of up to ${FREE_PORTFOLIO_LIMIT} cards with a set checklist of what each set is missing, and the top rows of Deal Finder and Rising Cards. Plus adds an unlimited watchlist and portfolio (a whole set fits), every Deal Finder row, target-price alerts, sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products (an alert when a box is back in stock or at RRP) and an ad-free site; Premium adds Best Basket (the store-by-store plan, at the minimum condition you set), every Rising Cards pick, the full Demand Finder and a deck price watch (a saved list re-priced delivered after every update, up to ${DECK_WATCH_LIMIT} lists).`,
   },
   {
     q: "Which One Piece tool should I use to buy a whole decklist?",
-    a: "Best Basket. It searches store combinations for the lowest total including postage, and with Premium shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from.",
+    a: "Best Basket. It searches store combinations for the lowest total including postage, and shows the best one-store and two-store orders beside it, with which store to buy each card from. It is a Premium tool.",
   },
   {
     q: "Is a One Piece booster box worth opening?",
@@ -90,13 +90,13 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/rising",
         title: "Rising Cards",
-        desc: "Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks.",
-        badge: LIST_BADGE,
+        desc: `Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks. The top ${FREE_RISING_ROWS} are free with an account.`,
+        badge: "Premium",
       },
       {
         href: "/tools/best-basket",
         title: "Best Basket",
-        desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included, at the condition you'll play — see your total free with an account.",
+        desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included, at the condition you'll play.",
         badge: "Premium",
       },
       {

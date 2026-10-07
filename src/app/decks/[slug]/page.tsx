@@ -89,8 +89,8 @@ export default async function DeckPage({ params }: { params: { slug: string } })
       <InlineSignupPrompt
         surface="inline-published-deck"
         className="mt-6"
-        title="See what this deck costs delivered"
-        body="A free account shows what this list costs delivered in Best Basket, postage included: from how many stores, and how much less that is than buying each card's cheapest copy separately."
+        title="Buy this deck for less"
+        body="Premium's Best Basket finds the cheapest delivered way to buy this list, store by store, postage included. A free account watches its cards for a price drop."
       />
       <RelatedGuides guides={guidesForTool("/decks")} className="card-surface mt-8 p-5" />
     </div>

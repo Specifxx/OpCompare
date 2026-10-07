@@ -7,7 +7,6 @@ import type { PostageCart, PostageQuote } from "../src/lib/shipping";
 import { clampQty, parseBasketRequest } from "../src/lib/basket-request";
 import { rateLimit, refundRateLimit } from "../src/lib/rate-limit";
 import { BASKET_COLLECTION_SOURCES } from "../src/lib/basket-request";
-import { FREE_BASKET_TOTALS_PER_DAY } from "../src/lib/tier-limits";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -569,19 +568,19 @@ test("the card picker supports keyboard arrow/enter selection", () => {
 const ROUTE = "src/app/api/basket/route.ts";
 const READS = "src/lib/basket-server.ts";
 
-test("the basket route withholds the plan from non-Premium callers", () => {
+test("the basket route is Premium only: anyone else gets a 403 before any read (owner, 2026-10-07)", () => {
   const code = readCode(ROUTE);
-  assert.match(code, /const full = isPremium\(user, "premium"\)/);
-  const at = code.indexOf("if (!full) {\n      const preview");
-  assert.ok(at > 0);
-  const branch = code.slice(at, code.indexOf("const { plan, alternatives }", at));
-  assert.match(branch, /const preview = basketPreview\(optimizeBasket\(basketCards, stores\), unmatched, region\)/);
-  // The aggregate, plus where delivery was priced to (no store in it) and, for a
-  // set, the tier-safe counts (setGapFields(false, …), 2026-09-29).
-  assert.match(branch, /NextResponse\.json\(\{ \.\.\.preview, shipping/);
-  assert.doesNotMatch(branch, /plan|alternatives|fuzzy/, "the preview branch returns nothing but the aggregate");
+  const gate = code.indexOf('if (!isPremium(user, "premium")) {');
+  assert.ok(gate > 0);
+  assert.match(code.slice(gate, gate + 220), /premium: "required" \}, \{ status: 403 \}/);
+  assert.ok(gate < code.indexOf("rateLimit("), "gated before the rate limit");
+  assert.ok(gate < code.indexOf("loadStoreListings("), "gated before any read");
   // The full plan's store links carry the page for the affiliate sub-id.
   assert.match(code, /planBasket\(basketCards, stores, \{ loc: "\/tools\/best-basket" \}\)/);
+  // The page renders the tool only for Premium; everyone else sees the wall.
+  const page = readCode("src/app/tools/best-basket/page.tsx");
+  assert.match(page, /\{user && premium \? \(\n\s*<BestBasket/);
+  assert.match(page, /<PlanButton surface="gate:basket" tier="premium" \/>/);
 });
 
 test("a failed read answers 503, never a $0.00 plan", () => {
@@ -591,32 +590,15 @@ test("a failed read answers 503, never a $0.00 plan", () => {
   assert.doesNotMatch(readCode(READS), /\.catch\(/, "the shared reads must throw, not swallow");
 });
 
-test("rate limits: 5 a day free, 30 an hour Premium, keyed by user", () => {
+test("rate limits: 30 an hour for Premium, keyed by user, before any read", () => {
   const code = readCode(ROUTE);
   assert.match(code, /const HOUR = 3_600_000/);
-  assert.match(code, /const DAY = 86_400_000/);
   assert.match(code, /rateLimit\(`basket-premium:\$\{user\.id\}`, 30, HOUR\)/);
-  assert.match(code, /rateLimit\(`basket:\$\{user\.id\}`, FREE_BASKET_TOTALS_PER_DAY, DAY\)/);
-  assert.equal(FREE_BASKET_TOTALS_PER_DAY, 5);
-  // …checked before any read.
   assert.ok(code.indexOf("rateLimit(") < code.indexOf("loadStoreListings("));
   assert.match(readCode("src/app/api/deck/price/route.ts"), /rateLimit\(`deck-price:\$\{ipKey\(req\)\}`, 30, 60_000\)/);
-});
-
-test("a free run that returns no total hands its daily slot back; attempts are capped separately", () => {
-  const code = readCode(ROUTE);
-  // Every free attempt counts against an hourly cap that is never refunded —
-  // that is what bounds the reads a refunded run can cause.
-  assert.match(code, /rateLimit\(`basket-try:\$\{user\.id\}`, 20, HOUR\)/);
-  assert.ok(code.indexOf("basket-try:") < code.indexOf("`basket:${user.id}`, FREE_BASKET_TOTALS_PER_DAY, DAY"));
-  assert.match(code, /if \(!full && !out\.priced\) refundRateLimit\(`basket:\$\{user\.id\}`\)/);
-  // Every 400 and the 503 go through fail(), which is never "priced"…
+  // Every 400 and the 503 go through fail().
   assert.match(code, /const fail = \(error: string, status: number\): Outcome => \(\{ res: NextResponse\.json\(\{ error \}, \{ status \}\), priced: false \}\)/);
-  assert.doesNotMatch(code.slice(code.indexOf("async function buildBasket")), /status: 400|status: 503/, "no bare error response that would keep the slot");
   for (const status of ["400", "503"]) assert.match(code, new RegExp(`fail\\([^;]*, ${status}\\)`));
-  // …and an answer only counts when it priced at least one copy.
-  assert.match(code, /priced: preview\.covered > 0/);
-  assert.match(code, /priced: plan\.coveredCopies > 0/);
 });
 
 test("refundRateLimit gives one call back inside the window", () => {

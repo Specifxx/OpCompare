@@ -65,7 +65,7 @@ export const PLAN_PITCH: Record<Tier, string> = {
 // Every number is the enforced constant. Prices are unchanged.
 export const PLAN_FEATURES: Record<Tier, string[]> = {
   plus: ["No ads on any page", "No watchlist or portfolio limit", `Target alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards`, `Sealed watches on up to ${SEALED_WATCH_LIMIT_PLUS} products`],
-  premium: ["Everything in Plus, no ads", `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`, "Store-by-store plan for any list", "Unlimited alerts and Demand Finder"],
+  premium: ["Everything in Plus, no ads", "Best Basket: the cheapest store-by-store plan", "Full Rising Cards and Demand Finder", `Deck price watch on up to ${DECK_WATCH_LIMIT} lists`],
 };
 
 // THE TIER COMPARISON — RiftCompare's TIER_COMPARISON (TierComparisonTable.tsx),
@@ -95,11 +95,11 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Portfolio — value, P&L, CSV & replacement cost", account: `${FREE_PORTFOLIO_LIMIT} cards`, plus: "Unlimited", premium: "Unlimited" },
   { feature: "Set tracker — what your binder is missing and the cheapest listing to finish", account: `Up to ${FREE_PORTFOLIO_LIMIT} cards`, plus: "Whole sets, no limit", premium: "Whole sets, no limit" },
   { feature: "Deal Finder", account: `Top ${FREE_DEAL_ROWS}`, plus: "Full list + only my cards", premium: "Full list + only my cards" },
-  { feature: "Rising Cards", account: `Top ${FREE_RISING_ROWS}`, plus: "Full list", premium: "Full list" },
+  { feature: "Rising Cards", account: `Top ${FREE_RISING_ROWS}`, plus: `Top ${FREE_RISING_ROWS}`, premium: "Full list" },
   { feature: "Target-price alerts after every price update", account: false, plus: `Up to ${PLUS_TARGET_ALERT_LIMIT}`, premium: "Unlimited" },
-  { feature: "Best Basket — cheapest delivered order for a list", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
-  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
-  { feature: "Finish this set — store-by-store plan for what's missing, postage included", account: "Total and saving preview", plus: "Total and saving preview", premium: `Store-by-store plan, up to ${SET_GAP_CHUNK} cards` },
+  { feature: "Best Basket — cheapest delivered order for a list", account: false, plus: false, premium: "Store-by-store plan" },
+  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: false, plus: false, premium: "Store-by-store plan" },
+  { feature: "Finish this set — store-by-store plan for what's missing, postage included", account: false, plus: false, premium: `Store-by-store plan, up to ${SET_GAP_CHUNK} cards` },
   { feature: "Minimum condition — NM only or LP or better, in the plan and the deck watch", account: false, plus: false, premium: true },
   { feature: "Demand Finder — most searched & viewed cards", account: `Top ${FREE_DEMAND_ROWS} searched`, plus: `Top ${FREE_DEMAND_ROWS} searched`, premium: true },
   { feature: `Sealed watches — restock and price alerts, checked ${SEALED_CHECK_CADENCE}`, account: false, plus: `Up to ${SEALED_WATCH_LIMIT_PLUS}`, premium: "Unlimited" },

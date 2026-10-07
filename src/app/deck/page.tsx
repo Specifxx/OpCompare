@@ -68,7 +68,7 @@ const FAQS = [
   },
   {
     q: "Is it free?",
-    a: "Yes, with no account. To buy the list, \"Buy this deck for less\" hands it to Best Basket, which prices the whole order with each store's measured postage: a free account sees its delivered total, and Premium shows which store to buy each card from.",
+    a: "Yes, with no account. To buy the list, \"Buy this deck for less\" hands it to Best Basket, which prices the whole order with each store's measured postage: a Premium tool that shows which store to buy each card from.",
   },
 ];
 

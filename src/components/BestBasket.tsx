@@ -25,7 +25,6 @@ import { planPrice } from "@/lib/plans";
 import { RARITY_KEYS, rarityLabel } from "@/lib/constants";
 import { SET_SCOPES, type SetScope } from "@/lib/set-scope";
 import { SET_GAP_CHUNK, nextChunkLabel, setGapNote, type SetGapSummary } from "@/lib/set-gap";
-import { FREE_BASKET_TOTALS_PER_DAY } from "@/lib/tier-limits";
 import { DEFAULT_MIN_CONDITION, MIN_CONDITIONS, MIN_CONDITION_LABEL, MIN_CONDITION_PHRASE, playedCopiesNote, type MinCondition } from "@/lib/basket-condition";
 
 export type BasketSource = "deck" | "watchlist" | "binder" | "set";
@@ -598,7 +597,7 @@ export function BestBasket({
           </button>
           {!full && (
             <span className="text-xs text-slate-500">
-              Without Premium you see your own delivered total, {FREE_BASKET_TOTALS_PER_DAY} times a day. Premium shows which store to buy each card from.
+              Best Basket is a Premium tool.
             </span>
           )}
         </div>

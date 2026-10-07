@@ -10,7 +10,7 @@ export const CONTEXT_LINES: Record<string, string> = {
   "/dashboard": "Sign in to open your dashboard.",
   "/tools/deal-finder": "Create a free account to see today's top 3 Deal Finder deals.",
   "/tools/rising": "Create a free account to see the top 3 rising cards and why each one ranks.",
-  "/tools/best-basket": "Create a free account to see what your list costs delivered. Premium shows which store to buy each card from.",
+  "/tools/best-basket": "Best Basket is a Premium tool: the cheapest delivered order for your list, store by store. Sign in to continue.",
   "/tools/demand": "Sign in to open Demand Finder. The top 10 most searched this week are free; the full most-searched and most-viewed lists are part of Premium.",
 };
 

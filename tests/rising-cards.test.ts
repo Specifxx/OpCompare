@@ -203,13 +203,13 @@ test("rising.json carries velocity now and demand a week ago for the feed's card
   assert.equal(buildRiseFile("2026-10-20", new Map(), [f("2026-10-19", {})], 1).weekAgo, null, "no snapshot a week back: no week-ago ranking");
 });
 
-test("access: signed out sees no pick, a free account the top FREE_RISING_ROWS, Plus and Premium every row", () => {
+test("access: signed out sees no pick, a free or Plus account the top FREE_RISING_ROWS, Premium every row", () => {
   const src = code(PAGE);
-  assert.match(src, /const premium = isPremium\(user\);/, "the Plus minimum");
+  assert.match(src, /const premium = isPremium\(user, "premium"\);/, "the Premium minimum (owner, 2026-10-07)");
   assert.match(src, /const access: "full" \| "top3" \| "none" = premium \? "full" : user \? "top3" : "none";/);
   assert.match(src, /const FREE_PREVIEW_ROWS = FREE_RISING_ROWS;/);
   assert.match(src, /analysis\.picks\.slice\(0, FREE_PREVIEW_ROWS\)/);
-  assert.match(src, /<PlanButton tier="plus" surface="gate:rising" \/>/);
+  assert.match(src, /<PlanButton tier="premium" surface="gate:rising" \/>/);
   assert.doesNotMatch(src, /backtested|validated|invest/i);
   assert.doesNotMatch(src, /email/i, "email is off: nothing promises one");
 });

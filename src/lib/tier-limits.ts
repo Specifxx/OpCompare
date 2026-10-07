@@ -18,15 +18,12 @@
  */
 export const FREE_DEAL_ROWS = 3;
 
-/** Rising Cards rows a free account sees before the Plus gate (RiftCompare's FREE_PREVIEW_ROWS). */
+/** Rising Cards rows a free or Plus account sees before the Premium gate (owner, 2026-10-07). */
 export const FREE_RISING_ROWS = 3;
 
 /** Demand Finder rows: free accounts, then Premium (RiftCompare lib/demand-finder.ts). */
 export const FREE_DEMAND_ROWS = 10;
 export const PREMIUM_DEMAND_ROWS = 25;
-
-/** Best Basket delivered totals a free account may compute per day (Premium: unlimited). */
-export const FREE_BASKET_TOTALS_PER_DAY = 5;
 
 /** Cards per request when the set checklist asks which cards are owned. */
 export const SET_GAP_CHUNK = 200;

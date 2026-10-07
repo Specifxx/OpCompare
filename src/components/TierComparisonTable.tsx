@@ -41,7 +41,7 @@ export const DIALOG_OMIT_FEATURES = new Set(TIER_COMPARISON.filter((r) => r.acco
 // /premium spells these out as "Full list …" for the paid columns; the dialog
 // collapses them to a tick (a 64px column can't hold "Full list + only my
 // cards"). Only rows where BOTH paid columns get the full thing belong here.
-export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
+export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder"]);
 
 /**
  * `compact` is also "is this the dialog?" — it trims padding and type scale

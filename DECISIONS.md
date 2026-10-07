@@ -2029,3 +2029,23 @@ loader (`getChaseStrip`), no eBay call from a page, labelled "Ad", disclosure
 beneath, `data-ad-placement` so ad-free members never see it. Pinned by
 `tests/ebay-chase-strip.test.ts`. The footer eBay box and the card-page banner
 are unchanged.
+
+## 2026-10-07 — Rising Cards and Best Basket become Premium tools
+
+**Owner's call.** Demand Finder, Rising Cards and Best Basket are Premium
+features.
+
+- **Demand Finder** was already Premium (the top 10 most searched this week
+  stay free, here and on /movers). Unchanged.
+- **Rising Cards**: the full ranking now needs Premium (`isPremium(user,
+  "premium")`); Plus drops to the same top-3 preview a free account sees.
+  The gate's plan button asks for Premium.
+- **Best Basket**: Premium only. `/api/basket` answers 403 `{ premium:
+  "required" }` to anyone else before any rate limit or read; the free and Plus
+  delivered-total preview (five a day) is gone, as are its rate limits. The
+  page renders the tool only for Premium and shows a Premium wall otherwise;
+  the deck pricer stays free.
+- `TIER_COMPARISON`, `PLAN_FEATURES`, the dashboard tool list, the /tools hub
+  and the deck pages' signup prompts say the same. The admin demand and rising
+  pages and the daily demand snapshot files (data branch, `history/demand/`)
+  were already in place.

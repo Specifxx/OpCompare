@@ -28,7 +28,7 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
     "Trade calculator",
   ]);
   assert.equal(byTitle["Deal Finder"].tier, "plus");
-  assert.equal(byTitle["Rising Cards"].tier, "plus");
+  assert.equal(byTitle["Rising Cards"].tier, "premium");
   assert.equal(byTitle["Best Basket"].tier, "premium");
   assert.equal(byTitle["Demand Finder"].tier, "premium");
   assert.equal(byTitle["Sealed watches"].tier, "plus");
@@ -40,8 +40,9 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   assert.equal(byTitle["Deal Finder"].freeTaste, "Top 3 free");
   assert.equal(cell("Rising Cards"), "Top 3");
   assert.equal(byTitle["Rising Cards"].freeTaste, "Top 3 free");
-  assert.equal(cell("Best Basket — cheapest delivered order for a list"), "Your total");
-  assert.equal(byTitle["Best Basket"].freeTaste, "See your total free");
+  // Best Basket is Premium only (owner, 2026-10-07): no free taste, a dash below Premium.
+  assert.equal(cell("Best Basket — cheapest delivered order for a list"), false);
+  assert.equal(byTitle["Best Basket"].freeTaste, undefined);
   assert.equal(cell("Demand Finder — most searched & viewed cards"), "Top 10 searched");
   assert.equal(byTitle["Demand Finder"].freeTaste, "Top 10 free");
   // The two watches have no free taste: their rows are a dash for a free account.
@@ -53,7 +54,7 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   const free = ["Watchlist & target alerts", "Portfolio", "Set checklist", "Box EV", "Deck pricer", "Trade calculator"];
   for (const [viewer, opens] of [
     [null, free],
-    ["plus", ["Deal Finder", "Rising Cards", "Watchlist & target alerts", "Sealed watches", "Portfolio", "Set checklist", "Box EV", "Deck pricer", "Trade calculator"]],
+    ["plus", ["Deal Finder", "Watchlist & target alerts", "Sealed watches", "Portfolio", "Set checklist", "Box EV", "Deck pricer", "Trade calculator"]],
     ["premium", DASHBOARD_TOOLS.map((t) => t.title)],
   ] as const) {
     assert.deepEqual(
