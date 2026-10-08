@@ -10,12 +10,16 @@ import { PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type 
 import { cardImage } from "./images";
 import {
   SNAPSHOT_FRESH_MS,
+  SNAPSHOT_SHARDS,
   SNAPSHOT_VERSION,
   isFreshAt,
   pack,
   shardOf,
+  snapshotFile,
   type SnapshotMeta,
 } from "./price-snapshot";
+import { STORES } from "./stores";
+import { keepCarried, readRunOffers } from "./run-offers";
 import type { CardDetail, CoreTuple, OfferRow, PriceTuple, SealedLite, SiteStats } from "./data";
 
 /** What card.json.gz holds: a card page's facts without its set (rejoined from core.sets) or offers (the shards). */
@@ -31,7 +35,17 @@ export interface SnapshotEbay {
 
 const EBAY_LIVE_DAYS = 3;
 
-export async function buildSnapshot(outDir: string, log: (m: string) => void = () => {}): Promise<SnapshotMeta> {
+/**
+ * Build the snapshot into `outDir`. `runOffersFile` is what the import just wrote
+ * (lib/run-offers.ts): the offers come from it, not from a read of the Offer table
+ * (~650,000 rows, over 100 MB of transfer). A source the run did not cover (a
+ * store that failed, a partial import) keeps its rows from the PREVIOUS snapshot
+ * on GitHub for as long as they are inside the 72-hour window, as the database
+ * does. eBay rows (a few thousand) are read from Postgres: the eBay pass writes
+ * them, not the import.
+ */
+export async function buildSnapshot(outDir: string, opts: { runOffersFile: string; log?: (m: string) => void }): Promise<SnapshotMeta> {
+  const log = opts.log ?? (() => {});
   const now = Date.now();
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(path.join(outDir, "offers"), { recursive: true });
@@ -108,27 +122,50 @@ export async function buildSnapshot(outDir: string, log: (m: string) => void = (
   sizes.sealed = await write("sealed.json.gz", sealed);
 
   // ── Offers, sharded by productId; only rows refreshed inside the window ────
-  const since = new Date(now - SNAPSHOT_FRESH_MS);
-  const offers = await prisma.offer.findMany({
-    where: { updatedAt: { gt: since } },
-    select: { productId: true, source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
-    orderBy: { priceCents: "asc" },
-  });
-  const shards = new Map<string, Record<string, OfferRow[]>>();
+  const run = readRunOffers(opts.runOffersFile);
+  const covered = new Set(run.covered);
+  const known = new Set<string>(["tcgplayer", ...STORES.map((x) => `store:${x.key}`)]);
+  const byShard = new Map<string, Record<string, OfferRow[]>>();
   let offerCount = 0;
-  for (const o of offers) {
-    if (!isFreshAt(o.updatedAt, now)) continue;
-    const key = shardOf(o.productId);
-    const shard = shards.get(key) ?? {};
-    (shard[o.productId] ??= []).push({
-      source: o.source, market: o.market, priceCents: o.priceCents, currency: o.currency, url: o.url, inStock: o.inStock,
-      condition: o.condition, shippingCents: o.shippingCents, updatedAt: o.updatedAt.toISOString(),
-    });
-    shards.set(key, shard);
+  const add = (productId: number, o: OfferRow) => {
+    const key = shardOf(productId);
+    const shard = byShard.get(key) ?? {};
+    (shard[productId] ??= []).push(o);
+    byShard.set(key, shard);
     offerCount++;
+  };
+  for (const [productId, source, market, priceCents, currency, url, inStock, condition, shippingCents, t] of run.offers) {
+    if (!isFreshAt(new Date(t), now)) continue;
+    add(productId, { source, market, priceCents, currency, url, inStock: inStock === 1, condition, shippingCents, updatedAt: new Date(t).toISOString() });
+  }
+  let carried = 0;
+  let previousFound = 0;
+  for (let i = 0; i < SNAPSHOT_SHARDS; i++) {
+    const prev = await snapshotFile<Record<string, OfferRow[]>>(`offers/${String(i).padStart(2, "0")}.json.gz`);
+    if (!prev) continue;
+    previousFound++;
+    for (const [pid, rows] of Object.entries(prev)) {
+      for (const o of rows) {
+        if (!keepCarried(o, covered, known, now, SNAPSHOT_FRESH_MS)) continue;
+        add(Number(pid), o);
+        carried++;
+      }
+    }
+  }
+  log(`snapshot offers: ${run.offers.length} from this run (${covered.size} sources), ${carried} carried from the previous snapshot (${previousFound}/${SNAPSHOT_SHARDS} shards found)`);
+  const since = new Date(now - SNAPSHOT_FRESH_MS);
+  const ebayOffers = await prisma.offer.findMany({
+    where: { source: { startsWith: "ebay" }, updatedAt: { gt: since } },
+    select: { productId: true, source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
+  });
+  for (const o of ebayOffers) {
+    add(o.productId, { source: o.source, market: o.market, priceCents: o.priceCents, currency: o.currency, url: o.url, inStock: o.inStock, condition: o.condition, shippingCents: o.shippingCents, updatedAt: o.updatedAt.toISOString() });
   }
   let offerBytes = 0;
-  for (const [key, shard] of shards) offerBytes += await write(`offers/${key}.json.gz`, shard);
+  for (const [key, shard] of byShard) {
+    for (const rows of Object.values(shard)) rows.sort((a, b) => a.priceCents - b.priceCents);
+    offerBytes += await write(`offers/${key}.json.gz`, shard);
+  }
   sizes.offers = offerBytes;
 
   // ── eBay: the listings panel rows, the chase strip and the picks ───────────
@@ -177,21 +214,25 @@ export async function buildSnapshot(outDir: string, log: (m: string) => void = (
   });
   sizes.chase = await write("chase.json.gz", chaseStrip);
 
-  // ── Site stats (the getSiteStats answer) ───────────────────────────────────
-  const [run, groups, ebayRun] = await Promise.all([
+  // ── Site stats (the getSiteStats answer), from the offers above ────────────
+  const [run2, ebayRun] = await Promise.all([
     prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
-    prisma.offer.groupBy({ by: ["source", "market", "inStock"], where: { NOT: { source: { startsWith: "ebay" } } }, _count: { _all: true } }),
     prisma.importRun.findFirst({ where: { kind: "ebay", ok: true, finishedAt: { gte: new Date(now - EBAY_LIVE_DAYS * 86_400_000) } }, select: { id: true } }),
   ]);
   const map = new Map<string, { source: string; market: string; offers: number; inStock: number }>();
-  for (const g of groups) {
-    const k = `${g.source}|${g.market}`;
-    const row = map.get(k) ?? { source: g.source, market: g.market, offers: 0, inStock: 0 };
-    row.offers += g._count._all;
-    if (g.inStock) row.inStock += g._count._all;
-    map.set(k, row);
+  for (const shard of byShard.values()) {
+    for (const rows of Object.values(shard)) {
+      for (const o of rows) {
+        if (o.source.startsWith("ebay")) continue; // eBay is not a store
+        const k = `${o.source}|${o.market}`;
+        const row = map.get(k) ?? { source: o.source, market: o.market, offers: 0, inStock: 0 };
+        row.offers += 1;
+        if (o.inStock) row.inStock += 1;
+        map.set(k, row);
+      }
+    }
   }
-  const stats: SiteStats = { lastImportAt: run?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
+  const stats: SiteStats = { lastImportAt: run2?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
   sizes.stats = await write("stats.json.gz", stats);
 
   const meta: SnapshotMeta = {
@@ -201,7 +242,7 @@ export async function buildSnapshot(outDir: string, log: (m: string) => void = (
     counts: { cards: cardRows.length, sealed: sealed.length, offers: offerCount, ebayListings: ebayRows.length },
   };
   await fs.writeFile(path.join(outDir, "meta.json"), JSON.stringify(meta));
-  log(`snapshot: ${meta.counts.cards} cards, ${meta.counts.sealed} sealed, ${meta.counts.offers} offers in ${shards.size} shards, ${meta.counts.ebayListings} eBay listings`);
+  log(`snapshot: ${meta.counts.cards} cards, ${meta.counts.sealed} sealed, ${meta.counts.offers} offers in ${byShard.size} shards, ${meta.counts.ebayListings} eBay listings`);
   log(`snapshot bytes: ${Object.entries(sizes).map(([k, v]) => `${k} ${(v / 1024).toFixed(0)} KB`).join(", ")}`);
   return meta;
 }

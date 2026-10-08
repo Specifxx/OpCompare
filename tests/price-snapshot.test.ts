@@ -115,7 +115,7 @@ test("the readers rebuild each loader's answer from the files, with the stale ru
   }
 });
 
-test("every public price loader falls back to the snapshot, and the history ref survives a database failure", () => {
+test("every public price loader reads the snapshot first, and the history ref survives a database failure", () => {
   const data = read("src/lib/data.ts");
   for (const [key, snap] of [
     ["catalog-core", "snapCore()"],
@@ -127,7 +127,7 @@ test("every public price loader falls back to the snapshot, and the history ref 
     ["ebay-panel", "snapEbayPanel(productId)"],
     ["chase-strip", "snapChaseStrip()"],
   ] as const) {
-    assert.ok(data.includes(`dbOrSnapshot("${key}", async () => {`), `${key} is wrapped`);
+    assert.ok(data.includes(`snapshotFirst("${key}", async () => {`), `${key} is wrapped`);
     assert.ok(data.includes(`}, () => ${snap}),`), `${key} falls back to ${snap}`);
   }
   // A database error is not "no ref": the charts read the branch instead of going blank.
@@ -158,4 +158,106 @@ test("the import builds and force-pushes ONE orphan commit, never failing the im
   assert.equal(JSON.parse(read("vercel.json")).git.deploymentEnabled.snapshot, false);
   // An empty-looking snapshot is not published.
   assert.match(read("scripts/price-snapshot.ts"), /throw new Error\(`snapshot looks empty/);
+});
+
+test("snapshot first: fresh snapshot, then the database; stale, missing, switched off or non-production go to the database", async () => {
+  const { snapshotFirst, SNAPSHOT_SERVE_MS } = await import("../src/lib/price-snapshot");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "snapfirst-"));
+  const meta = (ageMs: number) => fs.writeFileSync(path.join(dir, "meta.json"), JSON.stringify({ v: 1, generatedAt: new Date(Date.now() - ageMs).toISOString(), lastImportAt: null, counts: {} }));
+  const env = process.env as Record<string, string | undefined>;
+  const saved = { dir: env.SNAPSHOT_LOCAL_DIR, from: env.PRICES_FROM_DB };
+  const silent = console.error;
+  console.error = () => {};
+  try {
+    env.SNAPSHOT_LOCAL_DIR = dir;
+    delete env.PRICES_FROM_DB;
+    let dbCalls = 0;
+    const db = async () => ((dbCalls++, "db"));
+    // Fresh: the snapshot answers and Postgres is never asked.
+    meta(60_000);
+    // snapshotFile memoises meta for ten minutes: use a fresh module state per case by changing the directory.
+    resetDbCooldown();
+    assert.equal(await snapshotFirst("t", db, async () => "snap"), "snap");
+    assert.equal(dbCalls, 0);
+    // A snapshot answer of null (not in it yet) goes on to the database.
+    assert.equal(await snapshotFirst("t", db, async () => null), "db");
+    assert.equal(dbCalls, 1);
+    // The escape hatch.
+    env.PRICES_FROM_DB = "1";
+    assert.equal(await snapshotFirst("t", db, async () => "snap"), "db");
+    delete env.PRICES_FROM_DB;
+    assert.ok(SNAPSHOT_SERVE_MS === 48 * 3600 * 1000);
+  } finally {
+    console.error = silent;
+    if (saved.dir === undefined) delete env.SNAPSHOT_LOCAL_DIR;
+    else env.SNAPSHOT_LOCAL_DIR = saved.dir;
+    if (saved.from !== undefined) env.PRICES_FROM_DB = saved.from;
+    fs.rmSync(dir, { recursive: true, force: true });
+    resetDbCooldown();
+  }
+});
+
+test("a stale snapshot is not trusted first, and outside production the database is used", async () => {
+  const mod = await import("../src/lib/price-snapshot");
+  const env = process.env as Record<string, string | undefined>;
+  const saved = { dir: env.SNAPSHOT_LOCAL_DIR, node: env.NODE_ENV };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "snapstale-"));
+  fs.writeFileSync(path.join(dir, "meta2.json"), "{}");
+  try {
+    // Not production and no local snapshot: the database, so a dev checkout never shows production's prices.
+    delete env.SNAPSHOT_LOCAL_DIR;
+    (env as Record<string, string>).NODE_ENV = "development";
+    assert.equal(await mod.snapshotIsFirst(), false);
+  } finally {
+    if (saved.dir !== undefined) env.SNAPSHOT_LOCAL_DIR = saved.dir;
+    (env as Record<string, string | undefined>).NODE_ENV = saved.node;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("run offers: written by the import, covered sources never carried, a failed store keeps its fresh rows", async () => {
+  const ro = await import("../src/lib/run-offers");
+  ro.resetRunOffers();
+  const at = new Date("2026-10-08T07:00:00Z");
+  ro.recordRunOffers("store:a", "US", [{ productId: 1, priceCents: 500, currency: "USD", url: "u1", inStock: true, condition: "NM" }], at);
+  ro.recordRunOffers("store:empty", "AU", [], at); // read fine, matched nothing: still covered
+  const f = path.join(os.tmpdir(), `run-offers-${process.pid}.json.gz`);
+  try {
+    ro.writeRunOffers(f);
+    const back = ro.readRunOffers(f);
+    assert.equal(back.offers.length, 1);
+    assert.deepEqual(back.offers[0].slice(0, 7), [1, "store:a", "US", 500, "USD", "u1", 1]);
+    assert.deepEqual([...back.covered].sort(), ["store:a|US", "store:empty|AU"]);
+    const covered = new Set(back.covered);
+    const known = new Set(["store:a", "store:empty", "store:failed", "tcgplayer"]);
+    const now = at.getTime();
+    const fresh = new Date(now - 3600e3).toISOString();
+    const old = new Date(now - 80 * 3600e3).toISOString();
+    const keep = (o: { source: string; market: string; updatedAt: string }) => ro.keepCarried(o, covered, known, now, SNAPSHOT_FRESH_MS);
+    assert.equal(keep({ source: "store:failed", market: "US", updatedAt: fresh }), true, "a store that failed keeps its rows");
+    assert.equal(keep({ source: "store:failed", market: "US", updatedAt: old }), false, "…for 72 hours, not forever");
+    assert.equal(keep({ source: "store:a", market: "US", updatedAt: fresh }), false, "a covered source is replaced, never doubled");
+    assert.equal(keep({ source: "store:empty", market: "AU", updatedAt: fresh }), false, "a store that now matches nothing loses its old rows");
+    assert.equal(keep({ source: "store:gone", market: "US", updatedAt: fresh }), false, "a store removed from the registry is dropped");
+    assert.equal(keep({ source: "ebay", market: "US", updatedAt: fresh }), false, "eBay rows come from Postgres");
+  } finally {
+    fs.rmSync(f, { force: true });
+    ro.resetRunOffers();
+  }
+});
+
+test("the snapshot is built from the import's own offers, never by reading the Offer table back (~650,000 rows of Neon transfer)", () => {
+  const build = read("src/lib/price-snapshot-build.ts");
+  // The only Offer read is eBay's.
+  const reads = [...build.matchAll(/prisma\.offer\.(\w+)\(\{([^}]*\{[^}]*\}[^}]*)\}/g)];
+  assert.equal(reads.length, 1, "exactly one Offer query");
+  assert.match(reads[0][0], /source: \{ startsWith: "ebay" \}/);
+  assert.doesNotMatch(build, /prisma\.offer\.groupBy/);
+  assert.match(build, /readRunOffers\(opts\.runOffersFile\)/);
+  assert.match(build, /keepCarried\(o, covered, known, now, SNAPSHOT_FRESH_MS\)/);
+  // The import hands its rows over.
+  assert.match(read("src/lib/import.ts"), /recordRunOffers\(source, store\.country,/);
+  assert.match(read("src/lib/import.ts"), /recordRunOffers\("tcgplayer", "US",/);
+  assert.match(read("scripts/import.ts"), /writeRunOffers\(runFile\)/);
+  assert.match(read("scripts/price-snapshot.ts"), /RUN_OFFERS_FILE/);
 });

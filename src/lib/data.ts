@@ -9,11 +9,15 @@ import { prisma } from "./db";
 import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "./history";
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
-import { dbOrSnapshot } from "./price-snapshot";
+import { snapshotFirst } from "./price-snapshot";
 import { snapCardDetail, snapChaseStrip, snapCore, snapEbayPanel, snapPrices, snapSealedCatalog, snapSealedDetail, snapSiteStats } from "./price-snapshot-read";
 
 export const PRICES_TAG = "prices";
 const TTL = 60 * 60 * 6;
+// Loaders that still read Postgres (deals, store pages, baskets, demand, the
+// per-user-free extras) refresh half as often: every refresh is Neon transfer
+// (owner, 2026-10-08). The snapshot-first loaders read GitHub and keep TTL.
+const DB_TTL = 60 * 60 * 12;
 
 // ── The catalogue: every printing, compact ───────────────────────────────────
 // Two cache entries, both ordered by id: the card FACTS (change only when the
@@ -87,7 +91,7 @@ export interface SetLite {
 }
 
 const loadCore = unstable_cache(
-  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => dbOrSnapshot("catalog-core", async () => {
+  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => snapshotFirst("catalog-core", async () => {
     const [rows, sets] = await Promise.all([
       prisma.card.findMany({
         orderBy: { id: "asc" },
@@ -115,7 +119,7 @@ const loadCore = unstable_cache(
 );
 
 const loadPrices = unstable_cache(
-  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => dbOrSnapshot("catalog-prices", async () => {
+  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => snapshotFirst("catalog-prices", async () => {
     const rows = await prisma.card.findMany({
       orderBy: { id: "asc" },
       select: {
@@ -252,7 +256,7 @@ function freshOffers(rows: OfferDbRow[]): OfferRow[] {
 }
 
 export const getCardDetail = unstable_cache(
-  async (slug: string): Promise<CardDetail | null> => dbOrSnapshot("card-detail", async () => {
+  async (slug: string): Promise<CardDetail | null> => snapshotFirst("card-detail", async () => {
     const c = await prisma.card.findUnique({
       where: { slug },
       select: {
@@ -297,7 +301,7 @@ export interface SealedLite {
 }
 
 export const getSealedCatalog = unstable_cache(
-  async (): Promise<SealedLite[]> => dbOrSnapshot("sealed-catalog", async () => {
+  async (): Promise<SealedLite[]> => snapshotFirst("sealed-catalog", async () => {
     const rows = await prisma.sealed.findMany({
       select: {
         id: true, slug: true, name: true, setId: true, kind: true, packCount: true, imageUrl: true, releasedOn: true, presale: true,
@@ -323,7 +327,7 @@ export interface SealedDetail extends SealedLite {
 }
 
 export const getSealedDetail = unstable_cache(
-  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => dbOrSnapshot("sealed-detail", async () => {
+  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => snapshotFirst("sealed-detail", async () => {
     const s = await prisma.sealed.findUnique({
       where: { slug },
       select: {
@@ -362,7 +366,7 @@ export interface SiteStats {
 const EBAY_LIVE_DAYS = 3;
 
 export const getSiteStats = unstable_cache(
-  async (): Promise<SiteStats> => dbOrSnapshot("site-stats", async () => {
+  async (): Promise<SiteStats> => snapshotFirst("site-stats", async () => {
     const [run, groups, ebayRun] = await Promise.all([
       prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
       // eBay is not a store: never in store counts or homepage stats.
@@ -413,7 +417,7 @@ export const getHistoryRef = unstable_cache(
   async (): Promise<string | null> =>
     prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }).then((m) => m?.value ?? null, () => null),
   ["history-ref-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 async function historyFile<T>(rel: string): Promise<T | null> {
@@ -480,7 +484,7 @@ export const getDealInputs = unstable_cache(
     return rows.map((r) => encodeDealInput({ id: Number(r.id), storeMin: num(r.storeMin), tcgLow: num(r.tcgLow), ebayCents: num(r.ebayCents), ebayKnown: r.ebayKnown }, country));
   },
   ["deal-inputs-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 function num(v: unknown): number | null {
@@ -506,7 +510,7 @@ export const getStoreMins = unstable_cache(
     return rows.map((r) => [Number(r.id), Number(r.m)]);
   },
   ["deal-store-mins-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 export interface DealOfferDetail {
@@ -554,7 +558,7 @@ export const getDealOffers = unstable_cache(
     }));
   },
   ["deal-offers-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 // ---- tools track loaders ----
@@ -596,7 +600,7 @@ export const getCardText = unstable_cache(
     };
   },
   ["card-text-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 /** Decoded getCardText(): number → { types, keywords }. */
@@ -642,7 +646,7 @@ export const getStoreStats = unstable_cache(
     return rows;
   },
   ["store-stats-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 /**
@@ -683,7 +687,7 @@ export const getStoreListings = unstable_cache(
     };
   },
   ["store-listings-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 // ---- ux track loaders ----
@@ -725,7 +729,7 @@ export type EmailStatus = "on" | "off";
 const getEmailMeta = unstable_cache(
   async (): Promise<string | null> => (await prisma.meta.findUnique({ where: { key: "email" }, select: { value: true } }))?.value ?? null,
   ["email-status-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 export function emailStatusFrom(value: string | null | undefined): EmailStatus {
@@ -768,7 +772,7 @@ const loadSearched = unstable_cache(
       })
     ).map((r) => r.id),
   ["home-searched-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 /**
@@ -826,7 +830,7 @@ const loadReviews = unstable_cache(
       select: { id: true, rating: true, message: true, displayName: true },
     }),
   ["approved-reviews-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 /** Approved, consented public feedback, newest first. Any error is an empty list. */
@@ -908,7 +912,7 @@ const loadBasketBucket = unstable_cache(
     return rows.map((r): BasketListingTuple => [r.productId, r.source, r.priceCents, r.condition, r.url]);
   },
   ["basket-listings-v2"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 export async function getBasketListings(country: Country, ids: number[]): Promise<BasketListingTuple[]> {
@@ -1299,7 +1303,7 @@ const loadSetStoreMins = (setId: number, market: Country) =>
       return [...foldStoreRows(groups)].map(([id, v]) => [id, v.minCents, v.stores]);
     },
     ["set-checklist-v1", String(setId), market],
-    { tags: [PRICES_TAG], revalidate: TTL },
+    { tags: [PRICES_TAG], revalidate: DB_TTL },
   )();
 
 /** One set's cards with each one's cheapest store listing in `market` (lib/set-scope.ts ChecklistCard). */
@@ -1347,7 +1351,7 @@ import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, 
  * card view costs no query. ~8 rows x 6 markets, titles trimmed: well under 10 KB.
  */
 export const getEbayPanel = unstable_cache(
-  async (productId: number): Promise<EbayPanelData> => dbOrSnapshot("ebay-panel", async () => {
+  async (productId: number): Promise<EbayPanelData> => snapshotFirst("ebay-panel", async () => {
     const since = new Date(Date.now() - PANEL_MAX_AGE_HOURS * 3600 * 1000);
     const [listings, graded] = await Promise.all([
       prisma.ebayListing.findMany({
@@ -1406,7 +1410,7 @@ export const getEbayPicks = unstable_cache(
       .filter((c) => Object.keys(c.listings).length > 0);
   },
   ["ebay-picks-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
 /**
@@ -1430,7 +1434,7 @@ export const getSealedSoldOut = unstable_cache(
     return out;
   },
   ["sealed-soldout-v1"],
-  { tags: [PRICES_TAG], revalidate: TTL },
+  { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 // ── end wave2:catalogue ──
 // ── promo ──
@@ -1466,7 +1470,7 @@ export async function getLaunchPromo(): Promise<PromoStatus> {
  * works before the eBay keys exist. Display-only; costs no eBay call.
  */
 export const getChaseStrip = unstable_cache(
-  async (): Promise<ChaseTile[]> => dbOrSnapshot("chase-strip", async () => {
+  async (): Promise<ChaseTile[]> => snapshotFirst("chase-strip", async () => {
     const cards = await prisma.card.findMany({
       where: { marketUsd: { gt: 0 }, hasImage: true, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
       orderBy: { marketUsd: "desc" },

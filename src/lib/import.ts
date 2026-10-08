@@ -45,6 +45,7 @@ import {
 } from "./match";
 import { STORES, platformOf, type StorePlatform, type StoreInfo } from "./stores";
 import { fetchStoreListings, productUrl, type StoreRead } from "./store-import";
+import { recordRunOffers } from "./run-offers";
 import { SITE_URL } from "./site";
 import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
 import { historyDir, readBucket, readIndex, recentOf, writeBucket, writeDay, writeIndex, writeRecentBucket } from "./history-store";
@@ -250,6 +251,7 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     }),
   ]);
 
+  recordRunOffers("tcgplayer", "US", tcgRows.map((r) => ({ productId: r.productId, priceCents: r.priceCents, currency: "USD", url: r.url, inStock: true, condition: null })), now);
   const cardMarket = new Map<number, number | null>();
   for (const c of cards) cardMarket.set(c.id, c.market);
   for (const s of sealed) cardMarket.set(s.id, s.market);
@@ -378,6 +380,7 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
         data: rows.map((r) => ({ ...r, source, market: store.country, currency: cur, updatedAt: now })),
       }),
     ]);
+    recordRunOffers(source, store.country, rows.map((r) => ({ productId: r.productId, priceCents: r.priceCents, currency: cur, url: r.url, inStock: r.inStock, condition: r.condition })), now);
     res.cards = rows.filter((r) => !isSealed.has(r.productId)).length;
     res.sealed = rows.filter((r) => isSealed.has(r.productId)).length;
     res.inStock = rows.filter((r) => r.inStock).length;

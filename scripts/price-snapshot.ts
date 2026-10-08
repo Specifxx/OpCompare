@@ -1,5 +1,6 @@
 // Build the price snapshot (lib/price-snapshot.ts) into SNAPSHOT_DIR (default
-// .snapshot-out) after an import. import-prices.yml then force-pushes that
+// .snapshot-out) after an import, from the offers that import just wrote
+// (RUN_OFFERS_FILE, default .snapshot-work/run-offers.json.gz; lib/run-offers.ts). import-prices.yml then force-pushes that
 // directory as the single commit of the `snapshot` branch. Read-only on the
 // database. Refuses to write a snapshot that is clearly empty, so a broken
 // import can never replace the last good one.
@@ -12,7 +13,8 @@ const log = (m: string) => console.log(new Date().toISOString().slice(11, 19), m
 
 async function main() {
   const dir = process.env.SNAPSHOT_DIR || ".snapshot-out";
-  const meta = await buildSnapshot(dir, log);
+  const runOffersFile = process.env.RUN_OFFERS_FILE || ".snapshot-work/run-offers.json.gz";
+  const meta = await buildSnapshot(dir, { runOffersFile, log });
   // An empty catalogue or no fresh offers means the import failed upstream: leave the old snapshot alone.
   if (meta.counts.cards < 1000 || meta.counts.offers < 1000) {
     throw new Error(`snapshot looks empty (${JSON.stringify(meta.counts)}); not publishing it`);

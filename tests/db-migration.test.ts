@@ -46,6 +46,10 @@ test("the script only ever reads the source, refuses a self-copy, and fails on a
   assert.doesNotMatch(s, /src\.\$executeRaw/, "no write on the source client");
   assert.doesNotMatch(s, /DELETE FROM|DROP |TRUNCATE/i);
   assert.match(s, /ON CONFLICT DO NOTHING/);
+  // Paging by one column of a composite key skipped a row (EbayCheck, 2026-10-08): order by the whole primary key.
+  assert.doesNotMatch(s, /ORDER BY 1\b/);
+  assert.match(s, /ORDER BY \$\{order\} LIMIT/);
+  assert.match(s, /indisprimary/);
   assert.match(s, /refusing to copy a database onto itself/);
   assert.match(s, /the target has fewer rows than the source/);
   assert.match(s, /tables not in COPY_ORDER or SKIPPED/);

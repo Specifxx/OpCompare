@@ -39,7 +39,7 @@ test("the cached read is ONE groupBy over stores, in stock, in the market, fresh
   assert.match(block, /updatedAt: \{ gt: new Date\(Date\.now\(\) - STALE_MS\) \}/);
   assert.match(block, /NOT: \{ source: \{ startsWith: "ebay" \} \}/);
   assert.match(block, /\["set-checklist-v1", String\(setId\), market\]/, "one entry per (set, market)");
-  assert.match(block, /tags: \[PRICES_TAG\], revalidate: TTL/);
+  assert.match(block, /tags: \[PRICES_TAG\], revalidate: DB_TTL/);
   assert.doesNotMatch(block, /getCatalog\(|getCardDetail\(|getHistoryRef\(/, "no cached loader inside the cache callback");
   const outer = data.slice(data.indexOf("export async function getSetChecklist"));
   assert.match(outer, /Promise\.all\(\[loadSetStoreMins\(setId, market\), getCatalog\(\)\]\)/, "the catalogue is read outside the cache");

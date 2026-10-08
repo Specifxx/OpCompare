@@ -26,3 +26,7 @@ next-env.d.ts
 
 # local checkout of the history (`data` branch; lib/history.ts)
 /.data/
+
+# Price snapshot work files (built by the import workflow, force-pushed to the snapshot branch)
+.snapshot-work/
+.snapshot-out/

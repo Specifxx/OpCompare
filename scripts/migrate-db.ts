@@ -68,6 +68,15 @@ async function columnsOf(db: PrismaClient, table: string): Promise<string[]> {
   return rows.map((r) => r.column_name);
 }
 
+/** The ORDER BY that makes OFFSET paging deterministic: the whole primary key (ordering by one column of a composite key skips and repeats rows), else ctid. */
+async function orderBy(db: PrismaClient, table: string): Promise<string> {
+  const rows = await db.$queryRawUnsafe<{ attname: string }[]>(
+    `SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey) WHERE i.indrelid = $1::regclass AND i.indisprimary ORDER BY array_position(i.indkey::int[], a.attnum::int)`,
+    q(table),
+  );
+  return rows.length ? rows.map((r) => q(r.attname)).join(", ") : "ctid";
+}
+
 async function tablesOf(db: PrismaClient): Promise<string[]> {
   const rows = await db.$queryRawUnsafe<{ table_name: string }[]>(
     `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
@@ -110,9 +119,10 @@ async function main() {
       let copied = 0;
       if (!dry) {
         const list = cols.map(q).join(", ");
+        const order = await orderBy(src, table);
         for (let offset = 0; offset < total; offset += BATCH) {
           const page = await src.$queryRawUnsafe<{ j: string }[]>(
-            `SELECT COALESCE(json_agg(t), '[]'::json)::text AS j FROM (SELECT ${list} FROM ${q(table)} ORDER BY 1 LIMIT ${BATCH} OFFSET ${offset}) t`,
+            `SELECT COALESCE(json_agg(t), '[]'::json)::text AS j FROM (SELECT ${list} FROM ${q(table)} ORDER BY ${order} LIMIT ${BATCH} OFFSET ${offset}) t`,
           );
           const n = await dst.$executeRawUnsafe(
             `INSERT INTO ${q(table)} (${list}) SELECT ${list} FROM json_populate_recordset(NULL::${q(table)}, $1::json) ON CONFLICT DO NOTHING`,

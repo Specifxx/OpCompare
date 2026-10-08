@@ -10,9 +10,12 @@
 // and a read applies the same 72-hour rule to what it finds, so a snapshot that
 // outlives a long outage fades to "sold out" instead of showing dead prices.
 //
-// READ only when the database fails: lib/data.ts wraps each public loader in
-// dbOrSnapshot(). The database stays the source of truth and is always tried
-// first. Reads go to GitHub's raw CDN, never to Neon.
+// READ FIRST (owner, 2026-10-08, to keep the free Neon allowance of 5 GB a month
+// for the whole month): lib/data.ts wraps each public price loader in
+// snapshotFirst(): the snapshot when it is under 48 hours old, the database when
+// it is not there, stale, or has no answer, and the snapshot again as the last
+// resort if the database then fails (dbOrSnapshot). Page loads therefore cost
+// Neon nothing. Reads go to GitHub's raw CDN.
 //
 // No private data, ever: accounts, watches, alerts, collections and the inbox
 // are not in it, and this directory is public.
@@ -26,6 +29,8 @@ export const SNAPSHOT_SHARDS = 64;
 /** An offer older than this is dropped by the writer and by the reader (lib/data.ts STALE_MS). */
 export const SNAPSHOT_FRESH_MS = 72 * 3600 * 1000;
 export const SNAPSHOT_VERSION = 1;
+/** A snapshot older than this is not trusted as the first source; the database is asked first (the snapshot stays the last resort). */
+export const SNAPSHOT_SERVE_MS = 48 * 3600 * 1000;
 
 export interface SnapshotMeta {
   v: typeof SNAPSHOT_VERSION;
@@ -128,4 +133,32 @@ export async function dbOrSnapshot<T>(name: string, db: () => Promise<T>, snap: 
     if (s != null) return s;
     throw e;
   }
+}
+
+/**
+ * True when the snapshot is the first place to look: it exists, was built in the
+ * last 48 hours, and nobody has switched it off. Outside production the database
+ * is used (a dev checkout must not show production's prices), unless a local
+ * snapshot is pointed at with SNAPSHOT_LOCAL_DIR. PRICES_FROM_DB=1 is the
+ * escape hatch: set it in Vercel to read prices from Postgres as before.
+ */
+export async function snapshotIsFirst(): Promise<boolean> {
+  if (process.env.PRICES_FROM_DB === "1") return false;
+  if (process.env.NODE_ENV !== "production" && !process.env.SNAPSHOT_LOCAL_DIR) return false;
+  const m = await snapshotFile<SnapshotMeta>("meta.json");
+  const t = m ? Date.parse(m.generatedAt) : NaN;
+  return Number.isFinite(t) && Date.now() - t < SNAPSHOT_SERVE_MS;
+}
+
+/**
+ * The GitHub snapshot first, the database second. A snapshot answer of null
+ * (a card the snapshot does not have yet) goes on to the database, which is then
+ * asked with the usual fallback back to the snapshot.
+ */
+export async function snapshotFirst<T>(name: string, db: () => Promise<T>, snap: () => Promise<T | null>): Promise<T> {
+  if (await snapshotIsFirst()) {
+    const s = await snap().catch(() => null);
+    if (s != null) return s;
+  }
+  return dbOrSnapshot(name, db, snap);
 }
