@@ -2182,3 +2182,25 @@ changes, one goal: Neon is for accounts and state, not for serving prices.
 - **Accounts stay in Neon.** Keeping them on GitHub was considered and rejected:
   the repository is public, the data is private, and sessions and writes need a
   database. Accounts are tiny (7 users today); they cost almost no transfer.
+
+## OP18 pre-order page (2026-10-08)
+
+Owner asked for a page like RiftCompare's `/radiance-preorders`, for One Piece's
+next release, with eBay and TCGplayer prices.
+
+- **One route per release, self-retiring.** `/op18-preorders` (`SET_CODE` at the
+  top; copy the route for the next set). Once the set's products are out or
+  past their date it says so and points to the live prices; `/sealed` links to it
+  only while OP18 is unreleased. It reads only `lib/data.ts` loaders, `revalidate`
+  3600, no `generateStaticParams`: snapshot-first, so it costs Neon nothing.
+- **Same ranking as every board.** Stores' pre-order prices, TCGplayer's cheapest
+  listing and eBay's rows are ranked by ITEM price (`productBoard` in
+  `lib/preorders.ts` reuses `marketRows`/`compareBoardRows`). When the eBay pass
+  has no priced offer for a product, the headline listing of the eBay panel in
+  that market stands in as one real listing; nothing is estimated. A market with
+  no tracked pre-order says so and still offers the TCGplayer and eBay searches.
+- **Structured data says PreOrder,** never InStock, because nothing has shipped.
+  No price forecasts in the copy: the page explains how to compare, not where
+  prices will go.
+- **Not changed:** eBay budget, deploy cadence. The page rides Monday's release
+  unless the owner asks for a deploy now.
