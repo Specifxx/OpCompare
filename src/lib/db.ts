@@ -14,17 +14,26 @@
 //      production deploys are gated to once a day (scripts/vercel-ignore-build.sh):
 //      every deploy clears the ISR cache and re-renders from the database.
 import { PrismaClient } from "@prisma/client";
+import { databaseUrl } from "./db-url";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+// The connection string is OP2 when set, else DATABASE_URL (lib/db-url.ts). The
+// override is passed to the client AND mirrored into DATABASE_URL, which the
+// schema's env() reads, so a tool that only looks at DATABASE_URL (prisma db
+// push, a script) lands on the same database as the app.
+const url = databaseUrl();
+if (url && process.env.DATABASE_URL !== url) process.env.DATABASE_URL = url;
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    ...(url ? { datasources: { db: { url } } } : {}),
     log: process.env.PRISMA_LOG === "1" ? ["query", "warn", "error"] : ["error"],
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export function hasDatabase(): boolean {
-  return Boolean(process.env.DATABASE_URL);
+  return Boolean(databaseUrl());
 }

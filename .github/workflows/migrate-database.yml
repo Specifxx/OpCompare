@@ -1,0 +1,63 @@
+name: Migrate database
+
+# One-off: copy OP Compare's state (accounts, entitlement, watches, alerts,
+# collections, notifications, the inbox, counters, Meta, the eBay check history
+# and the catalogue the user tables point at) from the OLD Neon database (secret
+# DATABASE_URL) to the NEW one (OP2: a repository secret or variable), after
+# creating the new database's schema. See scripts/migrate-db.ts and
+# DECISIONS.md "2026-10-08 — A new Neon database (OP2)".
+#
+#  - The old database is only READ. Nothing is deleted anywhere.
+#  - Offer rows (the 650k price rows) are not copied: the next Import prices run
+#    rebuilds them, and they are the bulk of the transfer.
+#  - Safe to run again: it only adds rows that are new since the last run.
+#  - It shares the import's concurrency group, so it never overlaps an import.
+#    Never dispatch it within 07:00–08:10 or 19:00–20:10 UTC.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: create the schema and count rows, copy nothing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: import-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check both databases are configured
+        id: gate
+        env:
+          OLD: ${{ secrets.DATABASE_URL }}
+          NEW: ${{ secrets.OP2 || vars.OP2 }}
+        run: |
+          if [ -z "$NEW" ]; then echo "::error::OP2 is not set as a repository secret or variable — nothing to migrate to."; exit 1; fi
+          if [ -z "$OLD" ]; then echo "::error::DATABASE_URL (the old database) is not set — nothing to copy from."; exit 1; fi
+          if [ "$OLD" = "$NEW" ]; then echo "::error::OP2 and DATABASE_URL are the same database."; exit 1; fi
+          echo "Both databases are configured."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Creates the tables in the new database (additive; no --accept-data-loss).
+      - name: Create the schema in the new database
+        env:
+          OP2: ${{ secrets.OP2 || vars.OP2 }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bash scripts/db-push-safe.sh && npx prisma generate
+      - name: Copy the state
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.OP2 || vars.OP2 }}
+          DRY: ${{ inputs.dry_run && '--dry' || '' }}
+        run: npx tsx scripts/migrate-db.ts $DRY
