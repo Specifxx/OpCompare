@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { OfferRow, SealedLite, SetLite } from "../src/lib/data";
 import type { PanelListing } from "../src/lib/listing-panel";
-import { daysUntil, groupForSet, longDateOf, preorderGroups, productBoard, releaseDateOf, shortDateOf } from "../src/lib/preorders";
+import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, productBoard, releaseDateOf, shortDateOf } from "../src/lib/preorders";
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -142,15 +142,30 @@ test("date helpers", () => {
   assert.equal(daysUntil("2026-10-07", "2026-10-08"), -1);
 });
 
-test("the page: pre-order availability, no private data, linked from /sealed and the sitemap", () => {
-  const page = read("src/app/op18-preorders/page.tsx");
-  assert.match(page, /PreOrder/);
-  assert.doesNotMatch(page, /schema\.org\/InStock|availability: *"InStock"/);
-  assert.doesNotMatch(page, /@\/lib\/db["']/);
-  assert.doesNotMatch(page, /generateStaticParams/);
-  assert.match(page, /export const revalidate = 3600/);
-  assert.match(read("src/app/sitemap.ts"), /"\/op18-preorders"/);
-  assert.match(read("src/app/sealed/page.tsx"), /\/op18-preorders/);
+test("the pages: pre-order availability, no private data, linked from /sealed and the sitemap", () => {
+  const shared = read("src/components/PreorderPage.tsx");
+  assert.match(shared, /schema\.org\/PreOrder/);
+  assert.doesNotMatch(shared, /schema\.org\/InStock|availability: *"InStock"/);
+  assert.doesNotMatch(shared, /@\/lib\/db["']/);
+  assert.doesNotMatch(shared, /generateStaticParams/);
+  for (const [code, route] of Object.entries(PREORDER_PAGES)) {
+    const page = read(`src/app${route}/page.tsx`);
+    assert.match(page, /export const revalidate = 3600/, route);
+    assert.match(page, new RegExp(`code: "${code}"`), route);
+    assert.match(page, new RegExp(`path: "${route}"`), route);
+    assert.doesNotMatch(page, /generateStaticParams|@\/lib\/db["']/, route);
+    assert.ok(read("src/app/sitemap.ts").includes(`"${route}"`), `${route} in the sitemap`);
+  }
+  // /sealed links every dedicated page through the same map.
+  assert.match(read("src/app/sealed/page.tsx"), /PREORDER_PAGES/);
+});
+
+test("EB05 releases before OP18, so its group sorts first and each links to its own page", () => {
+  const sets = [set({ id: 1, code: "OP18", releasedOn: "2026-11-20" }), set({ id: 3, code: "EB05", kind: "extra", releasedOn: "2026-10-30" })];
+  const groups = preorderGroups([product({ id: 1, name: "OP18 Box", setId: 1 }), product({ id: 2, name: "EB05 Box", setId: 3 })], sets, TODAY);
+  assert.deepEqual(groups.map((g) => g.set?.code), ["EB05", "OP18"]);
+  assert.equal(groupForSet(groups, "EB05")?.releasedOn, "2026-10-30");
+  assert.equal(PREORDER_PAGES.EB05, "/eb05-preorders");
 });
 
 test("the product card: every outbound link is tagged and rel-marked", () => {

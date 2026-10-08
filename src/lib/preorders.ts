@@ -18,6 +18,9 @@ export function releaseDateOf(s: Pick<SealedLite, "releasedOn" | "setId">, setBy
   return s.releasedOn ?? (s.setId != null ? setById.get(s.setId)?.releasedOn ?? null : null) ?? null;
 }
 
+/** Set code → its dedicated pre-order route (a group of that set links to it). */
+export const PREORDER_PAGES: Record<string, string> = { EB05: "/eb05-preorders", OP18: "/op18-preorders" };
+
 /** Order of products inside a release: the ones people compare first. */
 const KIND_ORDER = [
   "Booster Box",

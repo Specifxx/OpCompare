@@ -17,7 +17,7 @@ import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog, getSealedSoldOut } from "@/lib/data";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { groupForSet, preorderGroups } from "@/lib/preorders";
+import { longDateOf, PREORDER_PAGES, preorderGroups } from "@/lib/preorders";
 import { newestBoosterSet } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
 import { SITE_URL } from "@/lib/site";
@@ -53,8 +53,10 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
   const rows = sortSealed(filterSealed(sealed, query, ctx), query.sort, ctx);
   const soldOut = new Set(soldOutIds?.[country] ?? []);
   const newest = newestBoosterSet(cat.sets);
-  // The pre-order page is only linked while OP18 is still unreleased (it retires itself afterwards).
-  const op18Preorder = groupForSet(preorderGroups(sealed, cat.sets, new Date().toISOString().slice(0, 10)), "OP18");
+  // A pre-order page is linked only while its set is unreleased (each retires itself afterwards), soonest release first.
+  const preorderLinks = preorderGroups(sealed, cat.sets, new Date().toISOString().slice(0, 10)).flatMap((g) =>
+    g.set && PREORDER_PAGES[g.set.code] ? [{ code: g.set.code, href: PREORDER_PAGES[g.set.code], releasedOn: g.releasedOn }] : [],
+  );
   const sets = cat.sets
     .filter((s) => s.sealedCount > 0)
     .sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? ""))
@@ -99,17 +101,17 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
         Plus can watch a booster box and tell you when it restocks or drops to the price you set.
       </DiscoveryTip>
 
-      {op18Preorder ? (
-        <div className="card-surface mt-4 flex flex-wrap items-center gap-3 border-amber-500/40 p-4">
+      {preorderLinks.map((l) => (
+        <div key={l.code} className="card-surface mt-4 flex flex-wrap items-center gap-3 border-amber-500/40 p-4">
           <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300">Pre-order</span>
           <p className="flex-1 text-[15px] text-slate-200">
-            <span className="font-semibold text-white">OP18 pre-order prices</span> — every store&apos;s pre-order price beside TCGplayer and eBay, cheapest first.
+            <span className="font-semibold text-white">{l.code} pre-order prices</span> — out {longDateOf(l.releasedOn)}. Every store&apos;s pre-order price beside TCGplayer and eBay, cheapest first.
           </p>
-          <Link href="/op18-preorders" className="btn-primary min-h-10">
-            Compare OP18 pre-orders →
+          <Link href={l.href} className="btn-primary min-h-10">
+            Compare {l.code} pre-orders →
           </Link>
         </div>
-      ) : null}
+      ))}
 
       {newest ? (
         <div className="card-surface mt-4 flex flex-wrap items-center gap-3 border-brand-500/40 p-4">

@@ -2202,5 +2202,13 @@ next release, with eBay and TCGplayer prices.
 - **Structured data says PreOrder,** never InStock, because nothing has shipped.
   No price forecasts in the copy: the page explains how to compare, not where
   prices will go.
+- **EB05 first (owner, same day).** EB05 (Extra Booster: One Piece Heroines Edition
+  Vol. 2) releases 30 October, three weeks before OP18 (20 November), so it is the
+  nearer release and gets its own page, `/eb05-preorders`. The page body moved to
+  `components/PreorderPage.tsx` (a `PreorderConfig` per release); each route is a
+  config and `export const revalidate = 3600`. `PREORDER_PAGES` in `lib/preorders.ts`
+  maps a set code to its route: `/sealed` shows one banner per unreleased set,
+  soonest first, and the "Also coming soon" headings link to the other page.
+  The next release is a new route plus one map entry.
 - **Not changed:** eBay budget, deploy cadence. The page rides Monday's release
   unless the owner asks for a deploy now.
