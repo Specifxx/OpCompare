@@ -15,7 +15,7 @@ this in the browser.
 1. Create a new Neon project named `opcompare`: Postgres 16+, region AWS US East
    (N. Virginia), next to Vercel's `iad1` functions.
 2. Copy the **pooled** connection string (`…-pooler….neon.tech/neondb?sslmode=require`).
-3. That one string is `DATABASE_URL` everywhere below.
+3. That one string is `DATABASE_URL` everywhere below. Since 2026-10-08 the live database is a SECOND Neon project, whose string is the variable `OP2` (Vercel Production, and GitHub as a secret or a repository variable); `OP2` wins and `DATABASE_URL` (the old project) is only the fallback. Moving to a new project again: create it, set `OP2` to its string, run the **Migrate database** workflow (dry run first), then **Import prices**, then a manual **Production deploy**. The old project is never modified.
 
 There is no history database. Price history lives in GitHub (see 2).
 
@@ -40,7 +40,8 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 
 | Kind | Name | Value | From RiftCompare? |
 |---|---|---|---|
-| Secret | `DATABASE_URL` | The Neon pooled string | **New**, never a RiftCompare database |
+| Secret | `DATABASE_URL` | The Neon pooled string (the OLD project; the fallback behind `OP2`) | **New**, never a RiftCompare database |
+| Secret or variable | `OP2` | The new Neon pooled string; wins over `DATABASE_URL` everywhere | **New** |
 | Secret | `CRON_SECRET` | A long random string (same value as in Vercel) | New |
 | Secret | `GSC_SA_KEY` | The Search Console service-account JSON key | **Reuse** the same service account. GitHub secrets can't be read back, so create a new JSON key for it (Google Cloud → IAM → Service accounts → Keys) |
 | Secret | `STRIPE_SECRET_KEY` | OP Compare's Stripe secret key (`sk_live_…`), used by the *Stripe setup* workflow | **New** account (see 6) |
@@ -79,6 +80,7 @@ Each workflow is a no-op until its values exist.
 | Name | Value | From RiftCompare? |
 |---|---|---|
 | `DATABASE_URL` | Same Neon string as GitHub | **New** |
+| `OP2` | The new Neon string (wins over `DATABASE_URL`) | **New** |
 | `CRON_SECRET` | Same as the GitHub secret | New |
 | `AUTH_SECRET` | A 64-character random hex string. It signs sessions; production refuses sign-in without it | **New**, never RiftCompare's |
 | `NEXT_PUBLIC_SITE_URL` | `https://opcompare.app` | New |
