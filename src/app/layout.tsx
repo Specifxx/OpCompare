@@ -63,6 +63,10 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// Impact's snippet is `<meta name='impact-site-verification' value='…'>`: a `value`
+// attribute, which React's meta typings do not list, so it is spread in.
+const IMPACT_VERIFICATION_ATTR = { value: "cd475173-83c8-45d7-a414-7aeea2d17f68" } as Record<string, string>;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -123,6 +127,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-theme="light" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head>
+        {/* Impact (TCGplayer affiliate programme) site verification. Impact's own snippet
+            uses a `value` attribute rather than `content`, so it is rendered exactly as given. */}
+        <meta name="impact-site-verification" {...IMPACT_VERIFICATION_ATTR} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
         {/* GA4 + Consent Mode defaults, before anything else measures. */}
