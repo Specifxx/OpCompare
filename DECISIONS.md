@@ -2109,3 +2109,39 @@ reports 5,000 and the other site's use, which is expected.
 - The run budget still takes `liveRemaining − reserve` into account, so when the
   other site has taken more than its half, our run shrinks to what is really left
   rather than starving it.
+
+## 2026-10-08 — A last-good price snapshot on GitHub, so the site survives the database
+
+**Owner's call.** If Postgres does not answer (an outage, a spent Neon transfer
+allowance), the public price pages keep serving the last import instead of
+failing; old prices fade rather than linger.
+
+- **What.** `scripts/price-snapshot.ts` (run by `import-prices.yml` after every
+  import, never failing it) writes the answers the public loaders give, as
+  gzipped JSON, to `.snapshot-out`: catalogue facts and prices, card facts,
+  sealed, offers sharded by `productId % 64`, the eBay listings panel, the chase
+  strip and the site stats (~15 MB, 64 offer shards of ~200 KB). The workflow
+  force-pushes it as ONE orphan commit to the `snapshot` branch, so the branch
+  is always exactly the newest snapshot and never grows. An offer not refreshed
+  in 72 hours is not written. An empty-looking snapshot (<1,000 cards or
+  offers) is not published, so a broken import cannot replace the last good one.
+- **Reading.** `dbOrSnapshot()` in `lib/data.ts` wraps the eight public loaders:
+  database first; on a thrown error or no answer in 6 s, the matching file from
+  `raw.githubusercontent.com/.../snapshot/` (10-minute cache), and the database
+  is skipped for the next minute so requests do not each wait out the timeout.
+  "Not found" is an answer, not a failure. The reader re-applies the 72-hour
+  rule (stale store rows show as sold out, stale eBay rows drop), so a snapshot
+  that outlives a long outage fades. The history ref no longer blanks the
+  charts when the database fails (they read the `data` branch).
+- **Not covered.** Anything per user (accounts, watches, alerts, collections,
+  the inbox, billing) is private and not in it, and the loaders built from SQL
+  aggregations of the whole offer table (Deal Finder, Best Basket, store pages,
+  Rising/Demand, Today's top deals, the per-set eBay picks) have no fallback;
+  they show their own "unavailable" state while the database is down. The
+  IMPORT itself still needs the database to write; the snapshot is the last good
+  import, not an import path.
+- **Safe by design.** Public price data only (a test fails on any private
+  table), `snapshot` is excluded from Vercel builds in `vercel.json`, and
+  nothing under `src/app` imports the writer. Verified by pointing a dev site
+  at a dead database: the homepage, card page, price guide and sealed page all
+  rendered real prices from the snapshot.

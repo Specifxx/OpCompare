@@ -9,6 +9,8 @@ import { prisma } from "./db";
 import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "./history";
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
+import { dbOrSnapshot } from "./price-snapshot";
+import { snapCardDetail, snapChaseStrip, snapCore, snapEbayPanel, snapPrices, snapSealedCatalog, snapSealedDetail, snapSiteStats } from "./price-snapshot-read";
 
 export const PRICES_TAG = "prices";
 const TTL = 60 * 60 * 6;
@@ -18,7 +20,7 @@ const TTL = 60 * 60 * 6;
 // catalogue does) and the PRICES. Tuples, not objects: as objects the ~7,300
 // rows measured 3.7 MB against the Data Cache's ~2 MB item ceiling; split into
 // tuples each half is well under 1 MB, with room for years of new sets.
-type CoreTuple = [
+export type CoreTuple = [
   id: number,
   slug: string | 0, // 0 = the derived slug (cardSlugBase) — most rows
   name: string,
@@ -35,7 +37,7 @@ type CoreTuple = [
   life: number | null,
   hasImage: 0 | 1,
 ];
-type PriceTuple = [
+export type PriceTuple = [
   marketUsd: number | null,
   low: (number | null)[] | 0, // per MARKETS order; 0 = no price anywhere
   stores: number[] | 0, // per MARKETS order; 0 = no store anywhere
@@ -85,7 +87,7 @@ export interface SetLite {
 }
 
 const loadCore = unstable_cache(
-  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => {
+  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => dbOrSnapshot("catalog-core", async () => {
     const [rows, sets] = await Promise.all([
       prisma.card.findMany({
         orderBy: { id: "asc" },
@@ -107,13 +109,13 @@ const loadCore = unstable_cache(
       }),
       sets: sets.map((s) => ({ ...s, releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null })),
     };
-  },
+  }, () => snapCore()),
   ["catalog-core-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 const loadPrices = unstable_cache(
-  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => {
+  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => dbOrSnapshot("catalog-prices", async () => {
     const rows = await prisma.card.findMany({
       orderBy: { id: "asc" },
       select: {
@@ -131,7 +133,7 @@ const loadPrices = unstable_cache(
       }),
       at: new Date().toISOString(),
     };
-  },
+  }, () => snapPrices()),
   ["catalog-prices-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -250,7 +252,7 @@ function freshOffers(rows: OfferDbRow[]): OfferRow[] {
 }
 
 export const getCardDetail = unstable_cache(
-  async (slug: string): Promise<CardDetail | null> => {
+  async (slug: string): Promise<CardDetail | null> => dbOrSnapshot("card-detail", async () => {
     const c = await prisma.card.findUnique({
       where: { slug },
       select: {
@@ -271,7 +273,7 @@ export const getCardDetail = unstable_cache(
       set: { ...c.set, releasedOn: c.set.releasedOn ? c.set.releasedOn.toISOString().slice(0, 10) : null },
       offers: freshOffers(offers),
     };
-  },
+  }, () => snapCardDetail(slug)),
   ["card-detail-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -295,7 +297,7 @@ export interface SealedLite {
 }
 
 export const getSealedCatalog = unstable_cache(
-  async (): Promise<SealedLite[]> => {
+  async (): Promise<SealedLite[]> => dbOrSnapshot("sealed-catalog", async () => {
     const rows = await prisma.sealed.findMany({
       select: {
         id: true, slug: true, name: true, setId: true, kind: true, packCount: true, imageUrl: true, releasedOn: true, presale: true,
@@ -311,7 +313,7 @@ export const getSealedCatalog = unstable_cache(
       low: { US: r.lowUS, AU: r.lowAU, UK: r.lowUK, SG: r.lowSG, CA: r.lowCA, EU: r.lowEU },
       stores: { US: r.storesUS, AU: r.storesAU, UK: r.storesUK, SG: r.storesSG, CA: r.storesCA, EU: r.storesEU },
     }));
-  },
+  }, () => snapSealedCatalog()),
   ["sealed-catalog-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -321,7 +323,7 @@ export interface SealedDetail extends SealedLite {
 }
 
 export const getSealedDetail = unstable_cache(
-  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => {
+  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => dbOrSnapshot("sealed-detail", async () => {
     const s = await prisma.sealed.findUnique({
       where: { slug },
       select: {
@@ -340,7 +342,7 @@ export const getSealedDetail = unstable_cache(
       releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
       offers: freshOffers(offers),
     };
-  },
+  }, () => snapSealedDetail(slug)),
   ["sealed-detail-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -360,7 +362,7 @@ export interface SiteStats {
 const EBAY_LIVE_DAYS = 3;
 
 export const getSiteStats = unstable_cache(
-  async (): Promise<SiteStats> => {
+  async (): Promise<SiteStats> => dbOrSnapshot("site-stats", async () => {
     const [run, groups, ebayRun] = await Promise.all([
       prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
       // eBay is not a store: never in store counts or homepage stats.
@@ -379,7 +381,7 @@ export const getSiteStats = unstable_cache(
       map.set(k, row);
     }
     return { lastImportAt: run?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
-  },
+  }, () => snapSiteStats()),
   ["site-stats-v3"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -407,7 +409,9 @@ export async function getIndexSeries(): Promise<IndexPoint[]> {
 const HISTORY_RAW = (process.env.HISTORY_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
 
 export const getHistoryRef = unstable_cache(
-  async (): Promise<string | null> => (await prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }))?.value ?? null,
+  // A database failure is not "no ref": the charts then read the branch itself (historyFile's "data" fallback).
+  async (): Promise<string | null> =>
+    prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }).then((m) => m?.value ?? null, () => null),
   ["history-ref-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -1343,7 +1347,7 @@ import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, 
  * card view costs no query. ~8 rows x 6 markets, titles trimmed: well under 10 KB.
  */
 export const getEbayPanel = unstable_cache(
-  async (productId: number): Promise<EbayPanelData> => {
+  async (productId: number): Promise<EbayPanelData> => dbOrSnapshot("ebay-panel", async () => {
     const since = new Date(Date.now() - PANEL_MAX_AGE_HOURS * 3600 * 1000);
     const [listings, graded] = await Promise.all([
       prisma.ebayListing.findMany({
@@ -1362,7 +1366,7 @@ export const getEbayPanel = unstable_cache(
       listings: listings.map((l) => ({ ...l, title: panelTitle(l.title) })),
       graded: graded.map((l) => ({ ...l, title: panelTitle(l.title) })),
     };
-  },
+  }, () => snapEbayPanel(productId)),
   ["ebay-panel-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -1462,7 +1466,7 @@ export async function getLaunchPromo(): Promise<PromoStatus> {
  * works before the eBay keys exist. Display-only; costs no eBay call.
  */
 export const getChaseStrip = unstable_cache(
-  async (): Promise<ChaseTile[]> => {
+  async (): Promise<ChaseTile[]> => dbOrSnapshot("chase-strip", async () => {
     const cards = await prisma.card.findMany({
       where: { marketUsd: { gt: 0 }, hasImage: true, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
       orderBy: { marketUsd: "desc" },
@@ -1480,7 +1484,7 @@ export const getChaseStrip = unstable_cache(
       for (const r of rows) if (r.productId === c.id && r.imageUrl) listings[r.market] = { priceCents: r.priceCents, shippingCents: r.shippingCents, currency: r.currency, url: r.url, imageUrl: r.imageUrl };
       return { id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, marketUsd: c.marketUsd!, imageUrl: cardImage.tile(c.id), listings };
     });
-  },
+  }, () => snapChaseStrip()),
   ["ebay-chase-strip-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );

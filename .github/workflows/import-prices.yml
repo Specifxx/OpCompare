@@ -112,6 +112,34 @@ jobs:
             git push --quiet origin data
           fi
           echo "HISTORY_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      # The price snapshot (lib/price-snapshot.ts): a last-good copy of what the
+      # public price pages read from Postgres, force-pushed as ONE orphan commit
+      # to the `snapshot` branch, so the site keeps serving prices if the database
+      # does not answer. Never fails the import (continue-on-error), and a
+      # snapshot that looks empty is not published (scripts/price-snapshot.ts).
+      - name: Build the price snapshot
+        id: snapshot
+        if: steps.gate.outputs.run == 'true' && steps.import.outcome == 'success'
+        continue-on-error: true
+        env:
+          SNAPSHOT_DIR: .snapshot-out
+        run: npx tsx scripts/price-snapshot.ts
+      - name: Publish the price snapshot
+        if: steps.gate.outputs.run == 'true' && steps.snapshot.outcome == 'success'
+        continue-on-error: true
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          cd .snapshot-out
+          git init --quiet -b snapshot
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Vercel must never build this branch.
+          printf '{\n  "git": { "deploymentEnabled": false }\n}\n' > vercel.json
+          printf '# OP Compare price snapshot\n\nThe newest import, rebuilt by the Import prices workflow on main and force-pushed as a single commit (no history). Read only when the database does not answer: see src/lib/price-snapshot.ts there.\n' > README.md
+          git add -A
+          git commit --quiet -m "Price snapshot $(date -u +%F) $(date -u +%H:%M)"
+          git push --quiet --force "$REMOTE" snapshot
       - name: Point the site at it and refresh
         if: steps.gate.outputs.run == 'true'
         run: npx tsx scripts/publish-history.ts
