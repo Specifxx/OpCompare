@@ -65,3 +65,24 @@ test("the migration workflow is manual, read-only for the repo, in the import's 
   assert.match(wf, /TARGET_DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \}\}/);
   assert.doesNotMatch(wf, /echo[^\n]*\$\{?(OLD|NEW|DATABASE_URL|OP2)\b/, "never echo a connection string");
 });
+
+test("every workflow that touches the database prefers OP2 (a secret or a variable), then the old DATABASE_URL", () => {
+  const expr = "${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}";
+  for (const f of fs.readdirSync(path.join(ROOT, ".github/workflows"))) {
+    if (f === "migrate-database.yml") continue; // it names both databases on purpose
+    const wf = read(`.github/workflows/${f}`);
+    const uses = wf.match(/secrets\.DATABASE_URL/g) ?? [];
+    const withExpr = wf.split(expr).length - 1;
+    assert.equal(uses.length, withExpr, `${f}: every DATABASE_URL secret is behind the OP2-first expression`);
+  }
+  for (const f of ["import-prices", "ebay-prices", "email", "email-weekly", "inbox-audit"]) assert.ok(read(`.github/workflows/${f}.yml`).includes(expr), f);
+});
+
+test("deploys are weekly, Mondays 08:00 UTC, and still gated by [deploy] in the subject", () => {
+  const wf = read(".github/workflows/production-deploy.yml");
+  assert.match(wf, /schedule:\s*\n\s*- cron: "0 8 \* \* 1"/);
+  assert.equal((wf.match(/- cron:/g) ?? []).length, 1);
+  assert.match(wf, /workflow_dispatch:/, "a manual run still deploys now");
+  assert.match(read("scripts/vercel-ignore-build.sh"), /MARKER='\[deploy\]'/);
+  assert.match(read("CLAUDE.md"), /lands one a WEEK, Mondays at 08:00 UTC/);
+});

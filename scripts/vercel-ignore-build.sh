@@ -10,7 +10,7 @@
 #
 # THE RULE. A PRODUCTION build happens only when the commit's SUBJECT LINE carries
 # the literal marker  [deploy]  (any case). .github/workflows/production-deploy.yml
-# lands one such commit on main every day at 08:00 UTC; "Run workflow" there, or
+# lands one such commit on main every Monday at 08:00 UTC; "Run workflow" there, or
 # [deploy] in your own commit subject, deploys now. The SUBJECT only — a body that
 # discusses the marker must not deploy.
 #
@@ -42,5 +42,5 @@ if printf '%s' "$subject" | grep -qiF -- "$MARKER"; then
   exit 1
 fi
 
-echo "[vercel-ignore-build] no '$MARKER' in the commit subject — skipping. Production deploys daily at 08:00 UTC (production-deploy.yml)."
+echo "[vercel-ignore-build] no '$MARKER' in the commit subject — skipping. Production deploys weekly, Mondays 08:00 UTC (production-deploy.yml)."
 exit 0

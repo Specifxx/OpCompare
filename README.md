@@ -111,7 +111,8 @@ system, recoloured) · Prisma + Postgres (Neon) · Vercel · GitHub Actions.
 `vercel.json`'s `ignoreCommand` (`scripts/vercel-ignore-build.sh`) skips any
 production build whose commit **subject** lacks `[deploy]`;
 `.github/workflows/production-deploy.yml` lands one such commit on `main` every
-day at 08:00 UTC, after the morning import. Previews always build. RiftCompare
+Monday at 08:00 UTC, after the morning import (weekly since 2026-10-08: the site
+runs passively on the free Neon allowance). Previews always build. RiftCompare
 adopted this after per-push builds exhausted its Neon transfer allowance; OP
 Compare starts with it.
 

@@ -2145,3 +2145,40 @@ failing; old prices fade rather than linger.
   nothing under `src/app` imports the writer. Verified by pointing a dev site
   at a dead database: the homepage, card page, price guide and sealed page all
   rendered real prices from the snapshot.
+
+## 2026-10-08 — A new Neon database (OP2), weekly deploys, prices read from GitHub
+
+**Owner's call.** OP Compare should run passively and last the whole month on
+the free 5 GB of Neon transfer, without switching databases mid-month. Three
+changes, one goal: Neon is for accounts and state, not for serving prices.
+
+- **New database.** The connection string is the variable `OP2` (Vercel and
+  GitHub, a secret or a repository variable); `DATABASE_URL` stays the fallback,
+  so deleting `OP2` undoes the switch (`src/lib/db-url.ts`). `migrate-database.yml`
+  created the schema in the new project and `scripts/migrate-db.ts` copied the
+  state: accounts and entitlement, watches and alerts, collections, notifications,
+  the inbox, the launch-promo counter, Meta, the eBay check history and import-run
+  log, and the catalogue the user tables point at. It only READS the old database,
+  is idempotent, pages by the whole primary key, and fails if the target ends with
+  fewer rows or a table is not in its list. Offer (650,000 rows) and the retired
+  ClickEvent are not copied: the next import rebuilds prices. The old database is
+  left untouched.
+- **Prices from GitHub.** Public price pages read the `snapshot` branch first
+  (`snapshotFirst`), Postgres only when it is missing, older than 48 hours or has
+  no answer. Card pages, the catalogue, sealed, stats, the eBay panel and the
+  chase strip no longer cost Neon anything. The loaders that still read Postgres
+  (deals, store pages, baskets, demand, set checklists) refresh every 12 hours
+  instead of 6. `PRICES_FROM_DB=1` is the escape hatch.
+- **The snapshot costs no transfer to build.** Reading the Offer table back out
+  of Neon for every snapshot would have been over 100 MB twice a day. The import
+  now writes its offers to a local file (`lib/run-offers.ts`); the snapshot is
+  built from that, with a store that failed carried over from the previous
+  snapshot on GitHub (72 hours, as the database does) and eBay's few thousand rows
+  read from Postgres.
+- **Weekly deploys.** `production-deploy.yml` now runs Mondays at 08:00 UTC
+  (it was daily). Every build clears the page caches and re-renders from the
+  data; with prices on GitHub only code changes need one. "Run workflow" still
+  deploys now when the owner says so.
+- **Accounts stay in Neon.** Keeping them on GitHub was considered and rejected:
+  the repository is public, the data is private, and sessions and writes need a
+  database. Accounts are tiny (7 users today); they cost almost no transfer.

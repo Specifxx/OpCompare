@@ -56,7 +56,7 @@ jobs:
       - name: Skip unless eBay and the database are configured
         id: gate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: |
@@ -97,11 +97,11 @@ jobs:
       # The same additive sync as import-prices.yml (no --accept-data-loss).
       - name: Sync schema
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
         run: bash scripts/db-push-safe.sh && npx prisma generate
       - name: eBay pass
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}

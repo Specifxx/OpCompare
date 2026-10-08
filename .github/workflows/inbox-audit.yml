@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
     steps:
       - name: Skip when the database is not configured
         run: |

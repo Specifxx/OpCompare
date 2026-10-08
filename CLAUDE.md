@@ -8,9 +8,23 @@ OP Compare is the One Piece Card Game sister site of RiftCompare
 
 Production builds only for a commit whose SUBJECT LINE carries `[deploy]`
 (`scripts/vercel-ignore-build.sh`); `.github/workflows/production-deploy.yml`
-lands one a day at 08:00 UTC. "Push to prod" means land it on `main` and ride the
-daily release. Add `[deploy]` only when the owner says a release is urgent, and
-say so. A commit BODY may discuss the marker; it does not deploy.
+lands one a WEEK, Mondays at 08:00 UTC. "Push to prod" means land it on `main` and
+ride the weekly release. Add `[deploy]` (or dispatch the workflow) only when the
+owner says a release is urgent, and say so. A commit BODY may discuss the marker;
+it does not deploy. The site is meant to run passively on the free Neon allowance
+(5 GB a month): prices and eBay listings reach pages through the GitHub price
+snapshot, not a deploy, and only code changes wait for the release.
+
+## The database: OP2, and Postgres only for state
+
+The connection string is the variable `OP2` (Vercel and GitHub, a secret or a
+repository variable), falling back to `DATABASE_URL` (`src/lib/db-url.ts`). Public
+price pages read the `snapshot` branch on GitHub FIRST (`src/lib/price-snapshot.ts`,
+`snapshotFirst` in `src/lib/data.ts`) and Postgres only when the snapshot is
+missing, older than 48 hours or has no answer. Never read the Offer table back
+out of Postgres to build it: the import writes its offers to a local file
+(`src/lib/run-offers.ts`) and the snapshot is built from that. Never add a
+private table to the snapshot (`tests/price-snapshot.test.ts`).
 
 ## The eBay API: OP Compare's own keyset, script-side only
 

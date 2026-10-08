@@ -25,12 +25,12 @@ prices (about 365k offer rows) plus accounts.
 ## 2. GitHub — `Specifxx/OpCompare`
 
 **Branch.** Create `main` from `claude/tender-noether-2na98p` and make it the
-default branch. CI, the daily release and Vercel production all key off
+default branch. CI, the weekly release and Vercel production all key off
 `main`.
 
 **Settings → Actions → General → Workflow permissions:** set *Read and write*.
 Two workflows need it:
-- *Production deploy* pushes the daily release commit to `main`.
+- *Production deploy* pushes the weekly release commit (Mondays) to `main`.
 - *Import prices* pushes the price history to the `data` branch.
 
 **The `data` branch** is created by the first *Import prices* run. Don't edit
@@ -55,7 +55,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 |---|---|---|
 | CI | every PR and every push to `main` | nothing |
 | Import prices | 07:07 and 19:07 UTC, or Run workflow | `DATABASE_URL`, `CRON_SECRET`, write permission |
-| Production deploy | 08:00 UTC, or Run workflow | write permission |
+| Production deploy | Mondays 08:00 UTC, or Run workflow | write permission |
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
@@ -205,7 +205,7 @@ the last 24h (from the eBay `ImportRun` rows). Searches that fail without a 429
 10 in a row, or when over half of 50+ fail, and the run goes red.
 
 **Order (the deletion endpoint must be live before production keys):**
-1. Land the code on `main` (no `[deploy]`); it rides the next 08:00 UTC release.
+1. Land the code on `main` (no `[deploy]`); it rides the next weekly release (Monday 08:00 UTC).
    **Before that release, sync the schema:** the card and sealed pages select
    the new `Offer.shippingCents` column whether eBay is on or not, and only
    *Import prices* (07:07/19:07 UTC) syncs the schema while eBay is off. Run
@@ -329,7 +329,7 @@ sends nothing) or `free` to recover a missed 07:07 run.
 - **Neon storage (0.5 GB):** only today's prices and accounts, so it stays
   small. History is not in Postgres.
 - **Neon transfer (5 GB/month):** pages read cached loaders (6 h TTL, purged by
-  each import), production deploys once a day, and charts come from GitHub.
+  each import), production deploys once a week, and charts come from GitHub.
 - **The `data` branch:** about 250 KB of new history a day (about 90 MB a year
   before git's compression). Each product file keeps two years. The day files
   are the permanent archive.
