@@ -5,7 +5,7 @@
 // OP Compare spends at most DAILY_CALL_CAP (2,500) Browse calls a day, whatever
 // eBay's own limit (owner, 2026-10-07: a second approved account). ONE run a
 // day (05:37 UTC, .github/workflows/ebay-prices.yml) spends at most
-// min(EBAY_MAX_CALLS (2,000), liveRemaining − EBAY_QUOTA_RESERVE (300),
+// min(EBAY_MAX_CALLS (2,500), liveRemaining − EBAY_QUOTA_RESERVE (300),
 // 2,500 − our last-24h spend), split across markets by fixed shares
 // (US-weighted: the largest EPN payouts), and inside each market by the
 // product's TCGplayer market value: singles of US$100+ (the chase cards) every
@@ -31,7 +31,7 @@ export const SINGLES_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU"];
 export const SEALED_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU", "CA"];
 
 // ── Defaults (env-overridable, parsed with envInt) ───────────────────────────
-export const DEFAULT_MAX_CALLS = 2000; // EBAY_MAX_CALLS: per-run cap, and the budget when the live count can't be read
+export const DEFAULT_MAX_CALLS = 2500; // EBAY_MAX_CALLS: per-run cap, and the budget when the live count can't be read
 /** The hard daily ceiling (owner, 2026-10-07): no run, dispatch or env var can spend more than this in 24h. */
 export const DAILY_CALL_CAP = 2500;
 export const DEFAULT_QUOTA_RESERVE = 300; // EBAY_QUOTA_RESERVE: never spent today

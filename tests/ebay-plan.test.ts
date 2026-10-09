@@ -47,7 +47,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 // ── The model's constants ────────────────────────────────────────────────────
 const DAILY_LIMIT = 2500; // OP Compare's approved Browse allowance (owner, 2026-10-07). Raise DAILY_CALL_CAP with it.
 const RESERVE = DEFAULT_QUOTA_RESERVE;
-const CAP = DEFAULT_MAX_CALLS;
+const CAP = 2000; // the arithmetic below is pinned at a 2,000 cap; DEFAULT_MAX_CALLS is pinned separately
 const SPENDABLE = DAILY_LIMIT - RESERVE;
 const RETRY_RATE = 0.25;
 const SECONDS_PER_CALL = 0.75; // RiftCompare's measured figure — re-measure after week one
@@ -69,7 +69,6 @@ test("the model's retry rate is the plan's", () => {
 
 test("the daily ceiling: 2,500 calls, whatever the runs, dispatches or env vars", () => {
   assert.equal(DAILY_CALL_CAP, 2500);
-  assert.equal(CAP, 2000);
   assert.ok(CAP + RESERVE <= DAILY_LIMIT, "a run at the cap leaves the reserve untouched");
   // A scheduled run and two dispatches land in one day, eBay reporting plenty left each time.
   let spent = 0;
@@ -105,10 +104,10 @@ test("one capped run fits the workflow's timeout with a 25% margin", () => {
 });
 
 test("budgetFor: live count minus reserve, capped per run; a dispatch cap only lowers it", () => {
-  assert.equal(budgetFor(null), CAP);
-  assert.equal(budgetFor(2500), CAP);
-  assert.equal(budgetFor(800), 500);
-  assert.equal(budgetFor(300), 0);
+  assert.equal(budgetFor(null, CAP), CAP);
+  assert.equal(budgetFor(2500, CAP), CAP);
+  assert.equal(budgetFor(800, CAP), 500);
+  assert.equal(budgetFor(300, CAP), 0);
   assert.equal(budgetFor(2500, CAP, RESERVE, "50"), 50);
   assert.equal(budgetFor(2500, CAP, RESERVE, 50), 50);
   assert.equal(budgetFor(700, CAP, RESERVE, "50"), 50);
@@ -329,4 +328,18 @@ test("the methodology page states the plan's floors and intervals", () => {
   assert.ok(page.includes("Once a day"));
   assert.ok(page.includes("fixed daily budget"));
   assert.equal((read(".github/workflows/ebay-prices.yml").match(/- cron:/g) ?? []).length, 1);
+});
+
+test("the per-run cap is the whole daily ceiling: a shared 5,000-call key lets one run spend all 2,500, a 2,500 key still reserves", () => {
+  // Owner, 2026-10-09: "use up all the API creds". Yesterday's run started with 5,000
+  // left, took 1,600 of 2,500 (a 2,000 cap, 400 spent earlier in the window) and left
+  // 1,976 pairs due, 595 never searched in each of UK and AU.
+  assert.equal(DEFAULT_MAX_CALLS, DAILY_CALL_CAP);
+  assert.equal(budgetFor(5000, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: 0 }), 2500);
+  assert.equal(budgetFor(5000, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: 400 }), 2100);
+  // The ceiling still holds whatever the key reports, and the other site's share is left alone.
+  assert.equal(budgetFor(1400, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: 1610 }), 890);
+  assert.equal(budgetFor(5000, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: 2500 }), 0);
+  // An approved 2,500-call key (no other site) still keeps its reserve.
+  assert.equal(budgetFor(2500, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 2500, ourSpend24h: 0 }), 2200);
 });

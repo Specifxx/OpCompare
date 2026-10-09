@@ -2237,3 +2237,25 @@ rows were live); EB05 had none, and not because of the budget or the plan.
 - **Buttons.** TCGplayer rows and buttons on the pre-order pages are violet
   (`.btn-tcg`), eBay's stay eBay blue, stores keep the shared red. Colour only;
   rows stay ranked by item price.
+
+## Spend the whole eBay allowance (2026-10-09)
+
+Owner: "we need to use up all the API creds for cards and the most important
+sealed products." Yesterday's scheduled run began with 5,000 of 5,000 left on the
+shared key, but its budget was 1,600: a per-run cap of 2,000 and 400 calls already
+spent inside the rolling 24 hours. It searched ~1,300 pairs and left 1,976 due
+(595 UK and 595 AU pairs had never been searched), so cards and sealed outside the
+top of the plan had no eBay price. Only 526 cards and 87 sealed products had one.
+
+- **`DEFAULT_MAX_CALLS` is now 2,500, equal to `DAILY_CALL_CAP`.** One run can use
+  the whole day. The hard ceiling (2,500 in any 24h, counting every earlier run and
+  dispatch) and the live-remaining check are unchanged, so the other site's share
+  of the key is still never touched. On a key whose limit is 2,500 the reserve
+  still clamps a run to 2,200 (`clampLimits`).
+- **Order is unchanged and already puts the important pairs first:** singles of
+  US$100+ every 48h, then singles from the floor and sealed of US$30+ (boxes,
+  cases, decks, double packs) by value, never-searched ahead of overdue. At about
+  3,300 eligible pairs and a 72h cycle the steady state is ~1,100 calls a day, so
+  one or two full days clear the backlog and the rest of the allowance goes on
+  refreshing the dearest pairs sooner.
+- Still true: eBay keeps running only from GitHub Actions; no page calls it.

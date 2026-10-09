@@ -7,7 +7,7 @@ name: eBay prices
 #               and revalidates with the fresh eBay rows
 # At most 2,500 Browse calls in any 24h (lib/ebay-plan.ts DAILY_CALL_CAP, owner
 # 2026-10-07), counting a dispatch on the same day; each run spends at most
-# min(EBAY_MAX_CALLS (2,000), liveRemaining − EBAY_QUOTA_RESERVE (300),
+# min(EBAY_MAX_CALLS (2,500), liveRemaining − EBAY_QUOTA_RESERVE (300),
 # 2,500 − our 24h spend).
 #
 # OFF until the repository secrets EBAY_CLIENT_ID and EBAY_CLIENT_SECRET hold OP
