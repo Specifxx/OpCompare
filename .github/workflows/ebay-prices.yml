@@ -35,6 +35,10 @@ on:
         description: "One of US UK AU EU CA SG (blank = all)"
         type: string
         required: false
+      only_name:
+        description: "Only products whose name contains this text (with force: re-search just those after a matching fix)"
+        type: string
+        required: false
       max_calls:
         description: "Lower the run's budget to N calls (smoke test: 50). Can never raise it."
         type: string
@@ -86,6 +90,7 @@ jobs:
       EBAY_REFRESH: ${{ github.event_name != 'push' }}
       EBAY_FORCE: ${{ inputs.force && '1' || '' }}
       EBAY_ONLY_MARKET: ${{ inputs.only_market }}
+      EBAY_ONLY_NAME: ${{ inputs.only_name }}
       EBAY_DISPATCH_CAP: ${{ inputs.max_calls }}
     steps:
       - uses: actions/checkout@v4

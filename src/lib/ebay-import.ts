@@ -234,7 +234,7 @@ export async function runEbayPass(
   // "Japanese Version" promo, a Playmat promo, two same-tag printings in a set).
   const matchable = (c: (typeof cardsRaw)[number]) =>
     !c.number || selfMatches({ id: c.id, name: c.name, number: c.number, variant: c.variant, setName: c.set.name, setCode: c.set.code }, idx);
-  const products: PlanProduct[] = [
+  let products: PlanProduct[] = [
     ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null })),
     ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null })),
   ];
@@ -250,6 +250,15 @@ export async function runEbayPass(
   }
   if (summary.unmatchable) log(`eBay: ${summary.unmatchable} printings skipped — their own canonical title can't match them (no call is spent on them)`);
   if (unpricedIds.length) log(`eBay: ${summary.unpriced.withRef} unpriced launch products have a store reference price; ${summary.unpriced.withoutRef} without one are not searched`);
+  // EBAY_ONLY_NAME narrows the run to products whose name contains the text
+  // (with EBAY_FORCE it re-searches just those after a matching fix, for a few
+  // calls instead of the whole catalogue).
+  const onlyName = (process.env.EBAY_ONLY_NAME ?? "").trim().toLowerCase();
+  if (onlyName) {
+    const nameOf = (id: number) => (cards.get(id)?.name ?? sealed.get(id)?.name ?? "").toLowerCase();
+    products = products.filter((p) => nameOf(p.id).includes(onlyName));
+    log(`eBay: only products named "${onlyName}" (${products.length})`);
+  }
   const checks = new Map<string, Date>(checkRows.map((r) => [pairKey(r.productId, r.market), r.checkedAt]));
 
   // ── Plan ───────────────────────────────────────────────────────────────────

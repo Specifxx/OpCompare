@@ -629,3 +629,23 @@ test("the import skips a bare title that a store shares between products, whatev
   assert.match(src, /name-duplicate-title/);
   assert.match(src, /tags: p\.tags, productType: p\.product_type/);
 });
+
+test("Extra Booster boxes: EB-05 is the catalogue's EB05, and Vol. 2 is never the first Heroines box (no eBay prices on /eb05-preorders)", () => {
+  const refs: SealedRef[] = [
+    { id: 666891, name: "Extra Booster: One Piece Heroines Edition Box", kind: "Booster Box", setCode: "EB03", setName: "Extra Booster: One Piece Heroines Edition" },
+    { id: 666892, name: "Extra Booster: One Piece Heroines Edition Box Case", kind: "Booster Case", setCode: "EB03", setName: "Extra Booster: One Piece Heroines Edition" },
+    { id: 711385, name: "Extra Booster: One Piece Heroines Edition Vol.2 - Booster Box", kind: "Booster Box", setCode: "EB05", setName: "Extra Booster: One Piece Heroines Edition Vol. 2" },
+    { id: 711386, name: "Extra Booster: One Piece Heroines Edition Vol.2 - Booster Box Case", kind: "Booster Case", setCode: "EB05", setName: "Extra Booster: One Piece Heroines Edition Vol. 2" },
+  ];
+  const id = (t: string) => {
+    const r = matchSealedTitle(t, refs);
+    return "id" in r ? r.id : r.miss;
+  };
+  assert.equal(id("One Piece Card Game EB-05 Extra Booster Heroines Edition Vol. 2 Booster Box Sealed"), 711385);
+  assert.equal(id("One Piece TCG Extra Booster Heroines Edition Vol.2 EB05 Booster Box English"), 711385);
+  assert.equal(id("One Piece Card Game Extra Booster: One Piece Heroines Edition Vol.2 Booster Box"), 711385);
+  assert.equal(id("One Piece Card Game Extra Booster - One Piece Heroines Edition Vol 2 Booster Box Case"), 711386);
+  // The first Heroines box, with or without its code, stays the first box.
+  assert.equal(id("One Piece Card Game Extra Booster: One Piece Heroines Edition Booster Box"), 666891);
+  assert.equal(id("One Piece Card Game EB-03 Heroines Edition Booster Box"), 666891);
+});

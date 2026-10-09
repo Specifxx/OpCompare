@@ -174,3 +174,18 @@ test("the product card: every outbound link is tagged and rel-marked", () => {
   assert.match(card, /affiliateUrl/);
   assert.match(card, /outboundRel/);
 });
+
+test("marketplace buttons wear their own colour: eBay blue, TCGplayer violet, stores the shared red", () => {
+  const card = read("src/components/PreorderProduct.tsx");
+  assert.match(card, /r\.ebay \? "btn-ebay" : r\.source === "tcgplayer" \? "btn-tcg" : "btn-primary"/);
+  assert.match(card, /data-surface="preorder_tcgplayer" className="btn-tcg/);
+  assert.match(card, /data-surface="preorder_ebay" className="btn-ebay/);
+  const css = read("src/app/globals.css");
+  // Fixed fill, white ink in both themes (the themed `text-white` goes dark in light).
+  assert.match(css, /\.btn-tcg \{\s*@apply btn bg-\[#6d3fd9\] text-\[#ffffff\]/);
+});
+
+test("eBay pass: a forced run can be narrowed to products by name", () => {
+  assert.match(read("src/lib/ebay-import.ts"), /EBAY_ONLY_NAME/);
+  assert.match(read(".github/workflows/ebay-prices.yml"), /EBAY_ONLY_NAME: \$\{\{ inputs\.only_name \}\}/);
+});

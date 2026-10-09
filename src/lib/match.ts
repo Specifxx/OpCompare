@@ -695,12 +695,23 @@ export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: numb
   if (!kind) return { miss: "no-kind" };
   const lower = title.toLowerCase().replace(/[’']/g, "");
   const codes = setCodesIn(title);
+  // "Vol. 2" / "Vol.2" / "Vol 2" are one spelling for a set name.
+  const squash = (x: string) => x.toLowerCase().replace(/[’']/g, "").replace(/\bvol\.?\s*(\d)/g, "vol$1").replace(/[:\-–]/g, " ").replace(/\s+/g, " ").trim();
+  const squashed = squash(title);
+  const nameIn = (s: SealedRef) => {
+    const n = squash(s.setName ?? "");
+    return n.length >= 6 && squashed.includes(n) ? n : null;
+  };
+  // "Heroines Edition" is inside "Heroines Edition Vol. 2": when several sets'
+  // names are in the title, only the longest (most specific) one is meant.
+  const longestName = sealed.reduce((m, s) => Math.max(m, nameIn(s)?.length ?? 0), 0);
   const bySet = (s: SealedRef) => {
     if (!s.setCode) return false;
     const sc = s.setCode.toUpperCase();
-    if (codes.length) return codes.some((c) => sc === c || sc.startsWith(`${c}-`) || sc.endsWith(`-${c.replace("-", "")}`));
-    const n = (s.setName ?? "").toLowerCase().replace(/[’']/g, "");
-    return n.length >= 6 && lower.includes(n);
+    // TCGplayer writes "EB05" where a title says "EB-05" (and "OP15-EB04" for a crossover set).
+    if (codes.length) return codes.some((c) => sc === c || sc.replace(/-/g, "") === c.replace("-", "") || sc.startsWith(`${c}-`) || sc.endsWith(`-${c.replace("-", "")}`));
+    const n = nameIn(s);
+    return n != null && n.length === longestName;
   };
   let cands = sealed.filter((s) => s.kind === kind && bySet(s));
   // "Super Pre-Release Starter Deck 1" is not Starter Deck 1.

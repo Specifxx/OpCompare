@@ -48,7 +48,7 @@ beforeEach(async () => {
   annotations = [];
   process.env.EBAY_CLIENT_ID = "test-app-id";
   process.env.EBAY_CLIENT_SECRET = "test-cert-id";
-  for (const k of ["EBAY_MAX_CALLS", "EBAY_QUOTA_RESERVE", "EBAY_DISPATCH_CAP", "EBAY_ONLY_MARKET", "EBAY_FORCE", "EBAY_MIN_VALUE_CENTS"]) delete process.env[k];
+  for (const k of ["EBAY_MAX_CALLS", "EBAY_QUOTA_RESERVE", "EBAY_DISPATCH_CAP", "EBAY_ONLY_MARKET", "EBAY_FORCE", "EBAY_ONLY_NAME", "EBAY_MIN_VALUE_CENTS"]) delete process.env[k];
   console.log = (...a: unknown[]) => {
     if (typeof a[0] === "string" && a[0].startsWith("::")) annotations.push(a[0]);
   };

@@ -2212,3 +2212,28 @@ next release, with eBay and TCGplayer prices.
   The next release is a new route plus one map entry.
 - **Not changed:** eBay budget, deploy cadence. The page rides Monday's release
   unless the owner asks for a deploy now.
+
+## Why EB05 had no eBay prices (2026-10-09)
+
+Owner: "why are there still no eBay prices?" The OP18 page had them (US, AU, UK
+rows were live); EB05 had none, and not because of the budget or the plan.
+
+- **Two matcher gaps in `matchSealedTitle`.** TCGplayer's code is `EB05`; a title
+  says `EB-05`, and `setCodesIn` returns `EB-05`, so the code never matched
+  (`EB03`/`EB05` sets could not be reached by their code at all). And a title with
+  no code fell back to the set NAME, where "Extra Booster: One Piece Heroines
+  Edition" (EB03) is a substring of the Vol. 2 name, so a Vol. 2 box was matched to
+  the first Heroines box and rejected as "other-product". Every EB05 listing was
+  therefore dropped. Fixed: codes compare without the hyphen; names compare with
+  "Vol. 2" / "Vol.2" / "Vol 2" squashed and punctuation spaced; when several set
+  names are in a title only the LONGEST is meant. Nothing was loosened: a title
+  naming neither the code nor the full set name is still skipped. Real titles are
+  in `tests/match.test.ts`. The same fix lets store listings that say "EB-05"
+  match their product at the next import.
+- **`EBAY_ONLY_NAME` / workflow input `only_name`.** An EbayCheck row is written
+  after every completed search, so EB05's pairs were "checked" with no result and
+  would not be due for 72 hours. Narrowing a forced run to products whose name
+  contains some text re-searches just those (a few calls), not the catalogue.
+- **Buttons.** TCGplayer rows and buttons on the pre-order pages are violet
+  (`.btn-tcg`), eBay's stay eBay blue, stores keep the shared red. Colour only;
+  rows stay ranked by item price.

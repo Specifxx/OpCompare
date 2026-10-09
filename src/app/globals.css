@@ -403,6 +403,16 @@ html {
   .btn-ebay-ghost {
     @apply btn border border-[#0064d2]/60 bg-[#0064d2]/10 text-sky-300 hover:border-[#0064d2] hover:bg-[#0064d2]/20;
   }
+  /* TCGplayer's own action on the pre-order pages (owner, 2026-10-09: marketplace
+     buttons stand out from stores). Violet, so it is never mistaken for the
+     store red or eBay blue. Fixed hexes with white ink in both themes, like
+     .btn-ebay (tests/theme.test.ts). Colour only: rows stay cheapest-first. */
+  .btn-tcg {
+    @apply btn bg-[#6d3fd9] text-[#ffffff] hover:bg-[#7f55e6];
+  }
+  .btn-tcg-ghost {
+    @apply btn border border-[#6d3fd9]/60 bg-[#6d3fd9]/10 text-purple-300 hover:border-[#6d3fd9] hover:bg-[#6d3fd9]/20;
+  }
   /* Secondary "bright" action: flat near-white panel button with dark ink text. */
   .btn-accent {
     @apply btn bg-accent text-ink-950 hover:bg-white;

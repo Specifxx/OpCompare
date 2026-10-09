@@ -42,7 +42,7 @@ export function PreorderProduct({
         <p className="flex flex-wrap items-center gap-2">
           <span className="truncate text-[15px] font-semibold text-white">{r.label}</span>
           {i === 0 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
-          {r.source === "tcgplayer" ? <span className="rounded bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-300">TCGplayer</span> : null}
+          {r.source === "tcgplayer" ? <span className="rounded bg-[#6d3fd9]/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-300">TCGplayer</span> : null}
           {r.ebay ? <span className="rounded bg-[#0064d2]/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-300">eBay</span> : null}
         </p>
         <p className="mt-0.5 text-xs text-slate-400">
@@ -59,7 +59,7 @@ export function PreorderProduct({
         data-page={page}
         data-card={s.slug}
         data-surface="preorder_row"
-        className={`${r.ebay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:w-44 sm:px-4`}
+        className={`${r.ebay ? "btn-ebay" : r.source === "tcgplayer" ? "btn-tcg" : "btn-primary"} shrink-0 px-3 sm:w-44 sm:px-4`}
         aria-label={`${r.ebay ? "Buy on eBay" : r.source === "tcgplayer" ? "Buy on TCGplayer" : "Pre-order at"} ${r.label}`}
       >
         <span className="hidden sm:inline">{r.source === "tcgplayer" ? "Buy on TCGplayer →" : r.ebay ? "Buy on eBay →" : "Pre-order →"}</span>
@@ -128,7 +128,7 @@ export function PreorderProduct({
         <a href={ebaySearch} target="_blank" rel={outboundRel()} data-retailer="ebay_search" data-page={page} data-card={s.slug} data-surface="preorder_ebay" className="btn-ebay min-h-10">
           Search eBay →
         </a>
-        <a href={tcgHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={s.slug} data-surface="preorder_tcgplayer" className="btn-ghost min-h-10">
+        <a href={tcgHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={s.slug} data-surface="preorder_tcgplayer" className="btn-tcg min-h-10">
           TCGplayer →
         </a>
       </div>
