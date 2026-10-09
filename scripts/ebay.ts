@@ -1,5 +1,5 @@
-// The eBay pass runner. Run by .github/workflows/ebay-prices.yml at 05:37 and
-// 17:37 UTC (before the 07:07 / 19:07 store import, which aggregates the rows),
+// The eBay pass runner. Run by .github/workflows/ebay-prices.yml at 12:37 UTC
+// (the 19:07 store import, which aggregates the rows, publishes the result),
 // or by dispatch:
 //
 //   npx tsx scripts/ebay.ts

@@ -2259,3 +2259,35 @@ top of the plan had no eBay price. Only 526 cards and 87 sealed products had one
   one or two full days clear the backlog and the rest of the allowance goes on
   refreshing the dearest pairs sooner.
 - Still true: eBay keeps running only from GitHub Actions; no page calls it.
+
+## eBay: as many cards as the quota allows, all 2,500 every day (2026-10-09)
+
+Owner: eBay prices for all the cards; "not even the top 2000, just as many as the
+quota allows, so every day we have exactly 2500 used". Before this the pass only
+searched pairs that were DUE (singles of US$20+, every 48h or 72h), so once the
+backlog cleared it would have left ~1,400 of the 2,500 calls unspent, and only
+~1,093 cards were eligible at all.
+
+- **Per-market depth from the budget (`marketFloors`).** No fixed floor and no top-N:
+  each market covers the dearest cards its share of the day keeps inside 72h (an
+  eBay row older than 72h is not shown, so a pair rotating slower flickers).
+  The US takes every card from US$3 (2,424 today, the absolute minimum); its unused
+  share flows to the others pro rata: UK ~1,250 cards (US$15+), AU ~1,160 (US$18+),
+  EU ~630 (US$51+, and never under its US$40 floor). Re-derived every run from
+  the live prices, so depth grows as the budget or the catalogue does.
+  `EBAY_TOP_CARDS` can still cap it; `EBAY_MIN_VALUE_CENTS` still fixes one floor.
+- **Top-up (`fillPairs`).** After the due pairs and the overflow, the rest of the
+  budget goes to eligible pairs that are NOT due, dearest tier first, oldest first,
+  until eBay's own budget gate says stop. The run therefore always spends the day;
+  the dear cards just refresh sooner than their interval. Not for a forced or
+  name-narrowed run.
+- **The day is eBay's quota day, 07:00 to 07:00 UTC (`quotaDayStart`)**, not a rolling
+  24h. A rolling window made a run that started earlier than yesterday's (the cron
+  is not punctual: the 05:37 run started at 12:12 on 2026-10-08) see yesterday's
+  whole spend and underspend. The ceiling is still 2,500 a day including any
+  dispatch, and the live-remaining check still protects the other site's share.
+- **The run moved from 05:37 to 12:37 UTC**: mid-day, 5h clear of the reset and of
+  both import windows, so a delayed cron stays in its day; the 19:07 import
+  publishes the rows. The workflow timeout is 90 minutes (2,500 calls ≈ 45).
+- **`RETRY_RATE` is 0.05** (measured 0-1% in every market on 2026-10-08/09; the
+  25% was RiftCompare's), so the model no longer overstates a singles search.

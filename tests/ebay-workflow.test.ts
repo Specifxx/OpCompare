@@ -21,6 +21,10 @@ test("exactly one scheduled run a day, at least 60 minutes before an import", ()
   for (const e of ebay) {
     const next = imports.filter((i) => i > e).sort((a, b) => a - b)[0];
     assert.ok(next != null && next - e >= 60, `eBay run at ${e} min needs an import ≥60 min later`);
+    // Never inside an import's window (07:00–08:10, 19:00–20:10): they share a concurrency group.
+    for (const [from, to] of [[7 * 60, 8 * 60 + 10], [19 * 60, 20 * 60 + 10]]) assert.ok(e < from || e > to, `eBay run at ${e} min is inside an import window`);
+    // And clear of eBay's own 07:00 UTC quota reset, so a delayed cron stays in its day (lib/ebay-plan.ts quotaDayStart).
+    assert.ok(Math.abs(e - 7 * 60) >= 4 * 60, `eBay run at ${e} min is too close to the 07:00 quota reset`);
   }
 });
 
@@ -42,7 +46,7 @@ test("no push trigger, the import's concurrency group on the eBay job only, read
   assert.match(job("ebay"), /needs: gate\s*\n\s*if: needs\.gate\.outputs\.run == 'true'/);
   assert.match(YML, /permissions:\s*\n\s*contents: read/);
   assert.match(YML, /EBAY_REFRESH: \$\{\{ github\.event_name != 'push' \}\}/);
-  assert.match(job("ebay"), /timeout-minutes: 60/);
+  assert.match(job("ebay"), /timeout-minutes: 90/);
 });
 
 test("the dispatch cap comes only from the max_calls input", () => {

@@ -17,6 +17,7 @@ import {
   MARKET_SHARES,
   PACING_MS,
   RETRY_RATE as PLAN_RETRY_RATE,
+  SINGLE_CALL_COST as PLAN_SINGLE_COST,
   S1_MIN_CENTS,
   SEALED_MIN_CENTS,
   TIER_INTERVAL_HOURS,
@@ -26,6 +27,9 @@ import {
   budgetFor,
   clampLimits,
   duePairs,
+  fillPairs,
+  marketFloors,
+  quotaDayStart,
   ebayRunVerdict,
   pairKey,
   envInt,
@@ -49,7 +53,7 @@ const DAILY_LIMIT = 2500; // OP Compare's approved Browse allowance (owner, 2026
 const RESERVE = DEFAULT_QUOTA_RESERVE;
 const CAP = 2000; // the arithmetic below is pinned at a 2,000 cap; DEFAULT_MAX_CALLS is pinned separately
 const SPENDABLE = DAILY_LIMIT - RESERVE;
-const RETRY_RATE = 0.25;
+const RETRY_RATE = 0.05;
 const SECONDS_PER_CALL = 0.75; // RiftCompare's measured figure — re-measure after week one
 const PACING_SECONDS = PACING_MS / 1000;
 const DB_AND_SETUP_MIN = 7;
@@ -342,4 +346,75 @@ test("the per-run cap is the whole daily ceiling: a shared 5,000-call key lets o
   assert.equal(budgetFor(5000, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 5000, ourSpend24h: 2500 }), 0);
   // An approved 2,500-call key (no other site) still keeps its reserve.
   assert.equal(budgetFor(2500, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 2500, ourSpend24h: 0 }), 2200);
+});
+
+// ── As many cards as the quota allows (owner, 2026-10-09) ────────────────────
+// A price list shaped like OP Compare's: 6,875 priced cards, the 2,000th worth ~US$5 (counted 2026-10-09).
+const VALUES = Array.from({ length: 6875 }, (_, i) => Math.max(1, Math.min(500000, Math.round(7862 * Math.pow(500 / (i + 1), 1.95))))); // fitted: 500th US$78, 2,000th US$5
+
+test("marketFloors: each market covers as many dear cards as its calls keep inside 72h, and the plan fits the day", () => {
+  const f = marketFloors(VALUES, 140);
+  const cards = (m: EbayMarket) => (Number.isFinite(f[m]) ? VALUES.filter((v) => v >= f[m]).length : 0);
+  // The US covers everything above the absolute minimum; the others as deep as they can, dearest first.
+  assert.equal(cards("US"), VALUES.filter((v) => v >= 300).length);
+  assert.ok(cards("UK") < cards("US") && cards("AU") < cards("US") && cards("EU") < cards("UK"), JSON.stringify(f));
+  assert.equal(f.CA, Infinity);
+  assert.equal(f.SG, Infinity);
+  assert.ok(f.EU >= EU_MIN_VALUE_CENTS, "the EU keeps its own higher floor");
+  // The modelled steady state (every pair at its interval) never needs more than the day.
+  const counts = (m: EbayMarket) => {
+    const covered = VALUES.filter((v) => v >= f[m]);
+    const s1 = covered.filter((v) => v >= S1_MIN_CENTS).length;
+    return { s1, s2: covered.length - s1 };
+  };
+  let total = 0;
+  for (const m of ["US", "UK", "AU", "EU"] as EbayMarket[]) {
+    const { s1, s2 } = counts(m);
+    total += (s1 * 24 / TIER_INTERVAL_HOURS.S1 + s2 * 24 / TIER_INTERVAL_HOURS.S2) * PLAN_SINGLE_COST;
+  }
+  total += 140 * (24 / TIER_INTERVAL_HOURS.P1) * 5; // 140 sealed pairs in each of the 5 sealed markets
+  assert.ok(total <= DAILY_CALL_CAP, `${total} > ${DAILY_CALL_CAP}`);
+  // A smaller budget covers fewer cards, never more; a cap lowers the depth.
+  const half = marketFloors(VALUES, 140, { dailyCalls: 1250 });
+  assert.ok(half.UK >= f.UK && half.EU >= f.EU);
+  const capped = marketFloors(VALUES, 140, { topCards: 500 });
+  assert.equal(VALUES.filter((v) => v >= capped.US).length, 500);
+  // No cards, no floors.
+  assert.equal(marketFloors([], 0).US, Infinity);
+});
+
+test("fillPairs: only eligible pairs that are not due, tier then oldest, so leftover budget has somewhere to go", () => {
+  const now = new Date("2026-10-09T12:37:00Z");
+  const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
+  const prods: PlanProduct[] = [
+    { id: 1, kind: "single", marketUsd: 20000, number: "OP01-120", launch: false },
+    { id: 2, kind: "single", marketUsd: 5000, number: "OP01-121", launch: false },
+    { id: 3, kind: "single", marketUsd: 5000, number: "OP01-122", launch: false },
+    { id: 4, kind: "single", marketUsd: 5000, number: "OP01-123", launch: false },
+    { id: 5, kind: "single", marketUsd: 100, number: "OP01-124", launch: false },
+  ];
+  const checks = new Map<string, Date>([
+    [pairKey(1, "US"), ago(10)], // S1, 48h interval: not due
+    [pairKey(2, "US"), ago(50)], // S2, 72h: not due, older
+    [pairKey(3, "US"), ago(20)], // S2: not due, newer
+    // 4: never searched → due, not a fill pair
+    [pairKey(5, "US"), ago(1)], // under the floor: never eligible
+  ]);
+  const fill = fillPairs(prods, "US", checks, now, { minValueCents: 300 });
+  assert.deepEqual(fill.map((p) => p.productId), [1, 2, 3]);
+  const due = duePairs(prods, "US", checks, now, { minValueCents: 300 });
+  assert.deepEqual(due.map((p) => p.productId), [4]);
+  // Together they are every eligible pair, each in exactly one list.
+  assert.equal(fill.length + due.length, 4);
+});
+
+test("quotaDayStart: eBay's day runs 07:00 UTC to 07:00 UTC, so a drifting schedule never sees yesterday's spend", () => {
+  assert.equal(quotaDayStart(new Date("2026-10-09T12:37:00Z")).toISOString(), "2026-10-09T07:00:00.000Z");
+  assert.equal(quotaDayStart(new Date("2026-10-09T05:37:00Z")).toISOString(), "2026-10-08T07:00:00.000Z");
+  assert.equal(quotaDayStart(new Date("2026-10-09T07:00:00Z")).toISOString(), "2026-10-09T07:00:00.000Z");
+  assert.equal(quotaDayStart(new Date("2026-01-01T00:30:00Z")).toISOString(), "2025-12-31T07:00:00.000Z");
+  // A noon run is 5h from either edge, so a cron delayed by hours stays in its own day.
+  const cron = /cron: "(\d+) (\d+) \* \* \*"/.exec(read(".github/workflows/ebay-prices.yml"))!;
+  const hour = Number(cron[2]);
+  assert.ok(hour >= 9 && hour <= 16, `run hour ${hour} should sit mid-day, clear of the 07:00 reset and the 07:07/19:07 imports`);
 });

@@ -4,7 +4,7 @@
 //
 // OP Compare spends at most DAILY_CALL_CAP (2,500) Browse calls a day, whatever
 // eBay's own limit (owner, 2026-10-07: a second approved account). ONE run a
-// day (05:37 UTC, .github/workflows/ebay-prices.yml) spends at most
+// day (12:37 UTC, .github/workflows/ebay-prices.yml) spends at most
 // min(EBAY_MAX_CALLS (2,500), liveRemaining − EBAY_QUOTA_RESERVE (300),
 // 2,500 − our last-24h spend), split across markets by fixed shares
 // (US-weighted: the largest EPN payouts), and inside each market by the
@@ -35,7 +35,15 @@ export const DEFAULT_MAX_CALLS = 2500; // EBAY_MAX_CALLS: per-run cap, and the b
 /** The hard daily ceiling (owner, 2026-10-07): no run, dispatch or env var can spend more than this in 24h. */
 export const DAILY_CALL_CAP = 2500;
 export const DEFAULT_QUOTA_RESERVE = 300; // EBAY_QUOTA_RESERVE: never spent today
-export const DEFAULT_MIN_VALUE_CENTS = 2000; // EBAY_MIN_VALUE_CENTS: singles floor, US/UK/AU
+export const DEFAULT_MIN_VALUE_CENTS = 2000; // EBAY_MIN_VALUE_CENTS: a FIXED singles floor for every market (unset: each market gets its own, see marketFloors)
+/**
+ * Singles each market covers: as many of the dearest cards as its share of the
+ * day keeps fresh (owner, 2026-10-09: "as many as the quota allows"), so there
+ * is no fixed top-N. EBAY_TOP_CARDS can still cap it.
+ */
+export const DEFAULT_TOP_CARDS = Number.POSITIVE_INFINITY;
+/** Never search a card worth less than this, whatever the top-N rank says. */
+export const SINGLES_ABS_MIN_CENTS = 300;
 
 // ── Tiers ────────────────────────────────────────────────────────────────────
 export const S1_MIN_CENTS = 10000; // singles of US$100+ — every 48h
@@ -60,7 +68,7 @@ export const SEARCHED_SEALED_KINDS = new Set([
 ]);
 
 // ── Model constants (tests/ebay-plan.test.ts) ────────────────────────────────
-export const RETRY_RATE = 0.25; // share of singles whose strict query returns 0 and is retried (RiftCompare's figure)
+export const RETRY_RATE = 0.05; // share of singles whose strict query returns 0 and is retried (measured on OP Compare 2026-10-08/09: 0–1% in every market; RiftCompare's own was 25%)
 export const SINGLE_CALL_COST = 1 + RETRY_RATE; // modelled calls per singles search
 export const SEALED_CALL_COST = 1; // sealed: one query, no retry
 export const PACING_MS = 150; // sleep between Browse calls (lib/ebay.ts)
@@ -113,6 +121,20 @@ export function budgetFor(
     else log?.(`eBay: ignoring max_calls=${JSON.stringify(String(dispatchCap))} (must be 1..${cap}; it can only lower the budget)`);
   }
   return b;
+}
+
+/** eBay's quota day resets at this UTC hour (the live `reset` says so; this is the fallback). */
+export const QUOTA_RESET_HOUR_UTC = 7;
+
+/**
+ * Start of the eBay quota day containing `now` (the latest 07:00 UTC at or before
+ * it). Our spend is counted from here, the way eBay counts its own quota, so a
+ * run that starts a little earlier than yesterday's does not see yesterday's
+ * spend and underspend (a rolling 24h window did, whenever the schedule drifted).
+ */
+export function quotaDayStart(now: Date, resetHourUtc: number = QUOTA_RESET_HOUR_UTC): Date {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), resetHourUtc));
+  return d.getTime() > now.getTime() ? new Date(d.getTime() - 86_400_000) : d;
 }
 
 /** The daily limit assumed when eBay's live count can't be read (OP Compare's own application). */
@@ -247,6 +269,104 @@ export function duePairs(
     if (!tier) continue;
     const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
     if (!isDue(checkedAt, tier, now, opts.force)) continue;
+    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST });
+  }
+  return out.sort((a, b) => comparePairs(a, b, now));
+}
+
+/**
+ * The singles floor of each market (US cents; Infinity = no singles there): the
+ * value of the Nth most valuable card, where N is the most cards the market's
+ * share of the daily budget can keep inside the 72h freshness window (an eBay
+ * row older than that is not shown, so a pair that rotates slower than 72h
+ * flickers) and never more than `topCards`. The US reaches the whole top 2,000;
+ * the smaller markets reach as deep as their calls allow, dearest first.
+ *
+ * Per day a market spends: sealed pairs (P1, every 72h) + its S1 chase cards
+ * (every 48h) + every other covered card (every 72h), each at the modelled
+ * calls per search. `sealedPairs` is how many sealed pairs it searches.
+ */
+export function marketFloors(
+  cardValuesCents: number[],
+  sealedPairs: number,
+  opts: { dailyCalls?: number; topCards?: number; absMinCents?: number } = {},
+): Record<EbayMarket, number> {
+  const dailyCalls = opts.dailyCalls ?? DAILY_CALL_CAP;
+  const topCards = opts.topCards ?? DEFAULT_TOP_CARDS;
+  const absMin = opts.absMinCents ?? SINGLES_ABS_MIN_CENTS;
+  const values = cardValuesCents.filter((v) => v > 0).sort((a, b) => b - a);
+  const single = EBAY_MARKETS.filter((m) => marketScope(m).singles);
+  const sealedCost = (m: EbayMarket) => (marketScope(m).sealed ? sealedPairs * (24 / TIER_INTERVAL_HOURS.P1) * SEALED_CALL_COST : 0);
+  /** Daily cost of covering the dearest n cards of a market, and the cards covered. */
+  const coverage = (m: EbayMarket, n: number) => {
+    const euFloor = m === "EU" ? EU_MIN_VALUE_CENTS : 0;
+    const covered = values.slice(0, n).filter((v) => v >= Math.max(absMin, euFloor));
+    const s1 = covered.filter((v) => v >= S1_MIN_CENTS).length;
+    const cost = (covered.length - s1) * (24 / TIER_INTERVAL_HOURS.S2) * SINGLE_CALL_COST + s1 * (24 / TIER_INTERVAL_HOURS.S1) * SINGLE_CALL_COST + sealedCost(m);
+    return { cost, covered: covered.length };
+  };
+  const maxCards = (m: EbayMarket, calls: number) => {
+    let n = 0;
+    for (let lo = 0, hi = Math.min(topCards, values.length); lo <= hi; ) {
+      const mid = (lo + hi) >> 1;
+      if (coverage(m, mid).cost <= calls) {
+        n = mid;
+        lo = mid + 1;
+      } else hi = mid - 1;
+    }
+    return n;
+  };
+  // Each market starts with its share of the day. A market that can cover every
+  // eligible card for less (the US) hands the rest to the others, pro rata, and
+  // the sizes are redone: the run's spill does the same thing at search time.
+  const allowance = {} as Record<EbayMarket, number>;
+  for (const m of EBAY_MARKETS) allowance[m] = Math.floor(dailyCalls * MARKET_SHARES[m]);
+  const counts = {} as Record<EbayMarket, number>;
+  const full = new Set<EbayMarket>();
+  for (let pass = 0; pass < 4; pass++) {
+    let surplus = 0;
+    for (const m of single) {
+      counts[m] = maxCards(m, allowance[m]);
+      const all = Math.min(topCards, values.length);
+      if (counts[m] >= all && !full.has(m)) {
+        full.add(m);
+        surplus += allowance[m] - coverage(m, all).cost;
+        allowance[m] = coverage(m, all).cost;
+      }
+    }
+    if (surplus <= 0) break;
+    const open = single.filter((m) => !full.has(m));
+    const weight = open.reduce((t, m) => t + MARKET_SHARES[m], 0);
+    if (!weight) break;
+    for (const m of open) allowance[m] += Math.floor((surplus * MARKET_SHARES[m]) / weight);
+  }
+  const out = {} as Record<EbayMarket, number>;
+  for (const m of EBAY_MARKETS) {
+    const n = single.includes(m) ? counts[m] : 0;
+    out[m] = n > 0 ? Math.max(absMin, m === "EU" ? EU_MIN_VALUE_CENTS : 0, values[n - 1]) : Infinity;
+  }
+  return out;
+}
+
+/**
+ * Every eligible pair of one market that is NOT due yet, in the same priority
+ * order (tier, then oldest). A run that has searched everything due spends the
+ * rest of its budget on these, so no quota is left over while eligible cards
+ * exist: dear cards are simply refreshed sooner than their interval.
+ */
+export function fillPairs(
+  products: PlanProduct[],
+  market: EbayMarket,
+  checks: Map<string, Date>,
+  now: Date,
+  opts: { minValueCents?: number } = {},
+): Pair[] {
+  const out: Pair[] = [];
+  for (const p of products) {
+    const tier = tierOf(p, market, opts.minValueCents);
+    if (!tier) continue;
+    const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
+    if (isDue(checkedAt, tier, now)) continue;
     out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST });
   }
   return out.sort((a, b) => comparePairs(a, b, now));

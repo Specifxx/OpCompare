@@ -1,6 +1,6 @@
 // The eBay pass: search eBay for the (product, market) pairs that are due, and
 // write each pair's result as soon as its search completes. Script-side only —
-// run by scripts/ebay.ts from .github/workflows/ebay-prices.yml (05:37 and 17:37
+// run by scripts/ebay.ts from .github/workflows/ebay-prices.yml (12:37
 // UTC), never from a page, a route or the store import.
 //
 // Partial-run safety (lib/ebay-plan.ts pairWrite): a COMPLETED search upserts
@@ -34,7 +34,10 @@ import {
 } from "./ebay-match";
 import {
   DAILY_CALL_CAP,
-  DEFAULT_MIN_VALUE_CENTS,
+  DEFAULT_TOP_CARDS,
+  fillPairs,
+  marketFloors,
+  marketScope,
   EBAY_MARKETS,
   FOREIGN_SPEND_BUDGET,
   FailureBreaker,
@@ -45,6 +48,7 @@ import {
   pairKey,
   pairWrite,
   parseOnlyMarket,
+  quotaDayStart,
   planRun,
   tierOf,
   type EbayMarket,
@@ -141,13 +145,14 @@ export async function runEbayPass(
   const now = opts.now ?? new Date();
   const only = parseOnlyMarket(process.env.EBAY_ONLY_MARKET);
   const force = process.env.EBAY_FORCE === "1";
-  const minValue = envInt(process.env.EBAY_MIN_VALUE_CENTS) ?? DEFAULT_MIN_VALUE_CENTS;
+  const fixedFloor = envInt(process.env.EBAY_MIN_VALUE_CENTS);
+  const topCards = envInt(process.env.EBAY_TOP_CARDS) ?? DEFAULT_TOP_CARDS;
 
-  // Our own spend over the last 24h (every eBay run records `spent`, also when
+  // Our own spend in the current eBay quota day, 07:00 UTC to 07:00 UTC (every eBay run records `spent`, also when
   // it throws). It bounds the budget when eBay's live count can't be read, and
   // it is what the foreign-spend check compares eBay's used count with.
   const recent = await prisma.importRun.findMany({
-    where: { kind: "ebay", startedAt: { gte: new Date(now.getTime() - 86_400_000) } },
+    where: { kind: "ebay", startedAt: { gte: quotaDayStart(now) } },
     select: { summary: true },
   });
   const ourSpend24h = recent.reduce((s, r) => s + (Number((r.summary as { spent?: unknown } | null)?.spent) || 0), 0);
@@ -238,10 +243,18 @@ export async function runEbayPass(
     ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null })),
     ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null })),
   ];
+  // Each market's singles floor: the value of the Nth card the market's share of the
+  // day can keep fresh (top 2,000 in the US, fewer in the smaller markets), unless
+  // EBAY_MIN_VALUE_CENTS fixes one for all of them (lib/ebay-plan.ts marketFloors).
+  const sealedPairs = products.filter((p) => p.kind === "sealed" && tierOf(p, "US") != null).length;
+  const floors: Record<EbayMarket, number> = fixedFloor != null
+    ? (Object.fromEntries(EBAY_MARKETS.map((m) => [m, fixedFloor])) as Record<EbayMarket, number>)
+    : marketFloors(cardsRaw.map((c) => c.marketUsd ?? 0), sealedPairs, { topCards });
+  log(`eBay singles floors: ${EBAY_MARKETS.filter((m) => marketScope(m).singles).map((m) => `${m} ${Number.isFinite(floors[m]) ? `US$${(floors[m] / 100).toFixed(2)}` : "none"}`).join(", ")}${fixedFloor != null ? " (EBAY_MIN_VALUE_CENTS)" : (Number.isFinite(topCards) ? ` (top ${topCards} cards)` : " (as many as the daily quota keeps fresh)")}`);
   // Only products that would otherwise be searched somewhere pay for the check.
   const rawById = new Map(cardsRaw.map((c) => [c.id, c]));
   for (const p of products) {
-    if (p.kind !== "single" || !EBAY_MARKETS.some((m) => tierOf(p, m, minValue))) continue;
+    if (p.kind !== "single" || !EBAY_MARKETS.some((m) => tierOf(p, m, floors[m]))) continue;
     const c = rawById.get(p.id)!;
     if (!matchable(c)) {
       p.matchable = false;
@@ -265,10 +278,19 @@ export async function runEbayPass(
   const markets = only ? [only] : EBAY_MARKETS;
   const due: Partial<Record<EbayMarket, Pair[]>> = {};
   for (const m of markets) {
-    due[m] = duePairs(products, m, checks, now, { force, minValueCents: minValue });
+    due[m] = duePairs(products, m, checks, now, { force, minValueCents: floors[m] });
     summary.byMarket[m] = { ...emptyStats(), due: due[m]!.length };
   }
   const plan = planRun(due, prime.budget, now, { only });
+  // Top-up: whatever the due pairs leave of the budget goes to the eligible pairs
+  // that are NOT due yet (dearest tier first, oldest first), so no quota is left
+  // unspent while cards wait. Not for a forced or name-narrowed run.
+  let fillOrder: Pair[] = [];
+  if (!force && !onlyName) {
+    const fill: Partial<Record<EbayMarket, Pair[]>> = {};
+    for (const m of markets) fill[m] = fillPairs(products, m, checks, now, { minValueCents: floors[m] });
+    fillOrder = planRun(fill, prime.budget, now, { only }).order;
+  }
   summary.modelled = Math.round(plan.modelled);
   for (const p of plan.order) summary.byMarket[p.market].planned++;
   log(
@@ -387,7 +409,7 @@ export async function runEbayPass(
   let saw429 = false;
   const breaker = new FailureBreaker();
   let sinceProgress = 0;
-  for (const pair of [...plan.order, ...plan.overflow]) {
+  for (const pair of [...plan.order, ...plan.overflow, ...fillOrder]) {
     if (isEbayRateLimited()) break;
     const st = summary.byMarket[pair.market];
     const r = await search(pair);
@@ -437,7 +459,7 @@ export async function runEbayPass(
   // ── Slip: how old is the oldest pair of each tier, per market? ─────────────
   for (const m of markets) {
     for (const p of products) {
-      const tier: Tier | null = tierOf(p, m, minValue);
+      const tier: Tier | null = tierOf(p, m, floors[m]);
       if (!tier) continue;
       const k = `${m}:${tier}`;
       const row = summary.tierSlip[k] ?? (summary.tierSlip[k] = { oldestHours: null, neverSearched: 0, pairs: 0 });

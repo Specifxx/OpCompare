@@ -123,7 +123,7 @@ test("prime: live count → budget; the dispatch cap lowers it; spend stops at i
   assert.equal(p.remaining, 2500);
   assert.equal(p.dailyLimit, 2500);
   assert.equal(p.budget, 2);
-  assert.match(logs.join("\n"), /eBay quota: 2500\/2500 remaining → budget 2 \(cap 2000, reserve 300\)/);
+  assert.match(logs.join("\n"), /eBay quota: 2500\/2500 remaining → budget 2 \(cap 2200, reserve 300\)/);
   assert.doesNotMatch(logs.join("\n"), /tok-test|test-cert-id|test-app-id/);
   assert.equal((await searchBrowse(query)).status, "ok");
   assert.equal((await searchBrowse(query)).status, "ok");
@@ -144,7 +144,7 @@ test("prime: unknown live count → the cap; an empty variable is unset, not 0",
   process.env.EBAY_MAX_CALLS = "";
   const p = await primeEbayBudget();
   assert.equal(p.remaining, null);
-  assert.equal(p.budget, 2000);
+  assert.equal(p.budget, 2200); // the 2,500 cap, clamped by the reserve on a 2,500-call key
   assert.equal(p.reserve, 300);
 });
 

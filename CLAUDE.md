@@ -29,7 +29,7 @@ private table to the snapshot (`tests/price-snapshot.test.ts`).
 ## The eBay API: OP Compare's own keyset, script-side only
 
 - It runs only from `scripts/ebay.ts`, via `.github/workflows/ebay-prices.yml`
-  (once a day, 05:37 UTC; at most 2,500 Browse calls in any 24h, `DAILY_CALL_CAP`
+  (once a day, 12:37 UTC; exactly the 2,500 Browse calls a day, `DAILY_CALL_CAP`, counted per eBay quota day from 07:00 UTC
   in `src/lib/ebay-plan.ts`). No page, route, Vercel cron or the store import calls
   or imports it.
 - eBay API hosts appear only in `src/lib/ebay*.ts`; the `EBAY_CLIENT_*`

@@ -60,7 +60,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
-| eBay prices | 05:37 UTC daily, or Run workflow (a dispatch shares the same 2,500-a-day ceiling) (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
+| eBay prices | 12:37 UTC daily, or Run workflow (a dispatch shares the same 2,500-a-day ceiling) (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
 
 Each workflow is a no-op until its values exist.
 
@@ -235,7 +235,7 @@ the last 24h (from the eBay `ImportRun` rows). Searches that fail without a 429
    source. Never paste the values from RiftCompare's repository.
 6. Run *eBay prices* by hand with `only_market=US` and `max_calls=50`. Read the
    `eBay quota:` line, the funnel and any foreign-spend warning (a yellow
-   *eBay keyset* annotation on the run page). The 05:37 UTC schedule
+   *eBay keyset* annotation on the run page). The 12:37 UTC schedule
    take over. The site's eBay copy (methodology, home FAQ, about, editorial
    policy) switches on by itself after the first successful run.
 7. Read eBay's current API License Agreement (call limits; storing and
