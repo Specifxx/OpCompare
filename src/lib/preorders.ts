@@ -21,6 +21,36 @@ export function releaseDateOf(s: Pick<SealedLite, "releasedOn" | "setId">, setBy
 /** Set code → its dedicated pre-order route (a group of that set links to it). */
 export const PREORDER_PAGES: Record<string, string> = { EB05: "/eb05-preorders", OP18: "/op18-preorders" };
 
+/**
+ * A set's pre-order page while the set is unreleased (its release date is after
+ * `today`), else null. Self-retiring: the link goes on release day, with no edit.
+ * The set page and /release-dates link through this.
+ */
+export function preorderPageFor(set: Pick<SetLite, "code" | "releasedOn">, today: string): string | null {
+  const href = PREORDER_PAGES[set.code];
+  return href && set.releasedOn && set.releasedOn > today ? href : null;
+}
+
+export interface PreorderLink {
+  code: string;
+  href: string;
+  name: string;
+  releasedOn: string;
+}
+
+/** Every set with a pre-order page that is still unreleased (preorderPageFor), soonest release first: the homepage's "Pre-orders open" line. */
+export function upcomingPreorderPages(sets: Pick<SetLite, "code" | "name" | "releasedOn">[], today: string): PreorderLink[] {
+  const seen = new Set<string>();
+  return sets
+    .flatMap((s) => {
+      const href = preorderPageFor(s, today);
+      if (!href || seen.has(s.code)) return [];
+      seen.add(s.code);
+      return [{ code: s.code, href, name: s.name, releasedOn: s.releasedOn! }];
+    })
+    .sort((a, b) => a.releasedOn.localeCompare(b.releasedOn) || a.code.localeCompare(b.code));
+}
+
 /** Order of products inside a release: the ones people compare first. */
 const KIND_ORDER = [
   "Booster Box",
@@ -33,7 +63,8 @@ const KIND_ORDER = [
   "Sleeved Booster Pack",
   "Booster Pack",
 ];
-const kindRank = (kind: string) => {
+/** A sealed kind's place in a release's product list (KIND_ORDER; anything else last). */
+export const kindRank = (kind: string) => {
   const i = KIND_ORDER.indexOf(kind);
   return i < 0 ? KIND_ORDER.length : i;
 };

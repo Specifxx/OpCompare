@@ -5,18 +5,21 @@ import { HowItWorks } from "./HowItWorks";
 import { AccountStrip } from "./AccountStrip";
 import { WelcomeBack } from "./WelcomeBack";
 import { NextSetCountdownCard } from "./NextSetCountdownCard";
+import { PreorderLinksLine } from "./PreorderLinksLine";
 import { PartnersStrip } from "./PartnersStrip";
 import { PopularCardsCarousel } from "./PopularCardsCarousel";
 import { ReturnVisitCards } from "./ReturnVisitCards";
 import type { HomeData } from "./home-data";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { ldJson } from "@/lib/jsonld";
+import { upcomingPreorderPages } from "@/lib/preorders";
 import { SITE_URL } from "@/lib/site";
 
 // RiftCompare's HomeSections, in its order: (EbayPicks — the catalogue
 // track's, slotted in through `ebayPicks`), the popular-cards carousel, the
 // return-visit tiles, How it works, "Explore the database" (sets, then
-// colours), the next-set line, reviews (only once there are enough), the
+// colours), the next-set line (with the "Pre-orders open" links while a set
+// with a pre-order board is unreleased), reviews (only once there are enough), the
 // account strip or welcome-back band, and the partners strip, plus the
 // ItemList JSON-LD for the carousel's lists.
 const NEW_DAYS = 45;
@@ -34,6 +37,7 @@ export function HomeSections({ data, storeCount, ebayPicks = null }: { data: Hom
     // Two rows of six on a desktop: the newest boosters, upcoming ones first.
     // Every older set is one click away ("Every set, starter deck and promo").
     .slice(0, SET_TILES);
+  const preorders = upcomingPreorderPages(cat.sets, today);
   const colorCounts = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0])) as Record<string, number>;
   for (const c of cat.cards) for (const k of c.colors) if (k in colorCounts) colorCounts[k]++;
 
@@ -104,9 +108,10 @@ export function HomeSections({ data, storeCount, ebayPicks = null }: { data: Hom
           </Link>
         </p>
       </section>
-      {data.nextSet ? (
+      {data.nextSet || preorders.length ? (
         <Reveal>
           <NextSetCountdownCard set={data.nextSet} now={now} />
+          <PreorderLinksLine links={preorders} />
         </Reveal>
       ) : null}
       <ReviewsSection />

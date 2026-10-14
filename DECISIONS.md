@@ -2393,3 +2393,29 @@ and a "where to buy <new set>" post.
   Markdown names `/guides/<slug>` directly. `tests/guides.test.ts` walks `src/` and
   fails on a guide slug after `/blog/` or on any `/blog/${…}` / `"/blog/" +` built
   outside `postHref` and the news sitemap (which takes blog posts only).
+- **A "where to buy EB05" post, and the pre-order boards linked where buyers look.**
+  `/blog/where-to-buy-one-piece-eb05` (a dated blog post, not a guide) reads each
+  EB05 product's cheapest live listing and seller count per market from the sealed
+  catalogue at render time, in that market's currency, and says "not listed yet"
+  for a product or market with nothing (the Sleeved Booster Pack had no listing
+  anywhere on publication day). The release facts are Bandai's, dated: the English
+  page (30 October 2026, US$4.99 MSRP per pack, "75+2 types", the rarity list) and
+  the Japanese one (31 October 2026, 6-card packs, the per-rarity split). Bandai's
+  English page prints no English pack size or box count, so the post says so
+  rather than borrowing the Japanese figure. No forecast and no "buy now": the
+  pre-order section explains how each choice works. Links to other posts are
+  literal paths in that file (it is imported by `lib/blog/index.ts`, so it cannot
+  import `postHrefFor` back); `tests/guides.test.ts` now also checks that every
+  literal `/blog/<slug>` or `/guides/<slug>` link names a published post at its own
+  URL. `tests/eb05-post.test.ts` renders the post from fixtures and fails on any
+  printed price the catalogue does not hold.
+- **The boards were reachable only from `/sealed` and the sitemap.** Now the set
+  page shows a callout (`PreorderCallout`) and `/release-dates` links the board
+  beside the next-set line and under each upcoming set, both through
+  `preorderPageFor(set, today)`: a set in `PREORDER_PAGES` whose release date is
+  still ahead, else nothing, so every link retires itself on release day. The
+  homepage's existing next-set line (in `HomeSections`, below "Explore the
+  database") gains a "Pre-orders open" row from `upcomingPreorderPages`: no new
+  section, so the pinned section order and the no-cookie rule are untouched, and the
+  hourly ISR drops a set the day it releases. A set with no release date gets no
+  link (nothing would retire it).

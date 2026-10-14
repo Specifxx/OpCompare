@@ -7,11 +7,13 @@ import { mostExpensive } from "./posts/most-expensive";
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
 import { whereToBuy } from "./posts/where-to-buy";
+import { whereToBuyEb05 } from "./posts/where-to-buy-eb05";
 import type { Post } from "./types";
 
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  whereToBuyEb05,
   setConcentration,
   budgetAltArts,
   setReview("OP17", "op17-worlds-strongest-warriors-chase-cards", "2026-10-03"),

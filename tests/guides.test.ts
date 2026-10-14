@@ -42,6 +42,26 @@ test("nothing links a guide through /blog/: post links go through postHref", () 
   }
 });
 
+// A post link written as a literal ("/guides/<slug>" in a hub intro, href="/blog/<slug>"
+// in a post body) must name a published post at its own URL: a guide under /guides/,
+// anything else under /blog/. (External URLs that happen to contain /guides/ are not
+// preceded by a quote or a bracket, so they are not read as links here.)
+test("every literal post link names a published post at its own URL", () => {
+  const root = path.resolve(__dirname, "..");
+  const hrefs = new Set(POSTS.map((p) => postHref(p)));
+  const walk = (dir: string): string[] =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : /\.(ts|tsx)$/.test(e.name) ? [path.join(dir, e.name)] : []));
+  let seen = 0;
+  for (const f of walk(path.join(root, "src"))) {
+    const rel = path.relative(root, f).split(path.sep).join("/");
+    for (const m of fs.readFileSync(f, "utf8").matchAll(/(?<=["'`(])\/(?:blog|guides)\/[a-z0-9-]+(?=["'`)#?])/g)) {
+      seen++;
+      assert.ok(hrefs.has(m[0]), `${rel} links ${m[0]}, which is not a published post at that URL`);
+    }
+  }
+  assert.ok(seen >= 5, "the literal links are found");
+});
+
 test("the evergreen rarities and where-to-buy posts are guides, with FAQs and unique slugs", () => {
   const bySlug = new Map(POSTS.map((p) => [p.slug, p]));
   assert.equal(new Set(POSTS.map((p) => p.slug)).size, POSTS.length);
