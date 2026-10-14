@@ -50,12 +50,24 @@ test("the footer carries the share band, the sister site, the affiliate line and
   const src = read("src/components/Footer.tsx");
   assert.match(src, /Find OP Compare useful\? Send it to someone who plays One Piece\./);
   assert.match(src, /<ShareRow source="footer" size="sm"/);
-  assert.match(src, /SISTER_SITE\.url/);
+  // The sister sites: every one of the owner's other sites, from one list, as plain
+  // followed links in a new tab (our own sites: never nofollow or sponsored).
+  assert.match(src, /SISTER_SITES\.map\(/);
+  assert.match(src, /<a href=\{s\.url\} target="_blank" rel="noopener" /);
+  assert.doesNotMatch(src.slice(src.indexOf("SISTER_SITES.map"), src.indexOf("SISTER_SITES.map") + 400), /nofollow|sponsored|outboundRel/);
   assert.match(src, /eBay Partner Network affiliate and a TCGplayer affiliate/);
   assert.match(src, /Bandai, Eiichiro Oda, Shueisha or Toei Animation/);
   // No email capture in the footer while nothing sends: the newsletter is a
   // slot the collection-alerts track fills only when getEmailStatus() is "on".
   assert.doesNotMatch(src, /type="email"/);
+});
+
+test("the sister sites: RiftCompare, DexCompare and MTG Compare, each saying what it compares", () => {
+  const site = read("src/lib/site.ts");
+  for (const url of ["https://riftcompare.com", "https://www.dexcompare.app", "https://mtgcompare.app"]) assert.ok(site.includes(`url: "${url}"`), url);
+  assert.doesNotMatch(site, /\bSISTER_SITE\b/, "the single-site constant is gone");
+  assert.match(site, /compares: "Pokémon TCG booster boxes, ETBs and bundles"/);
+  for (const f of ["src/app/about/page.tsx", "src/app/authors/page.tsx"]) assert.match(read(f), /SISTER_SITES\b/, f);
 });
 
 test("the share row reports to GA only, never Vercel custom events", () => {

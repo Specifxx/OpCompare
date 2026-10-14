@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
 import { getSiteStats } from "@/lib/data";
-import { CONTACT_EMAIL, SISTER_SITE, SITE_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, SISTER_SITES, SITE_NAME } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
@@ -31,11 +31,16 @@ export default async function About() {
       </p>
       <h2>Made by the RiftCompare team</h2>
       <p>
-        {SITE_NAME} is the sister site of{" "}
-        <a href={SISTER_SITE.url}>{SISTER_SITE.name}</a>, which does the same
-        for {SISTER_SITE.game}. Same approach, same rules: a price is a live
-        listing you can buy, never a guess, and a listing we cannot match with
-        certainty is left out.
+        {SITE_NAME} is one of a family of price-comparison sites run by the
+        same team, one per game. The others are{" "}
+        {SISTER_SITES.map((s, i) => (
+          <span key={s.key}>
+            {i ? (i === SISTER_SITES.length - 1 ? ", and " : ", ") : ""}
+            <a href={s.url}>{s.name}</a> for {s.compares}
+          </span>
+        ))}
+        . Same approach, same rules: a price is a live listing you can buy,
+        never a guess, and a listing we cannot match with certainty is left out.
       </p>
       <h2>How it is paid for</h2>
       <p>

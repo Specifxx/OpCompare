@@ -2419,3 +2419,11 @@ and a "where to buy <new set>" post.
   section, so the pinned section order and the no-cookie rule are untouched, and the
   hourly ISR drops a set the day it releases. A set with no release date gets no
   link (nothing would retire it).
+- **Every footer names all three sister sites.** The owner runs four sites and wants
+  them cross-linked: `SISTER_SITE` (RiftCompare alone) became `SISTER_SITES` in
+  `lib/site.ts` (RiftCompare for Riftbound, DexCompare for Pokémon TCG sealed
+  product, MTG Compare for Magic: The Gathering), rendered as one "Also from us"
+  line under the footer's link row, which is unchanged. They are our own sites, so
+  the links are plain and followed (`target="_blank" rel="noopener"`, no
+  nofollow/sponsored, no affiliate tagging); About and Who writes this name all
+  three from the same list. `tests/site-chrome.test.ts` requires the three URLs.
