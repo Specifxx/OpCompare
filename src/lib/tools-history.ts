@@ -23,10 +23,12 @@ export interface ToolsHistoryResult {
 export async function recordToolsHistory(log: Log, today: string = utcDayKey()): Promise<ToolsHistoryResult> {
   // 1. Today's demand snapshot: the running totals of every card with any
   //    activity (id + two integers each), replacing a same-day run's file.
-  const counted = await prisma.card.findMany({
-    where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
-    select: { id: true, searchCount: true, viewCount: true },
-  });
+  const counted = (
+    await prisma.cardDemand.findMany({
+      where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
+      select: { cardId: true, searchCount: true, viewCount: true },
+    })
+  ).map((r) => ({ id: r.cardId, searchCount: r.searchCount, viewCount: r.viewCount }));
   const dayFile = buildDemandDay(today, counted);
   writeDemandDay(dayFile);
   const index = withDemandDay(readDemandDays(), today);

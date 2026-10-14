@@ -1,5 +1,6 @@
 // /admin/inbox reads and mutations. Uncached (owner-only traffic). Each list
 // loads under its own try/catch so one failing table never sinks the page.
+import { publicDb } from "./public-db";
 import { loadAppearances } from "./admin-health";
 import { prisma } from "./db";
 import type { FeedbackAction, ReportStatus, SuggestionStatus, ContactStatus } from "./inbox-rules";
@@ -25,8 +26,8 @@ async function loadReports() {
   const ids = [...new Set(rows.map((r) => r.productId))];
   const [cards, sealed] = ids.length
     ? await Promise.all([
-        prisma.card.findMany({ where: { id: { in: ids } }, select: { id: true, slug: true, name: true } }),
-        prisma.sealed.findMany({ where: { id: { in: ids } }, select: { id: true, slug: true, name: true } }),
+        publicDb.card.findMany({ where: { id: { in: ids } }, select: { id: true, slug: true, name: true } }),
+        publicDb.sealed.findMany({ where: { id: { in: ids } }, select: { id: true, slug: true, name: true } }),
       ])
     : [[], []];
   const product = new Map<number, { name: string; href: string }>();

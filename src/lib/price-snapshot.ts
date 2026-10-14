@@ -1,33 +1,44 @@
-// The price snapshot: a last-good copy of everything the public price pages
-// read from Postgres, kept on the `snapshot` branch of the public repo so the
-// site keeps serving prices when the database does not answer (an outage, a
-// spent Neon transfer allowance). Owner's call, 2026-10-08.
+// THE PUBLIC DATA: the catalogue, prices, offers and eBay state of OP Compare,
+// kept as files on the `snapshot` branch of the public repo (owner, 2026-10-14:
+// "offload everything public from Neon to GitHub"). It is the ONLY persistent
+// copy. Neon holds what is private (accounts, alerts, collections, the inbox,
+// Stripe, run records); nothing public is ever written to it.
 //
-// WRITTEN by scripts/price-snapshot.ts after every import (import-prices.yml):
-// a handful of gzipped JSON files, force-pushed as ONE orphan commit, so the
-// branch is always exactly the newest snapshot and never accumulates history.
-// An offer not refreshed in 72 hours is not in it ("old prices are redundant"),
-// and a read applies the same 72-hour rule to what it finds, so a snapshot that
-// outlives a long outage fades to "sold out" instead of showing dead prices.
+// WRITTEN by scripts/price-snapshot.ts at the end of the import and of the eBay
+// pass (import-prices.yml, ebay-prices.yml): a few dozen gzipped JSON files,
+// force-pushed as ONE orphan commit, so the branch is always exactly the newest
+// state and never accumulates history. Each job starts by SEEDING a throwaway
+// Postgres on its runner from the branch (lib/pub-seed.ts), runs against it with
+// the same code and SQL as ever, then writes the result back
+// (lib/price-snapshot-build.ts). The two jobs share one concurrency group, so
+// they never publish from the same seed.
 //
-// READ FIRST (owner, 2026-10-08, to keep the free Neon allowance of 5 GB a month
-// for the whole month): lib/data.ts wraps each public price loader in
-// snapshotFirst(): the snapshot when it is under 48 hours old, the database when
-// it is not there, stale, or has no answer, and the snapshot again as the last
-// resort if the database then fails (dbOrSnapshot). Page loads therefore cost
-// Neon nothing. Reads go to GitHub's raw CDN.
+// READ by every public loader (lib/price-snapshot-read.ts) and by the alert,
+// newsletter, inbox and admin code (lib/public-data.ts, lib/public-db.ts), from
+// GitHub's raw CDN, or from a local directory when SNAPSHOT_LOCAL_DIR is set (the
+// alert steps read the snapshot the import just built).
 //
-// No private data, ever: accounts, watches, alerts, collections and the inbox
-// are not in it, and this directory is public.
+// Offers carry their own timestamps: the pages treat a row older than 72 hours as
+// sold out (an eBay row as gone), so a snapshot that outlives a long outage fades
+// instead of showing dead prices. Store rows are KEPT 14 days (the alert engine
+// tells a sold-out card from a dead scraper by them); eBay rows are dropped at 72.
+//
+// No private data, ever: this branch is public.
 import { gunzipSync, gzipSync } from "node:zlib";
 import fs from "node:fs/promises";
 import path from "node:path";
 
 export const SNAPSHOT_BRANCH = "snapshot";
-/** Offers are sharded by productId % 64, so a card page fetches one ~300 KB file. */
+/** The legacy layout: offers sharded by productId % 64 (the site deployed before 2026-10-14 reads it). */
 export const SNAPSHOT_SHARDS = 64;
 /** An offer older than this is dropped by the writer and by the reader (lib/data.ts STALE_MS). */
 export const SNAPSHOT_FRESH_MS = 72 * 3600 * 1000;
+/**
+ * A store's offers stay in the snapshot this long (the pages show them as sold out after 72 hours):
+ * the alert engine needs rows up to ALERT_OUTAGE_MAX_MS old to tell a sold-out card from a store whose
+ * scraper is down (tests/public-data.test.ts pins the two equal).
+ */
+export const SNAPSHOT_OFFER_KEEP_MS = 14 * 24 * 3600 * 1000;
 export const SNAPSHOT_VERSION = 1;
 /** A snapshot older than this is not trusted as the first source; the database is asked first (the snapshot stays the last resort). */
 export const SNAPSHOT_SERVE_MS = 48 * 3600 * 1000;
@@ -38,7 +49,22 @@ export interface SnapshotMeta {
   /** finishedAt of the newest successful import, when the writer could read it. */
   lastImportAt: string | null;
   counts: { cards: number; sealed: number; offers: number; ebayListings: number };
+  /** The `o/<range>` files present, so a reader (the seed) need not guess. Absent in older snapshots. */
+  ranges?: string[];
+  /** Pairs in ebay-checks.json.gz (the eBay pass's memory of what it searched and when). */
+  ebayChecks?: number;
 }
+
+/**
+ * The newer layout (owner, 2026-10-14): offers grouped by product-id RANGE, not
+ * id % 64. A set's cards have near-consecutive ids, so a basket, a set checklist
+ * or a deal page reads one or two small files (~40 KB each) instead of up to 64.
+ * Written as `o/<range>.json.gz` beside the legacy `offers/NN.json.gz` (which the
+ * site deployed before the migration still reads) until SNAPSHOT_LEGACY_SHARDS=0.
+ */
+export const RANGE_SIZE = 1024;
+export const rangeOf = (productId: number) => String(Math.floor(productId / RANGE_SIZE)).padStart(3, "0");
+export const rangeFile = (productId: number) => `o/${rangeOf(productId)}.json.gz`;
 
 export const shardOf = (productId: number) => (((productId % SNAPSHOT_SHARDS) + SNAPSHOT_SHARDS) % SNAPSHOT_SHARDS).toString().padStart(2, "0");
 
@@ -62,7 +88,7 @@ export function isFreshAt(updatedAt: Date | string, now: number = Date.now()): b
 // ── Reading ──────────────────────────────────────────────────────────────────
 const RAW = (process.env.SNAPSHOT_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
 const MEMO_MS = 10 * 60 * 1000;
-const MEMO_MAX = 12;
+const MEMO_MAX = 64; // the range files are small; a script reads a few hundred of them
 const memo = new Map<string, { at: number; value: unknown }>();
 
 /**
@@ -71,6 +97,11 @@ const memo = new Map<string, { at: number; value: unknown }>();
  * process keeps the decoded file for ten minutes; Next's fetch cache keeps the
  * bytes ten minutes more (the raw CDN caches a branch name for a few minutes).
  */
+/** Test hook: forget every file read so far. */
+export function clearSnapshotMemo(): void {
+  memo.clear();
+}
+
 export async function snapshotFile<T>(rel: string): Promise<T | null> {
   const hit = memo.get(rel);
   if (hit && Date.now() - hit.at < MEMO_MS) return hit.value as T;
@@ -91,74 +122,4 @@ export async function snapshotFile<T>(rel: string): Promise<T | null> {
     memo.set(rel, { at: Date.now(), value });
   }
   return value;
-}
-
-// ── The fallback gate ────────────────────────────────────────────────────────
-const DB_TIMEOUT_MS = 6000;
-/** After a database failure, skip the database for this long so each request does not wait out the timeout. */
-const DB_COOLDOWN_MS = 60_000;
-let dbDownUntil = 0;
-
-/** Test hook: forget a recorded failure. */
-export function resetDbCooldown(): void {
-  dbDownUntil = 0;
-}
-
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  let t: ReturnType<typeof setTimeout>;
-  const timeout = new Promise<never>((_, rej) => {
-    t = setTimeout(() => rej(new Error(`database did not answer within ${ms} ms`)), ms);
-  });
-  return Promise.race([p, timeout]).finally(() => clearTimeout(t));
-}
-
-/**
- * The database first. If it throws or does not answer in six seconds, serve the
- * GitHub snapshot's version of the same answer (and go straight to the snapshot
- * for the next minute). A "not found" is an ANSWER (null), not a failure: only a
- * thrown error falls back. When the snapshot cannot answer either, the original
- * error is thrown, exactly as before the snapshot existed.
- */
-export async function dbOrSnapshot<T>(name: string, db: () => Promise<T>, snap: () => Promise<T | null>): Promise<T> {
-  if (Date.now() < dbDownUntil) {
-    const s = await snap().catch(() => null);
-    if (s != null) return s;
-  }
-  try {
-    return await withTimeout(db(), DB_TIMEOUT_MS);
-  } catch (e) {
-    dbDownUntil = Date.now() + DB_COOLDOWN_MS;
-    console.error(`[price-snapshot] ${name}: database failed, trying the GitHub snapshot —`, e instanceof Error ? e.message : e);
-    const s = await snap().catch(() => null);
-    if (s != null) return s;
-    throw e;
-  }
-}
-
-/**
- * True when the snapshot is the first place to look: it exists, was built in the
- * last 48 hours, and nobody has switched it off. Outside production the database
- * is used (a dev checkout must not show production's prices), unless a local
- * snapshot is pointed at with SNAPSHOT_LOCAL_DIR. PRICES_FROM_DB=1 is the
- * escape hatch: set it in Vercel to read prices from Postgres as before.
- */
-export async function snapshotIsFirst(): Promise<boolean> {
-  if (process.env.PRICES_FROM_DB === "1") return false;
-  if (process.env.NODE_ENV !== "production" && !process.env.SNAPSHOT_LOCAL_DIR) return false;
-  const m = await snapshotFile<SnapshotMeta>("meta.json");
-  const t = m ? Date.parse(m.generatedAt) : NaN;
-  return Number.isFinite(t) && Date.now() - t < SNAPSHOT_SERVE_MS;
-}
-
-/**
- * The GitHub snapshot first, the database second. A snapshot answer of null
- * (a card the snapshot does not have yet) goes on to the database, which is then
- * asked with the usual fallback back to the snapshot.
- */
-export async function snapshotFirst<T>(name: string, db: () => Promise<T>, snap: () => Promise<T | null>): Promise<T> {
-  if (await snapshotIsFirst()) {
-    const s = await snap().catch(() => null);
-    if (s != null) return s;
-  }
-  return dbOrSnapshot(name, db, snap);
 }

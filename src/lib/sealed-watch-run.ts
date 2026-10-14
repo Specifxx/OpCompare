@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { publicDb, type PublicDb } from "./public-db";
 import { COUNTRIES, currencyOf, type Country } from "./country";
 import { isPremium, tierOf, type EntitlementFields } from "./premium";
 import { adminEmails, isAdminEmail } from "./admin-emails";
@@ -139,7 +140,9 @@ export type SealedWatchDb = {
   priceAlert: Pick<typeof prisma.priceAlert, "groupBy">;
   deckWatch: Pick<typeof prisma.deckWatch, "findMany">;
   alertMute: Pick<typeof prisma.alertMute, "findMany">;
-  offer: Pick<typeof prisma.offer, "findMany">;
+  // The public data (lib/public-db.ts), read from the snapshot: a test may stub them.
+  offer: Pick<PublicDb["offer"], "findMany">;
+  sealed?: Pick<PublicDb["sealed"], "findMany">;
   $transaction: typeof prisma.$transaction;
 };
 
@@ -206,7 +209,7 @@ export function sealedNotificationTitle(item: Pick<SealedWatchItem, "kind" | "na
 }
 
 export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<SealedWatchRunSummary> {
-  const db = deps.db ?? (prisma as unknown as SealedWatchDb);
+  const db = deps.db ?? ({ ...(prisma as unknown as SealedWatchDb), offer: publicDb.offer, sealed: publicDb.sealed } as SealedWatchDb);
   const send = deps.sendSealedWatchEmail ?? sendSealedWatchEmailImpl;
   const notify = deps.notify ?? notifyImpl;
   const emailOn = deps.emailEnabled ?? isEmailEnabled();
@@ -217,7 +220,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
   };
   const admins = adminEmails();
 
-  const rows = await db.sealedWatch.findMany({
+  const rawRows = await db.sealedWatch.findMany({
     where: {
       user: {
         is: {
@@ -248,8 +251,22 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
       snoozedUntil: true,
       createdAt: true,
       user: { select: { email: true, isAdmin: true, premiumUntil: true, premiumTier: true } },
-      sealed: { select: { id: true, slug: true, name: true, kind: true, releasedOn: true, set: { select: { code: true } } } },
     },
+  });
+  // The watched products, from the public data (the join to Sealed is gone with the table).
+  // A row that already carries its `sealed` (a test's stub) keeps it; a product the catalogue
+  // no longer has is skipped, as a deleted product's watches were by the cascade.
+  type SealedRow = { id: number; slug: string; name: string; kind: string; releasedOn: Date | null; set: { code: string } | null };
+  const stubbedRows = rawRows as unknown as ((typeof rawRows)[number] & { sealed?: SealedRow })[];
+  const needSealed = [...new Set(stubbedRows.filter((w) => !w.sealed).map((w) => w.sealedId))];
+  const sealedById = new Map<number, SealedRow>(
+    needSealed.length && (db.sealed ?? publicDb.sealed)
+      ? (((await (db.sealed ?? publicDb.sealed).findMany({ where: { id: { in: needSealed } }, select: { id: true, slug: true, name: true, kind: true, releasedOn: true, set: { select: { code: true } } } })) as SealedRow[]).map((r) => [r.id, r]))
+      : [],
+  );
+  const rows = stubbedRows.flatMap((w) => {
+    const sealed = w.sealed ?? sealedById.get(w.sealedId);
+    return sealed ? [{ ...w, sealed }] : [];
   });
   summary.watches = rows.length;
 

@@ -12,6 +12,7 @@
 // 19:07 store import does all three with the fresh eBay rows.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { pub } from "./pubdb";
 import type { Country } from "./country";
 import { convertUsdCents, toUsdCents } from "./fx";
 import { buildCardIndex, type SealedRef } from "./match";
@@ -197,13 +198,13 @@ export async function runEbayPass(
 
   // ── Products ───────────────────────────────────────────────────────────────
   const [cardsRaw, sealedRaw, checkRows] = await Promise.all([
-    prisma.card.findMany({
+    pub.card.findMany({
       select: { id: true, name: true, number: true, variant: true, marketUsd: true, set: { select: { code: true, name: true, releasedOn: true } } },
     }),
-    prisma.sealed.findMany({
+    pub.sealed.findMany({
       select: { id: true, name: true, kind: true, marketUsd: true, releasedOn: true, presale: true, set: { select: { code: true, name: true, releasedOn: true } } },
     }),
-    prisma.ebayCheck.findMany({ select: { productId: true, market: true, checkedAt: true } }),
+    pub.ebayCheck.findMany({ select: { productId: true, market: true, checkedAt: true } }),
   ]);
   // The FULL index, as the store import builds it: a title that fits another printing is a miss.
   const idx = buildCardIndex(cardsRaw.filter((c) => c.number).map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name })));
@@ -220,7 +221,7 @@ export async function runEbayPass(
   ];
   const refUsd = new Map<number, number>();
   if (unpricedIds.length) {
-    const offers = await prisma.offer.findMany({
+    const offers = await pub.offer.findMany({
       where: { productId: { in: unpricedIds }, NOT: { source: { startsWith: "ebay" } } },
       select: { productId: true, priceCents: true, currency: true },
     });
@@ -312,12 +313,12 @@ export async function runEbayPass(
       priceCents: l.priceCents, currency: l.currency, url: l.url, inStock: true, condition: l.condition, title: l.title, shippingCents: l.shippingCents, updatedAt: now,
     });
     if (listing) {
-      ops.push(prisma.offer.upsert({ where: { productId_source_market: { productId, source: "ebay", market } }, create: { productId, source: "ebay", market, ...data(listing) }, update: data(listing) }));
+      ops.push(pub.offer.upsert({ where: { productId_source_market: { productId, source: "ebay", market } }, create: { productId, source: "ebay", market, ...data(listing) }, update: data(listing) }));
     } else {
-      ops.push(prisma.offer.deleteMany({ where: { productId, source: "ebay", market } }));
+      ops.push(pub.offer.deleteMany({ where: { productId, source: "ebay", market } }));
     }
     ops.push(
-      prisma.ebayCheck.upsert({
+      pub.ebayCheck.upsert({
         where: { productId_market: { productId, market } },
         create: { productId, market, checkedAt: now, matched: Boolean(listing) },
         update: { checkedAt: now, matched: Boolean(listing) },
@@ -329,10 +330,10 @@ export async function runEbayPass(
     if (market === "US" && kindOf(productId) === "single") {
       if (listing && (listing.location === "US" || listing.location === "CA")) {
         const ca = { ...data(listing), priceCents: convertUsdCents(listing.priceCents, "CAD"), currency: "CAD", shippingCents: null };
-        ops.push(prisma.offer.upsert({ where: { productId_source_market: { productId, source: "ebay_us", market: "CA" } }, create: { productId, source: "ebay_us", market: "CA", ...ca }, update: ca }));
+        ops.push(pub.offer.upsert({ where: { productId_source_market: { productId, source: "ebay_us", market: "CA" } }, create: { productId, source: "ebay_us", market: "CA", ...ca }, update: ca }));
         caWrite = "write";
       } else {
-        ops.push(prisma.offer.deleteMany({ where: { productId, source: "ebay_us", market: "CA" } }));
+        ops.push(pub.offer.deleteMany({ where: { productId, source: "ebay_us", market: "CA" } }));
         caWrite = "delete";
       }
     }
@@ -341,24 +342,24 @@ export async function runEbayPass(
     // transaction, and only here, which only runs after a COMPLETED search.
     const panel = panelListings(survivorsOf.get(pairKey(productId, market)) ?? [], listing, bannedIn(market));
     const slabs = gradedOf.get(pairKey(productId, market)) ?? [];
-    ops.push(prisma.ebayListing.deleteMany({ where: { productId, market } }));
+    ops.push(pub.ebayListing.deleteMany({ where: { productId, market } }));
     if (panel.length) {
       ops.push(
-        prisma.ebayListing.createMany({
+        pub.ebayListing.createMany({
           data: panel.map((l, rank) => ({ productId, market, rank, priceCents: l.priceCents, shippingCents: l.shippingCents, currency: l.currency, url: l.url, title: l.title, imageUrl: l.imageUrl, updatedAt: now })),
         }),
       );
     }
-    ops.push(prisma.ebayGradedListing.deleteMany({ where: { productId, market } }));
+    ops.push(pub.ebayGradedListing.deleteMany({ where: { productId, market } }));
     if (slabs.length) {
       ops.push(
-        prisma.ebayGradedListing.createMany({
+        pub.ebayGradedListing.createMany({
           data: slabs.map((l) => ({ productId, market, itemId: l.itemId, priceCents: l.priceCents, shippingCents: l.shippingCents, currency: l.currency, url: l.url, title: l.title, imageUrl: l.imageUrl, grader: l.grader, grade: l.grade, updatedAt: now })),
           skipDuplicates: true,
         }),
       );
     }
-    const res = await prisma.$transaction(ops);
+    const res = await pub.$transaction(ops);
     if (caWrite === "write") summary.derivedCA.written++;
     else if (caWrite === "delete" && ((res[2] as { count?: number })?.count ?? 0) > 0) summary.derivedCA.deleted++;
     checks.set(pairKey(productId, market), now);
@@ -450,8 +451,8 @@ export async function runEbayPass(
   // (Only when a search completed: a run that failed everywhere touches nothing.)
   if (summary.completed > 0) {
     const sweepBefore = new Date(now.getTime() - 72 * 3600 * 1000);
-    await prisma.ebayListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
-    await prisma.ebayGradedListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
+    await pub.ebayListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
+    await pub.ebayGradedListing.deleteMany({ where: { updatedAt: { lt: sweepBefore } } }).catch(() => {});
   }
   summary.spent = ebaySpentThisRun();
   summary.latched = summary.breaker ? "failures" : saw429 ? "429" : isEbayRateLimited() ? "budget" : null;

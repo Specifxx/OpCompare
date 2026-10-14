@@ -40,8 +40,26 @@ permissions:
 jobs:
   import:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
+    # The public working copy (lib/pubdb.ts): a throwaway Postgres seeded from the
+    # `snapshot` branch below and published back to it. Neon holds none of the
+    # catalogue or offers (owner, 2026-10-14).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pub
+          POSTGRES_DB: pub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     env:
+      PUBLIC_DATABASE_URL: postgresql://postgres:pub@localhost:5432/pub
+      NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       REVALIDATE_URL: ${{ format('{0}/api/revalidate', vars.SITE_URL || 'https://opcompare.app') }}
@@ -74,7 +92,12 @@ jobs:
       # than dropping data.
       - name: Sync schema
         if: steps.gate.outputs.run == 'true'
-        run: bash scripts/db-push-safe.sh && npx prisma generate
+        run: bash scripts/db-push-safe.sh && npm run db:generate
+      # The public working copy: its own tables, seeded from the snapshot branch.
+      - name: Seed the public working copy from the snapshot
+        id: seed
+        if: steps.gate.outputs.run == 'true'
+        run: bash scripts/pub-setup.sh
       # The history lives on the `data` branch, not in Postgres. Check it out
       # into .data (an orphan branch, created on the first run).
       - name: Check out the history branch
@@ -94,12 +117,6 @@ jobs:
         id: import
         if: steps.gate.outputs.run == 'true'
         run: npx tsx scripts/import.ts
-      # Scrapers that broke quietly (lib/store-health.ts): a summary table and
-      # up to 20 warnings in this run's log. Never fails the import.
-      - name: Store health report
-        if: steps.gate.outputs.run == 'true'
-        continue-on-error: true
-        run: npx tsx scripts/store-health.ts
       - name: Publish the history
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -112,34 +129,33 @@ jobs:
             git push --quiet origin data
           fi
           echo "HISTORY_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      # The price snapshot (lib/price-snapshot.ts): a last-good copy of what the
-      # public price pages read from Postgres, force-pushed as ONE orphan commit
-      # to the `snapshot` branch, so the site keeps serving prices if the database
-      # does not answer. Never fails the import (continue-on-error), and a
-      # snapshot that looks empty is not published (scripts/price-snapshot.ts).
+      # The price snapshot (lib/price-snapshot.ts): the ONLY persistent copy of the
+      # public data (catalogue, prices, offers, eBay state), force-pushed as ONE
+      # orphan commit to the `snapshot` branch. The site reads it, and the next
+      # job seeds its working copy from it, so a failure here must FAIL the run
+      # (never continue-on-error): an import that is not published is lost. A
+      # snapshot that looks empty is refused (scripts/price-snapshot.ts).
       - name: Build the price snapshot
         id: snapshot
         if: steps.gate.outputs.run == 'true' && steps.import.outcome == 'success'
-        continue-on-error: true
         env:
           SNAPSHOT_DIR: .snapshot-out
         run: npx tsx scripts/price-snapshot.ts
-      - name: Publish the price snapshot
-        if: steps.gate.outputs.run == 'true' && steps.snapshot.outcome == 'success'
+      # Scrapers that broke quietly (lib/store-health.ts): a summary table and
+      # up to 20 warnings in this run's log. Never fails the import.
+      - name: Store health report
+        if: steps.gate.outputs.run == 'true'
         continue-on-error: true
         env:
+          # The snapshot this run just built (the offers are not in Neon).
+          SNAPSHOT_LOCAL_DIR: .snapshot-out
+        run: npx tsx scripts/store-health.ts
+      - name: Publish the price snapshot
+        if: steps.gate.outputs.run == 'true' && steps.snapshot.outcome == 'success'
+        env:
           REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
-        run: |
-          cd .snapshot-out
-          git init --quiet -b snapshot
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Vercel must never build this branch.
-          printf '{\n  "git": { "deploymentEnabled": false }\n}\n' > vercel.json
-          printf '# OP Compare price snapshot\n\nThe newest import, rebuilt by the Import prices workflow on main and force-pushed as a single commit (no history). Read only when the database does not answer: see src/lib/price-snapshot.ts there.\n' > README.md
-          git add -A
-          git commit --quiet -m "Price snapshot $(date -u +%F) $(date -u +%H:%M)"
-          git push --quiet --force "$REMOTE" snapshot
+          SNAPSHOT_DIR: .snapshot-out
+        run: bash scripts/publish-snapshot.sh
       - name: Point the site at it and refresh
         if: steps.gate.outputs.run == 'true'
         run: npx tsx scripts/publish-history.ts
@@ -171,6 +187,8 @@ jobs:
       - name: Free price alerts (daily digest)
         if: ${{ !cancelled() && steps.import.outcome == 'success' && (github.event.schedule == '7 7 * * *' || (github.event_name == 'workflow_dispatch' && inputs.alerts == 'free')) }}
         env:
+          # The alerts read prices from the snapshot this run just built (no CDN lag; the offers are not in Neon).
+          SNAPSHOT_LOCAL_DIR: .snapshot-out
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_LINK_SECRET: ${{ secrets.EMAIL_LINK_SECRET }}
@@ -180,6 +198,8 @@ jobs:
       - name: Paid price alerts (targets, below-market, deck, sealed and release alerts)
         if: ${{ !cancelled() && steps.import.outcome == 'success' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.alerts == 'free')) }}
         env:
+          # The alerts read prices from the snapshot this run just built (no CDN lag; the offers are not in Neon).
+          SNAPSHOT_LOCAL_DIR: .snapshot-out
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_LINK_SECRET: ${{ secrets.EMAIL_LINK_SECRET }}
@@ -188,4 +208,6 @@ jobs:
         run: npx tsx scripts/alerts.ts --mode=paid
       - name: Alert baselines after a matcher change (no alerts)
         if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.alerts == 'baseline' }}
+        env:
+          SNAPSHOT_LOCAL_DIR: .snapshot-out
         run: npx tsx scripts/alerts.ts --mode=baseline

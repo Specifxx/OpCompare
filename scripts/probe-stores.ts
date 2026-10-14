@@ -14,7 +14,7 @@
 // market's Shopify Markets country. Every title then goes through the real
 // matcher against the catalogue in DATABASE_URL, so the numbers it prints are
 // what the import would match. Read-only: it writes nothing.
-import { prisma } from "../src/lib/db";
+import { publicDb } from "../src/lib/public-db";
 import { normalizeCountry } from "../src/lib/country";
 import { bestVariant, buildCardIndex, buildDonIndex, buildNameIndex, matchStoreProduct, type SealedRef, type StoreMatchIndexes } from "../src/lib/match";
 import { fetchStoreListings } from "../src/lib/store-import";
@@ -69,12 +69,12 @@ async function main() {
     process.exit(2);
   }
   // The same indexes and paths as lib/import.ts importStores.
-  const cards = await prisma.card.findMany({
+  const cards = await publicDb.card.findMany({
     where: { number: { not: null } },
     select: { id: true, name: true, tcgName: true, number: true, variant: true, set: { select: { code: true, name: true, tcgName: true } } },
   });
-  const dons = await prisma.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, set: { select: { code: true, name: true, tcgName: true } } } });
-  const sealed = await prisma.sealed.findMany({ select: { id: true, name: true, kind: true, set: { select: { code: true, name: true } } } });
+  const dons = await publicDb.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, set: { select: { code: true, name: true, tcgName: true } } } });
+  const sealed = await publicDb.sealed.findMany({ select: { id: true, name: true, kind: true, set: { select: { code: true, name: true } } } });
   const ix: StoreMatchIndexes = {
     cards: buildCardIndex(cards.map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name, setTcgName: c.set.tcgName }))),
     names: buildNameIndex([...cards, ...dons].map((c) => ({ id: c.id, tcgName: c.tcgName, setNames: [c.set.name, c.set.tcgName] }))),
@@ -104,7 +104,6 @@ async function main() {
     console.log(`  misses: ${JSON.stringify(misses)}`);
     if (unmatched.length) console.log(`  unmatched e.g.: ${unmatched.map((t) => JSON.stringify(t)).join(" · ")}`);
   }
-  await prisma.$disconnect();
 }
 
 main().catch((e) => {

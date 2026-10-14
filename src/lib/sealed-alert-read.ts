@@ -1,4 +1,4 @@
-import type { prisma } from "./db";
+import type { PublicDb } from "./public-db";
 import { sourceLabel } from "./stores";
 
 // AN UNCACHED READ OF THE SEALED OFFERS, FOR THE SEALED ALERT PASS ONLY —
@@ -30,7 +30,7 @@ export interface SealedListing {
 /** A real store's listing: `store:` only — never eBay, never the TCGplayer row. */
 export const isRealSealedStore = (source: string) => source.startsWith("store:");
 
-export type SealedAlertDb = { offer: Pick<typeof prisma.offer, "findMany"> };
+export type SealedAlertDb = { offer: Pick<PublicDb["offer"], "findMany"> };
 
 /** {market → {sealedId → listings}} for the watched pairs. Throws on a failed read. */
 export async function readSealedListings(

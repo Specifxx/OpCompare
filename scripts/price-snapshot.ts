@@ -1,21 +1,30 @@
 // Build the price snapshot (lib/price-snapshot.ts) into SNAPSHOT_DIR (default
-// .snapshot-out) after an import, from the offers that import just wrote
-// (RUN_OFFERS_FILE, default .snapshot-work/run-offers.json.gz; lib/run-offers.ts). import-prices.yml then force-pushes that
-// directory as the single commit of the `snapshot` branch. Read-only on the
-// database. Refuses to write a snapshot that is clearly empty, so a broken
-// import can never replace the last good one.
+// .snapshot-out) at the end of a job that holds the public working copy
+// (lib/pubdb.ts): the import, and the eBay pass. The workflow then force-pushes
+// that directory as the single commit of the `snapshot` branch, which is the ONLY
+// persistent copy of the public data. Reads Neon only for two facts about runs
+// (when the last import finished, whether the eBay pass ran lately). Refuses to
+// write a snapshot that is clearly empty, so a broken job can never replace the
+// last good one.
 //
 //   SNAPSHOT_DIR=.snapshot-out npx tsx scripts/price-snapshot.ts
 import { prisma } from "../src/lib/db";
+import { pub, requirePublicDatabase } from "../src/lib/pubdb";
 import { buildSnapshot } from "../src/lib/price-snapshot-build";
 
 const log = (m: string) => console.log(new Date().toISOString().slice(11, 19), m);
+const EBAY_LIVE_DAYS = 3;
 
 async function main() {
+  requirePublicDatabase();
   const dir = process.env.SNAPSHOT_DIR || ".snapshot-out";
-  const runOffersFile = process.env.RUN_OFFERS_FILE || ".snapshot-work/run-offers.json.gz";
-  const meta = await buildSnapshot(dir, { runOffersFile, log });
-  // An empty catalogue or no fresh offers means the import failed upstream: leave the old snapshot alone.
+  const now = Date.now();
+  const [run, ebayRun] = await Promise.all([
+    prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
+    prisma.importRun.findFirst({ where: { kind: "ebay", ok: true, finishedAt: { gte: new Date(now - EBAY_LIVE_DAYS * 86_400_000) } }, select: { id: true } }),
+  ]);
+  const meta = await buildSnapshot(dir, { log, lastImportAt: run?.finishedAt ?? null, ebayLive: Boolean(ebayRun) });
+  // An empty catalogue or no fresh offers means the job failed upstream: leave the old snapshot alone.
   if (meta.counts.cards < 1000 || meta.counts.offers < 1000) {
     throw new Error(`snapshot looks empty (${JSON.stringify(meta.counts)}); not publishing it`);
   }
@@ -27,4 +36,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => Promise.all([prisma.$disconnect(), pub.$disconnect()]));

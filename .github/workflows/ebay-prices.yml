@@ -47,9 +47,12 @@ on:
         type: string
         required: false
 
-# Never pushes: the store import owns the data branch.
+# Pushes only the `snapshot` branch (the public data's one persistent copy: the
+# eBay pass seeds from it and publishes its result back, in the import's
+# concurrency group so the two never publish from the same seed). The `data`
+# branch (price history) stays the import's.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   # Decides whether there is anything to do. It holds no concurrency group, so
@@ -79,7 +82,22 @@ jobs:
     needs: gate
     if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    # The public working copy (lib/pubdb.ts): a throwaway Postgres seeded from the
+    # `snapshot` branch, searched into, and published back to it.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pub
+          POSTGRES_DB: pub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     # The import's group, so the two never overlap (see the header).
     concurrency:
       group: import-prices
@@ -87,6 +105,8 @@ jobs:
     # No secret at job level: npm ci's install scripts never see one. Each step
     # gets only what it needs.
     env:
+      PUBLIC_DATABASE_URL: postgresql://postgres:pub@localhost:5432/pub
+      NODE_OPTIONS: --max-old-space-size=4096
       EBAY_QUOTA_RESERVE: ${{ vars.EBAY_QUOTA_RESERVE }}
       EBAY_MAX_CALLS: ${{ vars.EBAY_MAX_CALLS }}
       EBAY_MIN_VALUE_CENTS: ${{ vars.EBAY_MIN_VALUE_CENTS }}
@@ -106,11 +126,34 @@ jobs:
       - name: Sync schema
         env:
           DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
-        run: bash scripts/db-push-safe.sh && npx prisma generate
+        run: bash scripts/db-push-safe.sh && npm run db:generate
+      - name: Seed the public working copy from the snapshot
+        id: seed
+        run: bash scripts/pub-setup.sh
       - name: eBay pass
+        id: pass
         env:
           DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/ebay.ts
+      # Publish whatever the pass wrote, even when it stopped red (the failure
+      # breaker, a 429, a timeout): the pairs it completed live only in the working
+      # copy until this step, and the eBay pass's memory of what it searched with
+      # them. Skipped when the seed itself failed (nothing to publish) or the
+      # run was cancelled. A failure here fails the run: unpublished work is lost.
+      - name: Build the price snapshot
+        id: snapshot
+        if: ${{ !cancelled() && steps.seed.outcome == 'success' && steps.pass.outcome != 'skipped' }}
+        env:
+          # Two facts about runs (when the last import finished, whether this pass ran lately): the only thing read from Neon.
+          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+          SNAPSHOT_DIR: .snapshot-out
+        run: npx tsx scripts/price-snapshot.ts
+      - name: Publish the price snapshot
+        if: ${{ !cancelled() && steps.snapshot.outcome == 'success' }}
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          SNAPSHOT_DIR: .snapshot-out
+        run: bash scripts/publish-snapshot.sh

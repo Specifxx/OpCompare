@@ -18,8 +18,11 @@ const cards = Array.from({ length: N_CARDS }, (_, i) => ({
   set: { code: "OP01", name: "Romance Dawn", releasedOn: new Date("2022-12-02") },
 }));
 const op = () => Promise.resolve({ count: 0 });
+// Neon holds only the run records; the catalogue and what the pass remembers are the public working copy (lib/pubdb.ts).
 (globalThis as unknown as { prisma: unknown }).prisma = {
   importRun: { findMany: async () => db.importRuns },
+};
+(globalThis as unknown as { pub: unknown }).pub = {
   card: { findMany: async () => cards },
   sealed: { findMany: async () => [] },
   ebayCheck: { findMany: async () => [], upsert: () => (db.writes++, op()) },

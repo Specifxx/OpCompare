@@ -3,6 +3,14 @@
 // ONE database (a Neon project of its own; DATABASE_URL). Nothing here is
 // shared with RiftCompare: the Riftbound databases are never read or written.
 //
+// PRIVATE STATE ONLY (owner, 2026-10-14). The catalogue, offers and eBay state
+// (Set, Card, Sealed, Offer, EbayCheck, EbayListing, EbayGradedListing) are
+// RETIRED here: they live on GitHub (the `snapshot` branch) and in a throwaway
+// database on each job's runner (prisma/public/schema.prisma). Their models stay
+// below, unreferenced, only so `prisma db push` never has to drop a non-empty
+// table; nothing reads or writes them (tests/public-data.test.ts), and the
+// "Retire the public tables" workflow drops them once.
+//
 // The catalogue is TCGplayer's, mirrored daily by TCGCSV (category 68 = One
 // Piece Card Game). A Card is ONE PRINTING — TCGplayer's own product — so the
 // base OP01-120 Shanks, its Parallel and its Manga art are three rows that share
@@ -92,9 +100,6 @@ model Card {
   viewCount    Int       @default(0)
   lastViewedAt DateTime?
 
-  priceAlerts PriceAlert[]
-  collection  CollectionCard[]
-
   @@index([setId])
   @@index([number])
   @@index([marketUsd])
@@ -128,8 +133,6 @@ model Sealed {
   change7d     Float?
   firstSeen    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-
-  sealedWatches SealedWatch[]
 
   @@index([setId])
 }
@@ -365,7 +368,6 @@ model PriceAlert {
   dropAnchorCents    Int?
   pendingLowCents    Int?
   snoozedUntil       DateTime?
-  card               Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
   user               User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([email, cardId, market])
@@ -401,7 +403,6 @@ model SealedWatch {
   snoozedUntil     DateTime?
   createdAt        DateTime  @default(now())
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sealed           Sealed    @relation(fields: [sealedId], references: [id], onDelete: Cascade)
 
   @@unique([userId, sealedId, market])
   @@index([userId])
@@ -462,7 +463,6 @@ model CollectionCard {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cardId, condition, isFoil])
   @@index([userId])
@@ -600,4 +600,20 @@ model EbayGradedListing {
 
   @@unique([itemId, market])
   @@index([productId, market])
+}
+
+// The popularity counters (owner, 2026-10-14: moved out of Card when the catalogue
+// left Neon). searchCount counts picks from the search box, viewCount any open
+// (page or QuickView): one UPDATE per counted view, the DECISIONS exception to
+// "no per-request writes". Keyed by the card's TCGplayer id, no foreign key: the
+// catalogue is not in this database. Feeds Rising Cards, Demand Finder and the
+// "Most popular" row.
+model CardDemand {
+  cardId       Int       @id
+  searchCount  Int       @default(0)
+  viewCount    Int       @default(0)
+  lastViewedAt DateTime?
+
+  @@index([searchCount])
+  @@index([viewCount])
 }

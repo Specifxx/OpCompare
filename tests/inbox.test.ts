@@ -173,7 +173,7 @@ test("the price we showed comes from the Offer row, never the request", () => {
   const route = read("src/app/api/price-report/route.ts");
   assert.doesNotMatch(route, /shownPriceCents|priceCents/);
   assert.doesNotMatch(read("src/components/ReportPriceButton.tsx"), /priceCents/);
-  assert.match(read("src/lib/inbox.ts"), /prisma\.offer\.findUnique/);
+  assert.match(read("src/lib/inbox.ts"), /publicDb\.offer\.findUnique/, "read from the public data (the snapshot), not Neon");
 });
 
 const PUBLIC_ROUTES = ["price-report", "stores/suggest", "feedback", "contact"].map((r) => `src/app/api/${r}/route.ts`);

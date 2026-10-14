@@ -132,9 +132,9 @@ test("a listing with stated postage wins whenever its delivered price is no high
     { cents: 500, url: "unknown", postageKnown: false },
     "a cheaper item price with unstated postage is kept, flagged",
   );
-  // The cached SQL applies the same order.
-  const data = read("src/lib/data.ts");
-  assert.match(data, /ORDER BY id, p \+ COALESCE\(s, 0\) ASC, \(s IS NULL\) ASC/);
+  // The SQL that computes the deal inputs (now run by the job that writes the snapshot) applies the same order.
+  const build = read("src/lib/price-snapshot-build.ts");
+  assert.match(build, /ORDER BY id, p \+ COALESCE\(s, 0\) ASC, \(s IS NULL\) ASC/);
 });
 
 test("the cached tuple never claims known postage for Canada, and keeps TCGplayer's low only in the US", () => {
@@ -405,7 +405,7 @@ test("the deal loaders live in one block at the end of data.ts, and nothing else
   const at = data.indexOf("// ---- deals track loaders ----");
   assert.ok(at > 0);
   for (const name of ["getDealInputs", "getStoreMins", "getDealOffers"]) assert.ok(data.indexOf(`export const ${name} = unstable_cache(`) > at, `${name} is in the block`);
-  assert.match(data, /source LIKE 'store:%'/, "the store side is stores only");
+  assert.match(read("src/lib/price-snapshot-build.ts"), /source LIKE 'store:%'/, "the store side is stores only (the SQL the snapshot writer runs)");
   for (const f of ["src/lib/deal-pages.ts", "src/lib/top-deals.ts", "src/lib/deals.ts"]) {
     assert.doesNotMatch(read(f).replace(/\/\/[^\n]*/g, ""), /unstable_cache\(/, `${f} must not add a cache layer`);
   }

@@ -642,15 +642,17 @@ test("the owned and binder reads are per-user, selected and capped; listings com
   // The listings are the data.ts loader's (cached per market and 32-id bucket), injectable for the watch run.
   assert.match(code, /read: BasketListingReader = getBasketListings/);
   const loader = read("src/lib/data.ts").slice(read("src/lib/data.ts").indexOf("const loadBasketBucket"));
-  assert.match(loader, /condition: true/, "condition is selected so every line can show it");
-  assert.match(loader, /OR: \[\{ source: \{ startsWith: "store:" \} \}, \{ source: "tcgplayer" \}\]/, "stores and TCGplayer's listing, never eBay");
+  assert.match(loader, /r\.o\.condition/, "condition is kept so every line can show it");
+  assert.match(loader, /o\.source\.startsWith\("store:"\) \|\| o\.source === "tcgplayer"/, "stores and TCGplayer's listing, never eBay");
 });
 
 test("the basket listings cache is keyed on a market and an id bucket, never on the caller's list", () => {
   const data = read("src/lib/data.ts");
   const cached = data.slice(data.indexOf("const loadBasketBucket = unstable_cache("));
   assert.match(cached, /async \(country: Country, bucket: number\)/, "the cached function's arguments are fixed units");
-  assert.match(cached, /productId: \{ gte: bucket \* BASKET_ID_BUCKET, lt: \(bucket \+ 1\) \* BASKET_ID_BUCKET \}/);
+  // The bucket's 32 ids are read from the snapshot's offer range file (one small file per 1,024 ids: lib/price-snapshot-read.ts snapOffersOf), never the database.
+  assert.match(cached, /Array\.from\(\{ length: BASKET_ID_BUCKET \}, \(_, i\) => bucket \* BASKET_ID_BUCKET \+ i\)/);
+  assert.match(cached, /snapOffersOf\(ids\)/);
   assert.doesNotMatch(cached.slice(0, cached.indexOf("export async function getBasketListings")), /ids: number\[\]/);
   assert.match(data, /export async function getBasketListings\(country: Country, ids: number\[\]\)/, "the wrapper is not itself cached");
 });

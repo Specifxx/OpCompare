@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { publicDb, type PublicDb } from "./public-db";
 import { COUNTRIES, currencyOf, type Country } from "./country";
 import {
   ALERT_KIND_PRIORITY,
@@ -398,7 +399,8 @@ const isSupportedMarket = (m: string): m is Country => Object.prototype.hasOwnPr
 // sender and notifier (tests/alerts-email-off.test.ts); the run passes nothing.
 // `notifyUsers: false` switches the in-app mirror off.
 export interface AlertRunDeps {
-  db?: Pick<typeof prisma, "priceAlert" | "offer" | "alertMute" | "deckWatch" | "sealedWatch" | "$transaction">;
+  // `offer` and `card` are the PUBLIC data (lib/public-db.ts, read from the snapshot): a test may stub them here.
+  db?: Pick<typeof prisma, "priceAlert" | "alertMute" | "deckWatch" | "sealedWatch" | "$transaction"> & Partial<Pick<PublicDb, "offer" | "card">>;
   sendPriceDropEmail?: typeof sendPriceDropEmailImpl;
   notify?: (userId: string, type: string, title: string, body: string, href?: string | null) => Promise<void>;
   now?: Date;
@@ -436,6 +438,7 @@ type Patch = {
 
 export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOptions = {}): Promise<AlertRunSummary> {
   const db = deps.db ?? prisma;
+  const pdb: Pick<PublicDb, "offer" | "card"> = { offer: (db as Partial<PublicDb>).offer ?? publicDb.offer, card: (db as Partial<PublicDb>).card ?? publicDb.card };
   const sendPriceDropEmail = deps.sendPriceDropEmail ?? sendPriceDropEmailImpl;
   const notify = deps.notify ?? notifyImpl;
   const emailOn = deps.emailEnabled ?? isEmailEnabled();
@@ -461,7 +464,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
         },
       }
     : undefined;
-  const alerts = await db.priceAlert.findMany({
+  const rawAlerts = await db.priceAlert.findMany({
     where: paidOnly,
     // Oldest watch first, so the order candidates of one priority open digests
     // in is stable between runs. ~200 rows: the sort is free.
@@ -490,26 +493,35 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       // carries the "create a free account" block (anonymous watchers only).
       userId: true,
       user: { select: { email: true, isAdmin: true, premiumUntil: true, premiumTier: true } },
-      card: {
-        select: {
-          id: true,
-          name: true,
-          variant: true,
-          slug: true,
-          number: true,
-          // The below-market reference (TCGplayer US market, USD cents).
-          marketUsd: true,
-          // Only for the ebayOnly counter: the alert price is lib/alert-price.ts.
-          lowUS: true,
-          lowAU: true,
-          lowUK: true,
-          lowSG: true,
-          lowCA: true,
-          lowEU: true,
-          set: { select: { code: true, releasedOn: true } },
-        },
-      },
+      cardId: true,
     },
+  });
+  // The watched cards, from the public data (the join to Card is gone with the table):
+  // the current price, the below-market reference and the set's release date. An alert
+  // row that already carries its `card` (a test's stub) keeps it. A card the catalogue
+  // no longer has is skipped, as a deleted card's alerts were by the cascade.
+  type CardRow = {
+    id: number; name: string; variant: string | null; slug: string; number: string | null; marketUsd: number | null;
+    lowUS: number | null; lowAU: number | null; lowUK: number | null; lowSG: number | null; lowCA: number | null; lowEU: number | null;
+    set: { code: string; releasedOn: Date | null };
+  };
+  const stubbed = rawAlerts as unknown as ((typeof rawAlerts)[number] & { card?: CardRow })[];
+  const needCards = [...new Set(stubbed.filter((a) => !a.card).map((a) => a.cardId))];
+  const cardById = new Map<number, CardRow>(
+    needCards.length
+      ? ((await pdb.card.findMany({
+          where: { id: { in: needCards } },
+          select: {
+            id: true, name: true, variant: true, slug: true, number: true, marketUsd: true,
+            lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true,
+            set: { select: { code: true, releasedOn: true } },
+          },
+        })) as CardRow[]).map((c) => [c.id, c])
+      : [],
+  );
+  const alerts = stubbed.flatMap((a) => {
+    const card = a.card ?? cardById.get(a.cardId);
+    return card ? [{ ...a, card }] : [];
   });
   type Row = (typeof alerts)[number];
 
@@ -578,7 +590,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   // THE ALERT PRICE for every evaluated (card, market): one bounded query.
   // A failed read throws — nothing is safe to compare, and it must never be
   // read as every watched card selling out.
-  const prices = await computeAlertPrices(db, rows.map((a) => ({ cardId: a.card.id, market: a.market })), now);
+  const prices = await computeAlertPrices(pdb, rows.map((a) => ({ cardId: a.card.id, market: a.market })), now);
   const lowOf = (a: Row & { market: Country }): number | null => a.card[`low${a.market}` as "lowUS"] ?? null;
   const preorderOf = (a: Row): boolean => a.card.set.releasedOn != null && a.card.set.releasedOn.getTime() > now.getTime();
   const priceOf = (a: Row & { market: Country }): AlertPrice | undefined => prices.get(alertPairKey(a.market, a.card.id));

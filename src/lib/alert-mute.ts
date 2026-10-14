@@ -1,3 +1,4 @@
+import { attachCards } from "./public-db";
 import type { prisma } from "./db";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,13 +57,16 @@ async function addressFor(db: AlertMuteDb, token: string): Promise<string | null
 
 export async function alertEmailSummary(db: AlertMuteDb, token: string): Promise<AlertEmailSummary> {
   if (!token) return { active: false, paused: false, count: 0, cards: [] };
-  const rows = await db.priceAlert.findMany({
-    where: { unsubToken: token },
-    orderBy: { createdAt: "desc" },
-    // The subscribe route caps one request at 500 cards; this is a page, not an export.
-    take: 500,
-    select: { id: true, email: true, market: true, snoozedUntil: true, card: { select: { name: true, variant: true, number: true, set: { select: { code: true } } } } },
-  });
+  const rows = await attachCards<{ id: string; email: string; market: string; snoozedUntil: Date | null; cardId: number }, { name: string; variant: string | null; number: string | null; set: { code: string } }>(
+    await db.priceAlert.findMany({
+      where: { unsubToken: token },
+      orderBy: { createdAt: "desc" },
+      // The subscribe route caps one request at 500 cards; this is a page, not an export.
+      take: 500,
+      select: { id: true, email: true, market: true, snoozedUntil: true, cardId: true },
+    }),
+    { name: true, variant: true, number: true, set: { select: { code: true } } },
+  );
   if (rows.length === 0) return { active: false, paused: false, count: 0, cards: [] };
   const email = rows[0]!.email;
   const mute = await db.alertMute.findUnique({ where: { email }, select: { email: true } });

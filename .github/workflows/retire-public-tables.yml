@@ -1,0 +1,44 @@
+name: Retire the public tables
+
+# ONE-TIME, AFTER the site has been verified on the snapshot (owner, 2026-10-14).
+# Drops the retired public tables from Neon: Offer, Card, Sealed, Set,
+# EbayCheck, EbayListing, EbayGradedListing. That frees about 360 MB of the 512 MB
+# of storage and ends every read and write of them. They hold nothing the
+# snapshot does not (the move workflow copied them first; the popularity counters
+# are in CardDemand).
+#
+# It refuses unless: you type `drop`, the snapshot has the new layout and is under
+# 36 hours old, and CardDemand holds at least as many rows as the Card table has
+# cards with a counter. It lists what it is about to drop and the row counts first.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type  drop  to delete the retired public tables from Neon"
+        type: string
+        required: true
+
+concurrency:
+  group: import-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  retire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      CONFIRM: ${{ inputs.confirm }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - name: Drop the retired tables
+        run: npx tsx scripts/retire-public-tables.ts

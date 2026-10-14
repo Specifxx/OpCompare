@@ -2336,3 +2336,43 @@ I'm moving to other projects: less maintenance, for every aspect of the site."
 - **Not done, on purpose:** Vercel's own usage (needs a token with account scope) and
   Stripe webhook health (no record of the last webhook is kept). Both are the next
   checks to add; the watchdog's structure makes each a function and a test.
+
+## 2026-10-14: The public data left Neon; the `snapshot` branch is its only copy
+
+**Why.** RiftCompare and the MTG site already keep their public data in GitHub; OP
+Compare still held ~360 MB of catalogue, offers and eBay state in Neon and paid
+transfer on every page-cache miss. The owner asked for everything public to move.
+
+**Decisions.**
+- **GitHub is the store, a throwaway Postgres is the workbench.** The import and the
+  eBay pass keep their SQL (upserts, aggregates, sweeps) unchanged but run it on a
+  Postgres service container seeded from the snapshot at the start of each job and
+  discarded at the end. This keeps the tested import logic and avoids a rewrite into
+  in-memory code. A second Prisma schema (`prisma/public`) and `pub` client; `pubdb`
+  refuses Neon URLs.
+- **Readers.** Page loaders read files; everything else that used the models (alerts,
+  newsletter, inbox, collection, admin) reads `public-data.ts` rows via `publicDb`, a
+  small where/orderBy/select evaluator with the Prisma shape, so those modules changed
+  their client, not their logic. Derived answers the pages computed in SQL
+  (deal inputs, store prices/stats/listings, sold-out sealed) are computed in the job
+  and written as files.
+- **Never cache "not found".** An unreadable file throws; only an answer from a
+  readable snapshot may be null.
+- **Retention.** Store offers 14 days (the alert outage window), eBay offers 72 h,
+  pages show a row older than 72 h as sold out. `Offer.title` is not kept (no reader
+  used it).
+- **Offer layout.** By product-id range (1,024 ids; a set's cards are consecutive, so
+  a basket is one or two files). The old 64-way `offers/NN` layout is written too
+  while `SNAPSHOT_LEGACY_SHARDS` is not `0`, so the live (pre-deploy) site keeps
+  working during the rollout; switch it off after the deploy.
+- **Private stays private.** Accounts and everything personal remain in Neon (the repo
+  is public). The only new private table is `CardDemand` (counters moved off Card).
+  Foreign keys from alerts/watches/collections to Card/Sealed were dropped.
+- **Retiring the tables is guarded and separate.** The retired models stay declared
+  in `prisma/schema.prisma` so `db push` never drops non-empty tables; a manual
+  workflow (`retire-public-tables.yml`, input `drop`) drops them after the new site
+  is live. A later commit removes the declarations.
+
+**Rollout.** `move-public-data.yml` (builds the first snapshot from Neon; refuses if
+one with `ranges` exists) → import + eBay runs → deploy (the owner asked for it ASAP)
+→ retire. Public-data tests: `tests/public-data.test.ts`, `tests/price-snapshot.test.ts`.

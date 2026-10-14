@@ -1,3 +1,4 @@
+import { publicDb } from "./public-db";
 import { randomUUID } from "crypto";
 import { prisma } from "./db";
 import { sendNewsletterDigestEmail, isEmailEnabled, escapeHtml, EMAIL_COLORS } from "./email";
@@ -139,7 +140,7 @@ function toDigestCard(r: CardRow): DigestCard {
 
 /** The cards that can move: worth US$1+ with a 7-day change or a 90-day high. One narrow read per run. */
 export async function loadDigestCards(): Promise<DigestCard[]> {
-  const rows = await prisma.card.findMany({
+  const rows = await publicDb.card.findMany({
     where: { marketUsd: { gte: MOVER_MIN_USD_CENTS }, OR: [{ change7d: { not: null } }, { high90Usd: { not: null } }] },
     select: CARD_SELECT,
     take: 20000,
@@ -149,7 +150,7 @@ export async function loadDigestCards(): Promise<DigestCard[]> {
 
 /** Cards TCGplayer listed for the first time in the last 7 days. */
 export async function recentNewCards(now = new Date()): Promise<DigestCard[]> {
-  const rows = await prisma.card
+  const rows = await publicDb.card
     .findMany({
       where: { firstSeen: { gte: new Date(now.getTime() - 7 * 86400_000) } },
       orderBy: [{ marketUsd: { sort: "desc", nulls: "last" } }, { id: "asc" }],
@@ -294,20 +295,29 @@ function releasesSection(list: NonNullable<DigestExtras["releases"]>): string {
 
 const STORE_FRESH_MS = 72 * 3600_000;
 
+/** The most-searched cards: the counters are private (Neon, CardDemand), the cards are public data. */
+async function mostSearchedCards(n: number): Promise<unknown[]> {
+  const top = await prisma.cardDemand.findMany({ where: { searchCount: { gt: 0 } }, orderBy: [{ searchCount: "desc" }, { cardId: "asc" }], take: n, select: { cardId: true } });
+  if (!top.length) return [];
+  const rows = (await publicDb.card.findMany({ where: { id: { in: top.map((t) => t.cardId) } }, select: CARD_SELECT })) as { id: number }[];
+  const order = new Map(top.map((t, i) => [t.cardId, i]));
+  return rows.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+}
+
 /** Load every extra section for one market. Each source fails on its own. */
 export async function loadDigestExtras(market: Country, now = new Date(), opts: { sponsor?: boolean } = {}): Promise<DigestExtras> {
   const quiet = <T,>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
   const lowKey = `low${market}` as const;
   const [priced, stores, popular, sets] = await Promise.all([
-    quiet(prisma.card.count({ where: { [lowKey]: { not: null } } })),
+    quiet(publicDb.card.count({ where: { [lowKey]: { not: null } } })),
     quiet(
-      prisma.offer.groupBy({
+      publicDb.offer.groupBy({
         by: ["source"],
         where: { market, inStock: true, source: { startsWith: "store:" }, updatedAt: { gt: new Date(now.getTime() - STORE_FRESH_MS) } },
       }),
     ),
-    quiet(prisma.card.findMany({ where: { searchCount: { gt: 0 } }, orderBy: [{ searchCount: "desc" }, { id: "asc" }], take: 5, select: CARD_SELECT })),
-    quiet(prisma.set.findMany({ where: { releasedOn: { gte: now } }, orderBy: { releasedOn: "asc" }, take: 2, select: { name: true, slug: true, releasedOn: true } })),
+    quiet(mostSearchedCards(5)),
+    quiet(publicDb.set.findMany({ where: { releasedOn: { gte: now } }, orderBy: { releasedOn: "asc" }, take: 2, select: { name: true, slug: true, releasedOn: true } })),
   ]);
   const today = now.toISOString().slice(0, 10);
   return {

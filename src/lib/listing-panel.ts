@@ -16,6 +16,8 @@ export interface PanelListing {
   url: string;
   title: string;
   imageUrl: string | null;
+  /** When the eBay pass captured it (ms). Carried in the snapshot so a re-seed keeps the real age; the pages ignore it. */
+  u?: number;
 }
 
 /** One slab (Graded tab): a row of EbayGradedListing. */
@@ -30,6 +32,8 @@ export interface PanelGraded {
   imageUrl: string | null;
   grader: string;
   grade: string;
+  /** Captured at (ms), as on PanelListing. */
+  u?: number;
 }
 
 export interface EbayPanelData {
@@ -42,7 +46,11 @@ export const PANEL_MAX_AGE_HOURS = 72;
 /** EbayPicks tiles must be this fresh: an old asking price sends a buyer to a dead page. */
 export const PICKS_MAX_AGE_HOURS = 72; // one daily run refreshes the dearest cards every 48h (2026-10-07)
 
-export const panelTitle = (s: string, n = 70): string => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+/** Remove half of a surrogate pair (an emoji cut in two): a database refuses it and so does JSON.parse in the Prisma engine. */
+export const stripLoneSurrogates = (s: string): string => s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
+
+/** A listing title shortened for a tile, never cutting an emoji in half. */
+export const panelTitle = (s: string, n = 70): string => (s.length > n ? `${stripLoneSurrogates(s.slice(0, n - 1))}…` : stripLoneSurrogates(s));
 
 /** A pick: a chase printing with its rank-0 eBay listing in each market that has one. */
 export interface PickCard {

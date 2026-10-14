@@ -14,6 +14,7 @@
 // This file must not name the credential variables (tests/no-ebay-api.test.ts):
 // it asks isEbayEnabled().
 import { prisma } from "../src/lib/db";
+import { pub, requirePublicDatabase } from "../src/lib/pubdb";
 import { ebaySpentThisRun, isEbayEnabled } from "../src/lib/ebay";
 import { runEbayPass } from "../src/lib/ebay-import";
 import { ebayRunVerdict, parseOnlyMarket } from "../src/lib/ebay-plan";
@@ -34,6 +35,10 @@ async function main(): Promise<number> {
     return 0;
   }
   parseOnlyMarket(process.env.EBAY_ONLY_MARKET); // an unknown market code fails before anything is spent
+  // The catalogue and what the pass remembers live in the public working copy, seeded from the
+  // GitHub snapshot before this runs and published back after it (ebay-prices.yml). Neon keeps
+  // only the run's record.
+  requirePublicDatabase();
   const run = await prisma.importRun.create({ data: { kind: "ebay" } });
   try {
     const summary = await runEbayPass(log, {
@@ -65,4 +70,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => Promise.all([prisma.$disconnect(), pub.$disconnect()]));

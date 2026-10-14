@@ -12,6 +12,7 @@
 //
 // Egress: one narrow, capped read per step, scoped by the posted address (and
 // the session's account when it owns that address). Called only from the route.
+import { publicDb } from "./public-db";
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { isCountry, type Country } from "./country";
@@ -106,7 +107,7 @@ export async function subscribeAddress(
   const userId = session && session.email.toLowerCase() === email ? session.id : null;
 
   // Only watch cards that exist.
-  const cards = await prisma.card.findMany({ where: { id: { in: body.cardIds } }, select: { id: true }, take: SUBSCRIBE_CARD_CAP });
+  const cards = await publicDb.card.findMany({ where: { id: { in: body.cardIds } }, select: { id: true }, take: SUBSCRIBE_CARD_CAP });
   if (!cards.length) return { status: 400, body: { error: "No matching cards" } };
 
   // One unsubscribe token per address: reuse it so a single link covers every card.

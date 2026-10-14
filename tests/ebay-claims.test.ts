@@ -37,8 +37,9 @@ test("eBay-collection copy is gated on data, so 'off' keeps the old wording", ()
   gated("src/app/methodology/page.tsx", "ebayLive", "an eBay row shows the postage eBay states");
   gated("src/app/about/page.tsx", "ebayLive", "eBay prices are the cheapest matching Buy It Now listing");
   gated("src/app/editorial-policy/page.tsx", "ebayLive", "eBay listing prices");
-  // The flag is data: a recent successful ImportRun of kind "ebay".
-  const data = read("src/lib/data.ts");
-  assert.match(data, /ebayLive: Boolean\(ebayRun\)/);
-  assert.match(data, /kind: "ebay", ok: true, finishedAt: \{ gte:/);
+  // The flag is data: a recent successful ImportRun of kind "ebay", read when the snapshot is written
+  // (scripts/price-snapshot.ts) and served from the snapshot's stats file.
+  const script = read("scripts/price-snapshot.ts");
+  assert.match(script, /ebayLive: Boolean\(ebayRun\)/);
+  assert.match(script, /kind: "ebay", ok: true, finishedAt: \{ gte:/);
 });

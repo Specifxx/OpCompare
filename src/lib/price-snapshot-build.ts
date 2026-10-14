@@ -1,29 +1,41 @@
 // The WRITER of the price snapshot (format and rules: lib/price-snapshot.ts).
-// Run by scripts/price-snapshot.ts after an import. It reads the same columns
-// the public loaders in lib/data.ts read and writes their answers (or the rows
-// they are built from) as gzipped JSON, so a fallback read returns exactly the
-// shape the page already expects. Script-side only: never imported by a page.
+// Run by scripts/price-snapshot.ts at the end of a job that holds the public
+// working copy (lib/pubdb.ts: the throwaway Postgres on the runner, seeded from
+// the previous snapshot and then updated by the import or the eBay pass).
+// Script-side only: never imported by a page.
+//
+// The snapshot is the ONLY persistent copy of the public data (owner,
+// 2026-10-14): catalogue, offers and eBay state. It carries, besides the files
+// the pages always read:
+//   o/<range>.json.gz        offers by product-id range (a set is one or two files)
+//   offers/NN.json.gz        the same offers by id % 64, for the site deployed before
+//                            the migration (SNAPSHOT_LEGACY_SHARDS=0 stops writing it)
+//   ebay-checks.json.gz      when each (product, market) pair was last searched on eBay
+//   deal-inputs, store-prices/<market>, store-stats, store-listings/<market>,
+//   sealed-soldout           the answers to the queries that scan every offer, computed
+//                            here in SQL so a request never has to
 import fs from "node:fs/promises";
 import path from "node:path";
-import { prisma } from "./db";
+import { pub } from "./pubdb";
 import { PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type PanelGraded, type PanelListing } from "./listing-panel";
 import { cardImage } from "./images";
+import { MARKETS, type Country } from "./country";
+import { ebaySourceFor, encodeDealInput, type DealInputTuple } from "./deals";
 import {
+  RANGE_SIZE,
   SNAPSHOT_FRESH_MS,
+  SNAPSHOT_OFFER_KEEP_MS,
   SNAPSHOT_SHARDS,
   SNAPSHOT_VERSION,
-  isFreshAt,
   pack,
+  rangeOf,
   shardOf,
-  snapshotFile,
   type SnapshotMeta,
 } from "./price-snapshot";
-import { STORES } from "./stores";
-import { keepCarried, readRunOffers } from "./run-offers";
-import type { CardDetail, CoreTuple, OfferRow, PriceTuple, SealedLite, SiteStats } from "./data";
+import type { CardDetail, CoreTuple, OfferRow, PriceTuple, SealedLite, SiteStats, StoreListing, StoreStat } from "./data";
 
 /** What card.json.gz holds: a card page's facts without its set (rejoined from core.sets) or offers (the shards). */
-export type SnapshotCard = Omit<CardDetail, "set" | "offers"> & { setId: number };
+export type SnapshotCard = Omit<CardDetail, "set" | "offers"> & { setId: number; /** ISO: when TCGplayer first listed it (the weekly newsletter's "new this week"). */ firstSeen?: string };
 export type SnapshotSealed = Omit<SealedLite, "low" | "stores"> & {
   low: SealedLite["low"];
   stores: SealedLite["stores"];
@@ -32,32 +44,43 @@ export interface SnapshotEbay {
   listings: Record<string, PanelListing[]>;
   graded: Record<string, PanelGraded[]>;
 }
+/** [productId, market, checkedAt (ms), matched (1/0)] */
+export type EbayCheckTuple = [number, string, number, 0 | 1];
+export type DealInputsFile = Record<Country, DealInputTuple[]>;
+/** One market's store prices: source → flat [productId, priceCents, productId, priceCents, …], cards only, in stock and fresh. */
+export type StorePricesFile = Record<string, number[]>;
+export type StoreListingsFile = Record<string, { top: StoreListing[]; cheapestHere: StoreListing[] }>;
+export type SoldOutFile = Record<Country, number[]>;
 
-const EBAY_LIVE_DAYS = 3;
+const FRESH_HOURS = SNAPSHOT_FRESH_MS / 3_600_000;
+const legacyShards = () => process.env.SNAPSHOT_LEGACY_SHARDS !== "0";
 
-/**
- * Build the snapshot into `outDir`. `runOffersFile` is what the import just wrote
- * (lib/run-offers.ts): the offers come from it, not from a read of the Offer table
- * (~650,000 rows, over 100 MB of transfer). A source the run did not cover (a
- * store that failed, a partial import) keeps its rows from the PREVIOUS snapshot
- * on GitHub for as long as they are inside the 72-hour window, as the database
- * does. eBay rows (a few thousand) are read from Postgres: the eBay pass writes
- * them, not the import.
- */
-export async function buildSnapshot(outDir: string, opts: { runOffersFile: string; log?: (m: string) => void }): Promise<SnapshotMeta> {
+export interface BuildOptions {
+  log?: (m: string) => void;
+  /** finishedAt of the newest successful import (an ImportRun row in Neon), and whether the eBay pass ran in the last 3 days. */
+  lastImportAt: Date | null;
+  ebayLive: boolean;
+}
+
+/** Build the snapshot into `outDir` from the working copy. */
+export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise<SnapshotMeta> {
   const log = opts.log ?? (() => {});
   const now = Date.now();
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(path.join(outDir, "offers"), { recursive: true });
+  await fs.mkdir(path.join(outDir, "o"), { recursive: true });
+  await fs.mkdir(path.join(outDir, "store-prices"), { recursive: true });
+  await fs.mkdir(path.join(outDir, "store-listings"), { recursive: true });
   const write = async (rel: string, value: unknown) => {
     const bytes = pack(value);
     await fs.writeFile(path.join(outDir, rel), bytes);
     return bytes.length;
   };
+  const sizes: Record<string, number> = {};
 
   // ── Catalogue: facts and prices (the loadCore / loadPrices answers) ────────
   const [cardRows, sets] = await Promise.all([
-    prisma.card.findMany({
+    pub.card.findMany({
       orderBy: { id: "asc" },
       select: {
         id: true, slug: true, name: true, tcgName: true, number: true, setId: true, rarity: true, variant: true, printing: true, colors: true,
@@ -65,10 +88,12 @@ export async function buildSnapshot(outDir: string, opts: { runOffersFile: strin
         hasImage: true, tcgplayerUrl: true, marketUsd: true, change7d: true, change30d: true, high90Usd: true,
         lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true,
         storesUS: true, storesAU: true, storesUK: true, storesSG: true, storesCA: true, storesEU: true,
+        firstSeen: true,
       },
     }),
-    prisma.set.findMany({ select: { id: true, slug: true, code: true, name: true, kind: true, releasedOn: true, cardCount: true, sealedCount: true } }),
+    pub.set.findMany({ select: { id: true, slug: true, code: true, name: true, tcgName: true, kind: true, releasedOn: true, cardCount: true, sealedCount: true } }),
   ]);
+  // `tcgName` rides along (the store matcher needs TCGplayer's own group name); the pages' SetLite ignores it.
   const setLites = sets.map((s) => ({ ...s, releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null }));
   const core = {
     // Explicit slugs (the loader's 0 = "derived" shorthand needs cardSlugBase, which lives beside next/cache).
@@ -95,16 +120,15 @@ export async function buildSnapshot(outDir: string, opts: { runOffersFile: strin
       id: r.id, slug: r.slug, name: r.name, tcgName: r.tcgName, number: r.number, rarity: r.rarity, variant: r.variant, printing: r.printing,
       colors: r.colors, cardType: r.cardType, cost: r.cost, power: r.power, counter: r.counter, life: r.life, attribute: r.attribute,
       subtypes: r.subtypes, effect: r.effect, finish: r.finish, hasImage: r.hasImage, tcgplayerUrl: r.tcgplayerUrl, marketUsd: r.marketUsd,
-      change7d: r.change7d, change30d: r.change30d, setId: r.setId,
+      change7d: r.change7d, change30d: r.change30d, setId: r.setId, firstSeen: r.firstSeen.toISOString(),
     };
   }
-  const sizes: Record<string, number> = {};
   sizes.core = await write("core.json.gz", core);
   sizes.prices = await write("prices.json.gz", prices);
   sizes.cards = await write("cards.json.gz", cards);
 
   // ── Sealed ─────────────────────────────────────────────────────────────────
-  const sealedRows = await prisma.sealed.findMany({
+  const sealedRows = await pub.sealed.findMany({
     select: {
       id: true, slug: true, name: true, setId: true, kind: true, packCount: true, imageUrl: true, releasedOn: true, presale: true,
       marketUsd: true, change7d: true, tcgplayerUrl: true,
@@ -121,80 +145,89 @@ export async function buildSnapshot(outDir: string, opts: { runOffersFile: strin
   }));
   sizes.sealed = await write("sealed.json.gz", sealed);
 
-  // ── Offers, sharded by productId; only rows refreshed inside the window ────
-  const run = readRunOffers(opts.runOffersFile);
-  const covered = new Set(run.covered);
-  const known = new Set<string>(["tcgplayer", ...STORES.map((x) => `store:${x.key}`)]);
-  const byShard = new Map<string, Record<string, OfferRow[]>>();
-  let offerCount = 0;
-  const add = (productId: number, o: OfferRow) => {
-    const key = shardOf(productId);
-    const shard = byShard.get(key) ?? {};
-    (shard[productId] ??= []).push(o);
-    byShard.set(key, shard);
-    offerCount++;
-  };
-  for (const [productId, source, market, priceCents, currency, url, inStock, condition, shippingCents, t] of run.offers) {
-    if (!isFreshAt(new Date(t), now)) continue;
-    add(productId, { source, market, priceCents, currency, url, inStock: inStock === 1, condition, shippingCents, updatedAt: new Date(t).toISOString() });
-  }
-  let carried = 0;
-  let previousFound = 0;
-  for (let i = 0; i < SNAPSHOT_SHARDS; i++) {
-    const prev = await snapshotFile<Record<string, OfferRow[]>>(`offers/${String(i).padStart(2, "0")}.json.gz`);
-    if (!prev) continue;
-    previousFound++;
-    for (const [pid, rows] of Object.entries(prev)) {
-      for (const o of rows) {
-        if (!keepCarried(o, covered, known, now, SNAPSHOT_FRESH_MS)) continue;
-        add(Number(pid), o);
-        carried++;
-      }
-    }
-  }
-  log(`snapshot offers: ${run.offers.length} from this run (${covered.size} sources), ${carried} carried from the previous snapshot (${previousFound}/${SNAPSHOT_SHARDS} shards found)`);
-  const since = new Date(now - SNAPSHOT_FRESH_MS);
-  const ebayOffers = await prisma.offer.findMany({
-    where: { source: { startsWith: "ebay" }, updatedAt: { gt: since } },
+  // ── Offers: every row refreshed inside the 72-hour window ──────────────────
+  // The working copy was seeded from the previous snapshot and then updated by
+  // this job, so it already holds a store that failed this run (its old rows,
+  // until they age out) and the eBay rows: one read of local rows, no carry-over.
+  // A store's rows are kept for 14 days (SNAPSHOT_OFFER_KEEP_MS) though the pages show them as sold out
+  // after 72 hours: the alert engine tells "sold out" from "its only scraper is down" by looking at rows
+  // that old (lib/alert-price.ts ALERT_OUTAGE_MAX_MS). eBay rows are dropped at 72 hours.
+  const since = new Date(now - SNAPSHOT_OFFER_KEEP_MS);
+  const ebaySinceMs = now - SNAPSHOT_FRESH_MS;
+  const offerRows = await pub.offer.findMany({
+    where: { updatedAt: { gt: since } },
     select: { productId: true, source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
   });
-  for (const o of ebayOffers) {
-    add(o.productId, { source: o.source, market: o.market, priceCents: o.priceCents, currency: o.currency, url: o.url, inStock: o.inStock, condition: o.condition, shippingCents: o.shippingCents, updatedAt: o.updatedAt.toISOString() });
+  const byRange = new Map<string, Record<string, OfferRow[]>>();
+  const byShard = new Map<string, Record<string, OfferRow[]>>();
+  const put = (m: Map<string, Record<string, OfferRow[]>>, key: string, productId: number, o: OfferRow) => {
+    const shard = m.get(key) ?? {};
+    (shard[productId] ??= []).push(o);
+    m.set(key, shard);
+  };
+  const storeMap = new Map<string, { source: string; market: string; offers: number; inStock: number }>();
+  for (const r of offerRows) {
+    if (r.source.startsWith("ebay") && r.updatedAt.getTime() <= ebaySinceMs) continue;
+    const o: OfferRow = { source: r.source, market: r.market, priceCents: r.priceCents, currency: r.currency, url: r.url, inStock: r.inStock, condition: r.condition, shippingCents: r.shippingCents, updatedAt: r.updatedAt.toISOString() };
+    put(byRange, rangeOf(r.productId), r.productId, o);
+    if (legacyShards()) put(byShard, shardOf(r.productId), r.productId, o);
+    if (!r.source.startsWith("ebay") && r.updatedAt.getTime() > ebaySinceMs) {
+      // eBay is not a store: never in store counts or homepage stats. Only rows inside 72 hours count.
+      const k = `${r.source}|${r.market}`;
+      const row = storeMap.get(k) ?? { source: r.source, market: r.market, offers: 0, inStock: 0 };
+      row.offers += 1;
+      if (r.inStock) row.inStock += 1;
+      storeMap.set(k, row);
+    }
   }
   let offerBytes = 0;
-  for (const [key, shard] of byShard) {
+  for (const [key, shard] of byRange) {
     for (const rows of Object.values(shard)) rows.sort((a, b) => a.priceCents - b.priceCents);
-    offerBytes += await write(`offers/${key}.json.gz`, shard);
+    offerBytes += await write(`o/${key}.json.gz`, shard);
   }
-  sizes.offers = offerBytes;
+  sizes.offersByRange = offerBytes;
+  if (legacyShards()) {
+    let legacyBytes = 0;
+    for (let i = 0; i < SNAPSHOT_SHARDS; i++) {
+      const key = String(i).padStart(2, "0");
+      const shard = byShard.get(key) ?? {};
+      for (const rows of Object.values(shard)) rows.sort((a, b) => a.priceCents - b.priceCents);
+      legacyBytes += await write(`offers/${key}.json.gz`, shard);
+    }
+    sizes.offersLegacy = legacyBytes;
+  }
+  log(`snapshot offers: ${offerRows.length} rows read in ${byRange.size} range files${legacyShards() ? ` and ${SNAPSHOT_SHARDS} legacy shards` : ""}`);
 
-  // ── eBay: the listings panel rows, the chase strip and the picks ───────────
+  // ── eBay: the listings panel rows, the chase strip, the picks and the pass's memory ──
   const ebaySince = new Date(now - 72 * 3600 * 1000);
-  const [ebayRows, gradedRows] = await Promise.all([
-    prisma.ebayListing.findMany({
+  const [ebayRows, gradedRows, checkRows] = await Promise.all([
+    pub.ebayListing.findMany({
       where: { updatedAt: { gte: ebaySince } },
       orderBy: [{ market: "asc" }, { rank: "asc" }],
-      select: { productId: true, market: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
+      select: { productId: true, market: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true, updatedAt: true },
     }),
-    prisma.ebayGradedListing.findMany({
+    pub.ebayGradedListing.findMany({
       where: { updatedAt: { gte: ebaySince } },
       orderBy: [{ market: "asc" }, { priceCents: "asc" }],
-      select: { productId: true, market: true, itemId: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true, grader: true, grade: true },
+      select: { productId: true, market: true, itemId: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true, grader: true, grade: true, updatedAt: true },
     }),
+    pub.ebayCheck.findMany({ select: { productId: true, market: true, checkedAt: true, matched: true } }),
   ]);
   const ebay: SnapshotEbay = { listings: {}, graded: {} };
-  for (const { productId, ...l } of ebayRows) (ebay.listings[productId] ??= []).push({ ...l, title: panelTitle(l.title) });
+  for (const { productId, updatedAt, ...l } of ebayRows) (ebay.listings[productId] ??= []).push({ ...l, title: panelTitle(l.title), u: updatedAt.getTime() });
   const gradedPer = new Map<number, number>();
-  for (const { productId, ...g } of gradedRows) {
+  for (const { productId, updatedAt, ...g } of gradedRows) {
     const n = gradedPer.get(productId) ?? 0;
     if (n >= 24) continue; // the loader's take: 24 per product
     gradedPer.set(productId, n + 1);
-    (ebay.graded[productId] ??= []).push({ ...g, title: panelTitle(g.title) });
+    (ebay.graded[productId] ??= []).push({ ...g, title: panelTitle(g.title), u: updatedAt.getTime() });
   }
   sizes.ebay = await write("ebay.json.gz", ebay);
+  const checks: EbayCheckTuple[] = checkRows.map((c) => [c.productId, c.market, c.checkedAt.getTime(), c.matched ? 1 : 0]);
+  sizes.ebayChecks = await write("ebay-checks.json.gz", checks);
 
   const pickSince = new Date(now - PICKS_MAX_AGE_HOURS * 3600 * 1000);
-  const chaseCards = await prisma.card.findMany({
+  const chaseCards = await pub.card.findMany({
     where: { marketUsd: { gt: 0 }, hasImage: true, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
     orderBy: { marketUsd: "desc" },
     take: 40,
@@ -202,7 +235,7 @@ export async function buildSnapshot(outDir: string, opts: { runOffersFile: strin
   });
   const chase = chaseCards.filter(isChasePrinting).slice(0, 12);
   const chaseListings = chase.length
-    ? await prisma.ebayListing.findMany({
+    ? await pub.ebayListing.findMany({
         where: { productId: { in: chase.map((c) => c.id) }, rank: 0, imageUrl: { not: null }, updatedAt: { gte: pickSince } },
         select: { productId: true, market: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
       })
@@ -215,34 +248,135 @@ export async function buildSnapshot(outDir: string, opts: { runOffersFile: strin
   sizes.chase = await write("chase.json.gz", chaseStrip);
 
   // ── Site stats (the getSiteStats answer), from the offers above ────────────
-  const [run2, ebayRun] = await Promise.all([
-    prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
-    prisma.importRun.findFirst({ where: { kind: "ebay", ok: true, finishedAt: { gte: new Date(now - EBAY_LIVE_DAYS * 86_400_000) } }, select: { id: true } }),
-  ]);
-  const map = new Map<string, { source: string; market: string; offers: number; inStock: number }>();
-  for (const shard of byShard.values()) {
-    for (const rows of Object.values(shard)) {
-      for (const o of rows) {
-        if (o.source.startsWith("ebay")) continue; // eBay is not a store
-        const k = `${o.source}|${o.market}`;
-        const row = map.get(k) ?? { source: o.source, market: o.market, offers: 0, inStock: 0 };
-        row.offers += 1;
-        if (o.inStock) row.inStock += 1;
-        map.set(k, row);
-      }
-    }
-  }
-  const stats: SiteStats = { lastImportAt: run2?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
+  const stats: SiteStats = { lastImportAt: opts.lastImportAt?.toISOString() ?? null, storeOffers: [...storeMap.values()], ebayLive: opts.ebayLive };
   sizes.stats = await write("stats.json.gz", stats);
+
+  // ── The queries that scan every offer, answered here in SQL ────────────────
+  sizes.derived = await writeDerived(write);
 
   const meta: SnapshotMeta = {
     v: SNAPSHOT_VERSION,
     generatedAt: new Date(now).toISOString(),
     lastImportAt: stats.lastImportAt,
-    counts: { cards: cardRows.length, sealed: sealed.length, offers: offerCount, ebayListings: ebayRows.length },
+    counts: { cards: cardRows.length, sealed: sealed.length, offers: offerRows.length, ebayListings: ebayRows.length },
+    ranges: [...byRange.keys()].sort(),
+    ebayChecks: checks.length,
   };
   await fs.writeFile(path.join(outDir, "meta.json"), JSON.stringify(meta));
-  log(`snapshot: ${meta.counts.cards} cards, ${meta.counts.sealed} sealed, ${meta.counts.offers} offers in ${byShard.size} shards, ${meta.counts.ebayListings} eBay listings`);
+  log(`snapshot: ${meta.counts.cards} cards, ${meta.counts.sealed} sealed, ${meta.counts.offers} offers, ${meta.counts.ebayListings} eBay listings, ${checks.length} eBay checks`);
   log(`snapshot bytes: ${Object.entries(sizes).map(([k, v]) => `${k} ${(v / 1024).toFixed(0)} KB`).join(", ")}`);
+  void RANGE_SIZE;
   return meta;
+}
+
+type Writer = (rel: string, value: unknown) => Promise<number>;
+
+/** The derived files; returns the bytes written. Same SQL the pages used to run against Neon (lib/data.ts, before the migration). */
+async function writeDerived(write: Writer): Promise<number> {
+  let bytes = 0;
+
+  // Deal Finder's inputs: one compact tuple per card with a fresh listing, per market.
+  const dealInputs = {} as DealInputsFile;
+  for (const country of MARKETS) {
+    const ebaySource = ebaySourceFor(country) ?? "";
+    const rows = await pub.$queryRaw<{ id: number; storeMin: number | null; tcgLow: number | null; ebayCents: number | null; ebayKnown: boolean | null }[]>`
+      WITH fresh AS (
+        SELECT o."productId" AS id, o.source, o."priceCents" AS p, o."shippingCents" AS s
+        FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+        WHERE o.market = ${country} AND o."inStock" AND o."updatedAt" > now() - make_interval(hours => ${FRESH_HOURS}::int)
+      ), st AS (
+        SELECT id, MIN(p) AS m FROM fresh WHERE source LIKE 'store:%' GROUP BY id
+      ), tc AS (
+        SELECT id, MIN(p) AS m FROM fresh WHERE source = 'tcgplayer' GROUP BY id
+      ), eb AS (
+        SELECT DISTINCT ON (id) id, p + COALESCE(s, 0) AS m, (s IS NOT NULL) AS k
+        FROM fresh WHERE source = ${ebaySource}
+        ORDER BY id, p + COALESCE(s, 0) ASC, (s IS NULL) ASC
+      ), ids AS (
+        SELECT id FROM st UNION SELECT id FROM tc UNION SELECT id FROM eb
+      )
+      SELECT ids.id, st.m AS "storeMin", tc.m AS "tcgLow", eb.m AS "ebayCents", eb.k AS "ebayKnown"
+      FROM ids LEFT JOIN st ON st.id = ids.id LEFT JOIN tc ON tc.id = ids.id LEFT JOIN eb ON eb.id = ids.id
+      ORDER BY ids.id`;
+    const n = (v: unknown) => (v == null ? null : Number(v));
+    dealInputs[country] = rows.map((r) => encodeDealInput({ id: Number(r.id), storeMin: n(r.storeMin), tcgLow: n(r.tcgLow), ebayCents: n(r.ebayCents), ebayKnown: r.ebayKnown }, country));
+  }
+  bytes += await write("deal-inputs.json.gz", dealInputs);
+
+  // The Deal Finder's store picker: every store's price per card, per market.
+  // Per-store files would be 400; per-market files keep each under ~1 MB.
+  for (const country of MARKETS) {
+    const rows = await pub.$queryRaw<{ id: number; source: string; p: number }[]>`
+      SELECT o."productId" AS id, o.source, o."priceCents" AS p
+      FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+      WHERE o.market = ${country} AND o."inStock" AND o.source LIKE 'store:%' AND o."updatedAt" > now() - make_interval(hours => ${FRESH_HOURS}::int)
+      ORDER BY o.source, o."productId"`;
+    const file: StorePricesFile = {};
+    for (const r of rows) (file[r.source] ??= []).push(Number(r.id), Number(r.p));
+    bytes += await write(`store-prices/${country}.json.gz`, file);
+  }
+
+  // /stores/[slug]: each store's footprint in each market.
+  const storeStats = await pub.$queryRaw<(StoreStat & { newest: Date | null })[]>`
+    WITH o AS (
+      SELECT o.source, o.market, o."priceCents", o."updatedAt", c.id AS card_id, s.id AS sealed_id,
+        (o."inStock" AND o."updatedAt" > now() - interval '72 hours') AS live,
+        CASE o.market
+          WHEN 'US' THEN COALESCE(c."lowUS", s."lowUS") WHEN 'AU' THEN COALESCE(c."lowAU", s."lowAU")
+          WHEN 'UK' THEN COALESCE(c."lowUK", s."lowUK") WHEN 'SG' THEN COALESCE(c."lowSG", s."lowSG")
+          WHEN 'CA' THEN COALESCE(c."lowCA", s."lowCA") WHEN 'EU' THEN COALESCE(c."lowEU", s."lowEU") END AS low
+      FROM "Offer" o
+      LEFT JOIN "Card" c ON c.id = o."productId"
+      LEFT JOIN "Sealed" s ON s.id = o."productId"
+      WHERE o.source LIKE 'store:%'
+    )
+    SELECT source, market,
+      count(*)::int AS offers,
+      count(*) FILTER (WHERE live)::int AS "inStock",
+      count(*) FILTER (WHERE live AND card_id IS NOT NULL)::int AS "singlesInStock",
+      count(*) FILTER (WHERE live AND sealed_id IS NOT NULL)::int AS "sealedInStock",
+      count(*) FILTER (WHERE live AND "priceCents" = low)::int AS cheapest,
+      max("updatedAt") AS newest
+    FROM o GROUP BY source, market`;
+  bytes += await write("store-stats.json.gz", storeStats);
+
+  // /stores/[slug]'s showcase: each store's 24 dearest in-stock listings, and the 24 most valuable
+  // cards where it is the cheapest listing in its market. Per market.
+  for (const country of MARKETS) {
+    const low = `"low${country}"`; // a fixed column name from MARKETS, never user input
+    const top = await pub.$queryRawUnsafe<{ source: string; productId: number; priceCents: number; condition: string | null; url: string }[]>(
+      `SELECT source, "productId", "priceCents", condition, url FROM (
+         SELECT o.source, o."productId", o."priceCents", o.condition, o.url,
+                row_number() OVER (PARTITION BY o.source ORDER BY o."priceCents" DESC, o."productId") AS rn
+         FROM "Offer" o WHERE o.market = $1 AND o.source LIKE 'store:%' AND o."inStock" AND o."updatedAt" > now() - interval '72 hours'
+       ) t WHERE rn <= 24 ORDER BY source, rn`,
+      country,
+    );
+    const cheap = await pub.$queryRawUnsafe<{ source: string; productId: number; priceCents: number; condition: string | null; url: string }[]>(
+      `SELECT source, "productId", "priceCents", condition, url FROM (
+         SELECT o.source, o."productId", o."priceCents", o.condition, o.url,
+                row_number() OVER (PARTITION BY o.source ORDER BY c."marketUsd" DESC, o."productId") AS rn
+         FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
+         WHERE o.market = $1 AND o.source LIKE 'store:%' AND o."inStock" AND o."updatedAt" > now() - interval '72 hours'
+           AND o."priceCents" = c.${low} AND c."marketUsd" IS NOT NULL
+       ) t WHERE rn <= 24 ORDER BY source, rn`,
+      country,
+    );
+    const file: StoreListingsFile = {};
+    for (const r of top) (file[r.source] ??= { top: [], cheapestHere: [] }).top.push([Number(r.productId), Number(r.priceCents), r.condition, r.url]);
+    for (const r of cheap) (file[r.source] ??= { top: [], cheapestHere: [] }).cheapestHere.push([Number(r.productId), Number(r.priceCents), r.condition, r.url]);
+    bytes += await write(`store-listings/${country}.json.gz`, file);
+  }
+
+  // /sealed's "sold out at every store we track".
+  const soldRows = await pub.$queryRaw<{ id: number; market: string }[]>`
+    SELECT o."productId" AS id, o.market
+    FROM "Offer" o JOIN "Sealed" s ON s.id = o."productId"
+    WHERE o.source NOT LIKE 'ebay%'
+    GROUP BY o."productId", o.market
+    HAVING NOT bool_or(o."inStock") AND MIN(o."updatedAt") > now() - make_interval(hours => ${FRESH_HOURS}::int)`;
+  const soldOut = { US: [], AU: [], UK: [], SG: [], CA: [], EU: [] } as SoldOutFile;
+  for (const r of soldRows) (soldOut[r.market as Country] ?? []).push(Number(r.id));
+  bytes += await write("sealed-soldout.json.gz", soldOut);
+  return bytes;
 }

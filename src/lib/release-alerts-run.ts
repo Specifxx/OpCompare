@@ -1,3 +1,4 @@
+import { publicDb } from "./public-db";
 import { prisma } from "./db";
 import { MARKETS, type Country } from "./country";
 import { emailShell, isEmailEnabled, sendEmail } from "./email";
@@ -55,7 +56,7 @@ export async function runReleaseAlerts(opts: { dryRun?: boolean; now?: Date; ema
   const summary: ReleaseRunSummary = { sets: 0, pending: 0, sent: 0, failed: 0, held: 0, restocked: {}, emailOn };
 
   const sets = releaseAlertSets(
-    (await prisma.set.findMany({ where: { releasedOn: { not: null } }, select: { id: true, slug: true, name: true, releasedOn: true } })).map((s) => ({
+    (await publicDb.set.findMany({ where: { releasedOn: { not: null } }, select: { id: true, slug: true, name: true, releasedOn: true } })).map((s) => ({
       ...s,
       releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
     })),
@@ -83,10 +84,10 @@ export async function runReleaseAlerts(opts: { dryRun?: boolean; now?: Date; ema
 
     // ── Singles facts: cards of the set with an in-stock store listing ──────
     const facts: SinglesFacts = { pricedCount: {}, cards: {} };
-    const setCards = await prisma.card.findMany({ where: { setId: set.id }, select: { id: true }, take: 3000 });
+    const setCards = await publicDb.card.findMany({ where: { setId: set.id }, select: { id: true }, take: 3000 });
     const ids = setCards.map((c) => c.id);
     if (ids.length && markets.length) {
-      const grouped = await prisma.offer.groupBy({
+      const grouped = await publicDb.offer.groupBy({
         by: ["market", "productId"],
         where: { productId: { in: ids }, market: { in: markets }, inStock: true, priceCents: { gt: 0 }, updatedAt: { gt: fresh }, source: { startsWith: "store:" } },
         _min: { priceCents: true },
@@ -98,7 +99,7 @@ export async function runReleaseAlerts(opts: { dryRun?: boolean; now?: Date; ema
       }
       const cardIds = [...new Set(live.filter((r) => r.scope !== "set" && !r.singlesNotifiedAt).map((r) => Number(r.scope)))].filter((n) => Number.isSafeInteger(n));
       if (cardIds.length) {
-        const cards = await prisma.card.findMany({ where: { id: { in: cardIds }, setId: set.id }, select: { id: true, slug: true, name: true, variant: true } });
+        const cards = await publicDb.card.findMany({ where: { id: { in: cardIds }, setId: set.id }, select: { id: true, slug: true, name: true, variant: true } });
         for (const c of cards) {
           const price: Partial<Record<Country, number | null>> = {};
           for (const m of markets) price[m] = minBy.get(`${m}:${c.id}`) ?? null;
@@ -111,10 +112,10 @@ export async function runReleaseAlerts(opts: { dryRun?: boolean; now?: Date; ema
     // ── Restock transitions (only while the set is unreleased) ─────────────
     const restockByMarket = new Map<Country, string[]>();
     if (isUnreleased(set.releasedOn, today)) {
-      const presale = await prisma.sealed.findMany({ where: { setId: set.id, presale: true }, select: { id: true, name: true }, take: 200 });
+      const presale = await publicDb.sealed.findMany({ where: { setId: set.id, presale: true }, select: { id: true, name: true }, take: 200 });
       for (const m of markets) {
         if (!presale.length || !live.some((r) => r.market === m && !r.restockNotifiedAt)) continue;
-        const offers = await prisma.offer.findMany({
+        const offers = await publicDb.offer.findMany({
           where: { productId: { in: presale.map((p) => p.id) }, market: m, source: { startsWith: "store:" } },
           select: { productId: true, inStock: true, updatedAt: true },
           take: presale.length * 60,

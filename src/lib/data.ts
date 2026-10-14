@@ -9,14 +9,19 @@ import { prisma } from "./db";
 import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "./history";
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
-import { snapshotFirst } from "./price-snapshot";
-import { snapCardDetail, snapChaseStrip, snapCore, snapEbayPanel, snapPrices, snapSealedCatalog, snapSealedDetail, snapSiteStats } from "./price-snapshot-read";
+import { SNAPSHOT_FRESH_MS } from "./price-snapshot";
+import {
+  snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
+  snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreListings, snapStorePrices, snapStoreStats,
+} from "./price-snapshot-read";
 
 export const PRICES_TAG = "prices";
 const TTL = 60 * 60 * 6;
-// Loaders that still read Postgres (deals, store pages, baskets, demand, the
-// per-user-free extras) refresh half as often: every refresh is Neon transfer
-// (owner, 2026-10-08). The snapshot-first loaders read GitHub and keep TTL.
+// THE PUBLIC DATA IS NOT IN NEON (owner, 2026-10-14). Every loader of prices,
+// catalogue and eBay state below reads the files of the `snapshot` branch on
+// GitHub (lib/price-snapshot-read.ts); Neon is asked only for private state
+// (the history ref, email status, the popularity counters, reviews, decks, the
+// promo counter). Those few reads keep the longer TTL: each refresh is transfer.
 const DB_TTL = 60 * 60 * 12;
 
 // ── The catalogue: every printing, compact ───────────────────────────────────
@@ -91,54 +96,18 @@ export interface SetLite {
 }
 
 const loadCore = unstable_cache(
-  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => snapshotFirst("catalog-core", async () => {
-    const [rows, sets] = await Promise.all([
-      prisma.card.findMany({
-        orderBy: { id: "asc" },
-        select: {
-          id: true, slug: true, name: true, number: true, setId: true, rarity: true, variant: true, printing: true, colors: true,
-          cardType: true, cost: true, power: true, counter: true, life: true, hasImage: true,
-        },
-      }),
-      prisma.set.findMany({ select: { id: true, slug: true, code: true, name: true, kind: true, releasedOn: true, cardCount: true, sealedCount: true } }),
-    ]);
-    const codeOf = new Map(sets.map((s) => [s.id, s.code]));
-    return {
-      cards: rows.map((r): CoreTuple => {
-        const derived = cardSlugBase(r.name, r.number, r.variant, codeOf.get(r.setId));
-        return [
-          r.id, r.slug === derived ? 0 : r.slug, r.name, r.number, r.setId, r.rarity, r.variant, r.printing, r.colors.join(";"),
-          r.cardType, r.cost, r.power, r.counter, r.life, r.hasImage ? 1 : 0,
-        ];
-      }),
-      sets: sets.map((s) => ({ ...s, releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null })),
-    };
-  }, () => snapCore()),
-  ["catalog-core-v1"],
+  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => {
+    const c = await snapCore();
+    // The sets carry TCGplayer's own group name for the store matcher; no page wants it.
+    return { cards: c.cards, sets: c.sets.map(({ tcgName: _t, ...s }: SetLite & { tcgName?: string }) => (void _t, s)) };
+  },
+  ["catalog-core-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 const loadPrices = unstable_cache(
-  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => snapshotFirst("catalog-prices", async () => {
-    const rows = await prisma.card.findMany({
-      orderBy: { id: "asc" },
-      select: {
-        id: true, marketUsd: true, change7d: true, change30d: true, high90Usd: true,
-        lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true,
-        storesUS: true, storesAU: true, storesUK: true, storesSG: true, storesCA: true, storesEU: true,
-      },
-    });
-    return {
-      ids: rows.map((r) => r.id),
-      prices: rows.map((r): PriceTuple => {
-        const low = [r.lowUS, r.lowAU, r.lowUK, r.lowSG, r.lowCA, r.lowEU];
-        const stores = [r.storesUS, r.storesAU, r.storesUK, r.storesSG, r.storesCA, r.storesEU];
-        return [r.marketUsd, low.every((x) => x == null) ? 0 : low, stores.every((x) => x === 0) ? 0 : stores, r.change7d, r.change30d, r.high90Usd];
-      }),
-      at: new Date().toISOString(),
-    };
-  }, () => snapPrices()),
-  ["catalog-prices-v1"],
+  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => snapPrices(),
+  ["catalog-prices-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -247,38 +216,9 @@ export interface HistoryPoint {
 // as sold out rather than as a live price — the same rule the aggregates use.
 // A stale eBay row is DROPPED instead: an eBay "sold out" means nothing.
 const STALE_MS = 72 * 3600 * 1000;
-type OfferDbRow = { source: string; market: string; priceCents: number; currency: string; url: string; inStock: boolean; condition: string | null; shippingCents: number | null; updatedAt: Date };
-function freshOffer(o: OfferDbRow): OfferRow {
-  return { ...o, inStock: o.inStock && Date.now() - o.updatedAt.getTime() < STALE_MS, updatedAt: o.updatedAt.toISOString() };
-}
-function freshOffers(rows: OfferDbRow[]): OfferRow[] {
-  return rows.map(freshOffer).filter((o) => o.inStock || !o.source.startsWith("ebay"));
-}
-
 export const getCardDetail = unstable_cache(
-  async (slug: string): Promise<CardDetail | null> => snapshotFirst("card-detail", async () => {
-    const c = await prisma.card.findUnique({
-      where: { slug },
-      select: {
-        id: true, slug: true, name: true, tcgName: true, number: true, rarity: true, variant: true, printing: true, colors: true,
-        cardType: true, cost: true, power: true, counter: true, life: true, attribute: true, subtypes: true, effect: true,
-        finish: true, hasImage: true, tcgplayerUrl: true, marketUsd: true, change7d: true, change30d: true,
-        set: { select: { id: true, slug: true, code: true, name: true, kind: true, releasedOn: true, cardCount: true, sealedCount: true } },
-      },
-    });
-    if (!c) return null;
-    const offers = await prisma.offer.findMany({
-      where: { productId: c.id },
-      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
-      orderBy: { priceCents: "asc" },
-    });
-    return {
-      ...c,
-      set: { ...c.set, releasedOn: c.set.releasedOn ? c.set.releasedOn.toISOString().slice(0, 10) : null },
-      offers: freshOffers(offers),
-    };
-  }, () => snapCardDetail(slug)),
-  ["card-detail-v3"],
+  async (slug: string): Promise<CardDetail | null> => snapCardDetail(slug),
+  ["card-detail-v4"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -301,24 +241,8 @@ export interface SealedLite {
 }
 
 export const getSealedCatalog = unstable_cache(
-  async (): Promise<SealedLite[]> => snapshotFirst("sealed-catalog", async () => {
-    const rows = await prisma.sealed.findMany({
-      select: {
-        id: true, slug: true, name: true, setId: true, kind: true, packCount: true, imageUrl: true, releasedOn: true, presale: true,
-        marketUsd: true, change7d: true, tcgplayerUrl: true,
-        lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true,
-        storesUS: true, storesAU: true, storesUK: true, storesSG: true, storesCA: true, storesEU: true,
-      },
-    });
-    return rows.map((r) => ({
-      id: r.id, slug: r.slug, name: r.name, setId: r.setId, kind: r.kind, packCount: r.packCount, imageUrl: r.imageUrl,
-      releasedOn: r.releasedOn ? r.releasedOn.toISOString().slice(0, 10) : null, presale: r.presale, marketUsd: r.marketUsd,
-      change7d: r.change7d, tcgplayerUrl: r.tcgplayerUrl,
-      low: { US: r.lowUS, AU: r.lowAU, UK: r.lowUK, SG: r.lowSG, CA: r.lowCA, EU: r.lowEU },
-      stores: { US: r.storesUS, AU: r.storesAU, UK: r.storesUK, SG: r.storesSG, CA: r.storesCA, EU: r.storesEU },
-    }));
-  }, () => snapSealedCatalog()),
-  ["sealed-catalog-v1"],
+  async (): Promise<SealedLite[]> => snapSealedCatalog(),
+  ["sealed-catalog-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -327,27 +251,8 @@ export interface SealedDetail extends SealedLite {
 }
 
 export const getSealedDetail = unstable_cache(
-  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => snapshotFirst("sealed-detail", async () => {
-    const s = await prisma.sealed.findUnique({
-      where: { slug },
-      select: {
-        id: true, slug: true, name: true, setId: true, kind: true, packCount: true, imageUrl: true, releasedOn: true, presale: true,
-        marketUsd: true, change7d: true, tcgplayerUrl: true,
-      },
-    });
-    if (!s) return null;
-    const offers = await prisma.offer.findMany({
-      where: { productId: s.id },
-      select: { source: true, market: true, priceCents: true, currency: true, url: true, inStock: true, condition: true, shippingCents: true, updatedAt: true },
-      orderBy: { priceCents: "asc" },
-    });
-    return {
-      ...s,
-      releasedOn: s.releasedOn ? s.releasedOn.toISOString().slice(0, 10) : null,
-      offers: freshOffers(offers),
-    };
-  }, () => snapSealedDetail(slug)),
-  ["sealed-detail-v3"],
+  async (slug: string): Promise<Omit<SealedDetail, "low" | "stores"> | null> => snapSealedDetail(slug),
+  ["sealed-detail-v4"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -366,27 +271,8 @@ export interface SiteStats {
 const EBAY_LIVE_DAYS = 3;
 
 export const getSiteStats = unstable_cache(
-  async (): Promise<SiteStats> => snapshotFirst("site-stats", async () => {
-    const [run, groups, ebayRun] = await Promise.all([
-      prisma.importRun.findFirst({ where: { ok: true, kind: { not: "ebay" } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
-      // eBay is not a store: never in store counts or homepage stats.
-      prisma.offer.groupBy({ by: ["source", "market", "inStock"], where: { NOT: { source: { startsWith: "ebay" } } }, _count: { _all: true } }),
-      prisma.importRun.findFirst({
-        where: { kind: "ebay", ok: true, finishedAt: { gte: new Date(Date.now() - EBAY_LIVE_DAYS * 86_400_000) } },
-        select: { id: true },
-      }),
-    ]);
-    const map = new Map<string, { source: string; market: string; offers: number; inStock: number }>();
-    for (const g of groups) {
-      const k = `${g.source}|${g.market}`;
-      const row = map.get(k) ?? { source: g.source, market: g.market, offers: 0, inStock: 0 };
-      row.offers += g._count._all;
-      if (g.inStock) row.inStock += g._count._all;
-      map.set(k, row);
-    }
-    return { lastImportAt: run?.finishedAt?.toISOString() ?? null, storeOffers: [...map.values()], ebayLive: Boolean(ebayRun) };
-  }, () => snapSiteStats()),
-  ["site-stats-v3"],
+  async (): Promise<SiteStats> => snapSiteStats(),
+  ["site-stats-v4"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -459,32 +345,9 @@ const DEAL_FRESH_HOURS = STALE_MS / 3_600_000;
  * One query per market, reduced in Postgres; ~7k rows ≈ 200 KB.
  */
 export const getDealInputs = unstable_cache(
-  async (country: Country): Promise<DealInputTuple[]> => {
-    const ebaySource = ebaySourceFor(country) ?? "";
-    const rows = await prisma.$queryRaw<{ id: number; storeMin: number | null; tcgLow: number | null; ebayCents: number | null; ebayKnown: boolean | null }[]>`
-      WITH fresh AS (
-        SELECT o."productId" AS id, o.source, o."priceCents" AS p, o."shippingCents" AS s
-        FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
-        WHERE o.market = ${country} AND o."inStock" AND o."updatedAt" > now() - make_interval(hours => ${DEAL_FRESH_HOURS}::int)
-      ), st AS (
-        SELECT id, MIN(p) AS m FROM fresh WHERE source LIKE 'store:%' GROUP BY id
-      ), tc AS (
-        SELECT id, MIN(p) AS m FROM fresh WHERE source = 'tcgplayer' GROUP BY id
-      ), eb AS (
-        SELECT DISTINCT ON (id) id, p + COALESCE(s, 0) AS m, (s IS NOT NULL) AS k
-        FROM fresh WHERE source = ${ebaySource}
-        ORDER BY id, p + COALESCE(s, 0) ASC, (s IS NULL) ASC
-      ), ids AS (
-        SELECT id FROM st UNION SELECT id FROM tc UNION SELECT id FROM eb
-      )
-      SELECT ids.id, st.m AS "storeMin", tc.m AS "tcgLow", eb.m AS "ebayCents", eb.k AS "ebayKnown"
-      FROM ids LEFT JOIN st ON st.id = ids.id LEFT JOIN tc ON tc.id = ids.id LEFT JOIN eb ON eb.id = ids.id
-      ORDER BY ids.id
-    `;
-    return rows.map((r) => encodeDealInput({ id: Number(r.id), storeMin: num(r.storeMin), tcgLow: num(r.tcgLow), ebayCents: num(r.ebayCents), ebayKnown: r.ebayKnown }, country));
-  },
-  ["deal-inputs-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  async (country: Country): Promise<DealInputTuple[]> => snapDealInputs(country),
+  ["deal-inputs-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 function num(v: unknown): number | null {
@@ -500,17 +363,19 @@ export const getStoreMins = unstable_cache(
   async (country: Country, storeKeys: string[]): Promise<[number, number][]> => {
     const sources = [...new Set(storeKeys)].sort().map((k) => `store:${k}`);
     if (!sources.length) return [];
-    const rows = await prisma.$queryRaw<{ id: number; m: number }[]>`
-      SELECT o."productId" AS id, MIN(o."priceCents") AS m
-      FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
-      WHERE o.market = ${country} AND o."inStock" AND o."updatedAt" > now() - make_interval(hours => ${DEAL_FRESH_HOURS}::int)
-        AND o.source = ANY(${sources})
-      GROUP BY o."productId"
-    `;
-    return rows.map((r) => [Number(r.id), Number(r.m)]);
+    const file = await snapStorePrices(country);
+    const min = new Map<number, number>();
+    for (const source of sources) {
+      const flat = file[source] ?? [];
+      for (let i = 0; i < flat.length; i += 2) {
+        const prev = min.get(flat[i]);
+        if (prev == null || flat[i + 1] < prev) min.set(flat[i], flat[i + 1]);
+      }
+    }
+    return [...min];
   },
-  ["deal-store-mins-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  ["deal-store-mins-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 export interface DealOfferDetail {
@@ -530,35 +395,24 @@ export const getDealOffers = unstable_cache(
     const want = [...new Set(ids.filter((n) => Number.isInteger(n)))].slice(0, 25);
     if (!want.length) return [];
     const ebaySource = ebaySourceFor(country);
-    const [offers, cards] = await Promise.all([
-      prisma.offer.findMany({
-        where: {
-          market: country,
-          productId: { in: want },
-          inStock: true,
-          updatedAt: { gt: new Date(Date.now() - STALE_MS) },
-          OR: [{ source: { startsWith: "store:" } }, ...(ebaySource ? [{ source: ebaySource }] : [])],
+    const [offers, cards] = await Promise.all([snapOffersOf(want), snapCardsById()]);
+    const live = (o: OfferRow) => o.market === country && o.inStock && Date.now() - Date.parse(o.updatedAt) < STALE_MS;
+    return want.flatMap((id): DealOfferDetail[] => {
+      const card = cards.get(id);
+      if (!card) return [];
+      const rows = (offers.get(id) ?? []).filter(live).sort((a, b) => a.priceCents - b.priceCents);
+      return [
+        {
+          id,
+          tcgplayerUrl: card.tcgplayerUrl,
+          stores: rows.filter((o) => o.source.startsWith("store:")).slice(0, 80).map((o) => ({ source: o.source, priceCents: o.priceCents, url: o.url, condition: o.condition })),
+          ebay: rows.filter((o) => o.source === ebaySource).map((o) => ({ id, priceCents: o.priceCents, shippingCents: o.shippingCents, url: o.url })),
         },
-        select: { productId: true, source: true, priceCents: true, shippingCents: true, url: true, condition: true },
-        // Cheapest first, so if the cap ever bites it drops the dearest listings, never a row's own.
-        orderBy: { priceCents: "asc" },
-        take: want.length * 80,
-      }),
-      prisma.card.findMany({ where: { id: { in: want } }, select: { id: true, tcgplayerUrl: true }, take: want.length }),
-    ]);
-    return cards.map((c) => ({
-      id: c.id,
-      tcgplayerUrl: c.tcgplayerUrl,
-      stores: offers
-        .filter((o) => o.productId === c.id && o.source.startsWith("store:"))
-        .map((o) => ({ source: o.source, priceCents: o.priceCents, url: o.url, condition: o.condition })),
-      ebay: offers
-        .filter((o) => o.productId === c.id && o.source === ebaySource)
-        .map((o) => ({ id: o.productId, priceCents: o.priceCents, shippingCents: o.shippingCents, url: o.url })),
-    }));
+      ];
+    });
   },
-  ["deal-offers-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  ["deal-offers-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 // ---- tools track loaders ----
@@ -582,10 +436,7 @@ export interface CardTextIndex {
 export const getCardText = unstable_cache(
   async (): Promise<CardTextIndex> => {
     const { cardKeywords } = await import("./keywords");
-    const rows = await prisma.$queryRaw<{ number: string; subtypes: string[]; effect: string | null }[]>`
-      SELECT DISTINCT ON (number) number, subtypes, effect FROM "Card"
-      WHERE number IS NOT NULL AND printing <> 'don'
-      ORDER BY number, (printing = 'standard') DESC, id`;
+    const rows = await snapCardTextRows();
     const types: string[] = [];
     const kws: string[] = [];
     const ti = new Map<string, number>();
@@ -599,8 +450,8 @@ export const getCardText = unstable_cache(
         .filter((r) => r[1].length || r[2].length),
     };
   },
-  ["card-text-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  ["card-text-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 /** Decoded getCardText(): number → { types, keywords }. */
@@ -622,31 +473,9 @@ export interface StoreStat {
 }
 
 export const getStoreStats = unstable_cache(
-  async (): Promise<StoreStat[]> => {
-    const rows = await prisma.$queryRaw<StoreStat[]>`
-      WITH o AS (
-        SELECT o.source, o.market, o."priceCents", c.id AS card_id, s.id AS sealed_id,
-          (o."inStock" AND o."updatedAt" > now() - interval '72 hours') AS live,
-          CASE o.market
-            WHEN 'US' THEN COALESCE(c."lowUS", s."lowUS") WHEN 'AU' THEN COALESCE(c."lowAU", s."lowAU")
-            WHEN 'UK' THEN COALESCE(c."lowUK", s."lowUK") WHEN 'SG' THEN COALESCE(c."lowSG", s."lowSG")
-            WHEN 'CA' THEN COALESCE(c."lowCA", s."lowCA") WHEN 'EU' THEN COALESCE(c."lowEU", s."lowEU") END AS low
-        FROM "Offer" o
-        LEFT JOIN "Card" c ON c.id = o."productId"
-        LEFT JOIN "Sealed" s ON s.id = o."productId"
-        WHERE o.source LIKE 'store:%'
-      )
-      SELECT source, market,
-        count(*)::int AS offers,
-        count(*) FILTER (WHERE live)::int AS "inStock",
-        count(*) FILTER (WHERE live AND card_id IS NOT NULL)::int AS "singlesInStock",
-        count(*) FILTER (WHERE live AND sealed_id IS NOT NULL)::int AS "sealedInStock",
-        count(*) FILTER (WHERE live AND "priceCents" = low)::int AS cheapest
-      FROM o GROUP BY source, market`;
-    return rows;
-  },
-  ["store-stats-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  async (): Promise<StoreStat[]> => snapStoreStats(),
+  ["store-stats-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 /**
@@ -662,32 +491,12 @@ export interface StoreListings {
 
 export const getStoreListings = unstable_cache(
   async (source: string, market: string): Promise<StoreListings> => {
-    // `market` is spliced into a column name below: only the six markets pass.
+    // Only the six markets and real stores have a file.
     if (!(MARKETS as string[]).includes(market) || !source.startsWith("store:")) return { top: [], cheapestHere: [] };
-    const live = (q: { "inStock": boolean; updatedAt: Date }) => q.inStock && Date.now() - q.updatedAt.getTime() < STALE_MS;
-    const [top, cheap] = await Promise.all([
-      prisma.offer.findMany({
-        where: { source, market, inStock: true, updatedAt: { gte: new Date(Date.now() - STALE_MS) } },
-        orderBy: { priceCents: "desc" },
-        take: 24,
-        select: { productId: true, priceCents: true, condition: true, url: true, inStock: true, updatedAt: true },
-      }),
-      prisma.$queryRawUnsafe<{ productId: number; priceCents: number; condition: string | null; url: string }[]>(
-        `SELECT o."productId", o."priceCents", o.condition, o.url FROM "Offer" o JOIN "Card" c ON c.id = o."productId"
-         WHERE o.source = $1 AND o.market = $2 AND o."inStock" AND o."updatedAt" > now() - interval '72 hours'
-           AND o."priceCents" = c."low${market}" AND c."marketUsd" IS NOT NULL
-         ORDER BY c."marketUsd" DESC LIMIT 24`,
-        source,
-        market,
-      ),
-    ]);
-    return {
-      top: top.filter(live).map((r): StoreListing => [r.productId, r.priceCents, r.condition, r.url]),
-      cheapestHere: cheap.map((r): StoreListing => [r.productId, r.priceCents, r.condition, r.url]),
-    };
+    return snapStoreListings(market as Country, source);
   },
-  ["store-listings-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  ["store-listings-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 // ---- ux track loaders ----
@@ -762,16 +571,16 @@ export async function getHomeStats(): Promise<HomeStats> {
 }
 
 const loadSearched = unstable_cache(
-  async (): Promise<number[]> =>
-    (
-      await prisma.card.findMany({
-        where: { searchCount: { gt: 0 } },
-        orderBy: [{ searchCount: "desc" }, { marketUsd: { sort: "desc", nulls: "last" } }, { viewCount: "desc" }],
-        take: 24,
-        select: { id: true },
-      })
-    ).map((r) => r.id),
-  ["home-searched-v1"],
+  async (): Promise<number[]> => {
+    // The counters are private (Neon, CardDemand); a tie on searches goes to the dearer card, then the more viewed.
+    const rows = await prisma.cardDemand.findMany({ where: { searchCount: { gt: 0 } }, orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }], take: 200, select: { cardId: true, searchCount: true, viewCount: true } });
+    const cards = await snapCardsById();
+    return rows
+      .sort((a, b) => b.searchCount - a.searchCount || (cards.get(b.cardId)?.marketUsd ?? -1) - (cards.get(a.cardId)?.marketUsd ?? -1) || b.viewCount - a.viewCount)
+      .slice(0, 24)
+      .map((r) => r.cardId);
+  },
+  ["home-searched-v2"],
   { tags: [PRICES_TAG], revalidate: DB_TTL },
 );
 
@@ -897,22 +706,22 @@ export const BASKET_ID_BUCKET = 32;
 const loadBasketBucket = unstable_cache(
   async (country: Country, bucket: number): Promise<BasketListingTuple[]> => {
     if (!Number.isInteger(bucket) || bucket < 0) return [];
-    const rows = await prisma.offer.findMany({
-      where: {
-        market: country,
-        productId: { gte: bucket * BASKET_ID_BUCKET, lt: (bucket + 1) * BASKET_ID_BUCKET },
-        inStock: true,
-        updatedAt: { gt: new Date(Date.now() - STALE_MS) },
-        OR: [{ source: { startsWith: "store:" } }, { source: "tcgplayer" }],
-      },
-      select: { productId: true, source: true, priceCents: true, condition: true, url: true },
-      orderBy: { priceCents: "asc" },
-      take: BASKET_ID_BUCKET * 120,
-    });
-    return rows.map((r): BasketListingTuple => [r.productId, r.source, r.priceCents, r.condition, r.url]);
+    const ids = Array.from({ length: BASKET_ID_BUCKET }, (_, i) => bucket * BASKET_ID_BUCKET + i);
+    const offers = await snapOffersOf(ids);
+    const rows: { productId: number; o: OfferRow }[] = [];
+    for (const [productId, list] of offers) {
+      for (const o of list) {
+        if (o.market !== country || !o.inStock || Date.now() - Date.parse(o.updatedAt) >= STALE_MS) continue;
+        if (o.source.startsWith("store:") || o.source === "tcgplayer") rows.push({ productId, o });
+      }
+    }
+    return rows
+      .sort((a, b) => a.o.priceCents - b.o.priceCents)
+      .slice(0, BASKET_ID_BUCKET * 120)
+      .map((r): BasketListingTuple => [r.productId, r.o.source, r.o.priceCents, r.o.condition, r.o.url]);
   },
-  ["basket-listings-v2"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  ["basket-listings-v3"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 export async function getBasketListings(country: Country, ids: number[]): Promise<BasketListingTuple[]> {
@@ -1017,11 +826,11 @@ async function historyFileAtOrThrow<T>(ref: string, rel: string): Promise<T | nu
 
 /** The live counters: every card with any activity, as cardId → [searches, views] (id + two integers each). */
 async function liveDemandOrThrow(): Promise<Record<string, [number, number]>> {
-  const rows = await prisma.card.findMany({
+  const rows = await prisma.cardDemand.findMany({
     where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
-    select: { id: true, searchCount: true, viewCount: true },
+    select: { cardId: true, searchCount: true, viewCount: true },
   });
-  return Object.fromEntries(rows.map((r) => [String(r.id), [r.searchCount, r.viewCount] as [number, number]]));
+  return Object.fromEntries(rows.map((r) => [String(r.cardId), [r.searchCount, r.viewCount] as [number, number]]));
 }
 
 /** The window read, with the files at `ref` and the live counters. Throws (see above). */
@@ -1134,15 +943,15 @@ export interface RiseFeed {
 const getRiseFeed = unstable_cache(
   async (ref: string, _day: string): Promise<RiseFeed> => {
     const [rows, file] = await Promise.all([
-      prisma.card.findMany({
+      prisma.cardDemand.findMany({
         where: { searchCount: { gt: 0 } },
-        orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }, { id: "asc" }],
+        orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }, { cardId: "asc" }],
         take: 2000,
-        select: { id: true, searchCount: true, viewCount: true },
+        select: { cardId: true, searchCount: true, viewCount: true },
       }),
       historyFileAtOrThrow<RiseFile>(ref, "rising.json"),
     ]);
-    return { searched: rows.map((r) => [r.id, r.searchCount, r.viewCount]), file };
+    return { searched: rows.map((r) => [r.cardId, r.searchCount, r.viewCount]), file };
   },
   ["oc-rise-feed-v1"],
   { tags: [PRICES_TAG], revalidate: 172800 },
@@ -1286,24 +1095,25 @@ export function foldStoreRows(rows: readonly { productId: number; _min: { priceC
 const loadSetStoreMins = (setId: number, market: Country) =>
   unstable_cache(
     async (): Promise<[number, number, number][]> => {
-      const ids = (await prisma.card.findMany({ where: { setId }, select: { id: true }, take: SET_CARD_CAP })).map((c) => c.id);
+      const cards = await snapCardsById();
+      const ids = [...cards.values()].filter((c) => c.setId === setId).slice(0, SET_CARD_CAP).map((c) => c.id);
       if (!ids.length) return [];
-      const groups = await prisma.offer.groupBy({
-        by: ["productId", "source"],
-        where: {
-          productId: { in: ids },
-          market,
-          inStock: true,
-          priceCents: { gt: 0 },
-          updatedAt: { gt: new Date(Date.now() - STALE_MS) },
-          NOT: { source: { startsWith: "ebay" } },
-        },
-        _min: { priceCents: true },
-      });
+      const offers = await snapOffersOf(ids);
+      // The cheapest price per (product, source): in stock, in the market, fresh, priced, never an eBay row.
+      const groups: { productId: number; _min: { priceCents: number | null } }[] = [];
+      for (const [productId, list] of offers) {
+        const bySource = new Map<string, number>();
+        for (const o of list) {
+          if (o.market !== market || !o.inStock || o.priceCents <= 0 || o.source.startsWith("ebay") || Date.now() - Date.parse(o.updatedAt) >= STALE_MS) continue;
+          const prev = bySource.get(o.source);
+          if (prev == null || o.priceCents < prev) bySource.set(o.source, o.priceCents);
+        }
+        for (const price of bySource.values()) groups.push({ productId, _min: { priceCents: price } });
+      }
       return [...foldStoreRows(groups)].map(([id, v]) => [id, v.minCents, v.stores]);
     },
-    ["set-checklist-v1", String(setId), market],
-    { tags: [PRICES_TAG], revalidate: DB_TTL },
+    ["set-checklist-v2", String(setId), market],
+    { tags: [PRICES_TAG], revalidate: TTL },
   )();
 
 /** One set's cards with each one's cheapest store listing in `market` (lib/set-scope.ts ChecklistCard). */
@@ -1351,27 +1161,8 @@ import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, 
  * card view costs no query. ~8 rows x 6 markets, titles trimmed: well under 10 KB.
  */
 export const getEbayPanel = unstable_cache(
-  async (productId: number): Promise<EbayPanelData> => snapshotFirst("ebay-panel", async () => {
-    const since = new Date(Date.now() - PANEL_MAX_AGE_HOURS * 3600 * 1000);
-    const [listings, graded] = await Promise.all([
-      prisma.ebayListing.findMany({
-        where: { productId, updatedAt: { gte: since } },
-        orderBy: [{ market: "asc" }, { rank: "asc" }],
-        select: { market: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
-      }),
-      prisma.ebayGradedListing.findMany({
-        where: { productId, updatedAt: { gte: since } },
-        orderBy: [{ market: "asc" }, { priceCents: "asc" }],
-        take: 24,
-        select: { market: true, itemId: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true, grader: true, grade: true },
-      }),
-    ]);
-    return {
-      listings: listings.map((l) => ({ ...l, title: panelTitle(l.title) })),
-      graded: graded.map((l) => ({ ...l, title: panelTitle(l.title) })),
-    };
-  }, () => snapEbayPanel(productId)),
-  ["ebay-panel-v1"],
+  async (productId: number): Promise<EbayPanelData> => snapEbayPanel(productId),
+  ["ebay-panel-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 
@@ -1382,35 +1173,9 @@ export const getEbayPanel = unstable_cache(
  * with an image. At most 12 cards: a few KB.
  */
 export const getEbayPicks = unstable_cache(
-  async (setId: number | null): Promise<PickCard[]> => {
-    let sid = setId;
-    if (sid == null) {
-      const s = await prisma.set.findFirst({ where: { kind: "booster", releasedOn: { lte: new Date() } }, orderBy: { releasedOn: "desc" }, select: { id: true } });
-      sid = s?.id ?? null;
-    }
-    if (sid == null) return [];
-    const cards = await prisma.card.findMany({
-      where: { setId: sid, marketUsd: { gt: 0 }, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
-      orderBy: { marketUsd: "desc" },
-      take: 24,
-      select: { id: true, slug: true, name: true, number: true, variant: true, printing: true, rarity: true, marketUsd: true, set: { select: { code: true } } },
-    });
-    const chase = cards.filter(isChasePrinting).slice(0, 12);
-    if (!chase.length) return [];
-    const rows = await prisma.ebayListing.findMany({
-      where: { productId: { in: chase.map((c) => c.id) }, rank: 0, imageUrl: { not: null }, updatedAt: { gte: new Date(Date.now() - PICKS_MAX_AGE_HOURS * 3600 * 1000) } },
-      select: { productId: true, market: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
-    });
-    return chase
-      .map((c): PickCard => {
-        const listings: PickCard["listings"] = {};
-        for (const r of rows) if (r.productId === c.id && r.imageUrl) listings[r.market] = { priceCents: r.priceCents, shippingCents: r.shippingCents, currency: r.currency, url: r.url, title: panelTitle(r.title), imageUrl: r.imageUrl };
-        return { id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, setCode: c.set.code, marketUsd: c.marketUsd!, listings };
-      })
-      .filter((c) => Object.keys(c.listings).length > 0);
-  },
-  ["ebay-picks-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  async (setId: number | null): Promise<PickCard[]> => snapEbayPicks(setId),
+  ["ebay-picks-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 
 /**
@@ -1422,19 +1187,9 @@ export const getEbayPicks = unstable_cache(
  * out"; one stale row keeps the chip off. A few hundred ids at most.
  */
 export const getSealedSoldOut = unstable_cache(
-  async (): Promise<Record<Country, number[]>> => {
-    const rows = await prisma.$queryRaw<{ id: number; market: string }[]>`
-      SELECT o."productId" AS id, o.market
-      FROM "Offer" o JOIN "Sealed" s ON s.id = o."productId"
-      WHERE o.source NOT LIKE 'ebay%'
-      GROUP BY o."productId", o.market
-      HAVING NOT bool_or(o."inStock") AND MIN(o."updatedAt") > now() - make_interval(hours => ${STALE_MS / 3_600_000}::int)`;
-    const out = { US: [], AU: [], UK: [], SG: [], CA: [], EU: [] } as Record<Country, number[]>;
-    for (const r of rows) (out[r.market as Country] ?? []).push(r.id);
-    return out;
-  },
-  ["sealed-soldout-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
+  async (): Promise<Record<Country, number[]>> => snapSoldOut(),
+  ["sealed-soldout-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
 );
 // ── end wave2:catalogue ──
 // ── promo ──
@@ -1470,25 +1225,7 @@ export async function getLaunchPromo(): Promise<PromoStatus> {
  * works before the eBay keys exist. Display-only; costs no eBay call.
  */
 export const getChaseStrip = unstable_cache(
-  async (): Promise<ChaseTile[]> => snapshotFirst("chase-strip", async () => {
-    const cards = await prisma.card.findMany({
-      where: { marketUsd: { gt: 0 }, hasImage: true, OR: [{ printing: { in: ["sp", "manga", "alt", "treasure"] } }, { rarity: "SEC" }] },
-      orderBy: { marketUsd: "desc" },
-      take: 40,
-      select: { id: true, slug: true, name: true, number: true, variant: true, printing: true, rarity: true, marketUsd: true },
-    });
-    const chase = cards.filter(isChasePrinting).slice(0, 12);
-    if (!chase.length) return [];
-    const rows = await prisma.ebayListing.findMany({
-      where: { productId: { in: chase.map((c) => c.id) }, rank: 0, imageUrl: { not: null }, updatedAt: { gte: new Date(Date.now() - PICKS_MAX_AGE_HOURS * 3600 * 1000) } },
-      select: { productId: true, market: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
-    });
-    return chase.map((c): ChaseTile => {
-      const listings: ChaseTile["listings"] = {};
-      for (const r of rows) if (r.productId === c.id && r.imageUrl) listings[r.market] = { priceCents: r.priceCents, shippingCents: r.shippingCents, currency: r.currency, url: r.url, imageUrl: r.imageUrl };
-      return { id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant, marketUsd: c.marketUsd!, imageUrl: cardImage.tile(c.id), listings };
-    });
-  }, () => snapChaseStrip()),
-  ["ebay-chase-strip-v1"],
+  async (): Promise<ChaseTile[]> => snapChaseStrip(),
+  ["ebay-chase-strip-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );

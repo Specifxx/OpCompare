@@ -7,7 +7,9 @@
 //   IMPORT_ONLY_COUNTRY=UK npm run import
 //   TCGCSV_CACHE_DIR=.cache npm run import   # reuse downloaded TCGCSV files (dev)
 //
-// Writes today's prices to DATABASE_URL and the price history to HISTORY_DIR
+// Writes today's prices to the public working copy (PUBLIC_DATABASE_URL: a throwaway
+// Postgres, seeded by scripts/pub-seed.ts and published by scripts/price-snapshot.ts)
+// and the price history to HISTORY_DIR
 // (default .data/history; the workflow commits it to the `data` branch — see
 // lib/history.ts). The store import never calls eBay: the eBay pass is
 // scripts/ebay.ts (ebay-prices.yml), and this import aggregates its rows.
@@ -17,11 +19,14 @@ import { pruneBeacons } from "../src/lib/beacons";
 import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";
 import { normalizeCountry } from "../src/lib/country";
 import { recordToolsHistory } from "../src/lib/tools-history";
-import { writeRunOffers } from "../src/lib/run-offers";
+import { pub, requirePublicDatabase } from "../src/lib/pubdb";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 async function main() {
+  // The catalogue and offers are the public working copy (seeded from the GitHub snapshot by
+  // scripts/pub-seed.ts), never Neon. Neon gets only this run's record.
+  requirePublicDatabase();
   const withStores = process.env.IMPORT_STORES !== "0";
   const cacheDir = process.env.TCGCSV_CACHE_DIR || undefined;
   if (cacheDir) fs.mkdirSync(cacheDir, { recursive: true });
@@ -40,12 +45,6 @@ async function main() {
       log(`Stores: ${stores.length} read, ${stores.reduce((a, s) => a + s.cards + s.sealed, 0)} offers, ${failed.length} failed${failed.length ? ` (${failed.join(", ")})` : ""}`);
     }
     await aggregate(log);
-    // What this run wrote, for the price snapshot (lib/run-offers.ts): the
-    // workflow builds the snapshot from this file instead of reading the Offer
-    // table back out of Postgres.
-    const runFile = process.env.RUN_OFFERS_FILE || ".snapshot-work/run-offers.json.gz";
-    const w = writeRunOffers(runFile);
-    log(`Run offers: ${w.offers} rows from ${w.covered} sources → ${runFile} (${(w.bytes / 1048576).toFixed(1)} MB)`);
     summary.history = await recordHistory(log);
     // Demand snapshots and the Rising Cards feed (lib/tools-history.ts), beside
     // the price history on the data branch. Never fails the import.
@@ -76,4 +75,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => Promise.all([prisma.$disconnect(), pub.$disconnect()]));

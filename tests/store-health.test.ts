@@ -137,7 +137,7 @@ test("appearances are capped per store", () => {
 
 test("the report step never fails the import", () => {
   const wf = fs.readFileSync(path.resolve(__dirname, "../.github/workflows/import-prices.yml"), "utf8");
-  assert.match(wf, /continue-on-error: true\s+run: npx tsx scripts\/store-health\.ts/);
+  assert.match(wf, /continue-on-error: true\s+env:[^\n]*\n\s+#[^\n]*\n\s+SNAPSHOT_LOCAL_DIR: \.snapshot-out\s+run: npx tsx scripts\/store-health\.ts/);
   const script = fs.readFileSync(path.resolve(__dirname, "../scripts/store-health.ts"), "utf8");
   assert.match(script, /process\.exit\(0\)/);
 });

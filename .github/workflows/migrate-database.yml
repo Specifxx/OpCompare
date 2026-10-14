@@ -54,7 +54,7 @@ jobs:
         env:
           OP2: ${{ secrets.OP2 || vars.OP2 }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: bash scripts/db-push-safe.sh && npx prisma generate
+        run: bash scripts/db-push-safe.sh && npm run db:generate
       - name: Copy the state
         env:
           SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL }}

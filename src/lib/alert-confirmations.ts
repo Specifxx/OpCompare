@@ -1,3 +1,4 @@
+import { attachCards } from "./public-db";
 import { prisma } from "./db";
 import { isCountry, type Country } from "./country";
 import { SITE_URL } from "./site";
@@ -130,12 +131,15 @@ export async function drainConfirmations(now: Date = new Date(), send = sendAler
       continue;
     }
     if (summary.sent >= CONFIRMATIONS_PER_RUN) break;
-    const rows = await prisma.priceAlert.findMany({
-      where: { email },
-      orderBy: { createdAt: "asc" },
-      take: 200,
-      select: { market: true, unsubToken: true, card: { select: { id: true, name: true, variant: true, slug: true, number: true, set: { select: { code: true } } } } },
-    });
+    const rows = await attachCards<{ market: string; unsubToken: string; cardId: number }, { id: number; name: string; variant: string | null; slug: string; number: string | null; set: { code: string } }>(
+      await prisma.priceAlert.findMany({
+        where: { email },
+        orderBy: { createdAt: "asc" },
+        take: 200,
+        select: { market: true, unsubToken: true, cardId: true },
+      }),
+      { name: true, variant: true, slug: true, number: true, set: { select: { code: true } } },
+    );
     if (!rows.length) continue;
     if (!(await claimConfirmationSlot(prisma, now))) {
       summary.capped++;

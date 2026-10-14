@@ -1,0 +1,99 @@
+name: Move public data off Neon
+
+# ONE-TIME (owner, 2026-10-14: "offload everything public from Neon to GitHub").
+# Copies the catalogue, offers and eBay state out of the Neon database into a
+# throwaway Postgres on this runner, builds the first snapshot of the new design
+# from them (nothing is lost: the eBay pass's memory of what it searched, panel
+# titles, change7d/30d, first-seen dates), moves the popularity counters to their
+# own small private table, and publishes the snapshot branch. After this the
+# `snapshot` branch is the only copy and every later job seeds from it
+# (scripts/pub-setup.sh).
+#
+# It REFUSES to run when the snapshot already has the new layout (it would
+# overwrite newer data with Neon's stale copy); tick `force` only if you mean it.
+# Neon's old tables are not touched here: the "Retire the public tables" workflow
+# drops them, later, once the site has been verified on the new data.
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run even though the snapshot already has the new layout (overwrites it with Neon's copy)"
+        type: boolean
+        default: false
+
+# Shares the import's group: it must never overlap an import or an eBay pass.
+concurrency:
+  group: import-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pub
+          POSTGRES_DB: pub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      PUBLIC_DATABASE_URL: postgresql://postgres:pub@localhost:5432/pub
+      NODE_OPTIONS: --max-old-space-size=4096
+      MOVE_FORCE: ${{ inputs.force && '1' || '' }}
+    steps:
+      - name: Skip when the database is not configured
+        id: gate
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL (OP2) is not set: nothing to move."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.run == 'true'
+      # Adds CardDemand and drops the foreign keys from the private tables to the
+      # catalogue (dropping a constraint loses no rows), additively as always.
+      - name: Sync the private schema
+        if: steps.gate.outputs.run == 'true'
+        run: bash scripts/db-push-safe.sh && npm run db:generate
+      - name: Move the popularity counters
+        if: steps.gate.outputs.run == 'true'
+        run: npx tsx scripts/move-demand.ts
+      - name: Create the public working copy (empty)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          PUB_SKIP_SEED: "1"
+        run: bash scripts/pub-setup.sh
+      - name: Copy the public tables out of Neon
+        if: steps.gate.outputs.run == 'true'
+        run: npx tsx scripts/pub-bootstrap.ts
+      - name: Build the first snapshot
+        if: steps.gate.outputs.run == 'true'
+        env:
+          SNAPSHOT_DIR: .snapshot-out
+        run: npx tsx scripts/price-snapshot.ts
+      - name: Publish the snapshot
+        if: steps.gate.outputs.run == 'true'
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          SNAPSHOT_DIR: .snapshot-out
+        run: bash scripts/publish-snapshot.sh

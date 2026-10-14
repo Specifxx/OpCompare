@@ -48,6 +48,7 @@ export const COPY_ORDER = [
   "SetReleaseAlert",
   "PublishedDeck",
   "SupportTicket",
+  "CardDemand",
 ] as const;
 /** Deliberately not copied. */
 export const SKIPPED = ["Offer", "ClickEvent"] as const;

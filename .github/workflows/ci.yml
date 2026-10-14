@@ -22,7 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: npx prisma generate && npx prisma generate --schema prisma/public/schema.prisma
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test

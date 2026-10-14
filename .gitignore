@@ -30,3 +30,6 @@ next-env.d.ts
 # Price snapshot work files (built by the import workflow, force-pushed to the snapshot branch)
 .snapshot-work/
 .snapshot-out/
+
+# generated public-data Prisma client (prisma generate --schema prisma/public/schema.prisma)
+/src/generated/

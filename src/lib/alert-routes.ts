@@ -8,6 +8,7 @@
 // unguessable token (an alert row's unsubToken, a release alert's unsubToken)
 // or by the signed-in account's own address, select-limited and capped. Called
 // only from those routes and pages, never from a cached loader or the layout.
+import { publicDb } from "./public-db";
 import { randomUUID } from "crypto";
 import { prisma } from "./db";
 import { normalizeCountry, type Country } from "./country";
@@ -50,7 +51,7 @@ export async function releaseAlertsForToken(token: string): Promise<ReleaseToken
   if (!token || token.length > 200) return { active: false, sets: [] };
   const rows = await prisma.setReleaseAlert.findMany({ where: { unsubToken: token }, select: { setSlug: true, scope: true }, take: 100 });
   if (!rows.length) return { active: false, sets: [] };
-  const sets = await prisma.set.findMany({ where: { slug: { in: [...new Set(rows.map((r) => r.setSlug))] } }, select: { slug: true, name: true } });
+  const sets = await publicDb.set.findMany({ where: { slug: { in: [...new Set(rows.map((r) => r.setSlug))] } }, select: { slug: true, name: true } });
   const name = new Map(sets.map((s) => [s.slug, s.name]));
   return { active: true, sets: rows.map((r) => ({ setSlug: r.setSlug, setName: name.get(r.setSlug) ?? r.setSlug, scope: r.scope })) };
 }
@@ -94,13 +95,13 @@ export function parseReleaseBody(body: unknown): ReleaseSignupBody | null {
  * unsubscribe stops every release alert for that address. Nothing is sent here.
  */
 export async function subscribeRelease(body: ReleaseSignupBody, now = new Date()): Promise<{ status: number; body: Record<string, unknown> }> {
-  const set = await prisma.set.findUnique({ where: { slug: body.setSlug }, select: { id: true, releasedOn: true } });
+  const set = await publicDb.set.findUnique({ where: { slug: body.setSlug }, select: { id: true, releasedOn: true } });
   const today = now.toISOString().slice(0, 10);
   const releasedOn = set?.releasedOn ? set.releasedOn.toISOString().slice(0, 10) : null;
   if (!set || !releaseAlertSets([{ releasedOn }], today).length) return { status: 400, body: { error: "Unknown set." } };
   let scope = "set";
   if (body.cardId != null) {
-    const card = await prisma.card.findUnique({ where: { id: body.cardId }, select: { setId: true } });
+    const card = await publicDb.card.findUnique({ where: { id: body.cardId }, select: { setId: true } });
     if (card?.setId !== set.id) return { status: 400, body: { error: "Unknown card." } };
     scope = String(body.cardId);
   }
@@ -144,18 +145,20 @@ export async function cardActionContext(id: string): Promise<CardActionContext |
         targetCents: true,
         snoozedUntil: true,
         user: { select: { email: true, isAdmin: true, premiumUntil: true, premiumTier: true } },
-        card: { select: { slug: true, name: true, variant: true } },
+        cardId: true,
       },
     })
     .catch(() => null);
   if (!row) return null;
+  const card = (await publicDb.card.findUnique({ where: { id: row.cardId }, select: { slug: true, name: true, variant: true } }).catch(() => null)) as { slug: string; name: string; variant: string | null } | null;
+  if (!card) return null;
   const entitled = !!row.user && isPremium({ ...row.user, isAdmin: row.user.isAdmin || isAdminEmail(row.user.email) });
   return {
     market: row.market,
     targetCents: row.targetCents,
     snoozedUntil: row.snoozedUntil,
     entitled,
-    card: { slug: row.card.slug, name: `${row.card.name}${row.card.variant ? ` (${row.card.variant})` : ""}` },
+    card: { slug: card.slug, name: `${card.name}${card.variant ? ` (${card.variant})` : ""}` },
   };
 }
 
@@ -163,7 +166,11 @@ export async function cardActionContext(id: string): Promise<CardActionContext |
 export async function watchActionContext(kind: "deck" | "sealed", id: string): Promise<{ name: string; snoozedUntil: Date | null } | null> {
   if (kind === "deck") return prisma.deckWatch.findUnique({ where: { id }, select: { name: true, snoozedUntil: true } }).catch(() => null);
   return prisma.sealedWatch
-    .findUnique({ where: { id }, select: { snoozedUntil: true, sealed: { select: { name: true } } } })
-    .then((r) => (r ? { name: r.sealed.name, snoozedUntil: r.snoozedUntil } : null))
+    .findUnique({ where: { id }, select: { snoozedUntil: true, sealedId: true } })
+    .then(async (r) => {
+      if (!r) return null;
+      const sealed = (await publicDb.sealed.findUnique({ where: { id: r.sealedId }, select: { name: true } })) as { name: string } | null;
+      return sealed ? { name: sealed.name, snoozedUntil: r.snoozedUntil } : null;
+    })
     .catch(() => null);
 }

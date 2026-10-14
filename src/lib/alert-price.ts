@@ -1,4 +1,4 @@
-import type { prisma } from "./db";
+import type { PublicDb } from "./public-db";
 import { sourceLabel } from "./stores";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ export function alertPriceFromRows(rows: readonly AlertPriceRow[], now: Date): A
   return { state: "priced", priceCents: lead.priceCents, condition: lead.condition, checkedAt: lead.lastSeen, stores };
 }
 
-export type AlertPriceDb = { offer: Pick<typeof prisma.offer, "findMany"> };
+export type AlertPriceDb = { offer: Pick<PublicDb["offer"], "findMany"> };
 
 /**
  * The baseline a NEW watch starts from: the alert price when the pair is

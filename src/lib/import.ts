@@ -1,6 +1,8 @@
 // The import: TCGplayer catalogue + prices (TCGCSV), store offers, per-market
 // aggregates, daily history and the index. Run by scripts/import.ts from
-// .github/workflows/import-prices.yml twice a day. Writes ONLY to DATABASE_URL.
+// .github/workflows/import-prices.yml twice a day. Writes ONLY to the public working
+// copy (lib/pubdb.ts, seeded from the GitHub snapshot and published back to it),
+// never to Neon.
 //
 // The store import never calls eBay. eBay listing prices come from the separate
 // eBay pass (scripts/ebay.ts, lib/ebay-import.ts, ebay-prices.yml), which writes
@@ -8,7 +10,7 @@
 // stores<M>, which counts every store plus TCGplayer, and never eBay).
 import fs from "node:fs";
 import path from "node:path";
-import { prisma } from "./db";
+import { pub } from "./pubdb";
 import {
   TCGCSV_BASE,
   assignSlugs,
@@ -45,7 +47,6 @@ import {
 } from "./match";
 import { STORES, platformOf, type StorePlatform, type StoreInfo } from "./stores";
 import { fetchStoreListings, productUrl, type StoreRead } from "./store-import";
-import { recordRunOffers } from "./run-offers";
 import { SITE_URL } from "./site";
 import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
 import { historyDir, readBucket, readIndex, recentOf, writeBucket, writeDay, writeIndex, writeRecentBucket } from "./history-store";
@@ -110,7 +111,7 @@ async function upsert(table: string, cols: Col[], rows: unknown[][], conflict: s
     const sql =
       `INSERT INTO "${table}" (${cols.map((c) => `"${c.name}"`).join(",")}) VALUES ${values.join(",")} ` +
       `ON CONFLICT ("${conflict}") DO UPDATE SET ${update.map((u) => `"${u}"=EXCLUDED."${u}"`).join(",")}`;
-    await prisma.$executeRawUnsafe(sql, ...params);
+    await pub.$executeRawUnsafe(sql, ...params);
   }
 }
 
@@ -191,7 +192,7 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
 
   const codeBySet = new Map(data.map(({ g }) => [g.groupId, setCode(g)] as const));
   foldNameAliases(cards, (id) => codeBySet.get(id) ?? "");
-  const existingCardSlugs = new Map((await prisma.card.findMany({ select: { id: true, slug: true } })).map((r) => [r.id, r.slug]));
+  const existingCardSlugs = new Map((await pub.card.findMany({ select: { id: true, slug: true } })).map((r) => [r.id, r.slug]));
   const cardSlugs = assignSlugs(cards, existingCardSlugs);
   await upsert(
     "Card",
@@ -210,7 +211,7 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     ["name", "tcgName", "number", "setId", "rarity", "variant", "printing", "colors", "cardType", "cost", "power", "counter", "life", "attribute", "subtypes", "effect", "finish", "hasImage", "tcgplayerUrl", "marketUsd", "updatedAt"],
   );
 
-  const existingSealedSlugs = new Map((await prisma.sealed.findMany({ select: { id: true, slug: true } })).map((r) => [r.id, r.slug]));
+  const existingSealedSlugs = new Map((await pub.sealed.findMany({ select: { id: true, slug: true } })).map((r) => [r.id, r.slug]));
   const sealedSlugs = assignSlugs(sealed, existingSealedSlugs);
   await upsert(
     "Sealed",
@@ -233,9 +234,9 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     ...cards.filter((c) => c.low != null).map((c) => ({ productId: c.id, priceCents: c.low!, url: c.tcgplayerUrl })),
     ...sealed.filter((s) => s.low != null).map((s) => ({ productId: s.id, priceCents: s.low!, url: s.tcgplayerUrl })),
   ];
-  await prisma.$transaction([
-    prisma.offer.deleteMany({ where: { source: "tcgplayer" } }),
-    prisma.offer.createMany({
+  await pub.$transaction([
+    pub.offer.deleteMany({ where: { source: "tcgplayer" } }),
+    pub.offer.createMany({
       data: tcgRows.map((r) => ({
         productId: r.productId,
         source: "tcgplayer",
@@ -251,7 +252,6 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     }),
   ]);
 
-  recordRunOffers("tcgplayer", "US", tcgRows.map((r) => ({ productId: r.productId, priceCents: r.priceCents, currency: "USD", url: r.url, inStock: true, condition: null })), now);
   const cardMarket = new Map<number, number | null>();
   for (const c of cards) cardMarket.set(c.id, c.market);
   for (const s of sealed) cardMarket.set(s.id, s.market);
@@ -293,17 +293,17 @@ function better(a: OfferDraft, b: OfferDraft): OfferDraft {
 }
 
 export async function importStores(log: Log, opts: { only?: string[]; market?: Country } = {}): Promise<StoreResult[]> {
-  const cards = await prisma.card.findMany({
+  const cards = await pub.card.findMany({
     where: { number: { not: null } },
     select: { id: true, name: true, tcgName: true, number: true, variant: true, marketUsd: true, set: { select: { code: true, name: true, tcgName: true } } },
   });
   const idx = buildCardIndex(cards.map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name, setTcgName: c.set.tcgName })));
   // DON!! cards have no number: the name path and the strict DON!! path.
-  const dons = await prisma.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, marketUsd: true, set: { select: { code: true, name: true, tcgName: true } } } });
+  const dons = await pub.card.findMany({ where: { number: null }, select: { id: true, tcgName: true, marketUsd: true, set: { select: { code: true, name: true, tcgName: true } } } });
   const nameIdx = buildNameIndex([...cards, ...dons].map((c) => ({ id: c.id, tcgName: c.tcgName, setNames: [c.set.name, c.set.tcgName] })));
   const donIdx = buildDonIndex(dons.map((d) => ({ id: d.id, tcgName: d.tcgName, setCode: d.set.code, setName: d.set.name })));
   for (const d of dons) cards.push({ ...d, name: "DON!! Card", number: null, variant: null, set: { code: "", name: d.set.name, tcgName: d.set.tcgName } });
-  const sealedRows = await prisma.sealed.findMany({ select: { id: true, name: true, kind: true, marketUsd: true, set: { select: { code: true, name: true } } } });
+  const sealedRows = await pub.sealed.findMany({ select: { id: true, name: true, kind: true, marketUsd: true, set: { select: { code: true, name: true } } } });
   const sealedRefs: SealedRef[] = sealedRows.map((s) => ({ id: s.id, name: s.name, kind: s.kind as SealedRef["kind"], setCode: s.set?.code ?? null, setName: s.set?.name ?? null }));
   const ix: StoreMatchIndexes = { cards: idx, names: nameIdx, dons: donIdx, sealed: sealedRefs };
   const market = new Map<number, number | null>([...cards.map((c) => [c.id, c.marketUsd] as const), ...sealedRows.map((s) => [s.id, s.marketUsd] as const)]);
@@ -374,13 +374,12 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
     const now = new Date();
     const source = `store:${store.key}`;
     const rows = [...drafts.values()];
-    await prisma.$transaction([
-      prisma.offer.deleteMany({ where: { source, market: store.country } }),
-      prisma.offer.createMany({
+    await pub.$transaction([
+      pub.offer.deleteMany({ where: { source, market: store.country } }),
+      pub.offer.createMany({
         data: rows.map((r) => ({ ...r, source, market: store.country, currency: cur, updatedAt: now })),
       }),
     ]);
-    recordRunOffers(source, store.country, rows.map((r) => ({ productId: r.productId, priceCents: r.priceCents, currency: cur, url: r.url, inStock: r.inStock, condition: r.condition })), now);
     res.cards = rows.filter((r) => !isSealed.has(r.productId)).length;
     res.sealed = rows.filter((r) => isSealed.has(r.productId)).length;
     res.inStock = rows.filter((r) => r.inStock).length;
@@ -401,13 +400,13 @@ export const STALE_HOURS = 72;
 export async function aggregate(log: Log): Promise<void> {
   // A store removed from the registry leaves no rows behind.
   const known = STORES.map((s) => `store:${s.key}`);
-  const removed = await prisma.offer.deleteMany({ where: { source: { startsWith: "store:", notIn: known } } });
+  const removed = await pub.offer.deleteMany({ where: { source: { startsWith: "store:", notIn: known } } });
   if (removed.count) log(`Removed ${removed.count} offers from stores no longer in the registry`);
   for (const table of ["Card", "Sealed"]) {
     const reset = MARKETS.map((m) => `"low${m}" = NULL, "stores${m}" = 0`).join(", ");
-    await prisma.$executeRawUnsafe(`UPDATE "${table}" SET ${reset}`);
+    await pub.$executeRawUnsafe(`UPDATE "${table}" SET ${reset}`);
     for (const m of MARKETS) {
-      await prisma.$executeRawUnsafe(
+      await pub.$executeRawUnsafe(
         `UPDATE "${table}" t SET "low${m}" = a.low, "stores${m}" = a.n
          FROM (SELECT "productId", MIN("priceCents") AS low, COUNT(*) FILTER (WHERE source NOT LIKE 'ebay%')::int AS n FROM "Offer"
                WHERE market = $1 AND "inStock" AND "updatedAt" > now() - make_interval(hours => $2::int) GROUP BY "productId") a
@@ -429,8 +428,8 @@ export async function recordHistory(log: Log, today: Date = utcDay()): Promise<H
   const day = today.toISOString().slice(0, 10);
   const dn = dayNum(day);
   const [cards, sealed] = await Promise.all([
-    prisma.card.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
-    prisma.sealed.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
+    pub.card.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
+    pub.sealed.findMany({ select: { id: true, marketUsd: true, lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true } }),
   ]);
   const isCard = new Set(cards.map((c) => c.id));
   type Row = (typeof cards)[number];
@@ -513,7 +512,7 @@ async function bulkUpdate(table: string, cols: Col[], rows: unknown[][]): Promis
     const sql =
       `UPDATE "${table}" AS t SET ${cols.map((c) => `"${c.name}" = v."${c.name}"`).join(", ")} ` +
       `FROM (VALUES ${values.join(",")}) AS v(id, ${cols.map((c) => `"${c.name}"`).join(", ")}) WHERE t.id = v.id`;
-    await prisma.$executeRawUnsafe(sql, ...params);
+    await pub.$executeRawUnsafe(sql, ...params);
   }
 }
 

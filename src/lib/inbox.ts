@@ -3,6 +3,7 @@
 // /api/contact). Inputs arrive already parsed by lib/inbox-rules.ts. Nothing
 // here reads the session (routes pass the user id), stores an IP address or
 // sends email. Every read is one narrow lookup by key.
+import { publicDb } from "./public-db";
 import { prisma } from "./db";
 import { formatTicketNumber, nextNumber, type CounterClient } from "./order-number";
 import type { SupportInput, ContactInput, FeedbackInput, PriceReportInput, StoreSuggestionInput } from "./inbox-rules";
@@ -14,10 +15,10 @@ import { STORES, sourceLabel } from "./stores";
  * request. A vanished offer stores nulls.
  */
 export async function createPriceReport(v: PriceReportInput, userId: string | null): Promise<{ ok: true } | { ok: false; status: 400; error: string }> {
-  const card = await prisma.card.findUnique({ where: { id: v.productId }, select: { id: true } });
-  const sealed = card ? null : await prisma.sealed.findUnique({ where: { id: v.productId }, select: { id: true } });
+  const card = await publicDb.card.findUnique({ where: { id: v.productId }, select: { id: true } });
+  const sealed = card ? null : await publicDb.sealed.findUnique({ where: { id: v.productId }, select: { id: true } });
   if (!card && !sealed) return { ok: false, status: 400, error: "Unknown product" };
-  const offer = await prisma.offer.findUnique({
+  const offer = await publicDb.offer.findUnique({
     where: { productId_source_market: { productId: v.productId, source: v.source, market: v.market } },
     select: { priceCents: true, currency: true, title: true, url: true },
   });

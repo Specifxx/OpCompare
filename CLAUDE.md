@@ -15,16 +15,31 @@ it does not deploy. The site is meant to run passively on the free Neon allowanc
 (5 GB a month): prices and eBay listings reach pages through the GitHub price
 snapshot, not a deploy, and only code changes wait for the release.
 
-## The database: OP2, and Postgres only for state
+## The database: OP2 holds private state only
 
 The connection string is the variable `OP2` (Vercel and GitHub, a secret or a
-repository variable), falling back to `DATABASE_URL` (`src/lib/db-url.ts`). Public
-price pages read the `snapshot` branch on GitHub FIRST (`src/lib/price-snapshot.ts`,
-`snapshotFirst` in `src/lib/data.ts`) and Postgres only when the snapshot is
-missing, older than 48 hours or has no answer. Never read the Offer table back
-out of Postgres to build it: the import writes its offers to a local file
-(`src/lib/run-offers.ts`) and the snapshot is built from that. Never add a
-private table to the snapshot (`tests/price-snapshot.test.ts`).
+repository variable), falling back to `DATABASE_URL` (`src/lib/db-url.ts`). Neon
+holds ONLY private state: users, alerts, watches, collections, inbox, Stripe,
+`ImportRun`, `Meta`, `Counter`, `CardDemand`. The public data (sets, cards, sealed,
+offers, eBay panels and checks) is NOT in Neon: the `snapshot` branch on GitHub is
+its only copy (`src/lib/price-snapshot.ts`, format and rules at its top). Pages read
+it through `price-snapshot-read.ts` (`data.ts` loaders); alerts, newsletter and admin
+read rows through `public-data.ts` / `public-db.ts` (a Prisma-shaped read-only client).
+
+- Jobs that change prices (`import-prices.yml`, `ebay-prices.yml`) run a throwaway
+  Postgres service (`PUBLIC_DATABASE_URL`, schema `prisma/public/schema.prisma`),
+  seed it from the snapshot (`scripts/pub-setup.sh`), run the import or eBay pass on
+  it through `pub` (`src/lib/pubdb.ts`, which refuses a Neon URL), rebuild the
+  snapshot (`scripts/price-snapshot.ts`) and force-push it
+  (`scripts/publish-snapshot.sh`). A failed build or publish fails the run.
+- A snapshot file that cannot be read THROWS; null only means "the snapshot has no
+  such thing". Never read the retired models (Card, Sealed, Set, Offer, Ebay*) through
+  `prisma`: `tests/public-data.test.ts` fails on it. No page, component or API route
+  imports `pubdb`, `pub-seed` or the builder.
+- Never add a private table to the snapshot or a public one to Neon
+  (`tests/price-snapshot.test.ts`). View/search counters are `CardDemand`.
+- Rollout order (one time): `move-public-data.yml` (bootstrap the snapshot from Neon)
+  → run import and eBay → deploy → `retire-public-tables.yml` with `drop`.
 
 ## The eBay API: OP Compare's own keyset, script-side only
 

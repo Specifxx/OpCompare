@@ -3,6 +3,7 @@
 // ImportRun.summary, never the ~50 KB summaries themselves: about four queries
 // and tens of KB per view. No Next-only imports, so a script may use it.
 import { prisma } from "./db";
+import { snapshotFile } from "./price-snapshot";
 import { groupAppearances, type OfferStat, type StoreAppearance } from "./store-health";
 
 export interface RunRow {
@@ -72,17 +73,21 @@ export async function loadAppearances(): Promise<Map<string, StoreAppearance[]>>
   );
 }
 
-/** Offer rows per store: listings, in stock, newest update. */
+/**
+ * Offer rows per store: listings, in stock (inside 72 hours), newest update. From the snapshot's
+ * store-stats file, which the job that wrote the snapshot computed in SQL (the offers are not in Neon).
+ */
 export async function loadOfferStats(): Promise<Map<string, OfferStat>> {
-  const where = { source: { startsWith: "store:" } };
-  const [all, open] = await Promise.all([
-    prisma.offer.groupBy({ by: ["source"], where, _count: { _all: true }, _max: { updatedAt: true } }),
-    prisma.offer.groupBy({ by: ["source"], where: { ...where, inStock: true }, _count: { _all: true } }),
-  ]);
-  const inStock = new Map(open.map((o) => [o.source, o._count._all]));
-  return new Map(
-    all.map((o) => [o.source.slice("store:".length), { listings: o._count._all, inStock: inStock.get(o.source) ?? 0, newest: o._max.updatedAt ?? null }]),
-  );
+  const rows = (await snapshotFile<{ source: string; market: string; offers: number; inStock: number; newest: string | null }[]>("store-stats.json.gz")) ?? [];
+  const out = new Map<string, { listings: number; inStock: number; newest: Date | null }>();
+  for (const r of rows) {
+    if (!r.source.startsWith("store:")) continue;
+    const key = r.source.slice("store:".length);
+    const prev = out.get(key) ?? { listings: 0, inStock: 0, newest: null as Date | null };
+    const at = r.newest ? new Date(r.newest) : null;
+    out.set(key, { listings: prev.listings + r.offers, inStock: prev.inStock + r.inStock, newest: at && (!prev.newest || at > prev.newest) ? at : prev.newest });
+  }
+  return out;
 }
 
 /** The last 10 runs, with the summary reduced to a few fields in SQL. */

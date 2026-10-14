@@ -44,9 +44,10 @@ test("no push trigger, the import's concurrency group on the eBay job only, read
   assert.doesNotMatch(job("gate"), /concurrency:/);
   assert.match(job("ebay"), /concurrency:\s*\n\s*group: import-prices\s*\n\s*cancel-in-progress: false/);
   assert.match(job("ebay"), /needs: gate\s*\n\s*if: needs\.gate\.outputs\.run == 'true'/);
-  assert.match(YML, /permissions:\s*\n\s*contents: read/);
+  // Writes only the `snapshot` branch (the public data's one persistent copy), never `data`.
+  assert.match(YML, /permissions:\s*\n\s*contents: write/);
   assert.match(YML, /EBAY_REFRESH: \$\{\{ github\.event_name != 'push' \}\}/);
-  assert.match(job("ebay"), /timeout-minutes: 90/);
+  assert.match(job("ebay"), /timeout-minutes: 120/);
 });
 
 test("the dispatch cap comes only from the max_calls input", () => {

@@ -29,18 +29,17 @@ test("foldStoreRows takes the cheapest store and counts distinct stores, ignorin
   assert.deepEqual(m.get(3), { minCents: 999, stores: 1 });
 });
 
-test("the cached read is ONE groupBy over stores, in stock, in the market, fresh, never eBay, scoped to the set's ids", () => {
+test("the cached read is ONE pass over the set's offers: stores, in stock, in the market, fresh, never eBay, from the snapshot", () => {
   const data = code("src/lib/data.ts");
   const block = data.slice(data.indexOf("const loadSetStoreMins"), data.indexOf("export async function getSetChecklist"));
-  assert.match(block, /prisma\.card\.findMany\(\{ where: \{ setId \}, select: \{ id: true \}, take: SET_CARD_CAP \}\)/);
-  assert.match(block, /prisma\.offer\.groupBy\(\{\s*by: \["productId", "source"\]/);
-  assert.match(block, /productId: \{ in: ids \}/);
-  assert.match(block, /inStock: true/);
-  assert.match(block, /updatedAt: \{ gt: new Date\(Date\.now\(\) - STALE_MS\) \}/);
-  assert.match(block, /NOT: \{ source: \{ startsWith: "ebay" \} \}/);
-  assert.match(block, /\["set-checklist-v1", String\(setId\), market\]/, "one entry per (set, market)");
-  assert.match(block, /tags: \[PRICES_TAG\], revalidate: DB_TTL/);
-  assert.doesNotMatch(block, /getCatalog\(|getCardDetail\(|getHistoryRef\(/, "no cached loader inside the cache callback");
+  // The offers are the snapshot's range files (the database does not have them): one read for the set's ids.
+  assert.match(block, /\.filter\(\(c\) => c\.setId === setId\)\.slice\(0, SET_CARD_CAP\)/);
+  assert.match(block, /snapOffersOf\(ids\)/);
+  assert.match(block, /o\.market !== market \|\| !o\.inStock \|\| o\.priceCents <= 0 \|\| o\.source\.startsWith\("ebay"\)/);
+  assert.match(block, /Date\.now\(\) - Date\.parse\(o\.updatedAt\) >= STALE_MS/);
+  assert.match(block, /\["set-checklist-v2", String\(setId\), market\]/, "one entry per (set, market)");
+  assert.match(block, /tags: \[PRICES_TAG\], revalidate: TTL/);
+  assert.doesNotMatch(block, /getCatalog\(|getCardDetail\(|getHistoryRef\(|prisma\./, "no cached loader and no database inside the cache callback");
   const outer = data.slice(data.indexOf("export async function getSetChecklist"));
   assert.match(outer, /Promise\.all\(\[loadSetStoreMins\(setId, market\), getCatalog\(\)\]\)/, "the catalogue is read outside the cache");
   assert.match(outer, /otherSource: !hit && c\.low\[market\] != null/, "an eBay-only card is 'other', never priced");

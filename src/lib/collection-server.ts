@@ -18,6 +18,7 @@
 // own product, so a row's `isFoil` is not a user toggle here: it defaults from
 // the card's own finish (Card.finish === "Foil") and is kept for CSV and schema
 // parity.
+import { publicDb } from "./public-db";
 import { prisma } from "./db";
 import { getCatalog, getIndexSeries, getRecentHistory, type CardLite } from "./data";
 import { MARKETS, type Country } from "./country";
@@ -229,7 +230,7 @@ export function parseAddBody(raw: unknown): AddBody | null {
 export async function addToCollection(account: Account, raw: unknown): Promise<RouteResult> {
   const d = parseAddBody(raw);
   if (!d) return err(400, "Invalid input");
-  const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true, finish: true } });
+  const card = await publicDb.card.findUnique({ where: { id: d.cardId }, select: { id: true, finish: true } });
   if (!card) return err(404, "Card not found");
 
   // THE FREE PORTFOLIO LIMIT (lib/free-limits.ts): a free account keeps up to
@@ -706,7 +707,7 @@ async function writeWants(account: Account, wants: Want[]) {
 async function finishes(ids: number[]): Promise<{ finishById: Map<number, string | null> }> {
   const uniq = [...new Set(ids)];
   if (!uniq.length) return { finishById: new Map() };
-  const rows = await prisma.card.findMany({ where: { id: { in: uniq } }, select: { id: true, finish: true }, take: uniq.length });
+  const rows = await publicDb.card.findMany({ where: { id: { in: uniq } }, select: { id: true, finish: true }, take: uniq.length });
   return { finishById: new Map(rows.map((r) => [r.id, r.finish])) };
 }
 

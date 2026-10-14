@@ -5,6 +5,7 @@
 // this page only displays demand, so a failed read is an empty window, said
 // plainly, never a crash.
 import { prisma } from "./db";
+import { publicDb } from "./public-db";
 import { demandWindowAtOrThrow } from "./data";
 import { compareDemand, chartMovement, type Movement } from "./demand-movement";
 import type { DemandWindowResult } from "./demand-snapshot";
@@ -31,11 +32,27 @@ export function parseAdminDemandRange(v: string | undefined): AdminDemandRange {
   return ADMIN_DEMAND_RANGES.find((r) => r.key === v) ?? ADMIN_DEMAND_RANGES.find((r) => r.key === ADMIN_DEMAND_DEFAULT_RANGE)!;
 }
 
+// The card facts (public data: the snapshot); the counters are CardDemand rows (private, Neon).
 const CARD_SELECT = {
-  id: true, slug: true, name: true, number: true, variant: true, searchCount: true, viewCount: true, lastViewedAt: true,
+  id: true, slug: true, name: true, number: true, variant: true,
   lowUS: true, lowAU: true, lowUK: true, lowSG: true, lowCA: true, lowEU: true,
   set: { select: { code: true } },
 } as const;
+
+/** Cards by id with their counters, in `ids` order (the order the caller ranked them in). */
+async function cardsWithCounters(ids: number[], _keepOrder = true): Promise<CardRow[]> {
+  void _keepOrder;
+  if (!ids.length) return [];
+  const [cards, demand] = await Promise.all([
+    publicDb.card.findMany({ where: { id: { in: ids } }, select: CARD_SELECT }) as Promise<Omit<CardRow, "searchCount" | "viewCount" | "lastViewedAt">[]>,
+    prisma.cardDemand.findMany({ where: { cardId: { in: ids } }, select: { cardId: true, searchCount: true, viewCount: true, lastViewedAt: true } }),
+  ]);
+  const d = new Map(demand.map((x) => [x.cardId, x]));
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return cards
+    .map((c) => ({ ...c, searchCount: d.get(c.id)?.searchCount ?? 0, viewCount: d.get(c.id)?.viewCount ?? 0, lastViewedAt: d.get(c.id)?.lastViewedAt ?? null }))
+    .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+}
 
 export interface AdminDemandCard {
   id: number;
@@ -97,7 +114,7 @@ export async function adminDemand(range: AdminDemandRange): Promise<AdminDemandD
     }
     // One read for the union, then re-split — the two lists overlap heavily.
     const ids = [...new Set([...bySearch, ...byView].map((r) => Number(r.cardId)))];
-    const cards = (await prisma.card.findMany({ where: { id: { in: ids } }, select: CARD_SELECT })).map(toCard);
+    const cards = (await cardsWithCounters(ids)).map(toCard);
     const byId = new Map(cards.map((c) => [c.id, c]));
     return {
       window, windowUsable, windowFailed, inWindow, searchMoves, viewMoves,
@@ -107,8 +124,14 @@ export async function adminDemand(range: AdminDemandRange): Promise<AdminDemandD
   }
   // All time, or a window the snapshots don't reach: the cumulative counters, said so on the page.
   const [topSearched, topViewed] = await Promise.all([
-    prisma.card.findMany({ where: { searchCount: { gt: 0 } }, orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }], take: ADMIN_DEMAND_TOP_N, select: CARD_SELECT }),
-    prisma.card.findMany({ where: { viewCount: { gt: 0 } }, orderBy: [{ viewCount: "desc" }, { searchCount: "desc" }], take: ADMIN_DEMAND_TOP_N, select: CARD_SELECT }),
+    cardsWithCounters(
+      (await prisma.cardDemand.findMany({ where: { searchCount: { gt: 0 } }, orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }], take: ADMIN_DEMAND_TOP_N, select: { cardId: true } })).map((r) => r.cardId),
+      true,
+    ),
+    cardsWithCounters(
+      (await prisma.cardDemand.findMany({ where: { viewCount: { gt: 0 } }, orderBy: [{ viewCount: "desc" }, { searchCount: "desc" }], take: ADMIN_DEMAND_TOP_N, select: { cardId: true } })).map((r) => r.cardId),
+      true,
+    ),
   ]);
   return { window, windowUsable, windowFailed, inWindow, searchMoves, viewMoves, topSearched: topSearched.map(toCard), topViewed: topViewed.map(toCard) };
 }
