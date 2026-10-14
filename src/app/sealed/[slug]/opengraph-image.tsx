@@ -2,7 +2,13 @@ import { sealedOg } from "@/lib/og/images";
 
 // A sealed product's share image: the product on a white plate with its price.
 export const runtime = "nodejs";
-export const revalidate = 21600;
+export const revalidate = 86400;
+// Drawn on its first request, never at build, then served from the ISR cache for
+// a day (lib/og/respond.ts). Without this EMPTY list Next 14 treats a [slug]
+// route as dynamic and draws the image on every request, whatever `revalidate` says.
+export function generateStaticParams() {
+  return [];
+}
 export const alt = "One Piece sealed product price on OP Compare: product image, cheapest in-stock price and TCGplayer market price";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

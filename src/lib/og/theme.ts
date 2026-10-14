@@ -6,8 +6,8 @@ import { PRINTINGS, RARITIES } from "../constants";
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 
-/** 6 h — the same as TTL in lib/data.ts; the import's revalidateTag("prices") refreshes sooner. */
-export const OG_REVALIDATE = 21600;
+/** A day: every opengraph-image route's `revalidate` (a literal there; tests/og.test.ts pins the two equal) and IMAGE_TTL in lib/data.ts. */
+export const OG_REVALIDATE = 86400;
 
 export const OG = {
   page: "#070c16",

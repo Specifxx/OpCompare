@@ -2427,3 +2427,56 @@ and a "where to buy <new set>" post.
   the links are plain and followed (`target="_blank" rel="noopener"`, no
   nofollow/sponsored, no affiliate tagging); About and Who writes this name all
   three from the same list. `tests/site-chrome.test.ts` requires the three URLs.
+
+## Share images: ISR for a day, drawn at most once a day (2026-10-14)
+
+Owner, on the cost of serving the site: "Social-preview images: make them fixed
+images, or cache them for a long time (a day or more), instead of drawing them on
+every request." Measured on production the same day: `/opengraph-image` came from
+the ISR cache (HIT, `s-maxage=21600`), but the card, set, sealed and blog images
+answered `public, max-age=0` with a MISS: a function drew them.
+
+- **Why they were drawn per request.** Not a cookie or header read: nothing in
+  their tree reads the request. A route with a dynamic segment (`[slug]`) and no
+  `generateStaticParams` is dynamic in Next 14 whatever it exports, so
+  `revalidate = 21600` only set the fetch cache's life (the build table said `ƒ`).
+  Every image route with a segment now exports an EMPTY `generateStaticParams`
+  (nothing drawn at build, each image on its first request, then the ISR cache;
+  the build table says `●`), the device `/decks/[slug]` already used.
+- **A day, not six hours.** Every route exports `revalidate = 86400`. That alone
+  is not enough: Next keeps the LOWEST revalidate any cached read in a render
+  declares, and a read tagged `prices` makes the render purgeable by the import's
+  `revalidateTag`. Through the pages' loaders (6 h, tagged) every image would live
+  six hours and be redrawn after each of the two daily imports. So the images read
+  day-old twins of the same snapshot files under their own keys, untagged
+  (`getCatalogForImages`, `getSealedCatalogForImages`, `getSiteStatsForImages`,
+  `postContextForImages`, `IMAGE_TTL` in `lib/data.ts`), and `getPublishedDeck`
+  is held a day (a publish or a hide revalidates `DECKS_TAG` at once anyway). The
+  prerendered `/opengraph-image` now records `initialRevalidateSeconds: 86400`
+  (was 21600) and carries no `prices` tag. Cost of the choice: an image shows
+  prices up to a day behind the page (two days at the very worst: the loader
+  entry's age plus the image's). A thumbnail is a preview, and the platforms cache
+  it themselves for far longer; the page it links to is current.
+- **A fallback is still never pinned.** An error or a slug the data does not have
+  draws the data-free fallback, never a 500, and `fallbackOg` cuts that render's
+  ISR life to a minute (`expireRenderAfter(60)` in `lib/data.ts`: reading a
+  constant `unstable_cache` entry declared with 60 s, which Next's lowest-wins rule
+  turns into the render's life; it reads no database and no network) beside the
+  one-minute `OG_AFTER_ERROR` header. Locally an unknown card's image goes STALE
+  after a minute while a real one stays a HIT. A slug the day-old catalogue lacks
+  (a set's release day, a card shared minutes after its import) is looked up in the
+  pages' catalogue before the fallback is drawn; that render lives six hours, and
+  the next finds it in the day-old one.
+- **Headers.** `OG_CACHED` is now `public, max-age=0, s-maxage=86400,
+  stale-while-revalidate=86400` (was 6 h), so the CDN header and the ISR life
+  agree; never ImageResponse's immutable year (the `?hash` on og:image tracks the
+  code, not the prices).
+- **Guard.** `tests/og.test.ts` requires the day and, for a `[slug]` route, the
+  empty `generateStaticParams`, and walks each image route's imports
+  (`tests/helpers/route-tree.ts`) failing on any `next/headers` import,
+  `getCountry()`, `unstable_noStore`, `cache: "no-store"`, `force-dynamic` or
+  `revalidate = 0` it can reach, plus any page that reads an image loader.
+- **Not a fixed file.** Every image here shows data (the fallback is the only
+  brand-only drawing, and it must stay a fallback), so none became a static file.
+  CLAUDE.md's "Share images" section is updated (it said `revalidate = 21600`
+  and a 6 h CDN header).

@@ -49,7 +49,8 @@ without its own image show "ONE PIECE PRICE GUIDE" with five real top cards:
 art, printing, the cheapest US price, TCGplayer market, number, and store count
 (7-day change once a week of moves exists). `/price-guide`, sets, sealed
 products, cards and blog posts get their own. A data error never breaks a
-share: it draws a data-free fallback card. Rebuilt every 6 h.
+share: it draws a data-free fallback card. Each image is drawn on its first
+request and then served from the cache for a day (the fallback for a minute).
 
 ## Admin
 

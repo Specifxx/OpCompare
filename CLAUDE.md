@@ -185,11 +185,24 @@ admin's own account menu links it).
 ## Share images (link thumbnails)
 
 Every `src/app/**/opengraph-image.tsx` is a thin route: it exports only
-`runtime = "nodejs"`, `revalidate = 21600`, `alt`, `size` (1200×630),
-`contentType` and `default`, and calls a loader-and-draw function in
+`runtime = "nodejs"`, `revalidate = 86400`, `alt`, `size` (1200×630),
+`contentType`, `default` and, in a route with a `[slug]`, an EMPTY
+`generateStaticParams` (without it Next 14 draws a `[slug]` image on every
+request, whatever `revalidate` says), and calls a loader-and-draw function in
 `src/lib/og/images.tsx` (compositions in `compose.tsx`, pure selection in
 `select.ts`). `tests/og.test.ts` pins this.
 
+- **Cached a day, drawn at most once a day (owner, 2026-10-14).** Each image is
+  ISR: drawn on its first request, never at build (`/` and `/price-guide` are
+  prerendered), then served from the cache for a day. Nothing in a route's tree
+  may read the request (no `cookies()`, `headers()`, `getCountry()`,
+  `unstable_noStore`, `cache: "no-store"`, `force-dynamic`): `tests/og.test.ts`
+  walks each route's imports. The images read the day-old IMAGE loaders
+  (`getCatalogForImages`, `getSealedCatalogForImages`, `getSiteStatsForImages`,
+  `postContextForImages`): the pages' 6-hour, `prices`-tagged loaders would cut
+  every image to six hours and redraw all of them after each import (Next keeps
+  the lowest `revalidate` any cached read declares). Pages never read the image
+  loaders. Any loader an image reads must be held at least a day.
 - **What each shows.** `/` and every page without its own image: the price
   guide (logo, "ONE PIECE PRICE GUIDE", card/store/market counts, five real
   top cards with art, printing, cheapest US price, TCGplayer market, number and
@@ -200,13 +213,16 @@ Every `src/app/**/opengraph-image.tsx` is a thin route: it exports only
   `/blog/[slug]`: the title beside three hero cards.
 - **Real data only,** from the cached `src/lib/data.ts` loaders (no Offer or
   per-card query). Any error, empty database or unknown slug draws the
-  data-free fallback image, never a 500 and never invented numbers.
+  data-free fallback image, never a 500 and never invented numbers; the
+  fallback also cuts its render's ISR life to a minute (`fallbackOg`,
+  `expireRenderAfter`), so it is never cached for the day a real image is. A
+  slug the day-old catalogue lacks is looked up in the pages' catalogue first.
 - **Page metadata:** a page's `openGraph` replaces the root's whole object, so
   build it with `pageOg(canonicalPath)` (keeps site name/locale/type, sets
   `og:url`, re-adds the default image) or, beside its own
   `opengraph-image.tsx`, `pageOgOwnImage(path)`, which has no `images` key:
   the key alone blocks the sibling file (`src/lib/og/meta.ts`). The root layout
-  sets no `og:url`. Images send a 6 h CDN header, the fallback one minute.
+  sets no `og:url`. Images send a one-day CDN header, the fallback one minute.
 - **Safe area:** content inside x 48–1152, y 30–612; nothing essential below
   ~575 (Reddit and X overlay the domain there); the centre square
   (x 285–915) always holds real content.
