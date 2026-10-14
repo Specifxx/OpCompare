@@ -17,8 +17,26 @@ function tagline(country: Country): string {
   return "Ships worldwide";
 }
 
-export function TcgplayerBanner({ country, page, card, className = "" }: { country: Country; page: string; card?: string; className?: string }) {
-  const href = affiliateUrl(TCGPLAYER_ONE_PIECE, "tcgplayer_banner", `/${page}`);
+/** The banner's Impact-tagged link (market-independent). */
+export function tcgplayerBannerHref(page: string): string {
+  return affiliateUrl(TCGPLAYER_ONE_PIECE, "tcgplayer_banner", `/${page}`);
+}
+
+export function TcgplayerBanner({
+  country,
+  page,
+  card,
+  className = "",
+  href: hrefProp,
+}: {
+  country: Country;
+  page: string;
+  card?: string;
+  className?: string;
+  /** Already tagged on the server (the ISR card page renders this in a client island). */
+  href?: string;
+}) {
+  const href = hrefProp ?? tcgplayerBannerHref(page);
   return (
     <div data-ad-placement="tcgplayer-banner" className={`flex flex-col items-center ${className}`}>
       <a

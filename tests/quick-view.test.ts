@@ -234,5 +234,7 @@ test("card search opens a card hit in the QuickView; the TCGplayer banner is an 
   assert.match(banner, /data-ad-placement/);
   assert.match(banner, />Ad</);
   assert.match(banner, /affiliateUrl\(/);
-  assert.match(read("src/app/card/[slug]/page.tsx"), /<TcgplayerBanner/);
+  // The ISR card page draws it in its market island, with the link tagged on the server.
+  assert.match(read("src/app/card/[slug]/page.tsx"), /<MarketReference [^>]*tcgBanner=\{tcgplayerBannerHref\("card"\)\}/);
+  assert.match(read("src/components/card/CardMarket.tsx"), /<TcgplayerBanner /);
 });

@@ -2480,3 +2480,69 @@ answered `public, max-age=0` with a MISS: a function drew them.
   brand-only drawing, and it must stay a fallback), so none became a static file.
   CLAUDE.md's "Share images" section is updated (it said `revalidate = 21600`
   and a 6 h CDN header).
+
+## The card page is ISR, localised in the browser (2026-10-14)
+
+Owner, on the cost of serving the site: "opcompare /card/[slug]: cache these pages
+and refresh them every few hours, the way riftcompare already does." Measured on
+production that day: every card page answered `private, no-cache, no-store` and
+MISS. It called `getCountry()` (the `country` cookie, then Vercel's geo header),
+which makes a route per-request, and as a `[slug]` route without
+`generateStaticParams` it could not be cached anyway.
+
+- **RiftCompare's model, ported.** `export const revalidate = 21600` and an EMPTY
+  `generateStaticParams` (on demand, nothing prewarmed; the build table now says
+  `●` where it said `ƒ`). No cookie, header or session read anywhere in the tree:
+  each card renders once on the baseline market (`DEFAULT_COUNTRY`, the US, what
+  `CountryProvider` starts from) and is served from the cache to every visitor and
+  crawler. Everything that depends on the visitor's market is computed on the
+  server for all six markets and drawn by client islands
+  (`components/card/CardMarket.tsx`) that pick the market `CountryProvider`
+  resolves after hydration (cookie, its localStorage mirror, then `/api/geo`). The
+  server render and the first client render agree, so there is no hydration
+  mismatch, and a crawler gets complete US prices. Checked in headless Chromium
+  against a local `next start`: no cookie shows the US; `country=AU`, `UK`, `EU`
+  show that market's tiles, board, chart currency, prose and FAQ, with no console
+  error.
+- **Ship results, not rows.** `lib/per-market.ts` computes each part for all six
+  markets and stores identical values once (a card with no listing anywhere ships
+  one "no price" state). The board is a `BoardModel` (`lib/board-model.ts`, the old
+  `PriceBoard` rules moved unchanged): labels, postage lines, played-copy notes,
+  "Paid link" flags and affiliate-tagged hrefs resolved on the server, so the 87 KB
+  store registry and the partner-id environment never reach the browser.
+  `PriceBoardView` and `CardMarketsTableView` only draw; the sealed page keeps
+  `PriceBoard` / `CardMarketsTable`, which now build the same model for one market
+  on the server. Measured locally on the biggest card (adio-op09-023, 146 open
+  offers across five markets): the six boards are 58 KB of the RSC payload, and
+  the HTML is 398,879 bytes against production's 448,360 (the old page carried the
+  US board twice, as HTML and as about 2 KB of RSC per row); gzipped, 53.3 KB
+  against 51.8 KB. Marshall.D.Teach OP16-119: 423,512 against 494,911 raw, 56.5 KB
+  gzipped on both. The route's own JS grew from 8.7 KB to 15.5 KB.
+- **Honest structured data.** Metadata already quoted the US listing. The Product
+  JSON-LD's `AggregateOffer` is the US market's, in USD, now with
+  `eligibleRegion: US`; the FAQPage JSON-LD is the US FAQ (the visible FAQ follows
+  the visitor, and is the US one for a crawler).
+- **"Updated 3h ago" stays true.** A six-hour-old page would freeze a relative
+  time. `components/Ago.tsx` renders the render-time value (hydration matches) and
+  recounts from the browser's clock after mount; the board's lines and the
+  "Last seen" tile use it.
+- **Six hours, purged by the import.** Every read under the page is tagged
+  `prices`, so the import's `revalidateTag("prices")` marks each cached card stale
+  (the next visit gets it and re-renders it in the background); the six hours are
+  the backstop. A loader under the page with a shorter TTL would become the page's
+  (Next keeps the lowest revalidate), so `getDecksUsingCard` moved from an hour to
+  `DB_TTL` (a publish or a hide revalidates `DECKS_TAG` at once, which also marks
+  every card page stale; decks are rare). `tests/card-isr.test.ts` checks the TTL
+  of every loader the page reads. One exception stays: when the history ref cannot
+  be read (no database), the chart reads the `data` branch with an hour's fetch
+  cache, which caps the page at an hour until the ref is back; with the ref pinned
+  (production) the history files are held a month. A local `next start` without a
+  database shows exactly that (`s-maxage=3600`), and `s-maxage=21600` once
+  `HISTORY_LOCAL_DIR` stands in for the ref.
+- **An unknown slug is a cached 404**, carrying the `prices` tag: a card that
+  appears in an import is purged with it.
+- **Guard.** `tests/card-isr.test.ts`: the exports, no dynamic API in the import
+  tree (`tests/helpers/route-tree.ts`, shared with the share images), the baseline
+  in metadata and JSON-LD, every market-dependent part drawn by an island, and the
+  islands' own tree free of the store registry, the loaders and the database.
+  CLAUDE.md's Egress section states the rule.

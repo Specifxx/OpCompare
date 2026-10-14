@@ -859,7 +859,9 @@ export const getDecksUsingCard = unstable_cache(
       select: { slug: true, title: true, leaderName: true },
     }),
   ["decks-using-card-v1"],
-  { tags: [DECKS_TAG], revalidate: 3600 },
+  // DB_TTL, not an hour: the card page is ISR for six hours and would be cut to
+  // this TTL if it were shorter; a publish or a hide revalidates DECKS_TAG at once.
+  { tags: [DECKS_TAG], revalidate: DB_TTL },
 );
 // ── Demand Finder, the /movers strip and Rising Cards ──
 // Both read the demand snapshot FILES and the Rising Cards feed the import

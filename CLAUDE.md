@@ -116,6 +116,20 @@ never call a loader inside an `unstable_cache` callback, and keep each cache
 entry well under 2 MB (`tests/nested-cache.test.ts`). No `generateStaticParams`
 prewarming of database-backed routes.
 
+`/card/[slug]` is REAL ISR (owner, 2026-10-14): `revalidate = 21600`, an EMPTY
+`generateStaticParams` (on demand, nothing at build), and nothing in its tree
+reads a cookie, a header or the session (`getCountry()` included;
+`tests/card-isr.test.ts` walks its imports). It renders once on the baseline
+market (`DEFAULT_COUNTRY`, the US), and its metadata and JSON-LD state that
+market and currency. Every market-dependent part (tiles, buy block and sticky
+bar, board, TCGplayer reference and banners, chart, prose, FAQ, markets table,
+eBay panel) is computed on the server for all six markets (`lib/per-market.ts`,
+board rows in `lib/board-model.ts`) and drawn by the client islands in
+`src/components/card/CardMarket.tsx`, which pick the market `CountryProvider`
+resolves; they never import the store registry, a loader or the database. A
+loader the page reads must be held at least six hours: Next keeps the lowest
+`revalidate` any cached read declares, so a shorter TTL becomes the page's.
+
 Accounts and billing are the one exception, and a narrow one: `src/lib/auth.ts`
 (`getCurrentUser`, one `select`-limited row), `src/lib/premium.ts`,
 `src/lib/accounts.ts` and the Stripe routes query per user, uncached, and only
