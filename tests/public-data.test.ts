@@ -58,3 +58,11 @@ test("the one-time workflows are manual only", () => {
   }
   assert.match(readFileSync(".github/workflows/retire-public-tables.yml", "utf8"), /drop/);
 });
+
+test("every shell script parses (a stray quote once failed the bootstrap at line 10)", async () => {
+  const { spawnSync } = await import("node:child_process");
+  for (const n of readdirSync("scripts").filter((f) => f.endsWith(".sh"))) {
+    const r = spawnSync("bash", ["-n", join("scripts", n)], { encoding: "utf8" });
+    assert.equal(r.status, 0, `${n}: ${r.stderr}`);
+  }
+});

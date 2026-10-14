@@ -7,7 +7,7 @@
 # --accept-data-loss is safe HERE and only here: the database is brand new and
 # disappears with the runner. (The Neon database is never touched by this script.)
 set -euo pipefail
-: "${PUBLIC_DATABASE_URL:?PUBLIC_DATABASE_URL is not set (the workflow's postgres service)}"
+: "${PUBLIC_DATABASE_URL:?PUBLIC_DATABASE_URL is not set (the postgres service of the workflow)}"
 case "$PUBLIC_DATABASE_URL" in
   *neon.tech*|*neon.build*) echo "refusing: PUBLIC_DATABASE_URL points at Neon" >&2; exit 1 ;;
 esac
