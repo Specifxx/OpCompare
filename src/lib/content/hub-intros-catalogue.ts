@@ -21,7 +21,7 @@ export const CATALOGUE_HUB_INTROS: Record<string, HubIntro> = {
   "/price-guide": {
     paragraphs: [
       "Every One Piece Card Game printing in one table, one row per printing, each with the cheapest in-stock price we track in your market, how many stores have it and its recent move. Search it, filter by set, colour, rarity, type, printing or price, and sort any column; a market button re-prices every row for another country.",
-      "A price is an item price from a store, TCGplayer or eBay with postage added at checkout, an asking price on a live listing rather than a record of a sale. Where the rows show a TCGplayer figure it is TCGplayer's own US market price. To see why printings of one card cost so differently, read [rarities explained](/blog/one-piece-card-rarities-explained).",
+      "A price is an item price from a store, TCGplayer or eBay with postage added at checkout, an asking price on a live listing rather than a record of a sale. Where the rows show a TCGplayer figure it is TCGplayer's own US market price. To see why printings of one card cost so differently, read [rarities explained](/guides/one-piece-card-rarities-explained).",
     ],
   },
   "/sets": {

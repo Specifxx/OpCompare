@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { CATALOGUE_HUB_INTROS } from "../src/lib/content/hub-intros-catalogue";
 import { HUB_INTROS, hubIntro } from "../src/lib/content/hub-intros";
-import { POSTS } from "../src/lib/blog";
+import { POSTS, postHref } from "../src/lib/blog";
 
 const LINK = /\[([^\]]+)\]\(([^)\s]*)\)/g;
 const routes = new Set(["/market", "/movers", "/price-guide", "/sets", "/sealed", "/leaders", "/colors", "/deck", "/tools/box-ev", "/tools/best-basket", "/blog"]);
@@ -17,15 +17,27 @@ test("every catalogue hub has an intro, and HUB_INTROS carries them", () => {
   }
 });
 
-test("links are internal single-slash paths that resolve to a page or a published post", () => {
-  const slugs = new Set(POSTS.map((p) => p.slug));
+// A post is linked at its own URL (postHref): /guides/<slug> for a guide,
+// /blog/<slug> for the rest. /blog/<guide> is a 308, so it does not count.
+const postLinkOk = (href: string) => POSTS.some((p) => href === postHref(p));
+
+test("the post-link rule: a guide at /guides/, never through the /blog/ redirect", () => {
+  const guide = POSTS.find((p) => p.category === "guide")!;
+  const blog = POSTS.find((p) => p.category !== "guide")!;
+  assert.ok(postLinkOk(`/guides/${guide.slug}`));
+  assert.ok(!postLinkOk(`/blog/${guide.slug}`), "a guide through /blog/ is a redirect");
+  assert.ok(postLinkOk(`/blog/${blog.slug}`));
+  assert.ok(!postLinkOk(`/guides/${blog.slug}`), "a dated post is not a guide");
+  assert.ok(!postLinkOk("/guides/no-such-post"));
+});
+
+test("links are internal single-slash paths that resolve to a page or a published post at its own URL", () => {
   for (const [route, intro] of Object.entries(CATALOGUE_HUB_INTROS)) {
     for (const para of intro.paragraphs) {
       for (const m of para.matchAll(LINK)) {
         const href = m[2];
         assert.match(href, /^\/(?!\/)/, `${route}: ${href}`);
-        const ok = routes.has(href) || (href.startsWith("/blog/") && slugs.has(href.slice(6)));
-        assert.ok(ok, `${route} links to ${href}`);
+        assert.ok(routes.has(href) || postLinkOk(href), `${route} links to ${href}`);
       }
     }
   }

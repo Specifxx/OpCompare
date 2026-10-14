@@ -55,7 +55,18 @@ export const AUTHOR = {
   bio: "The OP Compare team builds and runs the site: the price import, the store matching and the guides. Every figure in a post comes from our own price database.",
 };
 
-/** Where a post lives: guides at /guides/[slug], everything else at /blog/[slug]. */
+/**
+ * Where a post lives: guides at /guides/[slug], everything else at /blog/[slug].
+ * Every link to a post goes through here (or postHrefFor): /blog/<guide> is a
+ * 308 to /guides/<guide>, and a link through a redirect wastes crawl budget
+ * (tests/guides.test.ts fails on a hand-built /blog/ link).
+ */
 export function postHref(p: Pick<Post, "slug" | "category">): string {
   return p.category === "guide" ? `/guides/${p.slug}` : `/blog/${p.slug}`;
+}
+
+/** A published post's href from its slug alone; the blog index when no such post is published. */
+export function postHrefFor(slug: string): string {
+  const p = postBySlug(slug);
+  return p ? postHref(p) : "/blog";
 }

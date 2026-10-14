@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { postHrefFor } from "@/lib/blog";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { getSiteStats } from "@/lib/data";
 import { breadcrumb, faqPage, ldJson, webPage } from "@/lib/jsonld";
@@ -75,10 +76,10 @@ export async function RegionHome({ region }: { region: Exclude<Country, "US"> })
           <Link href="/deck" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Price a decklist →
           </Link>
-          <Link href={`/blog/${COUNTRY_GUIDE_SLUGS[region]}`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+          <Link href={postHrefFor(COUNTRY_GUIDE_SLUGS[region])} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Where to buy One Piece cards →
           </Link>
-          <Link href={`/blog/${CHEAPER_ABROAD_SLUG}`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+          <Link href={postHrefFor(CHEAPER_ABROAD_SLUG)} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Is it cheaper abroad? →
           </Link>
         </div>

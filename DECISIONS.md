@@ -2376,3 +2376,20 @@ transfer on every page-cache miss. The owner asked for everything public to move
 **Rollout.** `move-public-data.yml` (builds the first snapshot from Neon; refuses if
 one with `ranges` exists) → import + eBay runs → deploy (the owner asked for it ASAP)
 → retire. Public-data tests: `tests/public-data.test.ts`, `tests/price-snapshot.test.ts`.
+
+## Traffic plan: links without redirects, EB05 buyers, the sister sites (2026-10-14)
+
+Owner's traffic plan: 614 visitors a month, 1.9k pages indexed and 6.3k
+"discovered, not indexed". RiftCompare's growth came mostly from pre-release pages
+and a "where to buy <new set>" post.
+
+- **No link goes through the `/blog/<guide>` redirect.** A guide lives at
+  `/guides/<slug>` and `/blog/<slug>` 308s to it, but the homepage's "Start here",
+  the region homes, the tool-guide strips, three hub intros and the 404 page built
+  `/blog/${slug}` by hand, so the two most-linked guides (where to buy, rarities)
+  were reached through a redirect from every page that linked them. Every post link
+  now goes through `postHref(post)`, or `postHrefFor(slug)` where only a slug is
+  known (an unpublished slug gives the blog index, never a dead URL); hub-intro
+  Markdown names `/guides/<slug>` directly. `tests/guides.test.ts` walks `src/` and
+  fails on a guide slug after `/blog/` or on any `/blog/${…}` / `"/blog/" +` built
+  outside `postHref` and the news sitemap (which takes blog posts only).

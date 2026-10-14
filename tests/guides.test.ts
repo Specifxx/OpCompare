@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { AUTHORS, POSTS, postHref } from "../src/lib/blog";
+import { AUTHORS, POSTS, postHref, postHrefFor } from "../src/lib/blog";
 import { BLOG_PICKS, GUIDE_PICKS } from "../src/lib/content/featured";
 import { guidesForCatalogue } from "../src/lib/content/catalogue-guides";
 
@@ -10,6 +10,36 @@ test("guides are served at /guides, everything else at /blog", () => {
   assert.equal(postHref({ slug: "x", category: "guide" }), "/guides/x");
   assert.equal(postHref({ slug: "x" }), "/blog/x");
   assert.equal(postHref({ slug: "x", category: "blog" }), "/blog/x");
+});
+
+test("postHrefFor resolves a slug through postHref, and an unpublished slug to the blog index", () => {
+  assert.equal(postHrefFor("where-to-buy-one-piece-cards"), "/guides/where-to-buy-one-piece-cards");
+  assert.equal(postHrefFor("are-one-piece-cards-cheaper-abroad"), "/blog/are-one-piece-cards-cheaper-abroad");
+  assert.equal(postHrefFor("no-such-post"), "/blog");
+});
+
+// /blog/<guide> is a 308 to /guides/<guide>. A link through it costs a redirect
+// hop on every crawl and every click, so no source file may build one: a guide
+// slug after "/blog/" in any literal, or a /blog/ URL built from a variable
+// anywhere but postHref itself and the news sitemap (blog posts only, by
+// recentNewsPosts' filter, tests/news-sitemap.test.ts).
+test("nothing links a guide through /blog/: post links go through postHref", () => {
+  const root = path.resolve(__dirname, "..");
+  const guides = POSTS.filter((p) => p.category === "guide").map((p) => p.slug);
+  assert.ok(guides.length >= 2, "the guides are found");
+  const BUILDERS = new Set(["src/lib/blog/index.ts", "src/lib/news-sitemap.ts"]);
+  const walk = (dir: string): string[] =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(dir, e.name)] : []));
+  const files = walk(path.join(root, "src"));
+  assert.ok(files.length > 100, "the source tree is walked");
+  for (const f of files) {
+    const rel = path.relative(root, f).split(path.sep).join("/");
+    const src = fs.readFileSync(f, "utf8");
+    for (const slug of guides) assert.doesNotMatch(src, new RegExp(`/blog/${slug}(?![\\w-])`), `${rel} links the guide ${slug} through /blog/: use /guides/${slug} or postHref`);
+    if (BUILDERS.has(rel)) continue;
+    assert.doesNotMatch(src, /\/blog\/\$\{/, `${rel} builds a /blog/ URL from a slug: use postHref(post) or postHrefFor(slug)`);
+    assert.doesNotMatch(src, /["'`]\/blog\/["'`]\s*\+/, `${rel} concatenates a /blog/ URL: use postHref(post) or postHrefFor(slug)`);
+  }
 });
 
 test("the evergreen rarities and where-to-buy posts are guides, with FAQs and unique slugs", () => {
