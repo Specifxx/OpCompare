@@ -14,6 +14,7 @@ import { recordEmailRefused, recordEmailStatus } from "../src/lib/email-status";
 import { drainConfirmations } from "../src/lib/alert-confirmations";
 import { drainNewsletterWelcomes } from "../src/lib/newsletter";
 import { runWelcomeEmails } from "../src/lib/welcome-email";
+import { notifyOwnerInbox } from "../src/lib/owner-notify";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -32,6 +33,8 @@ async function main() {
       summary[name] = { error: e instanceof Error ? e.message : String(e) };
     }
   };
+  // The owner's own copy of every new message, feedback, report, suggestion and ticket (lib/owner-notify.ts).
+  await attempt("ownerInbox", () => notifyOwnerInbox({ db: prisma as never }));
   await attempt("welcome", () => runWelcomeEmails());
   await attempt("confirmations", () => drainConfirmations());
   await attempt("newsletterWelcomes", () => drainNewsletterWelcomes(new Date(), sendNewsletterWelcomeEmail));

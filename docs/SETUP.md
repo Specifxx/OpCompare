@@ -60,6 +60,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
+| Watchdog | every four hours at :47 (and Run workflow) | `DATABASE_URL`; optional `NEON_API_KEY`, `NEON_PROJECT_ID`, and the mail secrets so it can email you (without them it opens one GitHub issue instead) |
 | eBay prices | 12:37 UTC daily, or Run workflow (a dispatch shares the same 2,500-a-day ceiling) (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
 
 Each workflow is a no-op until its values exist.
@@ -283,6 +284,50 @@ unwanted mail, and Resend's free tier is 100 emails a day.
 Alert runs after a manual *Import prices* send nothing by default (`alerts`
 input = `none`): choose `baseline` after a matcher change (moves every baseline,
 sends nothing) or `free` to recover a missed 07:07 run.
+
+## 6c. The watchdog: so you do not have to look (optional keys)
+
+The site checks itself every four hours (the **Watchdog** workflow) and tells you.
+You do not need to open Neon, GitHub or the admin pages to find out something broke.
+
+What it checks, and what you see in **/admin/health** (and the number on the admin bar):
+
+- **Database and limits:** Neon network transfer against 5 GB with a pace check
+  (it warns when the month is on course to overshoot, not only when it is nearly
+  spent), Neon compute hours, and the database's size.
+- **Prices:** age of the last import and of the GitHub price snapshot.
+- **eBay:** the pass ran, was not refused or rate-limited, found listings, and spent
+  the day's 2,500 calls. It reads the eBay pass's own records and never calls eBay.
+- **Stores:** how many scrapers failed their last read.
+- **The live site:** the home page, price guide, sealed page and sitemap answer
+  with the site's own content, in under four seconds.
+- **Every scheduled job:** the import, eBay, email, newsletter, deploy, indexing and
+  tests: a failed run, or a run that has gone silent past its cadence.
+- **Email:** whether it is on. **Inbox:** how many items wait and for how long.
+
+**Who it tells.** Email to bill.jyang101@gmail.com (change it with the repository
+variable `OWNER_EMAIL`) when the two mail secrets in 6b exist: one email when a
+problem appears or gets worse, a reminder each day a failure persists (each three
+days for a warning), one when it clears, and a summary every Monday. **Every new
+inbox item (message, feedback, wrong-price report, store suggestion, support
+ticket) is emailed to you within the hour**, with the full text. Until the mail
+secrets exist, the watchdog opens ONE GitHub issue that @-mentions you (status and
+counts only, since the repository is public; GitHub then emails you), and the run
+goes red only if it found a problem it could not tell anyone about.
+
+**To see Neon's transfer and compute in the dashboard** (otherwise they read "not
+connected" and nothing is wrongly shown as fine):
+
+1. console.neon.tech → Account settings → API keys → create a key (name it
+   `opcompare-watchdog`). Copy it once.
+2. Copy the project id from the OP2 project's Settings → General.
+3. GitHub → Settings → Secrets and variables → Actions → New repository secret:
+   `NEON_API_KEY` (the key) and `NEON_PROJECT_ID` (the id).
+4. Actions → Watchdog → Run workflow once. /admin/health now shows the numbers.
+
+The limits default to Neon's free plan; change them with the repository variables
+`NEON_TRANSFER_LIMIT_GB` (5), `NEON_COMPUTE_LIMIT_HOURS` (100) and
+`NEON_STORAGE_LIMIT_MB` (512) if the plan changes.
 
 ## 7. Google Search Console and Bing
 

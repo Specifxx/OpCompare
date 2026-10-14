@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminNoAnalytics } from "@/components/admin/AdminNoAnalytics";
 import { adminMetadata, isAdminViewer } from "@/lib/admin";
+import { adminBadges, type AdminBadges } from "@/lib/admin-health-report";
 
 export const dynamic = "force-dynamic";
 export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: { default: "Admin · OP Compare", template: "%s · Admin" } });
@@ -13,13 +14,15 @@ export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: 
 // (a notFound() thrown HERE would send an empty client-only error shell).
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await isAdminViewer())) return <>{children}</>;
+  // The unread-inbox number and the watchdog's verdict on every admin page: a few counts, owner-only traffic.
+  const badges: AdminBadges = await adminBadges().catch(() => ({ inbox: null, health: null, problems: 0 }));
   return (
     <>
       <AdminNoAnalytics />
       {/* Inside the root layout's container now (wave 2): a hairline bar at
           the top of the content column rather than a full-bleed band. */}
       <div className="-mt-6 mb-6 border-b border-ink-700">
-        <AdminNav />
+        <AdminNav inbox={badges.inbox} health={badges.health} problems={badges.problems} />
       </div>
       {children}
     </>

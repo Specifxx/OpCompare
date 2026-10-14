@@ -2291,3 +2291,48 @@ backlog cleared it would have left ~1,400 of the 2,500 calls unspent, and only
   publishes the rows. The workflow timeout is 90 minutes (2,500 calls ≈ 45).
 - **`RETRY_RATE` is 0.05** (measured 0-1% in every market on 2026-10-08/09; the
   25% was RiftCompare's), so the model no longer overstates a singles search.
+
+## The site watches itself (2026-10-14)
+
+Owner: "I'm not going to look at Neon every day or the inbox; the admin dashboard
+should keep track of the limits, make sure eBay and everything is healthy, show how
+many new inbox items there are, and email me when one comes in (bill.jyang101@gmail.com).
+I'm moving to other projects: less maintenance, for every aspect of the site."
+
+- **A watchdog, not a page.** Limits like Neon's transfer cannot be read from a
+  request without spending the thing being protected, and a page only helps when
+  someone opens it. So a script-side job (`watchdog.yml`, every four hours: six
+  wakes a day, about 36 compute hours a month of Neon's allowance at worst, and
+  most land inside wakes the imports already cause) collects everything, stores ONE
+  report in Meta, and alerts. /admin/health and the admin home only read it.
+- **Alerts are state changes, not noise.** `planAlerts`: told when a problem appears
+  or worsens, reminded daily while a failure persists (every 72h for a warning),
+  told when it clears; `unknown` never alerts or clears; the first run records the
+  state silently. The alert state is saved only after the owner was actually told,
+  so a failed send is retried. One cause, one alert: an overdue eBay pass is one
+  message, not three.
+- **Pace, not just level, for limits.** `evalQuota` warns when the month is on course
+  to pass 90% of the allowance even if little is used (the failure that took the old
+  database down was 5 GB gone by day 9), after the first 15% of the period so one
+  busy import is not a trend. Neon's counters come from its API (`NEON_API_KEY`,
+  `NEON_PROJECT_ID`, both optional); without them the checks say "not connected",
+  never ok, and the database size is still read from Postgres.
+- **Two channels, so a missing mail key never means silence.** Email when the mail
+  secrets exist; otherwise ONE GitHub issue that @-mentions the owner, edited
+  quietly and commented on only when something changes (an edit does not notify).
+  The repository is public, so the issue is built from check labels, our own
+  sentences and counts; the inbox's text never reaches `health.ts`/`health-issue.ts`.
+  The run goes red only if a problem could not be told to anyone (GitHub's own email
+  is the last resort).
+- **Inbox emails ride the hourly outbox.** No new wake: `email-hourly.ts` already
+  connects hourly. One email per run lists everything new since a cursor (Meta
+  `inbox-notified-at`); the cursor moves only after the provider accepts it, the
+  first run only sets it (no backlog flood), a queue over 25 is cut at the point it
+  was read to so nothing is lost or sent twice. Visitor text goes only to the owner's
+  mailbox, never to an issue or a log.
+- **Every scheduled job is watched** (`JOBS`): a failed run, or silence beyond its
+  cadence (GitHub pauses schedules after 60 quiet days), and the live site is probed
+  (home, price guide, sealed, sitemap) for a 200 carrying the site's own text.
+- **Not done, on purpose:** Vercel's own usage (needs a token with account scope) and
+  Stripe webhook health (no record of the last webhook is kept). Both are the next
+  checks to add; the watchdog's structure makes each a function and a test.

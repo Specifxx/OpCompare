@@ -69,6 +69,30 @@ private table to the snapshot (`tests/price-snapshot.test.ts`).
 - Never dispatch *eBay prices* within 07:00–08:10 or 19:00–20:10 UTC: it shares
   the import's concurrency group and can cancel a pending import.
 
+## Self-monitoring: the owner is not watching
+
+The owner does not check Neon, GitHub or the admin pages. The site tells them.
+`scripts/watchdog.ts` (`.github/workflows/watchdog.yml`, every four hours) gathers
+every limit and health signal (`src/lib/health-collect.ts`), judges it with the pure
+evaluators in `src/lib/health.ts`, stores one report in Meta `health:report` for
+`/admin` and `/admin/health`, and emails **bill.jyang101@gmail.com** (`OWNER_EMAIL`)
+about new, worsened and cleared problems, plus a Monday summary. Every new inbox
+item is emailed to the owner by the hourly outbox (`src/lib/owner-notify.ts`).
+
+- A new thing that can silently break (a job, a limit, a data source) gets a check
+  in `health.ts` and a test in `tests/health.test.ts`; a new scheduled workflow goes
+  in `JOBS` there. A feature is not done until the watchdog would notice it failing.
+- The watchdog must keep working when something else is broken: every collector is
+  guarded and a source it cannot read is `unknown` (shown, never alerted, never a
+  false ok). It never calls eBay, never writes anything but its own Meta rows, and
+  its issue fallback is on a PUBLIC repository: status and counts only, never a
+  visitor's text, address or name (`tests/health.test.ts` pins it).
+- `owner-notify.ts`, `health-collect.ts` and `health-issue.ts` are script-side:
+  nothing under `src/app` or `src/components` may import them
+  (`tests/no-email-api.test.ts`, `tests/health.test.ts`).
+- The mail keys appear only in `email.ts` and the `email*`, `import-prices` and
+  `watchdog` workflows; the eBay keys never in `health.ts`.
+
 ## Egress
 
 Pages and API routes read only the loaders in `src/lib/data.ts`. Never import

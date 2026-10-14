@@ -4,6 +4,8 @@ import { Icon } from "@/components/Icon";
 import { StatTile } from "@/components/ui";
 import { adminMetadata, requireAdminPage } from "@/lib/admin";
 import { getAdminHomeCounts } from "@/lib/admin-accounts";
+import { adminBadges } from "@/lib/admin-health-report";
+import { statusWord } from "@/lib/health";
 import { int } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +14,7 @@ export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: 
 const n = (v: number | null) => (v == null ? "–" : int(v));
 
 const TOOLS = [
+  { href: "/admin/health", icon: "chart", title: "Health", text: "Limits, jobs, eBay, stores and the live site, checked every four hours. You are emailed when something needs you." },
   { href: "/admin/accounts", icon: "user", title: "Accounts", text: "Every account, plan and sign-in; grant, revoke, export." },
   { href: "/admin/subscriptions", icon: "chart", title: "Subscriptions", text: "MRR, churn, plan mix and cohorts from Stripe." },
   { href: "/admin/store-health", icon: "store", title: "Store health", text: "Scrapers that broke quietly: failures, drops, match rate." },
@@ -21,15 +24,27 @@ const TOOLS = [
 
 export default async function AdminHome() {
   const user = await requireAdminPage();
-  const counts = await getAdminHomeCounts();
+  const [counts, badges] = await Promise.all([getAdminHomeCounts(), adminBadges()]);
   return (
     <div>
       <h1 className="text-3xl text-white">Admin</h1>
       <p className="mt-1 text-sm text-slate-400">Signed in as {user.email}</p>
-      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <Link
+        href="/admin/health"
+        className={`card-surface mt-6 flex flex-wrap items-center gap-3 p-4 hover:border-ink-600 ${badges.health === "fail" ? "border-rose-500/60" : badges.health === "warn" ? "border-amber-400/60" : ""}`}
+      >
+        <span className={`h-3 w-3 rounded-full ${badges.health === "fail" ? "bg-rose-500" : badges.health === "warn" ? "bg-amber-400" : badges.health === "ok" ? "bg-emerald-400" : "bg-slate-500"}`} />
+        <span className="flex-1 text-white">
+          {badges.health == null ? "No health report yet: run the Watchdog workflow once." : badges.problems ? `${badges.problems} thing${badges.problems === 1 ? "" : "s"} to look at (${statusWord(badges.health)})` : "Everything is healthy"}
+        </span>
+        <span className="text-sm text-brand-400">Health →</span>
+      </Link>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label="Accounts" value={n(counts.accounts)} />
         <StatTile label="Paying now" value={n(counts.paying)} tone="text-gold" />
-        <StatTile label="New inbox items" value={n(counts.inboxNew)} />
+        <Link href="/admin/inbox" className="block rounded-xl hover:opacity-90">
+          <StatTile label="New inbox items" value={n(badges.inbox ?? counts.inboxNew)} tone={badges.inbox ? "text-gold" : undefined} />
+        </Link>
         <Link href="/admin/store-health#needs" className="block rounded-xl hover:opacity-90">
           <StatTile label="Stores whose last read failed" value={n(counts.storesFailed)} tone={counts.storesFailed ? "text-gold" : undefined} />
         </Link>

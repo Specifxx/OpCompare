@@ -1,0 +1,73 @@
+name: Watchdog
+
+# The site's self-check (scripts/watchdog.ts), every four hours at :47 (clear of
+# the :00/:07/:23/:37 slots the import, outbox and eBay passes use). It reads the
+# limits (Neon transfer, compute and size), the freshness of prices and the
+# GitHub snapshot, the eBay runs, the stores, the live site, every scheduled job
+# and the inbox, stores one report for /admin and /admin/health, and tells the
+# owner about NEW problems and recoveries:
+#   - by email to the owner when RESEND_API_KEY and EMAIL_FROM exist
+#   - otherwise through ONE GitHub issue that @-mentions the owner (counts and
+#     status only: the repository is public)
+#   - and the run goes red only if it found a problem it could not tell anyone
+# Mondays it also sends the weekly summary.
+#
+# NEON_API_KEY (a read-only key) and NEON_PROJECT_ID are OPTIONAL: without them
+# the Neon transfer and compute checks read "not connected" and the database
+# size is still checked. It never calls eBay (the eBay checks read the eBay
+# pass's own run records) and never writes anything but its own Meta rows.
+on:
+  schedule:
+    - cron: "47 1,5,9,13,17,21 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
+      OWNER_EMAIL: ${{ vars.OWNER_EMAIL }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+      NEON_TRANSFER_LIMIT_GB: ${{ vars.NEON_TRANSFER_LIMIT_GB }}
+      NEON_COMPUTE_LIMIT_HOURS: ${{ vars.NEON_COMPUTE_LIMIT_HOURS }}
+      NEON_STORAGE_LIMIT_MB: ${{ vars.NEON_STORAGE_LIMIT_MB }}
+      GITHUB_TOKEN: ${{ github.token }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
+    steps:
+      - name: Skip unless the database is configured
+        id: gate
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL (OP2) is not set: nothing to check."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.run == 'true'
+      - run: npx prisma generate
+        if: steps.gate.outputs.run == 'true'
+      - name: Check everything
+        if: steps.gate.outputs.run == 'true'
+        run: npx tsx scripts/watchdog.ts
