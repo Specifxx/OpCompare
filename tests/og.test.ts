@@ -27,14 +27,23 @@ const ALLOWED = new Set(["default", "alt", "size", "contentType", "runtime", "re
 test("there is a share image for /, /price-guide, sets, sealed, cards and blog posts", () => {
   const rel = ogRoutes.map((f) => path.relative(APP, f).split(path.sep).join("/")).sort();
   for (const want of [
-    "opengraph-image.tsx",
     "price-guide/opengraph-image.tsx",
     "sets/[slug]/opengraph-image.tsx",
-    "sealed/[slug]/opengraph-image.tsx",
-    "card/[slug]/opengraph-image.tsx",
     "blog/[slug]/opengraph-image.tsx",
   ]) {
     assert.ok(rel.includes(want), `missing src/app/${want}`);
+  }
+  // The site default is ONE static file (no function, no ISR writes), and the two per-product
+  // routes are gone: a drawn image per card and sealed product cost ~1.5 GB of ISR writes every
+  // 12 hours and two thirds of the function CPU. Their pages name the TCGplayer CDN art instead.
+  assert.ok(fs.existsSync(path.join(APP, "opengraph-image.png")), "missing the static src/app/opengraph-image.png");
+  assert.ok(!rel.includes("opengraph-image.tsx"), "the site default share image is static");
+  assert.ok(!rel.includes("card/[slug]/opengraph-image.tsx"), "no drawn share image per card");
+  assert.ok(!rel.includes("sealed/[slug]/opengraph-image.tsx"), "no drawn share image per sealed product");
+  for (const f of ["card/[slug]/page.tsx", "sealed/[slug]/page.tsx"]) {
+    const src = fs.readFileSync(path.join(APP, f), "utf8");
+    assert.match(src, /twitter:\s*\{[^}]*images/, `${f}: twitter:image is the CDN art`);
+    assert.match(src, /openGraph:\s*pageOg\(/, `${f}: og:image is the CDN art`);
   }
   // twitter:image is copied from og:image; a twitter-image file would override it.
   assert.deepEqual(rel.filter((r) => r.includes("twitter-image")), []);
@@ -111,8 +120,7 @@ test("pageOg: OG_BASE plus the page's url and the default image; extra fields ov
   assert.deepEqual(pageOg("/movers"), { siteName: "OP Compare", locale: "en_US", type: "website", url: "/movers", images: [DEFAULT_OG_IMAGE] });
   assert.equal("images" in pageOgOwnImage("/card/x"), false);
   // The default image's alt is the root route's own.
-  const root = fs.readFileSync(path.join(APP, "opengraph-image.tsx"), "utf8");
-  assert.equal(root.match(/export const alt =\s*"([^"]*)"/)?.[1], DEFAULT_OG_IMAGE.alt);
+  assert.equal(fs.readFileSync(path.join(APP, "opengraph-image.alt.txt"), "utf8"), DEFAULT_OG_IMAGE.alt);
   const a = pageOg("/blog/x", { type: "article", title: "T" }) as Record<string, unknown>;
   assert.equal(a.type, "article");
   assert.equal(a.url, "/blog/x");

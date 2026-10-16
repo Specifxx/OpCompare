@@ -46,7 +46,7 @@ import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
-import { pageOgOwnImage } from "@/lib/og/meta";
+import { pageOg } from "@/lib/og/meta";
 import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
@@ -84,6 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = cardTitle({ name: c.name, variant: c.variant, number: c.number, setName: c.set.name, setCode: c.set.code, printing: c.printing, hasPrice: c.marketUsd != null || c.offers.some((o) => o.inStock) });
   const cat = await getCatalog();
   const lite = cat.bySlug.get(c.slug);
+  const art = c.hasImage ? cardImage.tile(c.id) : null;
   const description = cardMetaDescription({
     displayName: t,
     number: c.number,
@@ -102,8 +103,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: title },
     description,
     alternates: { canonical: `/card/${c.slug}` },
-    // No `images`: the sibling opengraph-image.tsx draws the 1200×630 share card.
-    openGraph: pageOgOwnImage(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}` }),
+    // The card's own scan on TCGplayer's CDN: nothing is generated here (a drawn share
+    // image per card cost ~1.5 GB of ISR writes every 12 hours). No art: the site default.
+    openGraph: pageOg(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}`, ...(art ? { images: [{ url: art, alt: t }] } : {}) }),
+    twitter: { card: "summary_large_image", ...(art ? { images: [art] } : {}) },
   };
 }
 

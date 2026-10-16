@@ -22,7 +22,7 @@ import {
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
-import { pageOgOwnImage } from "@/lib/og/meta";
+import { pageOg } from "@/lib/og/meta";
 import { isPreRelease } from "@/lib/quick-view";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -39,10 +39,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: t.length <= 60 ? t : `${s.name.slice(0, 50)} Price` },
     description: `${s.name}: live One Piece Card Game sealed prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${s.marketUsd ? `. TCGplayer market price ${usd(s.marketUsd)}` : ""}.`,
     alternates: { canonical: `/sealed/${s.slug}` },
-    // No `images`: the sibling opengraph-image.tsx draws the 1200×630 share card.
-    openGraph: pageOgOwnImage(`/sealed/${s.slug}`, {
+    // The product shot on TCGplayer's CDN: nothing is generated here. No art: the site default.
+    openGraph: pageOg(`/sealed/${s.slug}`, {
       title: `${s.name} | ${SITE_NAME}`,
+      ...(s.imageUrl ? { images: [{ url: s.imageUrl, alt: s.name }] } : {}),
     }),
+    twitter: { card: "summary_large_image", ...(s.imageUrl ? { images: [s.imageUrl] } : {}) },
   };
 }
 

@@ -13,17 +13,17 @@ export const OG_BASE = { siteName: SITE_NAME, locale: "en_US", type: "website" }
 type OpenGraph = NonNullable<Metadata["openGraph"]>;
 
 /**
- * The site default share image (src/app/opengraph-image.tsx). A page that sets
+ * The site default share image (src/app/opengraph-image.png, a static file). A page that sets
  * its own openGraph loses the root's file-based image (Next replaces the whole
  * object, images included), so pageOg() names it again. `alt` must match the
  * route's own export (tests/og.test.ts).
  */
 export const DEFAULT_OG_IMAGE = {
-  url: "/opengraph-image",
+  url: "/opengraph-image.png",
   width: 1200,
   height: 630,
   type: "image/png",
-  alt: "OP Compare's One Piece price guide: the top cards with their TCGplayer market price, the cheapest in-stock store price and store counts, across six markets",
+  alt: "OP Compare's One Piece price guide: every card's cheapest price compared across stores in six markets",
 } as const;
 
 function build(path: string, extra: Partial<OpenGraph>): OpenGraph {

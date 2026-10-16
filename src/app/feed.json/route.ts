@@ -30,7 +30,7 @@ export async function GET() {
         title: titles.get(p.slug) ?? p.slug,
         summary: p.description,
         content_text: p.description,
-        image: `${url}/opengraph-image`,
+        image: `${url}/opengraph-image.png`,
         date_published: new Date(`${p.date}T00:00:00Z`).toISOString(),
         tags: p.tags,
       };

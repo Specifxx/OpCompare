@@ -2376,3 +2376,19 @@ transfer on every page-cache miss. The owner asked for everything public to move
 **Rollout.** `move-public-data.yml` (builds the first snapshot from Neon; refuses if
 one with `ranges` exists) → import + eBay runs → deploy (the owner asked for it ASAP)
 → retire. Public-data tests: `tests/public-data.test.ts`, `tests/price-snapshot.test.ts`.
+
+## 2026-10-16: No drawn share image per card or sealed product
+
+Vercel's bill was dominated by `card/[slug]/opengraph-image` and
+`sealed/[slug]/opengraph-image`: ~1.56 GB of ISR writes per 12 h (104-812 KB per
+image) and about two thirds of function CPU. Both routes are deleted. The card and
+sealed pages now name the product's own image on TCGplayer's CDN as `og:image` and
+`twitter:image` (`cardImage.tile`, the sealed `imageUrl`), so nothing is drawn or
+stored on our side; a card without art falls back to the site default. The site
+default is one static, data-free `src/app/opengraph-image.png` (served at
+`/opengraph-image.png`; the old drawn price-guide image showed live prices and cost a
+function run). Set, price-guide, blog, deck and rising images stay drawn: they are few
+and cached 6 h. Checked and unchanged: no `/card`, `/sealed` or `/price-guide` page
+sets a `revalidate` (they are dynamic, the loaders cache), and the only
+`revalidatePath`/`revalidateTag` calls are the admin deck and rising-snapshot routes,
+one path each, never a loop over cards. Pinned in `tests/og.test.ts`.

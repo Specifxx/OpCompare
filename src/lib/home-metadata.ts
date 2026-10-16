@@ -15,7 +15,7 @@ import {
 
 // The homepage's and region homes' <title>, description, Open Graph and
 // hreflang (RiftCompare's lib/home-metadata.ts). "/" has its own share image
-// (app/opengraph-image.tsx), so its openGraph carries no `images` key. Live counts from the cached
+// (app/opengraph-image.png), so its openGraph carries no `images` key. Live counts from the cached
 // home stats; any error falls back to count-free copy, never a 500.
 async function liveStats() {
   try {

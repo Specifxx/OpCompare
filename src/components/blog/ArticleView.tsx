@@ -74,7 +74,7 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
               logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png` },
             },
             mainEntityOfPage: url,
-            image: `${url}/opengraph-image`,
+            image: `${url}/opengraph-image.png`,
           },
           {
             "@context": "https://schema.org",

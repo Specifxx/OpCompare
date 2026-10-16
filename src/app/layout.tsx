@@ -76,8 +76,8 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   // No og:url here: every page inherits this object, so a url would point each
-  // share at the homepage. The image is src/app/opengraph-image.tsx (the price
-  // guide); twitter:image copies it, so there is no twitter-image file.
+  // share at the homepage. The image is src/app/opengraph-image.png (a static, data-free
+  // price-guide card); twitter:image copies it, so there is no twitter-image file.
   openGraph: { ...OG_BASE },
   twitter: { card: "summary_large_image" },
   alternates: { canonical: "/" },
