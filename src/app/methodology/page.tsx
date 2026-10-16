@@ -78,6 +78,12 @@ export default async function Methodology() {
         . A listing&apos;s condition is
         the best condition the store has in stock (Near Mint first). Sold-out
         listings are folded below the comparison and never set a headline price.
+        On the pre-order pages, each product shows eBay&apos;s and
+        TCGplayer&apos;s cheapest listing first, in a labelled
+        &ldquo;Marketplaces&rdquo; block that is not numbered and never counted
+        as a store; the stores under it are ranked cheapest first by item price,
+        and the product&apos;s headline price is the cheapest open offer from
+        anyone.
       </p>
       <h2>Markets and currency</h2>
       <p>

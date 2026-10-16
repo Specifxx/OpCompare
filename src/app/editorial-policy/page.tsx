@@ -38,11 +38,15 @@ export default async function EditorialPolicy() {
       <p>
         OP Compare earns from some eBay and TCGplayer links (labelled). That
         never changes a ranking: comparisons are cheapest first, and posts name
-        stores by the data. No store pays to be mentioned.
+        stores by the data. No store pays to be mentioned. One labelled
+        exception: on the pre-order pages, eBay and TCGplayer are shown first in
+        their own &ldquo;Marketplaces&rdquo; block, never numbered or counted
+        among the stores, whose ranking stays cheapest first.
         {ebayLive ? (
           <>
             {" "}eBay listing prices (we are an eBay Partner Network affiliate) are
-            ranked by item price like any store&apos;s.
+            ranked by item price like any store&apos;s, except in that pre-order
+            block.
           </>
         ) : null}
       </p>

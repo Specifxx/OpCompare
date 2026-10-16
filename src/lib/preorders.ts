@@ -1,17 +1,25 @@
 // The pre-order pages' logic (RiftCompare's /radiance-preorders, for One Piece):
 // which sealed products are not out yet, grouped by release date, and each
-// product's buyable rows in the visitor's market: stores' pre-order prices,
-// TCGplayer's cheapest listing and eBay's, all ranked by ITEM price like every
-// other board on the site, with nothing re-ranked for being a partner link.
+// product's rows in the visitor's market, in two groups (owner, 2026-10-16):
+//   - the MARKETPLACES, eBay then TCGplayer: each one's cheapest listing here,
+//     pinned above the stores in their own labelled block, never numbered,
+//     never counted as a store, never given the "Cheapest" badge;
+//   - the STORES: every open store pre-order, ranked by ITEM price like every
+//     other board on the site, then the stores that list it here but are sold
+//     out (or were not seen lately), last and never priced as buyable.
+// The product's headline ("From") is still the cheapest open offer from anyone,
+// so pinning a marketplace never moves the number a product is shown at.
 //
 // Pure: no database, no network. The page reads the loaders in lib/data.ts and
 // hands the results in, so tests/preorders.test.ts can pin all of it.
 import { COUNTRIES, type Country } from "./country";
 import type { OfferRow, SealedLite, SetLite } from "./data";
-import { ebayAffiliateUrl } from "./affiliate";
+import { affiliateUrl, ebayAffiliateUrl } from "./affiliate";
 import type { PanelListing } from "./listing-panel";
 import { buyRow, marketRows, type BuyRow } from "./quick-view";
-import { compareBoardRows } from "./board";
+import { compareBoardRows, postageLine, retailerSubId } from "./board";
+import { offerStock } from "./sealed-offers";
+import { sourceLabel, storesIn } from "./stores";
 
 /** The date a sealed product releases: its own, else its set's. */
 export function releaseDateOf(s: Pick<SealedLite, "releasedOn" | "setId">, setById: Map<number, Pick<SetLite, "releasedOn">>): string | null {
@@ -115,33 +123,55 @@ export function groupForSet(groups: PreorderGroup[], code: string): PreorderGrou
 function panelRow(l: PanelListing, country: Country): BuyRow {
   return {
     source: "ebay",
-    label: country === "US" ? "eBay" : `eBay ${COUNTRIES[country].code}`,
+    label: sourceLabel("ebay", country),
     retailer: `ebay_${country.toLowerCase()}`,
     priceCents: l.priceCents,
     shippingCents: l.shippingCents,
     condition: null,
     href: ebayAffiliateUrl(l.url, "preorders"),
     ebay: true,
-    postage: l.shippingCents == null ? "postage at checkout" : l.shippingCents === 0 ? "free postage" : "postage extra",
+    // The postage eBay states, as every eBay row shows it ("delivered" only when it is known).
+    postage: postageLine({ source: "ebay", priceCents: l.priceCents, shippingCents: l.shippingCents }, country),
     updatedAt: new Date(0).toISOString(),
   };
 }
 
+/** A store that lists the product in this market but cannot take an order now: shown last, never priced as buyable. */
+export interface SoldOutRow {
+  source: string;
+  label: string;
+  retailer: string;
+  href: string;
+  /** What the store last listed it at: context only, never drawn as a price to buy at. */
+  priceCents: number;
+  updatedAt: string;
+  /** "soldout": sold out on a fresh read. "unknown": not seen within 72 hours (a stale row reads as unavailable, never as open). */
+  state: "soldout" | "unknown";
+}
+
 export interface ProductBoard {
+  /** Every open row in the market (stores, TCGplayer, eBay), cheapest item price first: the headline price and the structured data. */
   rows: BuyRow[];
-  /** The cheapest row of each kind, for the headline line. */
+  /** The store ranking: open store pre-orders only, cheapest item price first. Never a TCGplayer or eBay row. */
+  stores: BuyRow[];
+  /** Stores that list it here and are sold out or stale: one row per store, sold out before not-seen, each cheapest first. */
+  soldOut: SoldOutRow[];
+  /** The cheapest row of each kind: `ebay` and `tcgplayer` are the pinned Marketplaces group. */
   cheapest: { store: BuyRow | null; tcgplayer: BuyRow | null; ebay: BuyRow | null };
   /** True when the eBay row came from the listings panel rather than a priced offer. */
   ebayFromPanel: boolean;
 }
 
+/** A store's row: a `store:` source (TCGplayer and eBay are marketplaces here, never stores). */
+const isStoreRow = (source: string) => source.startsWith("store:");
+
 /**
- * A product's rows in the visitor's market, cheapest item price first. eBay's
- * row is the priced eBay offer when the eBay pass wrote one, else the headline
- * (rank 0) listing of the listings panel in this market: either way a real
- * listing, never an estimate. `loc` names the page for the affiliate sub-id.
+ * A product's rows in the visitor's market. eBay's row is the priced eBay offer
+ * when the eBay pass wrote one, else the headline (rank 0) listing of the
+ * listings panel in this market: either way a real listing, never an estimate.
+ * `loc` names the page for the affiliate sub-id; `now` dates the sold-out rows.
  */
-export function productBoard(offers: OfferRow[], panel: PanelListing[], country: Country, loc: string): ProductBoard {
+export function productBoard(offers: OfferRow[], panel: PanelListing[], country: Country, loc: string, now: number = Date.now()): ProductBoard {
   const open = marketRows(offers, country).map((o) => buyRow(o, country, loc));
   let ebayFromPanel = false;
   if (!open.some((r) => r.ebay)) {
@@ -152,11 +182,88 @@ export function productBoard(offers: OfferRow[], panel: PanelListing[], country:
     }
   }
   const rows = open.sort((a, b) => compareBoardRows(a, b));
+  const stores = rows.filter((r) => isStoreRow(r.source));
   const first = (f: (r: BuyRow) => boolean) => rows.find(f) ?? null;
+
+  // Sold out / not seen: the market's store rows that are not open, one per
+  // store (its newest observation), and never a store that is open here.
+  const cur = COUNTRIES[country].currency;
+  const openSources = new Set(stores.map((r) => r.source));
+  const dead = new Map<string, OfferRow>();
+  for (const o of offers) {
+    if (o.market !== country || o.currency !== cur || !isStoreRow(o.source) || openSources.has(o.source)) continue;
+    if (offerStock({ priceCents: o.priceCents, inStock: o.inStock, lastSeen: o.updatedAt }, now) === "open") continue;
+    const prev = dead.get(o.source);
+    if (!prev || o.updatedAt > prev.updatedAt) dead.set(o.source, o);
+  }
+  const soldOut = [...dead.values()]
+    .map((o): SoldOutRow => ({
+      source: o.source,
+      label: sourceLabel(o.source, country),
+      retailer: retailerSubId(o.source),
+      href: affiliateUrl(o.url, retailerSubId(o.source), loc),
+      priceCents: o.priceCents,
+      updatedAt: o.updatedAt,
+      state: offerStock({ priceCents: o.priceCents, inStock: o.inStock, lastSeen: o.updatedAt }, now) === "unknown" ? "unknown" : "soldout",
+    }))
+    .sort((a, b) => (a.state === b.state ? 0 : a.state === "soldout" ? -1 : 1) || a.priceCents - b.priceCents || a.label.localeCompare(b.label));
+
   return {
     rows,
-    cheapest: { store: first((r) => !r.ebay && r.source !== "tcgplayer"), tcgplayer: first((r) => r.source === "tcgplayer"), ebay: first((r) => r.ebay) },
+    stores,
+    soldOut,
+    cheapest: { store: stores[0] ?? null, tcgplayer: first((r) => r.source === "tcgplayer"), ebay: first((r) => r.ebay) },
     ebayFromPanel,
+  };
+}
+
+/** One product of a release as the page loaded it: every market's offers, and its board in the visitor's market. */
+export interface PreorderItem {
+  s: Pick<SealedLite, "kind">;
+  offers: OfferRow[];
+  board: ProductBoard;
+}
+
+export interface PreorderSummary {
+  /** Stores the site reads in this market (the store registry): the same count "We track N stores" prints in the EB05 post. */
+  checked: number;
+  /** Distinct stores with an open pre-order here for any of the release's products. Never TCGplayer or eBay. */
+  taking: number;
+  /** The cheapest open STORE pre-order here for the release's booster box, and who has it. */
+  box: { priceCents: number; label: string } | null;
+  /** Across all six markets: distinct stores listing any of the release's products on a fresh read (open or sold out), how many of them are open, and in how many markets. */
+  all: { listing: number; taking: number; markets: number };
+}
+
+/**
+ * The summary strip at the top of a release's page, computed from the same
+ * products the page draws, so the two can never disagree. Stores only: TCGplayer
+ * and eBay are never counted as stores (CLAUDE.md). A row not seen within 72
+ * hours is neither "listing" nor "taking" (lib/sealed-offers.ts offerStock).
+ */
+export function preorderSummary(items: PreorderItem[], country: Country, now: number = Date.now()): PreorderSummary {
+  const taking = new Set(items.flatMap((i) => i.board.stores.map((r) => r.source)));
+  const boxRow = items.find((i) => i.s.kind === "Booster Box")?.board.stores[0] ?? null;
+  const listing = new Set<string>();
+  const open = new Set<string>();
+  const markets = new Set<string>();
+  for (const i of items) {
+    for (const o of i.offers) {
+      if (!isStoreRow(o.source)) continue;
+      const m = COUNTRIES[o.market as Country];
+      if (!m || o.currency !== m.currency) continue;
+      const state = offerStock({ priceCents: o.priceCents, inStock: o.inStock, lastSeen: o.updatedAt }, now);
+      if (state === "unknown") continue;
+      listing.add(o.source);
+      markets.add(o.market);
+      if (state === "open") open.add(o.source);
+    }
+  }
+  return {
+    checked: storesIn(country).length,
+    taking: taking.size,
+    box: boxRow ? { priceCents: boxRow.priceCents, label: boxRow.label } : null,
+    all: { listing: listing.size, taking: open.size, markets: markets.size },
   };
 }
 

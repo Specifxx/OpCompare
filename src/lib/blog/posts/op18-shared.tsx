@@ -268,7 +268,7 @@ export function boxLine(cat: Catalog, sealed: SealedLite[], country: Country): R
     <>
       The cheapest OP18 booster box {word} we track in {m.place} today is <strong>{money(low, country)}</strong>
       {box.stores[country] ? ` (${plural(box.stores[country], "tracked seller")} listing it)` : " (an eBay listing; no tracked store has one yet)"}, before postage.{" "}
-      <Link href={OP18_PREORDERS}>The OP18 pre-order board</Link> ranks every seller in your market, cheapest first.
+      <Link href={OP18_PREORDERS}>The OP18 pre-order board</Link> ranks every tracked store in your market, cheapest first, under eBay&apos;s and TCGplayer&apos;s listings.
     </>
   );
 }

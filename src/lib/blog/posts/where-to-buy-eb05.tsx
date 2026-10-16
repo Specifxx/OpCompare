@@ -52,7 +52,7 @@ export const whereToBuyEb05: Post = {
     },
     {
       q: "How much does an EB05 booster pack cost?",
-      a: "Bandai's English page gives an MSRP of US$4.99 per pack. Stores set their own pre-order prices for packs, boxes and cases, and they differ; [the EB05 pre-order board](/eb05-preorders) lists every tracked seller's price in your currency, cheapest first.",
+      a: "Bandai's English page gives an MSRP of US$4.99 per pack. Stores set their own pre-order prices for packs, boxes and cases, and they differ; [the EB05 pre-order board](/eb05-preorders) shows eBay's and TCGplayer's cheapest listing first, then every tracked store's price in your currency, cheapest first.",
     },
     {
       q: "How many packs are in an EB05 booster box?",
@@ -163,7 +163,7 @@ export const whereToBuyEb05: Post = {
           </>
         ) : null,
         <>Bandai&apos;s MSRP is US$4.99 per pack. Every price here is an item price, before postage.</>,
-        <>Prices move daily: {boardLink("the EB05 pre-order board")} ranks every tracked seller in your market, cheapest first.</>,
+        <>Prices move daily: {boardLink("the EB05 pre-order board")} ranks every tracked store in your market, cheapest first, under eBay&apos;s and TCGplayer&apos;s listings.</>,
       ].filter(Boolean),
       lede: (
         <>
@@ -249,8 +249,8 @@ export const whereToBuyEb05: Post = {
                 </p>
               ) : null}
               <Callout title="The live board">
-                {boardLink(`EB05 ${word} prices from every tracked store →`)} Each product lists every tracked seller in your market beside TCGplayer&apos;s cheapest
-                listing and eBay&apos;s, ranked by item price and refreshed daily.
+                {boardLink(`EB05 ${word} prices from every tracked store →`)} Each product shows eBay&apos;s and TCGplayer&apos;s cheapest listing first,
+                then every tracked store in your market ranked by item price, refreshed daily.
               </Callout>
             </>
           ) : (

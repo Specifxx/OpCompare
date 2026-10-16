@@ -11,8 +11,9 @@ import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type Seale
 import { getCountry } from "@/lib/get-country";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageOg } from "@/lib/og/meta";
-import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, productBoard, shortDateOf, type PreorderGroup, type ProductBoard } from "@/lib/preorders";
+import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderSummary, productBoard, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
 import { ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
+import { money } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,11 +22,17 @@ import { SITE_URL } from "@/lib/site";
 // ─────────────────────────────────────────────────────────────────────────────
 // RiftCompare's /radiance-preorders for One Piece. Before a set is out the
 // product is identical at every seller (nobody has opened one), so price is the
-// only variable, and the spread between stores is both large and unshopped. Each
-// product lists the visitor's market's pre-order prices from the stores we
-// track, TCGplayer's cheapest listing and eBay's, ranked together by ITEM price
-// (an eBay or TCGplayer row is never moved for being a partner link), with an
-// eBay search and TCGplayer link always offered beside them.
+// only variable, and the spread between stores is both large and unshopped.
+//
+// LAYOUT (owner, 2026-10-16: "the eBay links stay at the very top, alongside the
+// TCG(player) ones, and everything else is priced in order"): a summary strip
+// under the intro (stores checked in the visitor's market, how many are taking
+// pre-orders, the cheapest store box, days to release, and the all-market
+// total), then per product (components/PreorderProduct.tsx) a labelled
+// "Marketplaces" block pinned at the top, eBay then TCGplayer, OUTSIDE the
+// ranking (not numbered, never counted as a store, never "Cheapest"), and under
+// it the stores' open pre-orders cheapest first by ITEM price, then the sold-out
+// ones. The product's "From" price is still the cheapest open offer from anyone.
 //
 // EVERY PRICE HERE IS A PRE-ORDER and the page says so in the heading, on each row
 // and in its structured data (schema.org PreOrder, never InStock).
@@ -80,11 +87,12 @@ export async function preorderMetadata(cfg: PreorderConfig): Promise<Metadata> {
   };
 }
 
-async function boardsFor(products: SealedLite[], country: ReturnType<typeof getCountry>, page: string): Promise<{ s: SealedLite; board: ProductBoard }[]> {
+async function boardsFor(products: SealedLite[], country: ReturnType<typeof getCountry>, page: string, now: number): Promise<(PreorderItem & { s: SealedLite })[]> {
   return Promise.all(
     products.map(async (s) => {
       const [detail, panel] = await Promise.all([getSealedDetail(s.slug).catch(() => null), getEbayPanel(s.id).catch(() => ({ listings: [], graded: [] }))]);
-      return { s, board: productBoard(detail?.offers ?? [], panel.listings, country, `/${page}`) };
+      const offers = detail?.offers ?? [];
+      return { s, offers, board: productBoard(offers, panel.listings, country, `/${page}`, now) };
     }),
   );
 }
@@ -107,14 +115,17 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
   const setName = set?.name ?? cfg.fallbackName;
   const eventSet = cfg.eventCode ? cat.sets.find((s) => s.code === cfg.eventCode) : undefined;
 
-  const [mainBoards, otherBoards] = await Promise.all([main ? boardsFor(main.products, country, PAGE) : Promise.resolve([]), Promise.all(others.map((g) => boardsFor(g.products, country, PAGE)))]);
+  const now = Date.now();
+  const [mainBoards, otherBoards] = await Promise.all([main ? boardsFor(main.products, country, PAGE, now) : Promise.resolve([]), Promise.all(others.map((g) => boardsFor(g.products, country, PAGE, now)))]);
   const boxPacks = mainBoards.find((x) => x.s.kind === "Booster Box")?.s.packCount ?? null;
   const priced = mainBoards.filter((b) => b.board.rows.length);
+  // The summary strip: computed from the same products the page draws below.
+  const summary = mainBoards.length ? preorderSummary(mainBoards, country, now) : null;
 
   const faqs = [
     {
       q: `How much does a ${L} booster box cost to pre-order?`,
-      a: "Pre-order prices vary between sellers because nothing has shipped and each one sets its own opening price. This page lists every tracked store's pre-order price in your market beside TCGplayer's cheapest listing and eBay's, cheapest first by item price, so you see the real spread rather than the first price you find.",
+      a: "Pre-order prices vary between sellers because nothing has shipped and each one sets its own opening price. For each product this page shows eBay's and TCGplayer's cheapest listing in your market first, then every tracked store taking pre-orders, cheapest first by item price, so you see the real spread rather than the first price you find.",
     },
     {
       q: `When does One Piece ${L} release?`,
@@ -132,11 +143,11 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
     },
     {
       q: "Do the prices include postage?",
-      a: "They are item prices, ranked as listed. Each store's postage is measured from its own checkout and shown on the row where it is known; a sealed box usually ships as a parcel, so check the checkout for it. eBay rows show the postage the seller states.",
+      a: "They are item prices, ranked as listed. Each store's postage is measured from its own checkout and shown on the row where it is known; a sealed box usually ships as a parcel, so check the checkout for it. eBay listings show the postage the seller states.",
     },
     {
-      q: "Why show TCGplayer and eBay beside stores?",
-      a: "Before release, TCGplayer and eBay prices are individual sellers' asking prices for stock they expect to receive, not a store's list price. They are ranked with the stores by item price and never moved up or down for being a partner link, so a store pre-order is shown first whenever it is the cheaper route, and a marketplace listing is shown first when it is.",
+      q: "Why are eBay and TCGplayer shown above the stores?",
+      a: "They are marketplaces, not stores: before release their prices are individual sellers' asking prices for stock they expect to receive, not a store's list price. So each product shows them first in their own labelled Marketplaces block, outside the store ranking: they are never numbered among the stores, never counted as one and never marked cheapest. The stores below are ranked by item price alone, and the price at the top of each product is the cheapest open offer from anyone, a marketplace included.",
     },
     {
       q: "What is the difference between a booster box and a case?",
@@ -144,7 +155,7 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
     },
     {
       q: "How do you earn money from this page?",
-      a: "Links to TCGplayer and eBay are affiliate links, so OP Compare earns a commission on qualifying purchases at no extra cost to you. Store rows are not paid placements and no seller can buy a better position: every row is ranked by its item price.",
+      a: "Links to TCGplayer and eBay are affiliate links, so OP Compare earns a commission on qualifying purchases at no extra cost to you. Those two sit in the labelled Marketplaces block at the top of each product. Store rows are not paid placements and no store can buy a better position: the stores are ranked by item price alone.",
     },
   ];
 
@@ -192,8 +203,56 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         {released
           ? `${setName} is out, so its products are priced alongside every other set. Live prices are on the sealed page.`
-          : `${L} is "${setName}", ${cfg.kindLine}. Nothing has shipped yet, so every seller is simply picking an opening price, and they are picking very different ones. Below, each product lists the pre-order prices from our tracked ${info.adjective} stores beside TCGplayer's cheapest listing and eBay's, cheapest first, in ${info.currency}. Prices refresh daily.`}
+          : `${L} is "${setName}", ${cfg.kindLine}. Nothing has shipped yet, so every seller is simply picking an opening price, and they are picking very different ones. Below, each product shows eBay's and TCGplayer's cheapest listing first, then every tracked ${info.adjective} store taking pre-orders, cheapest first, in ${info.currency}. Prices refresh daily.`}
       </p>
+
+      {summary && stillUpcoming && !released ? (
+        <section aria-label={`${L} pre-orders at a glance`} className="mt-4">
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="card-surface min-w-0 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Stores checked</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-white">{summary.checked}</dd>
+              <dd className="text-xs text-slate-400">in {info.place}</dd>
+            </div>
+            <div className="card-surface min-w-0 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Taking pre-orders</dt>
+              <dd className="num mt-1 text-xl font-extrabold text-white">{summary.taking}</dd>
+              <dd className="text-xs text-slate-400">{summary.taking === 1 ? "store" : "stores"} with an open {L} pre-order</dd>
+            </div>
+            <div className="card-surface min-w-0 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Cheapest box at a store</dt>
+              {summary.box ? (
+                <>
+                  <dd className="num mt-1 text-xl font-extrabold text-accent">{money(summary.box.priceCents, country)}</dd>
+                  <dd className="break-words text-xs text-slate-400">{summary.box.label}</dd>
+                </>
+              ) : (
+                <>
+                  <dd className="mt-1 text-base font-bold text-slate-300">None open</dd>
+                  <dd className="text-xs text-slate-400">at a store in {info.place}</dd>
+                </>
+              )}
+            </div>
+            <div className="card-surface min-w-0 p-3">
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Release</dt>
+              {days != null && days > 0 ? (
+                <dd className="num mt-1 text-xl font-extrabold text-white">
+                  {days} {days === 1 ? "day" : "days"}
+                </dd>
+              ) : (
+                <dd className="mt-1 text-base font-bold text-white">{days === 0 ? "Today" : "Date to come"}</dd>
+              )}
+              {releaseIso ? <dd className="text-xs text-slate-400">{longDateOf(releaseIso)}</dd> : null}
+            </div>
+          </dl>
+          {summary.all.listing ? (
+            <p className="mt-2 text-xs text-slate-400 [font-feature-settings:'lnum'_1]">
+              Across all six markets: {summary.all.listing} {summary.all.listing === 1 ? "store" : "stores"}
+              {summary.all.markets > 1 ? ` in ${summary.all.markets} markets` : ""} {summary.all.listing === 1 ? "lists" : "list"} {L}, and {summary.all.taking} of them {summary.all.taking === 1 ? "is" : "are"} taking pre-orders now. TCGplayer and eBay are not counted as stores.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {stillUpcoming && !released ? (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#0064d2]/30 bg-[#0064d2]/[0.06] px-4 py-3">
