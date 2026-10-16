@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardLinkGrid } from "@/components/CardLinkGrid";
 import { CardArt } from "@/components/CardTile";
+import { RelatedGuides } from "@/components/RelatedGuides";
 import { Breadcrumbs, ColorBadge, InShort, SectionHeader, StatTile } from "@/components/ui";
 import { COUNTRIES, MARKETS } from "@/lib/country";
+import { guidesForLeader } from "@/lib/content/catalogue-guides";
 import { getCardDetail, getCardTextByNumber, getCatalog, type CardLite, type Catalog } from "@/lib/data";
 import { encodeDeckParam } from "@/lib/deck";
 import { leaderSlug } from "@/lib/facets";
@@ -199,6 +201,8 @@ export default async function LeaderPage({ params }: Props) {
           </ul>
         </section>
       ) : null}
+
+      <RelatedGuides guides={guidesForLeader(base.number)} heading="Leader guide" className="card-surface mt-10 p-5" />
 
       <div className="mt-10">
         <InShort>

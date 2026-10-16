@@ -4,7 +4,7 @@
 // shared facts in op18-shared.tsx). Each builds from fixtures, prints no price the
 // catalogue does not hold (Bandai's US$4.99 MSRP aside), leaves no [VERIFY] or
 // [live price] placeholder behind, labels pre-release card text as reported, and
-// links only routes that exist.
+// links only routes that exist. The pages that link them back are pinned at the end.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -19,6 +19,7 @@ import { leaderSlug } from "../src/lib/facets";
 import { money } from "../src/lib/format";
 import { usdCentsToCountry } from "../src/lib/fx";
 import { KEYWORD_BY_SLUG } from "../src/lib/keywords";
+import { guidesForCatalogue, guidesForLeader, guidesForSet, setOwnGuides } from "../src/lib/content/catalogue-guides";
 
 (globalThis as unknown as { React: typeof React }).React = React;
 
@@ -293,4 +294,22 @@ test("hero cards are real catalogue cards with art, the Leader first when it has
   assert.deepEqual(post(SLUGS[1]).build(ctx("US")).heroCards, []);
   const arty = CARDS.map((c) => (c.number === "OP18-001" ? { ...c, hasImage: true } : c));
   assert.equal(post(SLUGS[1]).build(ctx("US", arty)).heroCards[0]?.number, "OP18-001");
+});
+
+test("linked from the pages a reader of OP18 lands on: the set page, the pre-order board, the Leader pages, the keyword pages", () => {
+  const own = setOwnGuides("OP18").map((g) => g.href);
+  assert.deepEqual(own, ["/guides/op18-green-luffy-leader-deck-guide", "/guides/karoo-leader-guide-op18", "/guides/saint-gunko-leader-guide-op18"]);
+  assert.deepEqual(guidesForSet("OP18").map((g) => g.href), own);
+  assert.deepEqual(guidesForSet("OP17"), guidesForCatalogue("sets"), "a set without its own guides keeps the generic list");
+  assert.deepEqual(setOwnGuides("EB05"), []);
+  assert.equal(guidesForLeader("OP18-001")[0]?.href, "/guides/karoo-leader-guide-op18");
+  assert.equal(guidesForLeader("OP18-022")[0]?.href, "/guides/op18-green-luffy-leader-deck-guide");
+  assert.equal(guidesForLeader("OP18-060")[0]?.href, "/guides/saint-gunko-leader-guide-op18");
+  assert.deepEqual(guidesForLeader("OP01-001"), []);
+  assert.deepEqual(guidesForLeader(null), []);
+  assert.match(read("src/app/sets/[slug]/page.tsx"), /guidesForSet\(set\.code\)/);
+  assert.match(read("src/components/PreorderPage.tsx"), /<RelatedGuides guides=\{setOwnGuides\(SET_CODE\)\}/);
+  assert.match(read("src/app/leaders/[slug]/page.tsx"), /<RelatedGuides guides=\{guidesForLeader\(base\.number\)\}/);
+  assert.match(read("src/app/keywords/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
+  assert.match(read("src/app/keywords/[slug]/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
 });

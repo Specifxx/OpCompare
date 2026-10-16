@@ -4,6 +4,8 @@ import { Breadcrumbs } from "@/components/ui";
 import { HubFaq } from "@/components/HubFaq";
 import { PreorderProduct } from "@/components/PreorderProduct";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { setOwnGuides } from "@/lib/content/catalogue-guides";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type SealedLite } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
@@ -293,6 +295,9 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
           ))}
         </section>
       ) : null}
+
+      {/* The set's own guides (lib/content/catalogue-guides.ts SET_GUIDES): nothing for a set without any. */}
+      <RelatedGuides guides={setOwnGuides(SET_CODE)} heading={`${L} guides`} className="card-surface mt-8 p-5" />
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>

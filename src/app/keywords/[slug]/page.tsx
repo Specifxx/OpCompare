@@ -56,7 +56,12 @@ export default async function KeywordPage({ params, searchParams }: Props) {
           <p key={i}>{p}</p>
         ))}
         <p className="text-sm text-slate-400">
-          A summary of Bandai&apos;s Comprehensive Rules, not a ruling on any one card. Cards that gain [{k.name}] from an effect are listed too.
+          A summary of Bandai&apos;s Comprehensive Rules, not a ruling on any one card. Cards that gain [{k.name}] from an effect are listed too. Every keyword,
+          with its rule number:{" "}
+          <Link href="/guides/one-piece-tcg-keywords-explained" className="text-brand-400 hover:underline">
+            our keywords guide
+          </Link>
+          .
         </p>
       </div>
       <section className="mt-8">

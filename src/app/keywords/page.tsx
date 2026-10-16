@@ -35,7 +35,11 @@ export default async function KeywordsHub() {
       <div className="mt-6">
         <InShort>
           The definitions are short summaries of Bandai&apos;s Comprehensive Rules. For a ruling on a particular card, check the rules on the official
-          One Piece Card Game site.
+          One Piece Card Game site. New to them?{" "}
+          <Link href="/guides/one-piece-tcg-keywords-explained" className="text-brand-400 hover:underline">
+            What is Rush in One Piece TCG?
+          </Link>{" "}
+          walks through every keyword in plain English, with the rule number for each.
         </InShort>
       </div>
       {groups.map((g) => (

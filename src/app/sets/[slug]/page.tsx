@@ -29,7 +29,7 @@ import { SetGridControls } from "@/components/sets/SetGridControls";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
 import { JsonLd } from "@/components/ui";
 import { browseHref, parseBrowse, runBrowse, type SearchParams } from "@/lib/browse";
-import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
+import { guidesForSet } from "@/lib/content/catalogue-guides";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { setPriceGuideRows } from "@/lib/set-price-guide";
 
@@ -69,7 +69,7 @@ export default async function SetPage({ params, searchParams }: Props) {
     siteMedianCents: median(cat.cards.map((x) => x.low[country]).filter((v): v is number => v != null)),
   });
   const guideRows = setPriceGuideRows(cards, country);
-  const guides = guidesForCatalogue("sets");
+  const guides = guidesForSet(set.code);
   const setsByCode = Object.fromEntries(cat.sets.flatMap((x) => [[x.slug, `${x.name} (${x.code})`], [x.code.toLowerCase(), `${x.name} (${x.code})`]]));
   const priced = cards.filter((x) => x.low[country] != null);
   const med = median(priced.map((x) => x.low[country]!));
