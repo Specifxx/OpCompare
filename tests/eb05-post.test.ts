@@ -81,7 +81,9 @@ test("registered as a dated blog post (not a guide), newest first, with a title 
   assert.ok(post, "published");
   assert.equal(post.category, "blog");
   assert.equal(post.date, "2026-10-14");
-  assert.equal(POSTS[0].slug, SLUG);
+  // Newest first: the OP18 guides of 16 October sit above it, and it is the newest dated blog post.
+  for (let i = 1; i < POSTS.length; i++) assert.ok(POSTS[i - 1].date >= POSTS[i].date, `${POSTS[i - 1].slug} is listed before ${POSTS[i].slug}`);
+  assert.equal(POSTS.find((p) => (p.category ?? "blog") === "blog")?.slug, SLUG);
   const c = ctx(day(16), SEALED);
   const title = post.title(c);
   // articleMetadata: over 60 characters, the text before the colon is the <title>.

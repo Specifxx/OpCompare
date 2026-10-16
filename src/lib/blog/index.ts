@@ -3,7 +3,11 @@ import { budgetAltArts } from "./posts/budget-alt-arts";
 import { boosterBoxes } from "./posts/booster-boxes";
 import { cheapLeaders } from "./posts/cheap-leaders";
 import { cheaperAbroad } from "./posts/cheaper-abroad";
+import { keywordsExplained } from "./posts/keywords-explained";
 import { mostExpensive } from "./posts/most-expensive";
+import { op18GreenLuffy } from "./posts/op18-green-luffy";
+import { op18Karoo } from "./posts/op18-karoo";
+import { op18SaintGunko } from "./posts/op18-saint-gunko";
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
 import { whereToBuy } from "./posts/where-to-buy";
@@ -13,6 +17,10 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  op18GreenLuffy,
+  keywordsExplained,
+  op18SaintGunko,
+  op18Karoo,
   whereToBuyEb05,
   setConcentration,
   budgetAltArts,
