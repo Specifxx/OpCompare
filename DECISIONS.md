@@ -2561,3 +2561,12 @@ which makes a route per-request, and as a `[slug]` route without
   in metadata and JSON-LD, every market-dependent part drawn by an island, and the
   islands' own tree free of the store registry, the loaders and the database.
   CLAUDE.md's Egress section states the rule.
+
+## IndexNow names the sitemap's host and fails the run on a refusal — 2026-10-16
+
+MTG Compare's daily IndexNow run logged `8479 URLs → HTTP 422 … 0 of 8479 submitted` for a week and stayed green: its `SITE_URL` repository variable still named the old Vercel host, so the request's `host` was not the host of the sitemap's URLs, which IndexNow refuses (422). OP Compare's run works (HTTP 200 for 8,408 URLs on 15 Oct, the same key as RiftCompare and MTG Compare: a key is verified per host), but had the same two weaknesses, so it gets the same fix:
+
+- `submissionPlan()` (`scripts/indexnow-submit.ts`) takes the origin of the sitemap's own URLs, sends only URLs on it and checks the key file there; SITE_URL only says where to read the sitemap, and a SITE_URL on another host earns a warning.
+- The run exits 1, with the first 500 characters of IndexNow's answer in the log, when a batch is refused, when `/indexnow.txt` never serves `INDEXNOW_KEY`, or when the sitemap is empty. The watchdog reads the workflow's conclusion, so "0 of N submitted" on a green run was invisible to it. Without `INDEXNOW_KEY` the run still skips quietly.
+
+`tests/indexnow.test.ts` pins both.
