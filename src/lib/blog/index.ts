@@ -7,11 +7,13 @@ import { mostExpensive } from "./posts/most-expensive";
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
 import { whereToBuy } from "./posts/where-to-buy";
+import { whereToBuyEb05 } from "./posts/where-to-buy-eb05";
 import type { Post } from "./types";
 
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  whereToBuyEb05,
   setConcentration,
   budgetAltArts,
   setReview("OP17", "op17-worlds-strongest-warriors-chase-cards", "2026-10-03"),
@@ -55,7 +57,18 @@ export const AUTHOR = {
   bio: "The OP Compare team builds and runs the site: the price import, the store matching and the guides. Every figure in a post comes from our own price database.",
 };
 
-/** Where a post lives: guides at /guides/[slug], everything else at /blog/[slug]. */
+/**
+ * Where a post lives: guides at /guides/[slug], everything else at /blog/[slug].
+ * Every link to a post goes through here (or postHrefFor): /blog/<guide> is a
+ * 308 to /guides/<guide>, and a link through a redirect wastes crawl budget
+ * (tests/guides.test.ts fails on a hand-built /blog/ link).
+ */
 export function postHref(p: Pick<Post, "slug" | "category">): string {
   return p.category === "guide" ? `/guides/${p.slug}` : `/blog/${p.slug}`;
+}
+
+/** A published post's href from its slug alone; the blog index when no such post is published. */
+export function postHrefFor(slug: string): string {
+  const p = postBySlug(slug);
+  return p ? postHref(p) : "/blog";
 }

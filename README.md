@@ -32,7 +32,7 @@ straw gold), its own straw-hat logo, its own database and its own store list.
 | `/deck`, `/decks` | The deck pricer (the bulk pricer; `/bulk-pricer` redirects) and the public deck library |
 | `/premium`, `/login`, `/account` | Plus ($2.99/mo · $23.99/yr) and Premium ($4.99/mo · $39.99/yr) via Stripe; Google / Discord sign-in; manage or cancel in Stripe's portal |
 | `/stores`, `/stores/suggest` | Every store we read, per market, with today's matched listings; suggest a store |
-| `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`. Share image: the title beside three hero cards |
+| `/blog`, `/blog/[slug]` | Data-driven posts (most expensive cards, booster box prices, rarities explained, where to buy, where to buy EB05, cheaper abroad, budget Leaders, set reviews) — Article schema, RSS at `/feed.xml`. Share image: the title beside three hero cards |
 | `/release-dates`, `/authors`, `/editorial-policy` | |
 | `/watchlist` | Hearted cards and products (saved in the browser) |
 | `/portfolio`, `/portfolio/sets`, `/portfolio/sets/[set]` | **My binder** (free to 50 cards, unlimited with Plus/Premium): what the cards you own are worth in your market with a daily value chart, the replacement cost, CSV import/export (TCGplayer Product ID or card number + printing), and the set checklist with the cost to finish a set. `/c/[token]` is the read-only share link (noindex; cost and notes never shown) |
@@ -49,7 +49,8 @@ without its own image show "ONE PIECE PRICE GUIDE" with five real top cards:
 art, printing, the cheapest US price, TCGplayer market, number, and store count
 (7-day change once a week of moves exists). `/price-guide`, sets, sealed
 products, cards and blog posts get their own. A data error never breaks a
-share: it draws a data-free fallback card. Rebuilt every 6 h.
+share: it draws a data-free fallback card. Each image is drawn on its first
+request and then served from the cache for a day (the fallback for a minute).
 
 ## Admin
 

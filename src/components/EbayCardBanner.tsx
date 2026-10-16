@@ -12,6 +12,11 @@ function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
+/** The banner's EPN-tagged eBay search for a card on one market's eBay. */
+export function ebayBannerHref(country: Country, query: string, page: string): string {
+  return ebaySearchUrl(country, query, `${page}-banner`);
+}
+
 export function EbayCardBanner({
   country,
   query,
@@ -19,6 +24,7 @@ export function EbayCardBanner({
   page,
   card,
   className = "",
+  href: hrefProp,
 }: {
   country: Country;
   /** eBay keywords (cardEbayQuery / onePieceEbayQuery: "One Piece" exactly once). */
@@ -28,8 +34,10 @@ export function EbayCardBanner({
   page: string;
   card?: string;
   className?: string;
+  /** The search, already tagged on the server (the ISR card page passes every market's: ebayBannerHref). */
+  href?: string;
 }) {
-  const href = ebaySearchUrl(country, query, `${page}-banner`);
+  const href = hrefProp ?? ebayBannerHref(country, query, page);
   const label = ebayLabel(country);
   return (
     <div data-ad-placement="card-banner" className={`flex flex-col items-center ${className}`}>

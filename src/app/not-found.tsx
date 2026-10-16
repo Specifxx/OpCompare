@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CardSearch } from "@/components/CardSearch";
 import { CardTile } from "@/components/CardTile";
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import { getCatalog, getPopular } from "@/lib/data";
 import { releasedSets } from "@/lib/selectors";
 
@@ -80,7 +80,7 @@ export default async function NotFound() {
           <ul className="space-y-2">
             {guides.map((g) => (
               <li key={g.slug}>
-                <Link href={`/blog/${g.slug}`} className="text-sm font-semibold text-brand-400 hover:underline">
+                <Link href={postHref(g)} className="text-sm font-semibold text-brand-400 hover:underline">
                   {g.title({ cat })}
                 </Link>
               </li>

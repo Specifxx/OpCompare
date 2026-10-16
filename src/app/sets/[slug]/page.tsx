@@ -9,6 +9,7 @@ import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { SealedTile } from "@/components/SealedTile";
 import { cardEbayQuery, onePieceEbayQuery } from "@/lib/affiliate";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
+import { PreorderCallout } from "@/components/PreorderCallout";
 import { Breadcrumbs, InShort, SectionHeader, StatTile } from "@/components/ui";
 import { SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
@@ -17,6 +18,7 @@ import { int, longDate, money } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { withArticle } from "@/lib/filter-chips";
 import { median } from "@/lib/selectors";
+import { preorderPageFor } from "@/lib/preorders";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { BrowseFilters } from "@/components/BrowseFilters";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -79,8 +81,10 @@ export default async function SetPage({ params, searchParams }: Props) {
     .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0));
   const marketTotal = cards.reduce((a, x) => a + (x.marketUsd ?? 0), 0);
   const kind = SET_KINDS[set.kind]?.label ?? "Set";
-  const future =
-    set.releasedOn && set.releasedOn > new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const future = set.releasedOn && set.releasedOn > today;
+  // An unreleased set with a pre-order board links to it; null from release day on.
+  const preorderHref = preorderPageFor(set, today);
 
   return (
     <div>
@@ -112,6 +116,8 @@ export default async function SetPage({ params, searchParams }: Props) {
           <p key={i}>{p}</p>
         ))}
       </div>
+
+      {preorderHref && set.releasedOn ? <PreorderCallout code={set.code} href={preorderHref} releasedOn={set.releasedOn} className="mt-6" /> : null}
 
       <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="set" className="mt-6 max-w-2xl" />
 

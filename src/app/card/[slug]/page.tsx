@@ -4,28 +4,38 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardArt, CardTile } from "@/components/CardTile";
-import { CardStickyBuyBar } from "@/components/CardStickyBuyBar";
-import { CardTopBuy } from "@/components/CardTopBuy";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
-import { EbayCardBanner } from "@/components/EbayCardBanner";
+import { ebayBannerHref } from "@/components/EbayCardBanner";
 import { EbayTopButton, type EbayTopListing } from "@/components/EbayTopButton";
-import { TcgMarketPrice } from "@/components/TcgMarketPrice";
-import { TcgplayerBanner } from "@/components/TcgplayerBanner";
-import { LineChart } from "@/components/LineChart";
-import { PriceBoard } from "@/components/PriceBoard";
+import { tcgplayerBannerHref } from "@/components/TcgplayerBanner";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { DecksUsingCard } from "@/components/decks/DecksUsingCard";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
-import { CardMarketsTable } from "@/components/CardMarketsTable";
-import { EbayCardPanel } from "@/components/EbayCardPanel";
-import { CardNoListings } from "@/components/CardNoListings";
+import { marketsTableData } from "@/components/CardMarketsTable";
+import { EbayPanelIntro } from "@/components/EbayPanelIntro";
+import {
+  MarketAlertCta,
+  MarketBoard,
+  MarketEbayPanel,
+  MarketFaq,
+  MarketHistory,
+  MarketNoListings,
+  MarketParagraphs,
+  MarketPlace,
+  MarketReference,
+  MarketStickyBuyBar,
+  MarketTable,
+  MarketTiles,
+  MarketTopBuy,
+  type HistoryTuple,
+  type MarketTile,
+} from "@/components/card/CardMarket";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
-import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
 import { enabledProviders } from "@/lib/oauth";
 import {
   Breadcrumbs,
@@ -39,10 +49,12 @@ import {
 } from "@/components/ui";
 import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
-import { COUNTRIES, isoCountry } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, type Country } from "@/lib/country";
 import { getCardDetail, getCatalog, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
-import { longDate, money, usd } from "@/lib/format";
-import { getCountry } from "@/lib/get-country";
+import type { EbayPanelData } from "@/lib/listing-panel";
+import { boardModel } from "@/lib/board-model";
+import { perMarket, perMarketList } from "@/lib/per-market";
+import { longDate } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
@@ -51,7 +63,6 @@ import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
 import { aliasesFor } from "@/lib/card-aliases";
-import { visitorHistory } from "@/lib/price-history-view";
 import { PRINTING_SHORT } from "@/lib/content/card-narrative";
 import { faqLd } from "@/lib/jsonld";
 import { buildNarrative } from "@/lib/content/card-narrative";
@@ -60,14 +71,45 @@ import { buildCardFaqs, cardMetaDescription, cardTitle } from "@/lib/card-seo";
 import { cheaperAlternatives, priceToolChips, sameCharacter, sameNameCount } from "@/lib/card-related";
 import { elsewhereLine, lastSeen, priceState } from "@/lib/card-price-state";
 import { marketPriceListSentence, compareMarkets } from "@/lib/market-comparison";
-import { KEYWORDS, KEYWORD_BY_SLUG, cardKeywords } from "@/lib/keywords";
+import { KEYWORD_BY_SLUG, cardKeywords } from "@/lib/keywords";
 import { marketRows } from "@/lib/quick-view";
 import { MARKETS } from "@/lib/country";
 import { facetBySlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS, leaderSlug } from "@/lib/facets";
 import { COLORS } from "@/lib/constants";
-import { ago } from "@/lib/format";
 
 type Props = { params: { slug: string } };
+
+// REAL ISR (owner, 2026-10-14: "cache these pages and refresh them every few
+// hours, the way riftcompare already does"). Nothing in this route's tree reads
+// a cookie, a header or the session (no getCountry(): tests/card-isr.test.ts
+// walks the imports), so each card renders ONCE, on the baseline market below,
+// and is served from the cache to every visitor and crawler. Everything that
+// depends on the visitor's market (the price tiles, the top buy block and the
+// sticky bar, the board, the TCGplayer reference and banners, the chart, the
+// prose that quotes prices, the FAQ, the markets table, the eBay panel) is
+// computed here for ALL six markets (lib/per-market.ts) and drawn by the client
+// islands in components/card/CardMarket.tsx, which pick the market
+// CountryProvider resolves after hydration: RiftCompare's CardMarketSection.
+//
+// Six hours, refreshed sooner by the import: every loader here is tagged
+// "prices", and the import's revalidateTag("prices") marks the cached page stale
+// (the next visit is served it and re-renders it in the background). Every
+// loader the page reads is held at least as long as this, or it would shorten
+// it (Next keeps the lowest revalidate any cached read declares).
+export const revalidate = 21600;
+
+// NOTHING IS PRERENDERED AT BUILD: an empty list makes each card render on its
+// first request and then stay cached (dynamicParams is on, so this is "on
+// demand", never "404"). Without it Next 14 renders a [slug] page on every
+// request. Never prewarm: a build would read thousands of snapshot files.
+export function generateStaticParams(): { slug: string }[] {
+  return [];
+}
+
+// The market the cached HTML is rendered on, which the metadata, the JSON-LD
+// prices and the first paint all state: the US (DEFAULT_COUNTRY, the market
+// CountryProvider starts from before it reads the visitor's cookie).
+const BASELINE: Country = DEFAULT_COUNTRY;
 
 function displayTitle(c: {
   name: string;
@@ -111,8 +153,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CardPage({ params }: Props) {
-  const country = getCountry();
-  const co = COUNTRIES[country];
+  const co = COUNTRIES[BASELINE];
   const [card, cat] = await Promise.all([
     getCardDetail(params.slug),
     getCatalog(),
@@ -120,9 +161,9 @@ export default async function CardPage({ params }: Props) {
   if (!card) notFound();
   const history = await getProductHistory(card.id);
   const lite = cat.bySlug.get(card.slug);
-  const h = lite
-    ? headline(lite, country)
-    : { kind: "none" as const, cents: null, stores: 0 };
+  // When this render ran: the islands' "updated 3h ago" lines count from it until the browser's clock takes over.
+  const now = Date.now();
+  const headlineIn = (m: Country) => (lite ? headline(lite, m) : { kind: "none" as const, cents: null, stores: 0 });
   const siblings = card.number
     ? cat.cards
         .filter((x) => x.number === card.number && x.id !== card.id)
@@ -136,7 +177,6 @@ export default async function CardPage({ params }: Props) {
     .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
     .slice(0, 6);
   const title = displayTitle(card);
-  const vh = visitorHistory(history, country);
   const leader = card.cardType === "Leader";
   const stats: { label: string; value: string | number }[] = [];
   if (leader && card.life != null)
@@ -149,15 +189,13 @@ export default async function CardPage({ params }: Props) {
       label: "Counter",
       value: `+${card.counter.toLocaleString("en-US")}`,
     });
-  const inMarket = card.offers.filter((o) => o.market === country && o.inStock);
-  // "N stores" counts real stores only; the TCGplayer and eBay rows are listings, not stores.
-  const inStores = inMarket.filter((o) => isStoreSource(o.source));
+  const inMarketOf = (m: Country) => card.offers.filter((o) => o.market === m && o.inStock);
   // The buy surfaces (top block, sticky bar, TCGplayer reference) tag their
   // links with the card's own path, like the board's rows ("-card" sub-ids).
   const loc = `/card/${card.slug}`;
-  const best = cheapestBuyRow(card.offers, country, loc);
   const tcgHref = affiliateUrl(card.tcgplayerUrl, "tcgplayer", loc);
-  const preRelease = isPreRelease(card.set.releasedOn, new Date().toISOString().slice(0, 10));
+  const today = new Date(now).toISOString().slice(0, 10);
+  const preRelease = isPreRelease(card.set.releasedOn, today);
   // Alert copy promises an email only once a mailer is configured (cached Meta flag).
   const emailOn = (await getEmailStatus()) === "on";
   const noListingAnywhere = !card.offers.some((o) => o.inStock);
@@ -176,11 +214,34 @@ export default async function CardPage({ params }: Props) {
     </div>
   ) : null;
 
-  // ── Price state, narrative, FAQ, cross-links ──
-  const state = priceState(card.offers, country, { marketUsd: card.marketUsd, setKind: card.set.kind, printing: card.printing });
-  const seen = lastSeen(card.offers, country);
-  const elsewhere = elsewhereLine(state);
-  const today = new Date().toISOString().slice(0, 10);
+  // ── Every market's view (the islands pick the visitor's) ──
+  const stateIn = (m: Country) => priceState(card.offers, m, { marketUsd: card.marketUsd, setKind: card.set.kind, printing: card.printing });
+  // "Any listing anywhere" does not depend on the market: the baseline's answers it.
+  const state = stateIn(BASELINE);
+  const tiles = perMarket((m): MarketTile => {
+    const h = headlineIn(m);
+    const seen = h.kind === "none" ? lastSeen(card.offers, m) : null;
+    return {
+      kind: h.kind,
+      cents: h.cents,
+      seen: seen ? { cents: seen.priceCents, at: seen.at } : null,
+      // "N stores" counts real stores only; the TCGplayer and eBay rows are listings, not stores.
+      stores: inMarketOf(m).filter((o) => isStoreSource(o.source)).length,
+      elsewhere: elsewhereLine(stateIn(m)),
+    };
+  });
+  const best = perMarket((m) => cheapestBuyRow(card.offers, m, loc));
+  const unpriced = perMarket((m) => inMarketOf(m).length === 0);
+  const noListings = perMarket((m) => {
+    const st = stateIn(m);
+    return !st.hasListings || (st.noRetailChannel && !st.inMarket) ? st : null;
+  });
+  const boards = perMarket((m) => boardModel(card.offers, m, { page: "card", ebayQuery }));
+  const tables = perMarket((m) => marketsTableData(card.offers, card.name, m));
+  const ebayBanner = perMarket((m) => ebayBannerHref(m, ebayQuery, "card"));
+  const historyTuples = history.map((p): HistoryTuple => [p.day, p.marketUsd, p.lows ?? [p.lowUsd]]);
+
+  // ── Narrative, FAQ, cross-links ──
   const keys = cardKeywords(card.effect).map((sl) => KEYWORD_BY_SLUG.get(sl)).filter((k): k is NonNullable<typeof k> => !!k);
   const setPriced = cat.cards.filter((x) => x.setId === card.set.id && (x.marketUsd ?? 0) > 0);
   const sortedPrices = setPriced.map((x) => x.marketUsd as number).sort((a, b) => a - b);
@@ -197,7 +258,7 @@ export default async function CardPage({ params }: Props) {
     };
   });
   const baseSibling = siblings.find((x) => x.printing === "standard");
-  const narrative = buildNarrative({
+  const narrativeIn = (m: Country) => buildNarrative({
     name: card.name,
     variant: card.variant,
     number: card.number,
@@ -223,7 +284,7 @@ export default async function CardPage({ params }: Props) {
     change7d: card.change7d,
     change30d: card.change30d,
     high90Usd: lite?.high90Usd ?? null,
-    baseline: marketViews.find((m) => m.country === country)!,
+    baseline: marketViews.find((v) => v.country === m)!,
     markets: marketViews,
     printings: siblings.map((x) => ({ label: PRINTING_SHORT[x.printing] ?? "Other", marketUsd: x.marketUsd })),
     setContext:
@@ -232,26 +293,33 @@ export default async function CardPage({ params }: Props) {
         : null,
     sameNameElsewhere: lite ? sameNameCount(lite, cat.cards) : 0,
   });
-  const cmpHere = compareMarkets(card.offers, co.currency);
-  const faqs = buildCardFaqs({
-    name: card.name,
-    displayName: title,
-    number: card.number,
-    setName: card.set.name,
-    setCode: card.set.code,
-    rarity: card.rarity,
-    cardType: card.cardType,
-    colors: card.colors,
-    printing: card.printing,
-    country,
-    lowest: h.kind === "listing" ? h.cents : null,
-    stores: h.kind === "listing" ? h.stores : 0,
-    printingCount: siblings.length,
-    marketUsd: card.marketUsd,
-    baseMarketUsd: baseSibling?.marketUsd ?? null,
-    currencyAnswer: cmpHere.quotes.length >= 2 ? marketPriceListSentence(cmpHere) : null,
-    preRelease,
-  });
+  const paragraphs = perMarketList((m) => narrativeIn(m).paragraphs);
+  const faqsIn = (m: Country) => {
+    const h = headlineIn(m);
+    const cmp = compareMarkets(card.offers, COUNTRIES[m].currency);
+    return buildCardFaqs({
+      name: card.name,
+      displayName: title,
+      number: card.number,
+      setName: card.set.name,
+      setCode: card.set.code,
+      rarity: card.rarity,
+      cardType: card.cardType,
+      colors: card.colors,
+      printing: card.printing,
+      country: m,
+      lowest: h.kind === "listing" ? h.cents : null,
+      stores: h.kind === "listing" ? h.stores : 0,
+      printingCount: siblings.length,
+      marketUsd: card.marketUsd,
+      baseMarketUsd: baseSibling?.marketUsd ?? null,
+      currencyAnswer: cmp.quotes.length >= 2 ? marketPriceListSentence(cmp) : null,
+      preRelease,
+    });
+  };
+  // The visible FAQ follows the visitor; the FAQPage JSON-LD is the baseline's, the cached HTML's own.
+  const faqs = perMarketList(faqsIn);
+  const baselineFaqs = faqsIn(BASELINE);
   const cheaper = lite ? cheaperAlternatives(lite, cat.cards) : [];
   const sameChar = lite ? sameCharacter(lite, cat.cards) : [];
   const tools = priceToolChips({ cardType: card.cardType, name: card.name, setSlug: card.set.slug, hasSealed: card.set.sealedCount > 0, priced: state.hasListings || card.marketUsd != null });
@@ -261,18 +329,24 @@ export default async function CardPage({ params }: Props) {
   const printingFacet = PRINTING_FACETS.find((f) => f.key === card.printing);
   const guides = guidesForCatalogue("card");
 
-  const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
+  // Structured data states ONE market and its currency: the baseline's, which
+  // the cached HTML shows first (offers in the US, in USD).
+  const inBaseline = inMarketOf(BASELINE);
+  const ebayLd = ebayJsonLdOffers(inBaseline, co.currency, isoCountry(BASELINE));
   // Each market's headline eBay listing (the daily eBay pass's rank-0 row, the
-  // same data as the listings panel and the homepage strip) for the big button.
-  const ebayTop: Partial<Record<string, EbayTopListing>> = {};
+  // same data as the listings panel and the homepage strip) for the big button,
+  // and the panel itself (every market's: the island picks).
+  let panel: EbayPanelData = { listings: [], graded: [] };
   try {
-    const panel = await getEbayPanel(card.id);
-    for (const l of panel.listings) {
-      if (!ebayTop[l.market]) ebayTop[l.market] = { priceCents: l.priceCents, currency: l.currency, url: l.url };
-    }
+    panel = await getEbayPanel(card.id);
   } catch {
-    /* the button falls back to an eBay search */
+    /* the button falls back to an eBay search, the panel to its search CTA */
   }
+  const ebayTop: Partial<Record<string, EbayTopListing>> = {};
+  for (const l of panel.listings) {
+    if (!ebayTop[l.market]) ebayTop[l.market] = { priceCents: l.priceCents, currency: l.currency, url: l.url };
+  }
+  const rawIn = Object.fromEntries(MARKETS.map((m) => [m, lite?.low[m] ?? null])) as Record<Country, number | null>;
   return (
     <div>
       <JsonLd
@@ -285,26 +359,27 @@ export default async function CardPage({ params }: Props) {
           brand: { "@type": "Brand", name: "One Piece Card Game" },
           category: "Trading card",
           url: `${SITE_URL}/card/${card.slug}`,
-          ...(inMarket.length
+          ...(inBaseline.length
             ? {
                 offers: {
                   "@type": "AggregateOffer",
                   priceCurrency: co.currency,
                   lowPrice: (
-                    Math.min(...inMarket.map((o) => o.priceCents)) / 100
+                    Math.min(...inBaseline.map((o) => o.priceCents)) / 100
                   ).toFixed(2),
                   highPrice: (
-                    Math.max(...inMarket.map((o) => o.priceCents)) / 100
+                    Math.max(...inBaseline.map((o) => o.priceCents)) / 100
                   ).toFixed(2),
-                  offerCount: inMarket.length,
+                  offerCount: inBaseline.length,
                   availability: "https://schema.org/InStock",
+                  eligibleRegion: { "@type": "Country", name: isoCountry(BASELINE) },
                   ...(ebayLd.length ? { offers: ebayLd } : {}),
                 },
               }
             : {}),
         }}
       />
-      {faqs.length ? <JsonLd data={faqLd(faqs)} /> : null}
+      {baselineFaqs.length ? <JsonLd data={faqLd(baselineFaqs)} /> : null}
       <Breadcrumbs
         trail={[
           { href: "/browse", name: "Cards" },
@@ -376,42 +451,19 @@ export default async function CardPage({ params }: Props) {
             </div>
             {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}
             <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mt-4 hidden lg:block" />
-            <CardTopBuy best={best} country={country} page="card" slug={card.slug} />
-            <PriceDropAlertCta
+            <MarketTopBuy best={best} page="card" slug={card.slug} />
+            <MarketAlertCta
               cardId={card.id}
               slug={card.slug}
               name={title}
               cardPath={loc}
               providers={enabledProviders()}
-              unpriced={inMarket.length === 0}
+              unpriced={unpriced}
               preorder={preRelease}
               emailOn={emailOn}
             />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  Cheapest · {co.place}
-                </p>
-                <p className="num mt-1 text-xl font-bold text-accent">
-                  {h.kind === "listing"
-                    ? money(h.cents, country)
-                    : h.kind === "reference"
-                      ? `≈ ${money(h.cents, country)}`
-                      : seen
-                        ? money(seen.priceCents, country)
-                        : "—"}
-                </p>
-                {h.kind === "none" && seen ? <p className="mt-0.5 text-[11px] text-slate-500">Last seen {ago(seen.at)}</p> : null}
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  In stock at · {co.code}
-                </p>
-                <p className="num mt-1 text-xl font-bold text-white">
-                  {inStores.length} {inStores.length === 1 ? "store" : "stores"}
-                </p>
-                {elsewhere ? <p className="mt-0.5 text-[11px] text-slate-500">{elsewhere}</p> : null}
-              </div>
+              <MarketTiles tiles={tiles} now={now} />
               {stats.slice(0, 2).map((s) => (
                 <div key={s.label}>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
@@ -449,16 +501,13 @@ export default async function CardPage({ params }: Props) {
             </Link>
           </p>
 
-          {!state.hasListings || (state.noRetailChannel && !state.inMarket) ? (
-            <CardNoListings cardId={card.id} name={title} slug={card.slug} country={country} state={state} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
-          ) : null}
+          <MarketNoListings states={noListings} cardId={card.id} name={title} slug={card.slug} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
 
-          <PriceBoard
+          <MarketBoard
+            boards={boards}
             productId={card.id}
-            offers={card.offers}
-            country={country}
-            ebayQuery={ebayQuery}
             page="card"
+            now={now}
             id="price-comparison"
             slug={card.slug}
             name={title}
@@ -468,27 +517,10 @@ export default async function CardPage({ params }: Props) {
           {/* Under the comparison, never in it: TCGplayer's market price as a
               reference with its affiliate button, then the card's eBay banner
               and TCGplayer's (ads: hidden for Plus and Premium members). */}
-          <TcgMarketPrice marketUsd={card.marketUsd} country={country} href={tcgHref} page="card" card={card.slug} />
-          <EbayCardBanner country={country} query={ebayQuery} name={title} page="card" card={card.slug} />
-          <TcgplayerBanner country={country} page="card" card={card.slug} />
+          <MarketReference marketUsd={card.marketUsd} tcgHref={tcgHref} ebayBanner={ebayBanner} tcgBanner={tcgplayerBannerHref("card")} query={ebayQuery} name={title} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
-          <section className="card-surface p-5">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg text-white">{vh.title}</h2>
-              <p className="text-xs text-slate-400">
-                TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}
-              </p>
-            </div>
-            <LineChart
-              series={[
-                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
-                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
-              ]}
-              format={(v) => money(Math.round(v), country)}
-              empty={`Price history starts ${history[0] ? longDate(history[0].day) : "with the first import"} — the chart draws once there are two days of prices.`}
-            />
-          </section>
+          <MarketHistory history={historyTuples} />
 
           <InlineSignupPrompt surface="card" title="Get the top deals in your market, free" body="A free account shows Deal Finder's three biggest savings in your market right now, and is how you get Plus or Premium when you want them." />
 
@@ -496,9 +528,7 @@ export default async function CardPage({ params }: Props) {
           <section className="card-surface p-5" aria-label={`About ${card.name}`}>
             <h2 className="font-bold text-white">About {card.name}</h2>
             <div className="mt-3 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-300">
-              {narrative.paragraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+              <MarketParagraphs paras={paragraphs} />
               {card.effect ? (
                 <p className="text-slate-400">
                   <KeywordText text={card.effect.replace(/\n+/g, " ")} />
@@ -554,16 +584,11 @@ export default async function CardPage({ params }: Props) {
           <section className="card-surface p-5">
             <h2 className="font-bold text-white">Frequently asked questions</h2>
             <dl className="mt-3 space-y-4">
-              {faqs.map((f) => (
-                <div key={f.q}>
-                  <dt className="font-semibold text-white">{f.q}</dt>
-                  <dd className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">{f.a}</dd>
-                </div>
-              ))}
+              <MarketFaq faqs={faqs} />
             </dl>
           </section>
 
-          <CardMarketsTable offers={card.offers} name={card.name} country={country} />
+          <MarketTable tables={tables} name={card.name} />
           <AdSlot slot="card" thin={!state.hasListings && card.marketUsd == null} />
 
           <section className="card-surface p-5" aria-label="Do more with this price">
@@ -632,7 +657,11 @@ export default async function CardPage({ params }: Props) {
           </section>
 
           {/* The last in-column section: captured eBay listings and slabs. */}
-          <EbayCardPanel productId={card.id} country={country} query={ebayQuery} name={title} card={card.slug} rawCents={lite?.low[country] ?? null} preRelease={preRelease} />
+          <section className="card-surface p-5" aria-label="Also available on eBay">
+            <h2 className="font-bold text-white">Also available on eBay</h2>
+            <EbayPanelIntro />
+            <MarketEbayPanel data={panel} raw={rawIn} query={ebayQuery} name={title} card={card.slug} preRelease={preRelease} />
+          </section>
         </div>
       </div>
 
@@ -640,7 +669,7 @@ export default async function CardPage({ params }: Props) {
         <section id="printings" className="mt-10 scroll-mt-20">
           <SectionHeader
             title={`Other printings of ${card.number}`}
-            sub={`The same card in other art, finishes and promo releases — priced in ${co.place}.`}
+            sub={<>The same card in other art, finishes and promo releases — priced in <MarketPlace />.</>}
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {siblings.slice(0, 12).map((s) => (
@@ -648,7 +677,6 @@ export default async function CardPage({ params }: Props) {
                 key={s.id}
                 card={s}
                 setCode={cat.setById.get(s.setId)?.code ?? ""}
-                country={country}
               />
             ))}
           </div>
@@ -660,7 +688,7 @@ export default async function CardPage({ params }: Props) {
           <SectionHeader title={`Cheaper ${card.colors[0] ?? ""} ${card.cardType ?? "card"}s in ${card.set.name}`.replace(/\s+/g, " ")} sub="Same set, colour and type, strictly cheaper on TCGplayer." />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {cheaper.map((s) => (
-              <CardTile key={s.id} card={s} setCode={card.set.code} country={country} />
+              <CardTile key={s.id} card={s} setCode={card.set.code} />
             ))}
           </div>
         </section>
@@ -671,7 +699,7 @@ export default async function CardPage({ params }: Props) {
           <SectionHeader title={`More ${card.name} cards`} sub="Every other card with this name, across sets." />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {sameChar.map((s) => (
-              <CardTile key={s.id} card={s} setCode={cat.setById.get(s.setId)?.code ?? ""} country={country} />
+              <CardTile key={s.id} card={s} setCode={cat.setById.get(s.setId)?.code ?? ""} />
             ))}
           </div>
         </section>
@@ -693,7 +721,6 @@ export default async function CardPage({ params }: Props) {
                 key={s.id}
                 card={s}
                 setCode={card.set.code}
-                country={country}
               />
             ))}
           </div>
@@ -706,20 +733,7 @@ export default async function CardPage({ params }: Props) {
       <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
-      {best ? (
-        <CardStickyBuyBar
-          boardId="price-comparison"
-          price={money(best.priceCents, country)}
-          store={best.label}
-          href={best.href}
-          retailer={best.retailer}
-          ebay={best.ebay}
-          page="card"
-          slug={card.slug}
-          name={title}
-          cardId={card.id}
-        />
-      ) : null}
+      <MarketStickyBuyBar best={best} boardId="price-comparison" page="card" slug={card.slug} name={title} cardId={card.id} />
     </div>
   );
 }

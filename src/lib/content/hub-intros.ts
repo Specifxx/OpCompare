@@ -37,7 +37,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
     paragraphs: [
       "Work out whether a One Piece trade is fair before you shake on it. Put the cards on each side in, and it values both piles at the cheapest live price we have recorded for each card, in your market and currency, then shows the gap. Tap a price to type your own, or to pick one store's price if the cheapest copy is not the one on the table.",
       "Values move week to week and nobody has them memorised, so a trade at a local game store is easy to get wrong by accident: a Parallel can be worth ten times its standard print, and a stack of Rares can be worth less than the one Super Rare across the table.",
-      "The valuation is a market snapshot, not an appraisal: condition, sentiment and how much either of you wants the card are things it cannot see. [Rarities explained](/blog/one-piece-card-rarities-explained) covers why printings of one card are priced so far apart.",
+      "The valuation is a market snapshot, not an appraisal: condition, sentiment and how much either of you wants the card are things it cannot see. [Rarities explained](/guides/one-piece-card-rarities-explained) covers why printings of one card are priced so far apart.",
     ],
   },
   "/tools/best-basket": {
@@ -80,7 +80,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/tools": {
     paragraphs: [
       "The price tools here run on the same data as the rest of OP Compare: the prices our twice-daily import reads from stores, TCGplayer and eBay in six markets — the US, Australia, the UK, Singapore, Canada and the EU. Each answers one question: what a card or a whole list costs, whether a box is worth opening, whether a trade is fair, or what you keep after selling.",
-      "A price is an item price unless a tool says otherwise; Best Basket is the one that prices whole orders with each store's measured postage. None of them forecasts where a price will go. [Where to buy One Piece cards](/blog/where-to-buy-one-piece-cards) compares the stores behind the numbers.",
+      "A price is an item price unless a tool says otherwise; Best Basket is the one that prices whole orders with each store's measured postage. None of them forecasts where a price will go. [Where to buy One Piece cards](/guides/where-to-buy-one-piece-cards) compares the stores behind the numbers.",
     ],
   },
   "/decks": {

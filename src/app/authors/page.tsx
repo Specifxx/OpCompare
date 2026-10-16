@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
 import { AUTHOR, AUTHORS, POSTS, postHref } from "@/lib/blog";
-import { SISTER_SITE } from "@/lib/site";
+import { SISTER_SITES } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   openGraph: pageOg("/authors"),
 };
 
+// RiftCompare first (OP Compare is built on it), then the other sister sites.
+const rift = SISTER_SITES.find((s) => s.key === "rift");
+const others = SISTER_SITES.filter((s) => s.key !== "rift");
+
 export default function Authors() {
   return (
     <StaticPage title="Who writes OP Compare" crumb="Authors">
@@ -20,8 +24,20 @@ export default function Authors() {
       </h2>
       <p>
         Posts on the blog are bylined to the OP Compare team — the people who
-        also run <a href={SISTER_SITE.url}>{SISTER_SITE.name}</a>, the{" "}
-        {SISTER_SITE.game} price-comparison site OP Compare is built on.{" "}
+        also run{" "}
+        {rift ? (
+          <>
+            <a href={rift.url}>{rift.name}</a>, the {rift.game} price-comparison
+            site OP Compare is built on, as well as{" "}
+          </>
+        ) : null}
+        {others.map((s, i) => (
+          <span key={s.key}>
+            {i ? (i === others.length - 1 ? " and " : ", ") : ""}
+            <a href={s.url}>{s.name}</a> ({s.game})
+          </span>
+        ))}
+        .{" "}
         {AUTHOR.bio}
       </p>
       <p>

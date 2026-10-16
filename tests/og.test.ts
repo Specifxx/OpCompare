@@ -9,9 +9,10 @@ import type { CardLite, SetLite } from "../src/lib/data";
 import { MARKETS, type Country } from "../src/lib/country";
 import { OG_FONT_DIR, OG_FONT_FILES, isSfnt, loadOgFonts } from "../src/lib/og/fonts";
 import { DEFAULT_OG_IMAGE, pageOg, pageOgOwnImage } from "../src/lib/og/meta";
-import { OG_AFTER_ERROR, OG_CACHED } from "../src/lib/og/respond";
+import { OG_AFTER_ERROR, OG_CACHED, OG_FALLBACK_TTL } from "../src/lib/og/respond";
 import { ogPriceLines, pickGuideRows, setTopRows, showMoveColumn, storesTracked } from "../src/lib/og/select";
-import { SET_STATS, badgeText, clip, clipWords, fitStats, ogDate, ogDelta, ogMoney, setTitleSize, splitEdition, statWidth } from "../src/lib/og/theme";
+import { OG_REVALIDATE, SET_STATS, badgeText, clip, clipWords, fitStats, ogDate, ogDelta, ogMoney, setTitleSize, splitEdition, statWidth } from "../src/lib/og/theme";
+import { dynamicApiUses, routeTree, stripComments } from "./helpers/route-tree";
 
 const ROOT = path.resolve(__dirname, "..");
 const APP = path.join(ROOT, "src", "app");
@@ -22,7 +23,7 @@ function walk(dir: string): string[] {
 const ogRoutes = walk(APP).filter((f) => /[/\\](opengraph|twitter)-image\.(tsx|ts|jsx|js)$/.test(f));
 
 // ── 1. Route exports ────────────────────────────────────────────────────────
-const ALLOWED = new Set(["default", "alt", "size", "contentType", "runtime", "revalidate", "dynamic", "maxDuration", "generateImageMetadata"]);
+const ALLOWED = new Set(["default", "alt", "size", "contentType", "runtime", "revalidate", "dynamic", "maxDuration", "generateImageMetadata", "generateStaticParams"]);
 
 test("there is a share image for /, /price-guide, sets, sealed, cards and blog posts", () => {
   const rel = ogRoutes.map((f) => path.relative(APP, f).split(path.sep).join("/")).sort();
@@ -51,23 +52,64 @@ test("there is a share image for /, /price-guide, sets, sealed, cards and blog p
 
 for (const file of ogRoutes) {
   const rel = path.relative(ROOT, file);
-  test(`${rel}: nodejs, 1200×630 PNG, alt, revalidate, only Next's export names`, () => {
+  test(`${rel}: nodejs, 1200×630 PNG, alt, ISR for a day, only Next's export names`, () => {
     const src = fs.readFileSync(file, "utf8");
     assert.match(src, /export const runtime = "nodejs";/);
     assert.match(src, /export const size = \{ width: 1200, height: 630 \};/);
     assert.match(src, /export const contentType = "image\/png";/);
-    assert.match(src, /export const revalidate = 21600;/);
+    // A literal (Next reads segment config statically), equal to OG_REVALIDATE.
+    assert.match(src, new RegExp(`export const revalidate = ${OG_REVALIDATE};`));
+    // A [slug] route is ISR only with a generateStaticParams; an EMPTY one draws
+    // nothing at build (never prewarm) and each image on its first request.
+    // Without it Next 14 renders the route on every request (the per-card images
+    // did until 2026-10-14). A route with no dynamic segment is prerendered.
+    if (/\[[^\]]+\]/.test(rel)) {
+      assert.match(src, /export function generateStaticParams\(\) \{\s*return \[\];\s*\}/, `${rel}: needs an empty generateStaticParams`);
+    } else {
+      assert.doesNotMatch(src, /generateStaticParams/);
+    }
     const alt = src.match(/export const alt =\s*"([^"]*)"/);
     assert.ok(alt && alt[1].length > 20, "alt text");
     const names = [...src.matchAll(/export\s+(?:default\s+)?(?:async\s+)?(?:const|function|let|var)?\s*(\w+)?/g)].map((m) =>
       /export\s+default/.test(m[0]) ? "default" : m[1],
     );
     for (const n of names) assert.ok(ALLOWED.has(n), `${rel} exports "${n}", which next build rejects in an image route`);
-    assert.doesNotMatch(src, /export[^\n]*generateStaticParams/, "never prewarm share images");
     assert.doesNotMatch(src, /no-store|force-dynamic/, "a share image must stay ISR-cached");
     assert.doesNotMatch(src, /from "@\/lib\/db"/);
   });
+
+  test(`${rel}: nothing it can run reads the request (cookies, headers, the visitor's market, no-store)`, () => {
+    const tree = routeTree(rel);
+    assert.ok(tree.files.includes(path.join("src", "lib", "og", "images.tsx")), "the walk reaches lib/og/images.tsx");
+    assert.ok(tree.files.length > 20, `walked ${tree.files.length} files`);
+    assert.deepEqual(dynamicApiUses(tree), []);
+  });
 }
+
+test("the image routes read the day-old image loaders; no page does", () => {
+  assert.equal(OG_REVALIDATE, 86400);
+  const data = fs.readFileSync(path.join(ROOT, "src", "lib", "data.ts"), "utf8");
+  assert.match(data, /export const IMAGE_TTL = 60 \* 60 \* 24;/);
+  // Each image twin is held a day and carries no "prices" tag (an import would redraw every image).
+  for (const key of ["og-catalog-core-v1", "og-catalog-prices-v1", "og-sealed-catalog-v1", "og-site-stats-v1", "og-history-ref-v1"]) {
+    const line = data.split("\n").find((l) => l.includes(`"${key}"`));
+    assert.ok(line, key);
+    assert.match(line, /\{ revalidate: IMAGE_TTL \}/, key);
+  }
+  // A deck's share image reads the deck itself: held a day too (DECKS_TAG purges it on a publish or a hide).
+  assert.match(data, /\["published-deck-v1"\],[\s\S]{0,400}?\{ tags: \[DECKS_TAG\], revalidate: 86400 \}/);
+  const images = stripComments(fs.readFileSync(path.join(ROOT, "src", "lib", "og", "images.tsx"), "utf8"));
+  for (const loader of ["getSiteStats", "getSealedCatalog", "postContext"]) {
+    for (const m of images.matchAll(new RegExp(`\\b${loader}\\(`, "g"))) {
+      // The pages' fresher list is read only as the second chance for a slug added since (catalogWith, sealedOg).
+      assert.equal(loader, "getSealedCatalog", `lib/og/images.tsx calls ${loader}(): use the …ForImages twin`);
+      assert.match(images.slice(m.index! - 60, m.index!), /findSealed\(await $/);
+    }
+  }
+  assert.equal([...images.matchAll(/\bgetCatalog\(\)/g)].length, 1, "getCatalog() only inside catalogWith");
+  const pages = walk(APP).filter((f) => /\.(ts|tsx)$/.test(f) && !/opengraph-image/.test(f));
+  for (const f of pages) assert.doesNotMatch(fs.readFileSync(f, "utf8"), /ForImages\b/, `${path.relative(ROOT, f)} reads an image loader`);
+});
 
 // ── 2–3. Metadata that would hide or mis-point the images ────────────────────
 test("a page beside an opengraph-image never sets openGraph.images (it blocks the file)", () => {
@@ -128,11 +170,13 @@ test("pageOg: OG_BASE plus the page's url and the default image; extra fields ov
 });
 
 // ── Cache headers ────────────────────────────────────────────────────────────
-test("share images send a 6 h CDN header, fallbacks one minute; never ImageResponse's immutable year", () => {
-  assert.equal(OG_CACHED, "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400");
-  assert.equal(OG_AFTER_ERROR, "public, max-age=0, s-maxage=60");
+test("share images send a day's CDN header, fallbacks one minute (header AND ISR life); never ImageResponse's immutable year", () => {
+  assert.equal(OG_CACHED, `public, max-age=0, s-maxage=${OG_REVALIDATE}, stale-while-revalidate=86400`);
+  assert.equal(OG_AFTER_ERROR, `public, max-age=0, s-maxage=${OG_FALLBACK_TTL}`);
+  assert.equal(OG_FALLBACK_TTL, 60);
   const src = fs.readFileSync(path.join(ROOT, "src", "lib", "og", "images.tsx"), "utf8");
-  assert.match(src, /export const fallbackOg = \(\) => ogResponse\(<FallbackImage \/>, OG_AFTER_ERROR\);/);
+  // The fallback cuts its own render's ISR life to a minute before it draws.
+  assert.match(src, /export async function fallbackOg\(\): Promise<ImageResponse> \{\s*await expireRenderAfter\(OG_FALLBACK_TTL\);\s*return ogResponse\(<FallbackImage \/>, OG_AFTER_ERROR\);\s*\}/);
   // Every non-fallback ogResponse( … ) passes OG_CACHED.
   const calls = src.split("ogResponse(").slice(1);
   for (const c of calls) {

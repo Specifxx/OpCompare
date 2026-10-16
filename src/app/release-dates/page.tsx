@@ -8,6 +8,7 @@ import { pageOg } from "@/lib/og/meta";
 import { DATA_TABLE } from "@/components/prose";
 import { ReleaseCountdownTimer } from "@/components/ReleaseCountdownTimer";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
+import { preorderPageFor } from "@/lib/preorders";
 
 export const metadata: Metadata = {
   title: "One Piece TCG Release Dates — Next Set & Every Past Set",
@@ -36,6 +37,8 @@ export default async function ReleaseDates() {
     .filter((s) => s.releasedOn! <= today)
     .sort((a, b) => b.releasedOn!.localeCompare(a.releasedOn!));
   const next = upcoming[0];
+  // A set with a pre-order board links to it until its release day (preorderPageFor).
+  const nextPreorder = next ? preorderPageFor(next, today) : null;
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Release dates" }]} />
@@ -57,6 +60,14 @@ export default async function ReleaseDates() {
             </Link>{" "}
             ({next.code}), out {longDate(next.releasedOn)} —{" "}
             {int(Math.max(0, daysUntil(next.releasedOn!)))} days from today.
+            {nextPreorder ? (
+              <>
+                {" "}Pre-orders are open:{" "}
+                <Link href={nextPreorder} className="font-semibold text-brand-400 hover:underline">
+                  {next.code} pre-order prices from every tracked store →
+                </Link>
+              </>
+            ) : null}
           </InShort>
           {/* The day line above is server-computed (no-JS and crawlers); the ticking
               timer starts from the same date at 00:00 UTC. */}
@@ -73,22 +84,32 @@ export default async function ReleaseDates() {
         <section className="mt-8">
           <SectionHeader title="Coming up" />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {upcoming.map((s) => (
-              <Link
-                key={s.id}
-                href={`/sets/${s.slug}`}
-                className="card-surface p-4 hover:border-ink-600"
-              >
-                <p className="rb-eyebrow text-slate-500">
-                  {s.code} · {SET_KINDS[s.kind]?.label}
-                </p>
-                <p className="mt-1 text-lg font-bold text-white">{s.name}</p>
-                <p className="num mt-2 text-sm text-slate-300">
-                  {longDate(s.releasedOn)} · in{" "}
-                  {int(Math.max(0, daysUntil(s.releasedOn!)))} days
-                </p>
-              </Link>
-            ))}
+            {upcoming.map((s) => {
+              const preorder = preorderPageFor(s, today);
+              return (
+                <div key={s.id} className="flex flex-col gap-1.5">
+                  <Link
+                    href={`/sets/${s.slug}`}
+                    className="card-surface flex-1 p-4 hover:border-ink-600"
+                  >
+                    <p className="rb-eyebrow text-slate-500">
+                      {s.code} · {SET_KINDS[s.kind]?.label}
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-white">{s.name}</p>
+                    <p className="num mt-2 text-sm text-slate-300">
+                      {longDate(s.releasedOn)} · in{" "}
+                      {int(Math.max(0, daysUntil(s.releasedOn!)))} days
+                    </p>
+                  </Link>
+                  {/* A sibling link, not nested: the card above is itself a link. */}
+                  {preorder ? (
+                    <Link href={preorder} className="tap-link px-1 text-sm font-semibold text-amber-300 hover:underline">
+                      {s.code} pre-order prices from every tracked store →
+                    </Link>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </section>
       ) : null}

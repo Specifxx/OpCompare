@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { OfferRow, SealedLite, SetLite } from "../src/lib/data";
 import type { PanelListing } from "../src/lib/listing-panel";
-import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, productBoard, releaseDateOf, shortDateOf } from "../src/lib/preorders";
+import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderPageFor, productBoard, releaseDateOf, shortDateOf, upcomingPreorderPages } from "../src/lib/preorders";
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -188,4 +188,48 @@ test("marketplace buttons wear their own colour: eBay blue, TCGplayer violet, st
 test("eBay pass: a forced run can be narrowed to products by name", () => {
   assert.match(read("src/lib/ebay-import.ts"), /EBAY_ONLY_NAME/);
   assert.match(read(".github/workflows/ebay-prices.yml"), /EBAY_ONLY_NAME: \$\{\{ inputs\.only_name \}\}/);
+});
+
+test("preorderPageFor: a set's board only while it is unreleased, and only for a set that has one", () => {
+  const eb05 = set({ id: 3, code: "EB05", kind: "extra", releasedOn: "2026-10-30" });
+  assert.equal(preorderPageFor(eb05, "2026-10-14"), "/eb05-preorders");
+  assert.equal(preorderPageFor(eb05, "2026-10-29"), "/eb05-preorders");
+  assert.equal(preorderPageFor(eb05, "2026-10-30"), null, "release day retires it");
+  assert.equal(preorderPageFor({ ...eb05, releasedOn: null }, "2026-10-14"), null, "no date, no self-retiring link");
+  assert.equal(preorderPageFor(set({ id: 4, code: "OP17", releasedOn: "2026-12-01" }), "2026-10-14"), null, "no board, no link");
+});
+
+test("upcomingPreorderPages: every unreleased set with a board, soonest first, each once", () => {
+  const sets = [
+    set({ id: 1, code: "OP18", name: "The Dominance of God", releasedOn: "2026-11-20" }),
+    set({ id: 3, code: "EB05", name: "Heroines Vol. 2", kind: "extra", releasedOn: "2026-10-30" }),
+    set({ id: 5, code: "OP18", name: "duplicate code", releasedOn: "2026-11-20" }),
+    set({ id: 2, code: "OP17", releasedOn: "2026-08-01" }),
+  ];
+  assert.deepEqual(
+    upcomingPreorderPages(sets, "2026-10-14").map((l) => [l.code, l.href, l.releasedOn]),
+    [
+      ["EB05", "/eb05-preorders", "2026-10-30"],
+      ["OP18", "/op18-preorders", "2026-11-20"],
+    ],
+  );
+  assert.deepEqual(upcomingPreorderPages(sets, "2026-10-30").map((l) => l.code), ["OP18"]);
+  assert.deepEqual(upcomingPreorderPages(sets, "2026-11-20"), [], "the homepage line disappears on its own");
+});
+
+test("the set page, /release-dates and the homepage link the boards through the self-retiring helpers", () => {
+  const setPage = read("src/app/sets/[slug]/page.tsx");
+  assert.match(setPage, /preorderPageFor\(set, today\)/);
+  assert.match(setPage, /<PreorderCallout /);
+  assert.match(read("src/components/PreorderCallout.tsx"), /\{code\} pre-order prices from every tracked store →/);
+  const releases = read("src/app/release-dates/page.tsx");
+  assert.match(releases, /preorderPageFor\(next, today\)/);
+  assert.match(releases, /preorderPageFor\(s, today\)/);
+  const home = read("src/components/home/HomeSections.tsx");
+  assert.match(home, /upcomingPreorderPages\(cat\.sets, today\)/);
+  assert.match(home, /<PreorderLinksLine links=\{preorders\} \/>/);
+  // No hand-kept list of codes anywhere: PREORDER_PAGES is the one map.
+  for (const f of ["src/app/sets/[slug]/page.tsx", "src/app/release-dates/page.tsx", "src/components/home/HomeSections.tsx", "src/components/home/PreorderLinksLine.tsx"]) {
+    assert.doesNotMatch(read(f), /"(?:EB05|OP18)"|eb05-preorders|op18-preorders/, f);
+  }
 });

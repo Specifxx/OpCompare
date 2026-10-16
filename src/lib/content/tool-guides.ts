@@ -1,4 +1,4 @@
-import { POSTS } from "@/lib/blog";
+import { POSTS, postHref } from "@/lib/blog";
 import type { Catalog } from "@/lib/data";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -15,8 +15,9 @@ import type { Catalog } from "@/lib/data";
 //    dead link), never a retired tool;
 //  - no invest/flip framing.
 //
-// OP Compare's writing lives at /blog/<slug> (lib/blog); the catalogue track's
-// guides can join an entry once they exist. Pure and in-memory: safe on any
+// OP Compare's writing lives at postHref(post) (lib/blog: /guides/<slug> for a
+// guide, /blog/<slug> for the rest); the catalogue track's guides can join an
+// entry once they exist. Pure and in-memory: safe on any
 // ISR page with no query and no cache.
 
 export type RelatedGuide = { slug: string; title: string; href: string; reason: string };
@@ -109,7 +110,7 @@ export function guidesForTool(route: ToolRoute, limit = 3): RelatedGuide[] {
   for (const g of TOOL_GUIDES[route].guides) {
     const p = bySlug.get(g.slug);
     if (!p) continue;
-    out.push({ slug: p.slug, title: p.title({ cat: { pricesAt: new Date().toISOString() } as Catalog }), href: `/blog/${p.slug}`, reason: g.reason });
+    out.push({ slug: p.slug, title: p.title({ cat: { pricesAt: new Date().toISOString() } as Catalog }), href: postHref(p), reason: g.reason });
     if (out.length >= limit) break;
   }
   return out;

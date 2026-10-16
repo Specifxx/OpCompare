@@ -23,9 +23,13 @@ test("QuickView renders the compact alert with its own placement, after the eBay
 
 test("the card page puts it under the top buy block, with the site's email status", () => {
   const page = read("src/app/card/[slug]/page.tsx");
-  const top = page.indexOf("<CardTopBuy");
-  const at = page.indexOf("<PriceDropAlertCta");
+  // The ISR card page draws both through its market islands (components/card/CardMarket.tsx).
+  const top = page.indexOf("<MarketTopBuy");
+  const at = page.indexOf("<MarketAlertCta");
   assert.ok(top > 0 && at > top);
+  const islands = read("src/components/card/CardMarket.tsx");
+  assert.match(islands, /<CardTopBuy best=\{pickMarket\(best, country\)\}/);
+  assert.match(islands, /<PriceDropAlertCta \{\.\.\.rest\} unpriced=\{pickMarket\(unpriced, country\)\} \/>/);
   assert.match(page, /emailOn=\{emailOn\}/);
   assert.match(page, /const emailOn = \(await getEmailStatus\(\)\) === "on"/);
 });

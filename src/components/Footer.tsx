@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CONTACT_EMAIL, DISCORD_URL, SISTER_SITE, SITE_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SISTER_SITES, SITE_NAME } from "@/lib/site";
 import { FooterNav } from "./FooterNav";
 import { ShareRow } from "./ShareRow";
 
@@ -11,7 +11,7 @@ import { ShareRow } from "./ShareRow";
 // Order: the newsletter slot (collection-alerts' NewsletterSignup, rendered
 // only while getEmailStatus() is "on" — never an email field while nothing
 // sends), the site map, the share band, the always-visible link row, the
-// sister-site line, the site line, the affiliate disclosure, the trademark
+// sister-sites line ("Also from us"), the site line, the affiliate disclosure, the trademark
 // notice and the copyright. No "·" separators: items are spaced by the row's
 // own gap, so nothing dangles at a line end on a phone.
 export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) {
@@ -43,13 +43,18 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
           ) : null}
           <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
         </div>
-        {/* Cross-promotion: the owner's Riftbound sister site. */}
-        <p className="mb-2">
-          Playing {SISTER_SITE.game} too? Our sister site{" "}
-          <a href={SISTER_SITE.url} target="_blank" rel="noopener noreferrer" className="tap-link font-semibold text-brand-400 hover:underline">
-            {SISTER_SITE.name}
-          </a>{" "}
-          compares {SISTER_SITE.game} card prices the same way.
+        {/* Cross-promotion: the owner's sister sites, one per game. Our own sites,
+            so plain followed links (no nofollow/sponsored), in a new tab. */}
+        <p className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <span>Also from us, comparing prices the same way:</span>
+          {SISTER_SITES.map((s) => (
+            <span key={s.key}>
+              <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
+                {s.name}
+              </a>{" "}
+              for {s.compares}
+            </span>
+          ))}
         </p>
         <p>
           {SITE_NAME} · One Piece Card Game database &amp; price comparison for the US, Australia, the UK, Singapore, Canada and

@@ -95,18 +95,19 @@ export interface SetLite {
   sealedCount: number;
 }
 
-const loadCore = unstable_cache(
-  async (): Promise<{ cards: CoreTuple[]; sets: SetLite[] }> => {
-    const c = await snapCore();
-    // The sets carry TCGplayer's own group name for the store matcher; no page wants it.
-    return { cards: c.cards, sets: c.sets.map(({ tcgName: _t, ...s }: SetLite & { tcgName?: string }) => (void _t, s)) };
-  },
-  ["catalog-core-v2"],
-  { tags: [PRICES_TAG], revalidate: TTL },
-);
+type CoreFile = { cards: CoreTuple[]; sets: SetLite[] };
+type PricesFile = { ids: number[]; prices: PriceTuple[]; at: string };
+
+async function readCore(): Promise<CoreFile> {
+  const c = await snapCore();
+  // The sets carry TCGplayer's own group name for the store matcher; no page wants it.
+  return { cards: c.cards, sets: c.sets.map(({ tcgName: _t, ...s }: SetLite & { tcgName?: string }) => (void _t, s)) };
+}
+
+const loadCore = unstable_cache(readCore, ["catalog-core-v2"], { tags: [PRICES_TAG], revalidate: TTL });
 
 const loadPrices = unstable_cache(
-  async (): Promise<{ ids: number[]; prices: PriceTuple[]; at: string }> => snapPrices(),
+  async (): Promise<PricesFile> => snapPrices(),
   ["catalog-prices-v2"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
@@ -131,6 +132,7 @@ function decode(t: CoreTuple, p: PriceTuple, setCode: string | undefined): CardL
 // A warm lambda keeps the decoded catalogue for a few minutes, so a burst of
 // requests reads the Data Cache once rather than once each.
 let memo: { at: number; value: Catalog } | null = null;
+let imageMemo: { at: number; value: Catalog } | null = null;
 const MEMO_MS = 5 * 60 * 1000;
 
 export interface Catalog {
@@ -143,14 +145,12 @@ export interface Catalog {
   pricesAt: string;
 }
 
-export async function getCatalog(): Promise<Catalog> {
-  if (memo && Date.now() - memo.at < MEMO_MS) return memo.value;
-  const [core, pr] = await Promise.all([loadCore(), loadPrices()]);
+function catalogOf(core: CoreFile, pr: PricesFile): Catalog {
   const codeOf = new Map(core.sets.map((s) => [s.id, s.code]));
   const priceById = new Map<number, PriceTuple>();
   pr.ids.forEach((id, i) => priceById.set(id, pr.prices[i]));
   const cards = core.cards.map((t) => decode(t, priceById.get(t[0]) ?? NO_PRICE, codeOf.get(t[4])));
-  const value: Catalog = {
+  return {
     cards,
     sets: core.sets,
     setById: new Map(core.sets.map((s) => [s.id, s])),
@@ -159,8 +159,63 @@ export async function getCatalog(): Promise<Catalog> {
     byId: new Map(cards.map((c) => [c.id, c])),
     pricesAt: pr.at,
   };
+}
+
+export async function getCatalog(): Promise<Catalog> {
+  if (memo && Date.now() - memo.at < MEMO_MS) return memo.value;
+  const [core, pr] = await Promise.all([loadCore(), loadPrices()]);
+  const value = catalogOf(core, pr);
   memo = { at: Date.now(), value };
   return value;
+}
+
+// ── Share images: the same snapshot, held for a day ──────────────────────────
+// The share-image routes (src/app/**/opengraph-image.tsx) are ISR for a DAY
+// (owner, 2026-10-14: "cache them for a long time, a day or more"). Next keeps
+// the LOWEST revalidate that any cached read in a render declares, and a read
+// tagged "prices" makes the render purgeable by the import's revalidateTag. So
+// an image that read the 6-hour, "prices"-tagged loaders above would live six
+// hours and be redrawn after every import, whatever its route exports. These
+// are the same snapshot files under their own keys, held a day, untagged: an
+// image shows prices up to a day (two at the very worst: this entry's age plus
+// the image's) behind the pages. Only lib/og and the blog post context for
+// images read them; pages never do (tests/og.test.ts).
+export const IMAGE_TTL = 60 * 60 * 24;
+
+const loadCoreForImages = unstable_cache(readCore, ["og-catalog-core-v1"], { revalidate: IMAGE_TTL });
+const loadPricesForImages = unstable_cache(async (): Promise<PricesFile> => snapPrices(), ["og-catalog-prices-v1"], { revalidate: IMAGE_TTL });
+
+/** getCatalog() for the share images: a day old at most (see above). */
+export async function getCatalogForImages(): Promise<Catalog> {
+  if (imageMemo && Date.now() - imageMemo.at < MEMO_MS) return imageMemo.value;
+  const [core, pr] = await Promise.all([loadCoreForImages(), loadPricesForImages()]);
+  const value = catalogOf(core, pr);
+  imageMemo = { at: Date.now(), value };
+  return value;
+}
+
+/** getSealedCatalog() for the share images. */
+export const getSealedCatalogForImages = unstable_cache(async (): Promise<SealedLite[]> => snapSealedCatalog(), ["og-sealed-catalog-v1"], { revalidate: IMAGE_TTL });
+
+/** getSiteStats() for the share images. */
+export const getSiteStatsForImages = unstable_cache(async (): Promise<SiteStats> => snapSiteStats(), ["og-site-stats-v1"], { revalidate: IMAGE_TTL });
+
+/**
+ * Cut the ISR life of the render in progress to `seconds` (a share image that
+ * drew its fallback after a read error or for a slug the data does not have
+ * yet: it must not be pinned for a day). Next keeps the lowest revalidate any
+ * cached read in a render declares, so reading this constant entry, declared
+ * with `seconds`, is how a render shortens its own life; it reads nothing (no
+ * database, no network). Outside a Next render (tests, scripts) it does nothing.
+ */
+const shortLived = new Map<number, () => Promise<number>>();
+export async function expireRenderAfter(seconds: number): Promise<void> {
+  let marker = shortLived.get(seconds);
+  if (!marker) {
+    marker = unstable_cache(async () => seconds, [`short-lived-render-v1-${seconds}`], { revalidate: seconds });
+    shortLived.set(seconds, marker);
+  }
+  await marker().catch(() => undefined);
 }
 
 // ── One card ─────────────────────────────────────────────────────────────────
@@ -289,6 +344,12 @@ export async function getIndexSeries(): Promise<IndexPoint[]> {
   return (f?.days ?? []).slice(-730);
 }
 
+/** getIndexSeries() for the share images (the history ref held a day, untagged: see getCatalogForImages). */
+export async function getIndexSeriesForImages(): Promise<IndexPoint[]> {
+  const f = await historyFile<IndexFile>("index.json", getHistoryRefForImages);
+  return (f?.days ?? []).slice(-730);
+}
+
 // ── Price history (GitHub) ───────────────────────────────────────────────────
 // History is not in Postgres: the import commits it to the `data` branch of the
 // public repo (lib/history.ts), and pages read it from GitHub's raw CDN, pinned
@@ -298,15 +359,14 @@ export async function getIndexSeries(): Promise<IndexPoint[]> {
 // before the first publish; HISTORY_LOCAL_DIR reads a local checkout (dev).
 const HISTORY_RAW = (process.env.HISTORY_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
 
-export const getHistoryRef = unstable_cache(
-  // A database failure is not "no ref": the charts then read the branch itself (historyFile's "data" fallback).
-  async (): Promise<string | null> =>
-    prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }).then((m) => m?.value ?? null, () => null),
-  ["history-ref-v1"],
-  { tags: [PRICES_TAG], revalidate: DB_TTL },
-);
+// A database failure is not "no ref": the charts then read the branch itself (historyFile's "data" fallback).
+const readHistoryRef = async (): Promise<string | null> =>
+  prisma.meta.findUnique({ where: { key: "historyRef" }, select: { value: true } }).then((m) => m?.value ?? null, () => null);
 
-async function historyFile<T>(rel: string): Promise<T | null> {
+export const getHistoryRef = unstable_cache(readHistoryRef, ["history-ref-v1"], { tags: [PRICES_TAG], revalidate: DB_TTL });
+const getHistoryRefForImages = unstable_cache(readHistoryRef, ["og-history-ref-v1"], { revalidate: IMAGE_TTL });
+
+async function historyFile<T>(rel: string, refOf: () => Promise<string | null> = getHistoryRef): Promise<T | null> {
   const local = process.env.HISTORY_LOCAL_DIR;
   if (local) {
     try {
@@ -316,7 +376,7 @@ async function historyFile<T>(rel: string): Promise<T | null> {
     }
   }
   try {
-    const ref = (await getHistoryRef()) ?? "data";
+    const ref = (await refOf()) ?? "data";
     const r = await fetch(`${HISTORY_RAW}/${ref}/history/${rel}`, { next: { revalidate: ref === "data" ? 3600 : 30 * 86400 } });
     return r.ok ? ((await r.json()) as T) : null;
   } catch {
@@ -783,7 +843,10 @@ export const getPublishedDeck = unstable_cache(
     return d ? { ...deckRowOf(d), description: d.description, list: d.list } : null;
   },
   ["published-deck-v1"],
-  { tags: [DECKS_TAG], revalidate: 3600 },
+  // A day: a deck's rows never change after publishing, and a publish or a hide
+  // revalidates DECKS_TAG at once. Its share image is ISR for a day and would be
+  // cut to this TTL if it were shorter (getCatalogForImages, above).
+  { tags: [DECKS_TAG], revalidate: 86400 },
 );
 
 /** Up to six live decks that play a card (the card page's "Decks using this card"). */
@@ -796,7 +859,9 @@ export const getDecksUsingCard = unstable_cache(
       select: { slug: true, title: true, leaderName: true },
     }),
   ["decks-using-card-v1"],
-  { tags: [DECKS_TAG], revalidate: 3600 },
+  // DB_TTL, not an hour: the card page is ISR for six hours and would be cut to
+  // this TTL if it were shorter; a publish or a hide revalidates DECKS_TAG at once.
+  { tags: [DECKS_TAG], revalidate: DB_TTL },
 );
 // ── Demand Finder, the /movers strip and Rising Cards ──
 // Both read the demand snapshot FILES and the Rising Cards feed the import

@@ -2392,3 +2392,172 @@ and cached 6 h. Checked and unchanged: no `/card`, `/sealed` or `/price-guide` p
 sets a `revalidate` (they are dynamic, the loaders cache), and the only
 `revalidatePath`/`revalidateTag` calls are the admin deck and rising-snapshot routes,
 one path each, never a loop over cards. Pinned in `tests/og.test.ts`.
+## Traffic plan: links without redirects, EB05 buyers, the sister sites (2026-10-14)
+
+Owner's traffic plan: 614 visitors a month, 1.9k pages indexed and 6.3k
+"discovered, not indexed". RiftCompare's growth came mostly from pre-release pages
+and a "where to buy <new set>" post.
+
+- **No link goes through the `/blog/<guide>` redirect.** A guide lives at
+  `/guides/<slug>` and `/blog/<slug>` 308s to it, but the homepage's "Start here",
+  the region homes, the tool-guide strips, three hub intros and the 404 page built
+  `/blog/${slug}` by hand, so the two most-linked guides (where to buy, rarities)
+  were reached through a redirect from every page that linked them. Every post link
+  now goes through `postHref(post)`, or `postHrefFor(slug)` where only a slug is
+  known (an unpublished slug gives the blog index, never a dead URL); hub-intro
+  Markdown names `/guides/<slug>` directly. `tests/guides.test.ts` walks `src/` and
+  fails on a guide slug after `/blog/` or on any `/blog/${…}` / `"/blog/" +` built
+  outside `postHref` and the news sitemap (which takes blog posts only).
+- **A "where to buy EB05" post, and the pre-order boards linked where buyers look.**
+  `/blog/where-to-buy-one-piece-eb05` (a dated blog post, not a guide) reads each
+  EB05 product's cheapest live listing and seller count per market from the sealed
+  catalogue at render time, in that market's currency, and says "not listed yet"
+  for a product or market with nothing (the Sleeved Booster Pack had no listing
+  anywhere on publication day). The release facts are Bandai's, dated: the English
+  page (30 October 2026, US$4.99 MSRP per pack, "75+2 types", the rarity list) and
+  the Japanese one (31 October 2026, 6-card packs, the per-rarity split). Bandai's
+  English page prints no English pack size or box count, so the post says so
+  rather than borrowing the Japanese figure. No forecast and no "buy now": the
+  pre-order section explains how each choice works. Links to other posts are
+  literal paths in that file (it is imported by `lib/blog/index.ts`, so it cannot
+  import `postHrefFor` back); `tests/guides.test.ts` now also checks that every
+  literal `/blog/<slug>` or `/guides/<slug>` link names a published post at its own
+  URL. `tests/eb05-post.test.ts` renders the post from fixtures and fails on any
+  printed price the catalogue does not hold.
+- **The boards were reachable only from `/sealed` and the sitemap.** Now the set
+  page shows a callout (`PreorderCallout`) and `/release-dates` links the board
+  beside the next-set line and under each upcoming set, both through
+  `preorderPageFor(set, today)`: a set in `PREORDER_PAGES` whose release date is
+  still ahead, else nothing, so every link retires itself on release day. The
+  homepage's existing next-set line (in `HomeSections`, below "Explore the
+  database") gains a "Pre-orders open" row from `upcomingPreorderPages`: no new
+  section, so the pinned section order and the no-cookie rule are untouched, and the
+  hourly ISR drops a set the day it releases. A set with no release date gets no
+  link (nothing would retire it).
+- **Every footer names all three sister sites.** The owner runs four sites and wants
+  them cross-linked: `SISTER_SITE` (RiftCompare alone) became `SISTER_SITES` in
+  `lib/site.ts` (RiftCompare for Riftbound, DexCompare for Pokémon TCG sealed
+  product, MTG Compare for Magic: The Gathering), rendered as one "Also from us"
+  line under the footer's link row, which is unchanged. They are our own sites, so
+  the links are plain and followed (`target="_blank" rel="noopener"`, no
+  nofollow/sponsored, no affiliate tagging); About and Who writes this name all
+  three from the same list. `tests/site-chrome.test.ts` requires the three URLs.
+
+## Share images: ISR for a day, drawn at most once a day (2026-10-14)
+
+Owner, on the cost of serving the site: "Social-preview images: make them fixed
+images, or cache them for a long time (a day or more), instead of drawing them on
+every request." Measured on production the same day: `/opengraph-image` came from
+the ISR cache (HIT, `s-maxage=21600`), but the card, set, sealed and blog images
+answered `public, max-age=0` with a MISS: a function drew them.
+
+- **Why they were drawn per request.** Not a cookie or header read: nothing in
+  their tree reads the request. A route with a dynamic segment (`[slug]`) and no
+  `generateStaticParams` is dynamic in Next 14 whatever it exports, so
+  `revalidate = 21600` only set the fetch cache's life (the build table said `ƒ`).
+  Every image route with a segment now exports an EMPTY `generateStaticParams`
+  (nothing drawn at build, each image on its first request, then the ISR cache;
+  the build table says `●`), the device `/decks/[slug]` already used.
+- **A day, not six hours.** Every route exports `revalidate = 86400`. That alone
+  is not enough: Next keeps the LOWEST revalidate any cached read in a render
+  declares, and a read tagged `prices` makes the render purgeable by the import's
+  `revalidateTag`. Through the pages' loaders (6 h, tagged) every image would live
+  six hours and be redrawn after each of the two daily imports. So the images read
+  day-old twins of the same snapshot files under their own keys, untagged
+  (`getCatalogForImages`, `getSealedCatalogForImages`, `getSiteStatsForImages`,
+  `postContextForImages`, `IMAGE_TTL` in `lib/data.ts`), and `getPublishedDeck`
+  is held a day (a publish or a hide revalidates `DECKS_TAG` at once anyway). The
+  prerendered `/opengraph-image` now records `initialRevalidateSeconds: 86400`
+  (was 21600) and carries no `prices` tag. Cost of the choice: an image shows
+  prices up to a day behind the page (two days at the very worst: the loader
+  entry's age plus the image's). A thumbnail is a preview, and the platforms cache
+  it themselves for far longer; the page it links to is current.
+- **A fallback is still never pinned.** An error or a slug the data does not have
+  draws the data-free fallback, never a 500, and `fallbackOg` cuts that render's
+  ISR life to a minute (`expireRenderAfter(60)` in `lib/data.ts`: reading a
+  constant `unstable_cache` entry declared with 60 s, which Next's lowest-wins rule
+  turns into the render's life; it reads no database and no network) beside the
+  one-minute `OG_AFTER_ERROR` header. Locally an unknown card's image goes STALE
+  after a minute while a real one stays a HIT. A slug the day-old catalogue lacks
+  (a set's release day, a card shared minutes after its import) is looked up in the
+  pages' catalogue before the fallback is drawn; that render lives six hours, and
+  the next finds it in the day-old one.
+- **Headers.** `OG_CACHED` is now `public, max-age=0, s-maxage=86400,
+  stale-while-revalidate=86400` (was 6 h), so the CDN header and the ISR life
+  agree; never ImageResponse's immutable year (the `?hash` on og:image tracks the
+  code, not the prices).
+- **Guard.** `tests/og.test.ts` requires the day and, for a `[slug]` route, the
+  empty `generateStaticParams`, and walks each image route's imports
+  (`tests/helpers/route-tree.ts`) failing on any `next/headers` import,
+  `getCountry()`, `unstable_noStore`, `cache: "no-store"`, `force-dynamic` or
+  `revalidate = 0` it can reach, plus any page that reads an image loader.
+- **Not a fixed file.** Every image here shows data (the fallback is the only
+  brand-only drawing, and it must stay a fallback), so none became a static file.
+  CLAUDE.md's "Share images" section is updated (it said `revalidate = 21600`
+  and a 6 h CDN header).
+
+## The card page is ISR, localised in the browser (2026-10-14)
+
+Owner, on the cost of serving the site: "opcompare /card/[slug]: cache these pages
+and refresh them every few hours, the way riftcompare already does." Measured on
+production that day: every card page answered `private, no-cache, no-store` and
+MISS. It called `getCountry()` (the `country` cookie, then Vercel's geo header),
+which makes a route per-request, and as a `[slug]` route without
+`generateStaticParams` it could not be cached anyway.
+
+- **RiftCompare's model, ported.** `export const revalidate = 21600` and an EMPTY
+  `generateStaticParams` (on demand, nothing prewarmed; the build table now says
+  `●` where it said `ƒ`). No cookie, header or session read anywhere in the tree:
+  each card renders once on the baseline market (`DEFAULT_COUNTRY`, the US, what
+  `CountryProvider` starts from) and is served from the cache to every visitor and
+  crawler. Everything that depends on the visitor's market is computed on the
+  server for all six markets and drawn by client islands
+  (`components/card/CardMarket.tsx`) that pick the market `CountryProvider`
+  resolves after hydration (cookie, its localStorage mirror, then `/api/geo`). The
+  server render and the first client render agree, so there is no hydration
+  mismatch, and a crawler gets complete US prices. Checked in headless Chromium
+  against a local `next start`: no cookie shows the US; `country=AU`, `UK`, `EU`
+  show that market's tiles, board, chart currency, prose and FAQ, with no console
+  error.
+- **Ship results, not rows.** `lib/per-market.ts` computes each part for all six
+  markets and stores identical values once (a card with no listing anywhere ships
+  one "no price" state). The board is a `BoardModel` (`lib/board-model.ts`, the old
+  `PriceBoard` rules moved unchanged): labels, postage lines, played-copy notes,
+  "Paid link" flags and affiliate-tagged hrefs resolved on the server, so the 87 KB
+  store registry and the partner-id environment never reach the browser.
+  `PriceBoardView` and `CardMarketsTableView` only draw; the sealed page keeps
+  `PriceBoard` / `CardMarketsTable`, which now build the same model for one market
+  on the server. Measured locally on the biggest card (adio-op09-023, 146 open
+  offers across five markets): the six boards are 58 KB of the RSC payload, and
+  the HTML is 398,879 bytes against production's 448,360 (the old page carried the
+  US board twice, as HTML and as about 2 KB of RSC per row); gzipped, 53.3 KB
+  against 51.8 KB. Marshall.D.Teach OP16-119: 423,512 against 494,911 raw, 56.5 KB
+  gzipped on both. The route's own JS grew from 8.7 KB to 15.5 KB.
+- **Honest structured data.** Metadata already quoted the US listing. The Product
+  JSON-LD's `AggregateOffer` is the US market's, in USD, now with
+  `eligibleRegion: US`; the FAQPage JSON-LD is the US FAQ (the visible FAQ follows
+  the visitor, and is the US one for a crawler).
+- **"Updated 3h ago" stays true.** A six-hour-old page would freeze a relative
+  time. `components/Ago.tsx` renders the render-time value (hydration matches) and
+  recounts from the browser's clock after mount; the board's lines and the
+  "Last seen" tile use it.
+- **Six hours, purged by the import.** Every read under the page is tagged
+  `prices`, so the import's `revalidateTag("prices")` marks each cached card stale
+  (the next visit gets it and re-renders it in the background); the six hours are
+  the backstop. A loader under the page with a shorter TTL would become the page's
+  (Next keeps the lowest revalidate), so `getDecksUsingCard` moved from an hour to
+  `DB_TTL` (a publish or a hide revalidates `DECKS_TAG` at once, which also marks
+  every card page stale; decks are rare). `tests/card-isr.test.ts` checks the TTL
+  of every loader the page reads. One exception stays: when the history ref cannot
+  be read (no database), the chart reads the `data` branch with an hour's fetch
+  cache, which caps the page at an hour until the ref is back; with the ref pinned
+  (production) the history files are held a month. A local `next start` without a
+  database shows exactly that (`s-maxage=3600`), and `s-maxage=21600` once
+  `HISTORY_LOCAL_DIR` stands in for the ref.
+- **An unknown slug is a cached 404**, carrying the `prices` tag: a card that
+  appears in an import is purged with it.
+- **Guard.** `tests/card-isr.test.ts`: the exports, no dynamic API in the import
+  tree (`tests/helpers/route-tree.ts`, shared with the share images), the baseline
+  in metadata and JSON-LD, every market-dependent part drawn by an island, and the
+  islands' own tree free of the store registry, the loaders and the database.
+  CLAUDE.md's Egress section states the rule.
