@@ -2597,3 +2597,28 @@ Owner (16 October), after RiftCompare's `/radiance-preorders` did well on Reddit
 - The panel's eBay row now uses the shared `sourceLabel` and `postageLine` ("eBay Australia", "+ £3.45 postage · ≈ £203.44 delivered"), as every other eBay row; an unknown postage still reads "postage at checkout", never "delivered".
 - `tests/preorders.test.ts` pins the split (stores only in the ranking, marketplaces apart, sold-out rows last and deduplicated, the summary's counts) and the component's order and classes. Checked at 1280 and 390 px, US and AU, light and dark: no horizontal scroll.
 - **Not changed:** deploy cadence (it rides the next weekly release unless the owner asks), the eBay budget, `marketRows`, the card and sealed boards.
+
+## Card pages leave ISR for the CDN — 2026-10-17
+
+**Owner:** "ISR writes is taking a lot of costs on Vercel… it's costing like almost $10 a day. So we need to significantly reduce the cost."
+
+**What the card page cost.** The page went real ISR on 2026-10-14: six hours, on demand, purged by the import's twice-daily `revalidateTag("prices")`.
+- One card page is ~350 KB of HTML and ~165 KB of RSC. ISR writes are billed per 8 KB, so each rewrite was about 65 write units.
+- There are 7,306 card URLs in the sitemap, and crawlers walk the long tail. A card could be rewritten up to six times a day: four six-hour lives plus two purges.
+- That made one long-tail card cost about as much a day as rendering it two hundred times. A long-tail card fetched on 17 October came back `x-vercel-cache: REVALIDATED`, a rewrite.
+- One ISR write of this page is about $0.00026. One render is about $0.00001–0.00004 of CPU and transfer.
+
+**The change.**
+- The page is `force-dynamic`, with no `revalidate` and no `generateStaticParams`.
+- `next.config.js` sends `Vercel-CDN-Cache-Control: public, s-maxage=21600, stale-while-revalidate=86400` for `/card/:slug` (`CDN_PAGES`). Vercel's CDN reads it before the page's own `private, no-store`, keeps the copy for free and never forwards the header to the browser.
+- Checked live on DexCompare the same day, with the same header from `next.config.js`:
+  - a second request was a HIT;
+  - an `RSC: 1` request was cached apart from the HTML (`Vary`), so it cannot poison the page.
+- The page still reads nothing per visitor, so one copy serves everyone (`tests/card-isr.test.ts` walks the imports, as before).
+- The loaders keep their own Data Cache, tagged `prices` and purged by the import. A render after a purge reads the new snapshot. The CDN copy is at most six hours old, plus a stale serve while it refreshes: the same freshness the ISR life gave.
+
+**Cost of the change.** A CDN miss is a render: a function invocation and Fluid CPU. The CDN keeps a copy per region, so a card seen from two regions renders twice where ISR rendered once. At ~1/20 of a write per render, that still saves an order of magnitude.
+
+**Unchanged:** every other ISR route. These are the homes (`revalidate = 3600`), the pre-order pages, the decks and the five share images that list their params. They are a few dozen paths, not thousands.
+
+**Reversal:** `export const revalidate = 21600` and the empty `generateStaticParams` back in the page, drop `CDN_PAGES` from `next.config.js`, and restore the first test of `tests/card-isr.test.ts`.

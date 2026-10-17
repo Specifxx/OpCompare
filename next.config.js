@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+const CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
+const CDN_PAGES = ["/card/:slug"];
+
 const nextConfig = {
   poweredByHeader: false,
   images: {
@@ -54,6 +57,11 @@ const nextConfig = {
       // Share PNGs are not pages: keep them out of search results.
       { source: "/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
       { source: "/:path*/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
+      // THE CDN COPY OF THE CARD PAGES (2026-10-17, DECISIONS.md "Card pages leave ISR for the CDN"). The page is force-dynamic;
+      // Vercel's CDN reads Vercel-CDN-Cache-Control before the page's own `private, no-store` and never forwards it to the
+      // browser. Six hours fresh plus a day stale, as the ISR life was. Only pages that read nothing per visitor may be here
+      // (tests/card-isr.test.ts).
+      ...CDN_PAGES.map((source) => ({ source, headers: [{ key: "Vercel-CDN-Cache-Control", value: CDN_CACHE }] })),
     ];
   },
 };
