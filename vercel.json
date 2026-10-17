@@ -10,7 +10,9 @@
   "git": {
     "deploymentEnabled": {
       "data": false,
-      "snapshot": false
+      "snapshot": false,
+      "claude/*": false,
+      "claude/**": false
     }
   }
 }

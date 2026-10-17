@@ -14,17 +14,32 @@
 # [deploy] in your own commit subject, deploys now. The SUBJECT only — a body that
 # discusses the marker must not deploy.
 #
-# Preview and development builds are not gated. An unknown environment is
-# treated as production. If the commit message cannot be read at all, build
-# (fail open: "never deploys" is worse than "deploys too often").
+# PREVIEWS ARE OFF (owner, 2026-10-17: "reduce the cost on Vercel"; the sister
+# sites since 2026-10-14). A preview or development build happens only when the
+# commit SUBJECT carries the literal marker  [preview]  (any case), added only
+# when the owner asks for a preview of that commit. claude/* branches get no
+# deployment at all (vercel.json git.deploymentEnabled). An unreadable message
+# never builds a preview. An unknown environment is treated as production. If a
+# production commit message cannot be read at all, build (fail open: "never
+# deploys" is worse than "deploys too often").
 set -u
 
 MARKER='[deploy]'
+PREVIEW_MARKER='[preview]'
 
 env="${VERCEL_ENV:-}"
 if [ "$env" = "preview" ] || [ "$env" = "development" ]; then
-  echo "[vercel-ignore-build] VERCEL_ENV=$env — previews are not gated; building."
-  exit 1
+  pmsg="${VERCEL_GIT_COMMIT_MESSAGE:-}"
+  if [ -z "$pmsg" ]; then
+    pmsg="$(git log -1 --format=%B 2>/dev/null || true)"
+  fi
+  psubject="$(printf '%s\n' "$pmsg" | head -n 1)"
+  if [ -n "$psubject" ] && printf '%s' "$psubject" | grep -qiF -- "$PREVIEW_MARKER"; then
+    echo "[vercel-ignore-build] VERCEL_ENV=$env and '$PREVIEW_MARKER' in the commit subject — building the preview that was asked for."
+    exit 1
+  fi
+  echo "[vercel-ignore-build] VERCEL_ENV=$env — previews are off (owner, 2026-10-17): no '$PREVIEW_MARKER' in the commit subject, skipping."
+  exit 0
 fi
 
 msg="${VERCEL_GIT_COMMIT_MESSAGE:-}"
