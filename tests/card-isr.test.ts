@@ -1,6 +1,7 @@
-// /card/[slug] is REAL ISR (owner, 2026-10-14): one cached HTML per card,
-// rendered on the baseline market, localised in the browser by the islands of
-// components/card/CardMarket.tsx (RiftCompare's CardMarketSection model).
+// /card/[slug] is one cached HTML per card (owner, 2026-10-14), rendered on the
+// baseline market and localised in the browser by the islands of
+// components/card/CardMarket.tsx (RiftCompare's CardMarketSection model). Since
+// 2026-10-17 the copy is kept by Vercel's CDN, not ISR (the bill).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -16,19 +17,23 @@ const PAGE = "src/app/card/[slug]/page.tsx";
 const ISLANDS = "src/components/card/CardMarket.tsx";
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
-test("the card page is ISR for six hours, rendered on demand, never prewarmed", () => {
+test("the card page renders per request and Vercel's CDN keeps it six hours plus a day stale; no ISR, nothing prewarmed", async () => {
   const src = read(PAGE);
-  assert.match(src, /^export const revalidate = 21600;$/m);
-  // Without generateStaticParams Next 14 renders a [slug] page on every request; an EMPTY list is "on demand".
-  assert.match(src, /export function generateStaticParams\(\): \{ slug: string \}\[\] \{\s*return \[\];\s*\}/);
-  assert.doesNotMatch(src, /export const dynamic\b|export const dynamicParams\b|export const fetchCache\b/);
+  assert.match(src, /^export const dynamic = "force-dynamic";$/m);
+  // An ISR write is billed per 8 KB: a ~520 KB card page was ~65 units every time the 6-hour life or the import's tag purge rewrote it.
+  assert.doesNotMatch(src, /^export const revalidate\b|generateStaticParams|export const dynamicParams\b|export const fetchCache\b/m);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const headers = await (require(path.join(ROOT, "next.config.js")) as { headers: () => Promise<{ source: string; headers: { key: string; value: string }[] }[]> }).headers();
+  const rule = headers.find((h) => h.source === "/card/:slug");
+  assert.deepEqual(rule?.headers, [{ key: "Vercel-CDN-Cache-Control", value: "public, s-maxage=21600, stale-while-revalidate=86400" }]);
 });
 
 test("nothing the card page can run reads the request (cookies, headers, getCountry, no-store)", () => {
   const tree = routeTree(PAGE);
   assert.ok(tree.files.includes(ISLANDS), "the walk reaches the market islands");
   assert.ok(tree.files.includes(path.join("src", "lib", "data.ts")), "the walk reaches the loaders");
-  assert.deepEqual(dynamicApiUses(tree), []);
+  // The page's own force-dynamic is the point (the CDN keeps it); nothing else may make it per-visitor.
+  assert.deepEqual(dynamicApiUses(tree).filter((u) => u !== `${PAGE}: exports dynamic = "force-dynamic"`), []);
   assert.doesNotMatch(stripComments(read(PAGE)), /searchParams/);
 });
 

@@ -116,10 +116,13 @@ never call a loader inside an `unstable_cache` callback, and keep each cache
 entry well under 2 MB (`tests/nested-cache.test.ts`). No `generateStaticParams`
 prewarming of database-backed routes.
 
-`/card/[slug]` is REAL ISR (owner, 2026-10-14): `revalidate = 21600`, an EMPTY
-`generateStaticParams` (on demand, nothing at build), and nothing in its tree
-reads a cookie, a header or the session (`getCountry()` included;
-`tests/card-isr.test.ts` walks its imports). It renders once on the baseline
+`/card/[slug]` is ONE CACHED COPY PER CARD, KEPT BY VERCEL'S CDN (owner,
+2026-10-14; ISR until 2026-10-17, when ISR writes were the largest line of the
+bill): `dynamic = "force-dynamic"` with `Vercel-CDN-Cache-Control: public,
+s-maxage=21600, stale-while-revalidate=86400` from `next.config.js`
+(`CDN_PAGES`), never `revalidate` or `generateStaticParams` again, and nothing
+in its tree reads a cookie, a header or the session (`getCountry()` included;
+`tests/card-isr.test.ts` walks its imports). It renders on the baseline
 market (`DEFAULT_COUNTRY`, the US), and its metadata and JSON-LD state that
 market and currency. Every market-dependent part (tiles, buy block and sticky
 bar, board, TCGplayer reference and banners, chart, prose, FAQ, markets table,

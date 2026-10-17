@@ -79,32 +79,28 @@ import { COLORS } from "@/lib/constants";
 
 type Props = { params: { slug: string } };
 
-// REAL ISR (owner, 2026-10-14: "cache these pages and refresh them every few
-// hours, the way riftcompare already does"). Nothing in this route's tree reads
-// a cookie, a header or the session (no getCountry(): tests/card-isr.test.ts
-// walks the imports), so each card renders ONCE, on the baseline market below,
-// and is served from the cache to every visitor and crawler. Everything that
-// depends on the visitor's market (the price tiles, the top buy block and the
-// sticky bar, the board, the TCGplayer reference and banners, the chart, the
-// prose that quotes prices, the FAQ, the markets table, the eBay panel) is
-// computed here for ALL six markets (lib/per-market.ts) and drawn by the client
-// islands in components/card/CardMarket.tsx, which pick the market
-// CountryProvider resolves after hydration: RiftCompare's CardMarketSection.
+// ONE COPY PER CARD, KEPT BY VERCEL'S CDN (owner, 2026-10-14: "cache these
+// pages and refresh them every few hours"; ISR until 2026-10-17, when the owner
+// asked for the Vercel bill to come down). Nothing in this route's tree reads a
+// cookie, a header or the session (no getCountry(): tests/card-isr.test.ts walks
+// the imports), so each card renders on the baseline market below and one CDN
+// copy serves every visitor and crawler. Everything that depends on the
+// visitor's market (the price tiles, the top buy block and the sticky bar, the
+// board, the TCGplayer reference and banners, the chart, the prose that quotes
+// prices, the FAQ, the markets table, the eBay panel) is computed here for ALL
+// six markets (lib/per-market.ts) and drawn by the client islands in
+// components/card/CardMarket.tsx, which pick the market CountryProvider
+// resolves after hydration: RiftCompare's CardMarketSection.
 //
-// Six hours, refreshed sooner by the import: every loader here is tagged
-// "prices", and the import's revalidateTag("prices") marks the cached page stale
-// (the next visit is served it and re-renders it in the background). Every
-// loader the page reads is held at least as long as this, or it would shorten
-// it (Next keeps the lowest revalidate any cached read declares).
-export const revalidate = 21600;
-
-// NOTHING IS PRERENDERED AT BUILD: an empty list makes each card render on its
-// first request and then stay cached (dynamicParams is on, so this is "on
-// demand", never "404"). Without it Next 14 renders a [slug] page on every
-// request. Never prewarm: a build would read thousands of snapshot files.
-export function generateStaticParams(): { slug: string }[] {
-  return [];
-}
+// Rendered per request and cached at the CDN for six hours plus a day of
+// stale-while-revalidate (next.config.js, CDN_PAGES). Not ISR: a card page is
+// ~520 KB of HTML + RSC, about 65 ISR write units (billed per 8 KB) every time
+// it was rewritten, and with 7,300 cards, a six-hour life and the import's
+// twice-daily revalidateTag("prices") that was the largest line of the bill. A
+// CDN copy is free to keep; a render costs about a twentieth of a write. The
+// loaders keep their own Data Cache (tagged "prices", purged by the import), so
+// a render after the purge reads the new snapshot. Nothing is prerendered.
+export const dynamic = "force-dynamic";
 
 // The market the cached HTML is rendered on, which the metadata, the JSON-LD
 // prices and the first paint all state: the US (DEFAULT_COUNTRY, the market
