@@ -11,7 +11,9 @@ Production builds only for a commit whose SUBJECT LINE carries `[deploy]`
 lands one a WEEK, Mondays at 08:00 UTC. "Push to prod" means land it on `main` and
 ride the weekly release. Add `[deploy]` (or dispatch the workflow) only when the
 owner says a release is urgent, and say so. A commit BODY may discuss the marker;
-it does not deploy. The site is meant to run passively on the free Neon allowance
+it does not deploy. Previews are off (owner, 2026-10-17): a preview builds only
+for a `[preview]` SUBJECT the owner asked for, and `claude/*` branches never
+deploy (`vercel.json`). The site is meant to run passively on the free Neon allowance
 (5 GB a month): prices and eBay listings reach pages through the GitHub price
 snapshot, not a deploy, and only code changes wait for the release.
 

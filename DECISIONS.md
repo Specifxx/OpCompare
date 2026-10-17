@@ -2622,3 +2622,16 @@ Owner (16 October), after RiftCompare's `/radiance-preorders` did well on Reddit
 **Unchanged:** every other ISR route. These are the homes (`revalidate = 3600`), the pre-order pages, the decks and the five share images that list their params. They are a few dozen paths, not thousands.
 
 **Reversal:** `export const revalidate = 21600` and the empty `generateStaticParams` back in the page, drop `CDN_PAGES` from `next.config.js`, and restore the first test of `tests/card-isr.test.ts`.
+
+## Previews are off — 2026-10-17
+
+**Owner:** "reduce the cost on Vercel in general for all of these sites."
+
+OP Compare still built a preview for every push to every branch. `scripts/vercel-ignore-build.sh` let them all through ("previews are not gated"), and the sessions push `claude/*` branches several times a day. That cost a full build each time, for a URL nobody opened. The sister sites stopped this on 2026-10-14.
+
+**The change.**
+- A preview or development build happens only when the commit SUBJECT carries `[preview]` (any case). Add the marker only when the owner asks for a preview.
+- `claude/*` branches get no deployment at all (`vercel.json` `git.deploymentEnabled`, as on RiftCompare).
+- An unreadable message never builds a preview.
+- Production is unchanged: `[deploy]` subjects only, weekly on Mondays.
+- `tests/deploy-gate.test.ts` pins it.
