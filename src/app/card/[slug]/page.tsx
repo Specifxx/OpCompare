@@ -242,6 +242,8 @@ export default async function CardPage({ params }: Props) {
   const tables = perMarket((m) => marketsTableData(card.offers, card.name, m));
   const ebayBanner = perMarket((m) => ebayBannerHref(m, ebayQuery, "card"));
   const historyTuples = history.map((p): HistoryTuple => [p.day, p.marketUsd, p.lows ?? [p.lowUsd]]);
+  // The chart's summary line says "Now" only in a market with a live price (a listing or TCGplayer's market price).
+  const liveIn = perMarket((m) => headlineIn(m).kind !== "none");
 
   // ── Narrative, FAQ, cross-links ──
   const keys = cardKeywords(card.effect).map((sl) => KEYWORD_BY_SLUG.get(sl)).filter((k): k is NonNullable<typeof k> => !!k);
@@ -522,7 +524,7 @@ export default async function CardPage({ params }: Props) {
           <MarketReference marketUsd={card.marketUsd} tcgHref={tcgHref} ebayBanner={ebayBanner} tcgBanner={tcgplayerBannerHref("card")} query={ebayQuery} name={title} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
-          <MarketHistory history={historyTuples} />
+          <MarketHistory history={historyTuples} live={liveIn} />
 
           <InlineSignupPrompt surface="card" title="Get the top deals in your market, free" body="A free account shows Deal Finder's three biggest savings in your market right now, and is how you get Plus or Premium when you want them." />
 

@@ -169,8 +169,13 @@ export function MarketReference({
 /** A day of the card's history: [day, TCGplayer market (USD cents), each market's low in MARKETS order]. */
 export type HistoryTuple = [day: string, marketUsd: number | null, lows: (number | null)[]];
 
-/** The price-history section in the visitor's market and currency (lib/price-history-view.ts). */
-export function MarketHistory({ history }: { history: HistoryTuple[] }) {
+/**
+ * The price-history section in the visitor's market and currency
+ * (lib/price-history-view.ts). `live`: each market has a live price (a listing or
+ * TCGplayer's market price); where it has none the summary line says "Last
+ * recorded price", muted, not "Now".
+ */
+export function MarketHistory({ history, live }: { history: HistoryTuple[]; live: PerMarket<boolean> }) {
   const country = useMarket();
   const co = COUNTRIES[country];
   const points = useMemo(
@@ -194,7 +199,7 @@ export function MarketHistory({ history }: { history: HistoryTuple[] }) {
         </p>
       </div>
       {data ? (
-        <LineChartInteractive key={country} data={data} />
+        <LineChartInteractive key={country} data={data} live={pickMarket(live, country)} />
       ) : (
         <ChartEmpty text={`Price history starts ${points[0] ? longDate(points[0].day) : "with the first import"} — the chart draws once there are two days of prices.`} />
       )}

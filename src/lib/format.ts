@@ -47,6 +47,20 @@ export function shortDate(d: Date | string | null | undefined): string {
   return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * "12 Sep 2026" from YYYY-MM-DD (or an ISO timestamp, its UTC day): shortDate's
+ * day-month-year, spelled without the locale tables. ICU versions disagree on
+ * en-GB's September ("Sep" or "Sept"), and a client component renders on the
+ * server and again in the browser, which must agree (the share images' ogDate
+ * does the same).
+ */
+export function fixedShortDate(day: string): string {
+  const [y, m, d] = day.slice(0, 10).split("-").map(Number);
+  return y && m >= 1 && m <= 12 && d ? `${d} ${MONTHS[m - 1]} ${y}` : day;
+}
+
 /** "$12.34", "A$12.34" — minor units in any ISO currency (Stripe amounts, report snapshots). */
 export function moneyCode(cents: number | null | undefined, currency: string | null | undefined): string {
   if (cents == null) return "—";

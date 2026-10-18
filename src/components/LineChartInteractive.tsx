@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { linePath, nearestIndex, seriesChange } from "@/lib/chart";
+import { fixedShortDate } from "@/lib/format";
 
 export interface ChartData {
   xs: string[];
@@ -28,7 +29,13 @@ const longDay = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString
 // wrapper is measured (RiftCompare's lesson: a fixed viewBox squashes 11px
 // labels to half size on a phone). Pointer, touch and arrow keys move the
 // crosshair; Esc or leaving the chart clears it.
-export function LineChartInteractive({ data }: { data: ChartData }) {
+//
+// `live` (default true): the market the chart is for has a live price now. When
+// it has none (no listing there and no TCGplayer market price), the series' last
+// value is history, not a price anyone can buy at: the summary line calls it
+// "Last recorded price" with its day, in the muted colour, never "Now" in the
+// price accent (DECISIONS.md, "Last known price where a card has none").
+export function LineChartInteractive({ data, live = true }: { data: ChartData; live?: boolean }) {
   const { xs, series, ranges, height: H } = data;
   const [rangeKey, setRangeKey] = useState(ranges[ranges.length - 1].key);
   const [hover, setHover] = useState<number | null>(null);
@@ -75,8 +82,8 @@ export function LineChartInteractive({ data }: { data: ChartData }) {
       if (hi < 0 || v > head.ys[hi]!) hi = i;
       last = i;
     });
-    return { now: head.labels[last], low: head.labels[lo], high: head.labels[hi], change: seriesChange(head.ys) };
-  }, [head]);
+    return { now: head.labels[last], nowDay: view.xs[last] ?? null, low: head.labels[lo], high: head.labels[hi], change: seriesChange(head.ys) };
+  }, [head, view.xs]);
 
   const moveTo = (clientX: number) => {
     const el = wrap.current;
@@ -108,9 +115,16 @@ export function LineChartInteractive({ data }: { data: ChartData }) {
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         {stats && head ? (
           <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-            <span className="text-slate-300">
-              Now <span className="num font-bold text-accent">{stats.now}</span>
-            </span>
+            {live ? (
+              <span className="text-slate-300">
+                Now <span className="num font-bold text-accent">{stats.now}</span>
+              </span>
+            ) : (
+              <span className="text-slate-500" data-last-recorded="">
+                Last recorded price <span className="num font-semibold text-slate-400">{stats.now}</span>
+                {stats.nowDay ? ` · ${fixedShortDate(stats.nowDay)}` : null}
+              </span>
+            )}
             <span className="text-slate-500">
               Low <span className="num">{stats.low}</span>
             </span>

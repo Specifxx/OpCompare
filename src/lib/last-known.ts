@@ -14,6 +14,14 @@
 // reference is kept in USD and converted where it is shown, like the live one.
 // Days older than LAST_KNOWN_DAYS (the card page's chart window) are not used.
 //
+// ONE FIGURE WITH THE CARD PAGE. Where the card page's price tile shows a
+// sold-out store row as "Last seen" (lib/card-price-state.ts lastSeen), the
+// last known price IS that row: its price and the day it was last seen, which
+// is newer than any history point. The snapshot table and the QuickView pass
+// lastSeen's own answer in (lastKnownTupleOf), so a tile, its popup and its
+// card page can never show different figures. Only without such a row does the
+// newest history day stand in.
+//
 // NEVER A LIVE PRICE. A last known price is not a listing, not a reference and
 // not a price anyone can buy at: it is never in a sort, a filter, a ranking, an
 // index, movers, deals, Rising/Demand, alerts, baskets, collection values, an
@@ -24,7 +32,7 @@
 //
 // Pure and client-safe (the tiles and the card page's islands import it).
 import { COUNTRIES, MARKETS, type Country } from "./country";
-import { longDate } from "./format";
+import { fixedShortDate, longDate } from "./format";
 import { usdCentsToCountry } from "./fx";
 import { chartSeries, dayIso, dayNum, type Point } from "./history";
 import { headline, type Priced } from "./price";
@@ -45,16 +53,28 @@ export interface LastKnown {
   cents: number;
   /** YYYY-MM-DD: the newest history day that had it. */
   day: string;
-  /** "listing": that day's cheapest listing here; "reference": TCGplayer's market price that day, converted (≈). */
-  kind: "listing" | "reference";
+  /**
+   * "listing": that day's cheapest listing here; "reference": TCGplayer's market
+   * price that day, converted (≈); "seen": the sold-out store row the card page
+   * shows as "Last seen" here, on the day it was last seen.
+   */
+  kind: "listing" | "reference" | "seen";
 }
 
 /**
  * One market's entry in the snapshot (prices.json.gz `lastKnown`, an ADDITIVE
  * field): [YYYYMMDD, cents in the market's currency] for a listing,
- * [YYYYMMDD, USD cents, 1] for TCGplayer's market price, 0 for nothing.
+ * [YYYYMMDD, USD cents, 1] for TCGplayer's market price, [YYYYMMDD, cents, 2]
+ * for a sold-out store row last seen that day, 0 for nothing.
  */
-export type LastKnownTuple = 0 | [day: number, cents: number] | [day: number, usdCents: number, ref: 1];
+export type LastKnownTuple = 0 | [day: number, cents: number] | [day: number, usdCents: number, ref: 1] | [day: number, cents: number, seen: 2];
+
+/** A sold-out row as lib/card-price-state.ts lastSeen answers it (the card page's "Last seen"). */
+export interface SeenRow {
+  priceCents: number;
+  /** ISO timestamp: when it was last seen. */
+  at: string;
+}
 /** Card id → one tuple per market (MARKETS order); only cards with at least one entry. */
 export type LastKnownFile = Record<string, LastKnownTuple[]>;
 
@@ -76,11 +96,22 @@ export function lastKnownTuple(history: readonly HistoryDay[], country: Country)
   return best;
 }
 
+/**
+ * The last known price's tuple in `country`: the sold-out row the card page
+ * shows as "Last seen" there (pass lastSeen's answer for this card and market;
+ * never a second copy of that rule), else the newest priced history day.
+ */
+export function lastKnownTupleOf(seen: SeenRow | null | undefined, history: readonly HistoryDay[], country: Country): LastKnownTuple {
+  const day = seen ? dayNum(seen.at) : NaN;
+  if (seen && seen.priceCents > 0 && Number.isFinite(day)) return [day, seen.priceCents, 2];
+  return lastKnownTuple(history, country);
+}
+
 /** A snapshot tuple as shown in `country` (a reference converted with the live headline's rate). */
 export function decodeLastKnown(t: LastKnownTuple | undefined, country: Country): LastKnown | null {
   if (!t) return null;
   const ref = t[2] === 1;
-  return { cents: ref ? usdCentsToCountry(t[1], country) : t[1], day: dayIso(t[0]), kind: ref ? "reference" : "listing" };
+  return { cents: ref ? usdCentsToCountry(t[1], country) : t[1], day: dayIso(t[0]), kind: ref ? "reference" : t[2] === 2 ? "seen" : "listing" };
 }
 
 /** The last known price in `country` from a card's history (the card page and its quick view, which already hold it). */
@@ -115,22 +146,23 @@ export function needsLastKnown(c: LastKnownCandidate): boolean {
 /**
  * The snapshot's table, built once per import (lib/price-snapshot-build.ts):
  * for every card with no live headline in some market (no listing there and no
- * TCGplayer market price), that market's last known price from the card's own
- * series. `seriesOf` returns a product's raw history points (history bucket
- * files); `today` is YYYYMMDD.
+ * TCGplayer market price), that market's last known price: the sold-out row the
+ * card page shows as "Last seen" (`seenOf`: lastSeen over the very offers the
+ * page reads), else the newest day of the card's own series. `seriesOf` returns
+ * a product's raw history points (history bucket files); `today` is YYYYMMDD.
  */
 export function lastKnownTable(
   cards: Iterable<LastKnownCandidate>,
   seriesOf: (id: number) => Point[] | undefined,
   today: number,
+  seenOf: (id: number, country: Country) => SeenRow | null = () => null,
 ): LastKnownFile {
   const out: LastKnownFile = {};
   for (const c of cards) {
     if (!needsLastKnown(c)) continue;
     const open = MARKETS.map((_, i) => c.low[i] == null);
     const history = chartSeries(seriesOf(c.id), today, LAST_KNOWN_DAYS);
-    if (!history.length) continue;
-    const row = MARKETS.map((m, i): LastKnownTuple => (open[i] ? lastKnownTuple(history, m) : 0));
+    const row = MARKETS.map((m, i): LastKnownTuple => (open[i] ? lastKnownTupleOf(seenOf(c.id, m), history, m) : 0));
     if (row.some((t) => t !== 0)) out[String(c.id)] = row;
   }
   return out;
@@ -146,22 +178,9 @@ export function lastKnownFor(card: Priced & { lastKnown?: Partial<Record<Country
   return card.lastKnown?.[country] ?? null;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-/**
- * "12 Sep 2026" from YYYY-MM-DD: the site's day-month-year short date
- * (format.ts shortDate), spelled without the locale tables, because ICU
- * versions disagree on en-GB's September ("Sep" or "Sept") and a tile renders
- * on the server and again in the browser, which must agree.
- */
-export function lastKnownDate(day: string): string {
-  const [y, m, d] = day.split("-").map(Number);
-  return y && m >= 1 && m <= 12 && d ? `${d} ${MONTHS[m - 1]} ${y}` : day;
-}
-
-/** The fine print: "Last known price · 12 Sep 2026". */
+/** The fine print: "Last known price · 12 Sep 2026" (format.ts fixedShortDate: the server and the browser agree). */
 export function lastKnownLabel(lk: LastKnown): string {
-  return `Last known price · ${lastKnownDate(lk.day)}`;
+  return `Last known price · ${fixedShortDate(lk.day)}`;
 }
 
 /** The amount as text: "≈ A$12.34" for a reference, "A$12.34" for a listing (the live headline's own marks). */
@@ -171,6 +190,12 @@ export function lastKnownAmount(lk: LastKnown, money: (cents: number) => string)
 
 /** The hover text that says where the number came from. */
 export function lastKnownTitle(lk: LastKnown, country: Country): string {
-  const what = lk.kind === "reference" ? "TCGplayer's market price that day, converted at an approximate rate" : `the lowest listing we recorded in ${COUNTRIES[country].place} that day`;
+  const place = COUNTRIES[country].place;
+  const what =
+    lk.kind === "reference"
+      ? "TCGplayer's market price that day, converted at an approximate rate"
+      : lk.kind === "seen"
+        ? `a store's listing in ${place}, sold out when we last saw it`
+        : `the lowest listing we recorded in ${place} that day`;
   return `No live price right now. The last price we recorded, on ${longDate(lk.day)}: ${what}. Not a current price.`;
 }

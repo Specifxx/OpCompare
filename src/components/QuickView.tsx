@@ -397,6 +397,8 @@ export function QuickView({
                     { label: "Cheapest US listing", color: "#ff6b6b", points: (data.history ?? []).map((p) => ({ x: p.day, y: p.lowUsd })), dashed: true },
                   ]}
                   format={(v) => usd(Math.round(v))}
+                  // The chart is the US's: "Now" only while the US has a live price (an open row or TCGplayer's market price).
+                  live={data.marketUsd != null || data.markets.US.count > 0}
                   empty="Not enough price history yet — the chart draws once there are two days of prices."
                 />
               </div>

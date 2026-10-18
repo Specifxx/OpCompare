@@ -15,11 +15,13 @@
 //   sealed-soldout           the answers to the queries that scan every offer, computed
 //                            here in SQL so a request never has to
 // and, inside prices.json.gz, the additive `lastKnown` table (lib/last-known.ts):
-// for each card with no price in some market, the newest price its history holds
-// there. Built from the local history checkout in the import (HISTORY_DIR, which
-// recordHistory has just written); the eBay pass has no history checkout and does
-// not aggregate (the prices it publishes are the import's), so it carries the
-// previous snapshot's table over unchanged.
+// for each card with no price in some market, the sold-out row its card page
+// shows as "Last seen" there (lastSeen over the very rows written below, after
+// the page's own freshFromSnapshot), else the newest price its history holds.
+// Built in the import from those rows and the local history checkout
+// (HISTORY_DIR, which recordHistory has just written); the eBay pass has no
+// history checkout and does not aggregate (the prices it publishes are the
+// import's), so it carries the previous snapshot's table over unchanged.
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -27,6 +29,8 @@ import { pub } from "./pubdb";
 import { bucketOf, dayNum, type BucketFile } from "./history";
 import { historyDir, readBucket } from "./history-store";
 import { lastKnownTable, needsLastKnown, type LastKnownCandidate, type LastKnownFile } from "./last-known";
+import { lastSeen } from "./card-price-state";
+import { freshFromSnapshot } from "./price-snapshot-read";
 import { PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type PanelGraded, type PanelListing } from "./listing-panel";
 import { cardImage } from "./images";
 import { MARKETS, type Country } from "./country";
@@ -118,17 +122,10 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     ),
     sets: setLites,
   };
-  let lastKnown: LastKnownFile | null;
-  if (carried) {
-    lastKnown = carried.table;
-  } else {
-    const candidates = cardRows
-      .map((r): LastKnownCandidate => ({ id: r.id, marketUsd: r.marketUsd, low: [r.lowUS, r.lowAU, r.lowUK, r.lowSG, r.lowCA, r.lowEU] }))
-      .filter(needsLastKnown);
-    const series = historySeriesOf(candidates.map((c) => c.id));
-    lastKnown = lastKnownTable(candidates, (id) => series.get(id), dayNum(new Date(now).toISOString()));
-  }
-  log(`last known prices: ${lastKnown ? `${Object.keys(lastKnown).length} cards (${carried ? "carried over from the previous snapshot" : "from the history"})` : "none (no history here and none in the previous snapshot)"}`);
+  // Cards with no live headline somewhere: their last known prices are worked out once the offers are grouped (below).
+  const lastKnownCandidates = carried
+    ? []
+    : cardRows.map((r): LastKnownCandidate => ({ id: r.id, marketUsd: r.marketUsd, low: [r.lowUS, r.lowAU, r.lowUK, r.lowSG, r.lowCA, r.lowEU] })).filter(needsLastKnown);
   const prices = {
     ids: cardRows.map((r) => r.id),
     prices: cardRows.map((r): PriceTuple => {
@@ -137,8 +134,6 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
       return [r.marketUsd, low.every((x) => x == null) ? 0 : low, stores.every((x) => x === 0) ? 0 : stores, r.change7d, r.change30d, r.high90Usd];
     }),
     at: new Date(now).toISOString(),
-    // Additive: readers that predate it (the seed, the alerts, an older site) ignore it.
-    ...(lastKnown ? { lastKnown } : {}),
   };
   const cards: Record<string, SnapshotCard> = {};
   for (const r of cardRows) {
@@ -150,7 +145,6 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     };
   }
   sizes.core = await write("core.json.gz", core);
-  sizes.prices = await write("prices.json.gz", prices);
   sizes.cards = await write("cards.json.gz", cards);
 
   // ── Sealed ─────────────────────────────────────────────────────────────────
@@ -223,6 +217,28 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     sizes.offersLegacy = legacyBytes;
   }
   log(`snapshot offers: ${offerRows.length} rows read in ${byRange.size} range files${legacyShards() ? ` and ${SNAPSHOT_SHARDS} legacy shards` : ""}`);
+
+  // ── Last known prices (prices.json.gz `lastKnown`, additive) ──────────────
+  // The card page's own rule, on the rows it will read: freshFromSnapshot (a
+  // store row older than 72 hours is sold out, a stale eBay row is gone), then
+  // lastSeen. A market whose page shows "Last seen" gets that figure and day;
+  // the others get the newest priced history day.
+  let lastKnown: LastKnownFile | null;
+  if (carried) {
+    lastKnown = carried.table;
+  } else {
+    const series = historySeriesOf(lastKnownCandidates.map((c) => c.id));
+    const offersOf = new Map<number, OfferRow[]>();
+    const rowsOf = (id: number): OfferRow[] => {
+      let rows = offersOf.get(id);
+      if (!rows) offersOf.set(id, (rows = freshFromSnapshot(byRange.get(rangeOf(id))?.[id] ?? [], now)));
+      return rows;
+    };
+    lastKnown = lastKnownTable(lastKnownCandidates, (id) => series.get(id), dayNum(new Date(now).toISOString()), (id, m) => lastSeen(rowsOf(id), m));
+  }
+  log(`last known prices: ${lastKnown ? `${Object.keys(lastKnown).length} cards (${carried ? "carried over from the previous snapshot" : "from sold-out rows and the history"})` : "none (no history here and none in the previous snapshot)"}`);
+  // Additive: readers that predate it (the seed, the alerts, an older site) ignore it.
+  sizes.prices = await write("prices.json.gz", { ...prices, ...(lastKnown ? { lastKnown } : {}) });
 
   // ── eBay: the listings panel rows, the chase strip, the picks and the pass's memory ──
   const ebaySince = new Date(now - 72 * 3600 * 1000);

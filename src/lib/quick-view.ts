@@ -12,7 +12,8 @@ import { affiliateUrl, cardEbayQuery, ebaySearchUrl } from "./affiliate";
 import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
 import type { CardDetail, HistoryPoint, OfferRow } from "./data";
-import { lastKnownIn, type LastKnown } from "./last-known";
+import { lastSeen } from "./card-price-state";
+import { decodeLastKnown, lastKnownTupleOf, type LastKnown } from "./last-known";
 import { isEbaySource, sourceLabel } from "./stores";
 
 /** Rows per market in the popup; the full page lists the rest ("See all N"). */
@@ -103,9 +104,11 @@ export interface QuickViewPayload {
   history: HistoryPoint[];
   /**
    * DISPLAY ONLY (lib/last-known.ts): in each market with no open row and no
-   * TCGplayer market price, the newest price the card's history (its full year,
-   * as on the card page) holds there. Shown muted and labelled where the popup
-   * would say "—"; never a row, a buy button or "cheapest". Absent when empty.
+   * TCGplayer market price, the sold-out row the card page shows as "Last seen"
+   * there, else the newest price the card's history (its full year, as on the
+   * card page) holds there: the same figure as the tile. Shown muted and
+   * labelled where the popup would say "—"; never a row, a buy button or
+   * "cheapest". Absent when empty.
    */
   lastKnown?: Partial<Record<Country, LastKnown>>;
 }
@@ -141,7 +144,8 @@ export function quickViewPayload(
   for (const m of MARKETS) {
     const open = marketRows(c.offers, m);
     // Exactly where the popup would print "—" (no open row here, no TCGplayer market price).
-    const lk = !open.length && c.marketUsd == null ? lastKnownIn(history, m) : null;
+    // The offers are the card page's own (getCardDetail: fresh rules applied), so lastSeen answers as there.
+    const lk = !open.length && c.marketUsd == null ? decodeLastKnown(lastKnownTupleOf(lastSeen(c.offers, m), history, m), m) : null;
     if (lk) lastKnown[m] = lk;
     markets[m] = {
       count: open.length,

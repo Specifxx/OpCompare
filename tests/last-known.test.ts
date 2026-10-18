@@ -15,17 +15,21 @@ import { usdCentsToCountry } from "../src/lib/fx";
 import { addDays, dayNum, type Point } from "../src/lib/history";
 import {
   LAST_KNOWN_DAYS,
+  decodeLastKnown,
   decodeLastKnownRow,
   lastKnownFor,
   lastKnownIn,
   lastKnownLabel,
   lastKnownTable,
   lastKnownTuple,
+  lastKnownTupleOf,
   needsLastKnown,
   type HistoryDay,
   type LastKnown,
 } from "../src/lib/last-known";
 import { headline, sortPrice } from "../src/lib/price";
+import { lastSeen } from "../src/lib/card-price-state";
+import { freshFromSnapshot } from "../src/lib/price-snapshot-read";
 import { parseBrowse, runBrowse } from "../src/lib/browse";
 import { guideStats, sortGuide } from "../src/lib/price-guide-query";
 import { quickViewPayload } from "../src/lib/quick-view";
@@ -104,6 +108,61 @@ test("the table fills only markets with no live headline, from each card's OWN s
   assert.deepEqual(row, { US: { cents: 500, day: "2026-10-10", kind: "listing" } });
   assert.equal(decodeLastKnownRow(undefined), undefined);
   assert.equal(decodeLastKnownRow([0, 0, 0, 0, 0, 0]), undefined);
+});
+
+// ── One figure with the card page: its "Last seen" row beats an older history point ──
+const ago = (h: number) => new Date(Date.now() - h * 3600e3).toISOString();
+const row = (o: Partial<OfferRow> & Pick<OfferRow, "source" | "market" | "priceCents">): OfferRow => ({
+  currency: { US: "USD", AU: "AUD", UK: "GBP", SG: "SGD", CA: "CAD", EU: "EUR" }[o.market as Country],
+  url: `https://s.test/${o.source}`,
+  inStock: false,
+  condition: null,
+  shippingCents: null,
+  updatedAt: ago(2),
+  ...o,
+});
+const isoDay = (iso: string) => iso.slice(0, 10);
+
+test("a sold-out store row from yesterday (the card page's 'Last seen') beats an older history point: same figure, its own day", () => {
+  const yesterday = ago(24);
+  const offers = [
+    row({ source: "store:a", market: "US", priceCents: 2950, updatedAt: yesterday }), // the page's "Last seen" in the US
+    row({ source: "store:b", market: "US", priceCents: 3100, updatedAt: ago(30) }), // older sold-out row: not the newest
+    row({ source: "ebay", market: "AU", priceCents: 4000, updatedAt: yesterday }), // eBay "sold out" means nothing
+    row({ source: "store:c", market: "UK", priceCents: 1800, currency: "USD", updatedAt: yesterday }), // not in the UK's currency
+  ];
+  const history = [pt(addDays(TODAY, -8), null, 5840, 9000, 4400)];
+  const seenOf = (_id: number, m: Country) => lastSeen(offers, m);
+  const table = lastKnownTable([{ id: 9, marketUsd: null, low: MARKETS.map(() => null) }], () => history, TODAY, seenOf);
+  const [us, au, uk] = table["9"];
+  assert.deepEqual(us, [dayNum(yesterday), 2950, 2], "the US gets the page's Last seen row, not the history's US$58.40");
+  assert.deepEqual(au, [addDays(TODAY, -8), 9000], "no sold-out store row in Australia: the newest history day stands in");
+  assert.deepEqual(uk, [addDays(TODAY, -8), 4400], "a row in another currency is not the UK's Last seen");
+  const lk = decodeLastKnown(us, "US")!;
+  assert.deepEqual(lk, { cents: 2950, day: isoDay(yesterday), kind: "seen" });
+  assert.match(lastKnownLabel(lk), /^Last known price · \d{1,2} [A-Z][a-z]{2} \d{4}$/);
+  // The card page's own rule, unchanged: lastSeen picks the newest sold-out store row in the market's currency.
+  assert.deepEqual(lastSeen(offers, "US"), { priceCents: 2950, at: yesterday, source: "store:a" });
+  // A store row still "in stock" but 80 hours old is sold out on the page (freshFromSnapshot), so it counts here too.
+  const stale = freshFromSnapshot([row({ source: "store:d", market: "CA", priceCents: 1234, inStock: true, updatedAt: ago(80) })]);
+  const caTuple = lastKnownTupleOf(lastSeen(stale, "CA"), [], "CA");
+  assert.deepEqual(caTuple === 0 ? null : caTuple.slice(1), [1234, 2]);
+  // Without a seen row or history: nothing.
+  assert.equal(lastKnownTupleOf(null, [], "US"), 0);
+});
+
+test("the builder answers with the card page's own lastSeen, over the rows it writes, after the page's freshFromSnapshot", () => {
+  const build = stripComments(read("src/lib/price-snapshot-build.ts"));
+  assert.match(build, /import \{ lastSeen \} from "\.\/card-price-state";/);
+  assert.match(build, /import \{ freshFromSnapshot \} from "\.\/price-snapshot-read";/);
+  assert.match(build, /freshFromSnapshot\(byRange\.get\(rangeOf\(id\)\)\?\.\[id\] \?\? \[\], now\)/);
+  assert.match(build, /\(id, m\) => lastSeen\(rowsOf\(id\), m\)/);
+  // The card page still answers "Last seen" from lastSeen itself, and only falls back to history without it.
+  const page = stripComments(read("src/app/card/[slug]/page.tsx"));
+  assert.match(page, /const seen = h\.kind === "none" \? lastSeen\(card\.offers, m\) : null;/);
+  // No second copy of the rule: lastSeen is defined once.
+  const defs = ["src/lib/card-price-state.ts", "src/lib/last-known.ts", "src/lib/price-snapshot-build.ts", "src/lib/quick-view.ts"].filter((f) => /function lastSeen\b/.test(read(f)));
+  assert.deepEqual(defs, ["src/lib/card-price-state.ts"]);
 });
 
 // ── Shown only where there is no price ───────────────────────────────────────
@@ -222,7 +281,7 @@ test("the share images never see it: their catalogue is decoded without it", () 
 
 test("the snapshot: an additive field of prices.json.gz, from the import's history, carried over by the eBay pass", () => {
   const build = read("src/lib/price-snapshot-build.ts");
-  assert.match(build, /\.\.\.\(lastKnown \? \{ lastKnown \} : \{\}\),/);
+  assert.match(build, /write\("prices\.json\.gz", \{ \.\.\.prices, \.\.\.\(lastKnown \? \{ lastKnown \} : \{\}\) \}\)/);
   assert.match(build, /const carried = hasLocalHistory\(\) \? null : await previousLastKnown\(log\);\n\s+await fs\.rm\(outDir/, "the previous table is read before the output is cleared");
   assert.match(build, /snapshotFile<\{ lastKnown\?: LastKnownFile \}>\("prices\.json\.gz"\)/);
   // The loaders' type keeps the field optional (a snapshot written before it still reads).
@@ -240,7 +299,10 @@ test("drawn muted and labelled in words: never the price accent, a link, a buy b
   assert.match(listing, /title="No live price right now\. The last price we recorded, on 12 September 2026: the lowest listing we recorded in Australia that day\. Not a current price\."/);
   const ref = renderToStaticMarkup(React.createElement(LastKnownPrice, { lk: lk(990, "2026-10-01", "reference"), country: "UK", noteFirst: true }));
   assert.match(ref, /Last known price · 1 Oct 2026<\/span><span[^>]*>≈ £9\.90</, "a reference keeps its ≈; the note can sit above, as the tiles' labels do");
-  for (const html of [listing, ref]) {
+  const seen = renderToStaticMarkup(React.createElement(LastKnownPrice, { lk: lk(2950, "2026-10-17", "seen"), country: "US" }));
+  assert.match(seen, />US\$29\.50</);
+  assert.match(seen, /a store&#x27;s listing in the United States, sold out when we last saw it\. Not a current price\./);
+  for (const html of [listing, ref, seen]) {
     assert.doesNotMatch(html, /text-accent|<a\b|<button|href=|[Cc]heapest|\bfrom\b/);
   }
   const { PriceLine } = await import("../src/components/CardTile");
@@ -262,14 +324,39 @@ test("the quick view carries it only for markets with no open row and no TCGplay
     cardType: "Character", cost: 3, power: 5000, counter: null, life: null, attribute: null, subtypes: [], effect: null, finish: null, hasImage: false,
     tcgplayerUrl: "https://www.tcgplayer.com/product/7", marketUsd: null as number | null, change7d: null, change30d: null,
     set: { id: 1, slug: "op01", code: "OP01", name: "Romance Dawn", kind: "booster", releasedOn: "2022-12-02", cardCount: 1, sealedCount: 0 },
-    offers: [offer("US", 700)],
+    offers: [offer("US", 700), { ...offer("AU", 950), inStock: false, updatedAt: new Date(Date.now() - 24 * 3600e3).toISOString() }],
   };
   const history = [{ day: "2026-10-05", marketUsd: 650, lowUsd: 600, lows: [600, 1100, null, null, null, null] }];
   const p = quickViewPayload(detail, "2026-10-18", history);
   assert.equal(p.lastKnown?.US, undefined, "the US has an open row");
-  assert.deepEqual(p.lastKnown?.AU, { cents: 1100, day: "2026-10-05", kind: "listing" });
+  assert.deepEqual(p.lastKnown?.AU, { cents: 950, day: new Date(Date.now() - 24 * 3600e3).toISOString().slice(0, 10), kind: "seen" }, "the card page's Last seen row beats the AU history point (A$11.00)");
   assert.deepEqual(p.lastKnown?.UK, { cents: usdCentsToCountry(650, "UK"), day: "2026-10-05", kind: "reference" });
   assert.equal(quickViewPayload({ ...detail, marketUsd: 640 }, "2026-10-18", history).lastKnown, undefined, "a live TCGplayer price fills every market");
-  assert.equal(quickViewPayload(detail, "2026-10-18", []).lastKnown, undefined);
+  assert.deepEqual(Object.keys(quickViewPayload(detail, "2026-10-18", []).lastKnown ?? {}), ["AU"], "without history, only the sold-out row's market");
+  assert.equal(quickViewPayload({ ...detail, offers: [offer("US", 700)] }, "2026-10-18", []).lastKnown, undefined, "no sold-out row and no history: nothing");
   void dayNum;
+});
+
+// ── The chart's summary line: "Now" only where the market has a live price ──
+test("the price-history chart says 'Last recorded price', muted and dated, where the market has no live price; 'Now' otherwise", async () => {
+  const { LineChartInteractive } = await import("../src/components/LineChartInteractive");
+  const { buildChartData } = await import("../src/components/LineChart");
+  const data = buildChartData(
+    [{ label: "Cheapest US listing", color: "#f00", points: [{ x: "2026-10-06", y: 6200 }, { x: "2026-10-10", y: 5840 }, { x: "2026-10-12", y: null }] }],
+    (v) => `US$${(v / 100).toFixed(2)}`,
+  )!;
+  assert.ok(data);
+  const dead = renderToStaticMarkup(React.createElement(LineChartInteractive, { data, live: false })).replace(/<!-- -->/g, "");
+  assert.match(dead, /Last recorded price <span class="num font-semibold text-slate-400">US\$58\.40<\/span> · 10 Oct 2026/);
+  assert.doesNotMatch(dead, /\bNow\b/);
+  assert.doesNotMatch(dead.slice(0, dead.indexOf("Low")), /text-accent/, "never the price accent");
+  const liveHtml = renderToStaticMarkup(React.createElement(LineChartInteractive, { data })).replace(/<!-- -->/g, "");
+  assert.match(liveHtml, /Now <span class="num font-bold text-accent">US\$58\.40<\/span>/, "unchanged where a live price exists (the default)");
+  assert.doesNotMatch(liveHtml, /Last recorded/);
+  // Wired per market on the card page (a listing or a TCGplayer price is live), and for the QuickView's US chart.
+  const page = stripComments(read("src/app/card/[slug]/page.tsx"));
+  assert.match(page, /const liveIn = perMarket\(\(m\) => headlineIn\(m\)\.kind !== "none"\);/);
+  assert.match(page, /<MarketHistory history=\{historyTuples\} live=\{liveIn\} \/>/);
+  assert.match(read("src/components/card/CardMarket.tsx"), /<LineChartInteractive key=\{country\} data=\{data\} live=\{pickMarket\(live, country\)\} \/>/);
+  assert.match(read("src/components/QuickView.tsx"), /live=\{data\.marketUsd != null \|\| data\.markets\.US\.count > 0\}/);
 });

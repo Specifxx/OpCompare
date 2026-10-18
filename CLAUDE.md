@@ -166,8 +166,11 @@ through `src/lib/inbox.ts`. Share images read only `src/lib/data.ts` loaders
 
 Where a card has no price in a market, tiles, the price guide, the QuickView and
 the card page's tile show its last known price (`src/lib/last-known.ts`): the
-newest day of that printing's own history with a headline price there, muted
-and labelled "Last known price · <date>". It lives only in fields named
+sold-out row the card page shows as "Last seen" there (its own `lastSeen`, never
+a second copy), else the newest day of that printing's own history with a
+headline price there, muted and labelled "Last known price · <date>". The card
+page's price chart says "Last recorded price", muted, instead of "Now" in a
+market with no live price. It lives only in fields named
 `lastKnown` (the snapshot's `prices.json.gz`, `CardLite`, the QuickView payload,
 `MarketTile`) and is never read by a sort, filter, ranking, index, movers,
 deals, Rising/Demand, alerts, baskets, collection values, an eBay reference, a
