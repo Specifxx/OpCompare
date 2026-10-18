@@ -6,7 +6,9 @@ import type { Country } from "@/lib/country";
 import type { CardLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { headline } from "@/lib/price";
+import { lastKnownFor } from "@/lib/last-known";
 import { CardImage } from "./CardImage";
+import { LastKnownPrice } from "./LastKnownPrice";
 import { PrintingBadge, rarityColor } from "./Badge";
 import { useCountry } from "./CountryProvider";
 import { useQuickView } from "./QuickViewProvider";
@@ -14,7 +16,7 @@ import { PriceWatchButton } from "./PriceWatchButton";
 
 export type CardTileCard = Pick<
   CardLite,
-  "id" | "slug" | "name" | "number" | "rarity" | "variant" | "printing" | "hasImage" | "marketUsd" | "low" | "stores"
+  "id" | "slug" | "name" | "number" | "rarity" | "variant" | "printing" | "hasImage" | "marketUsd" | "low" | "stores" | "lastKnown"
 >;
 
 // RiftCompare's CardTile, markup and classes verbatim: a cv-auto card-surface
@@ -34,6 +36,8 @@ export function CardTile({ card, setCode, country: fixed, priority = false }: { 
   const { country: ctx } = useCountry();
   const country = fixed ?? ctx;
   const h = headline(card, country);
+  // Where it would say "No price yet": the last known price, muted and dated (display only).
+  const lk = lastKnownFor(card, country);
   const tint = rarityColor(card.rarity);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const label = `${card.name}${card.variant ? ` (${card.variant})` : ""}`;
@@ -97,6 +101,8 @@ export function CardTile({ card, setCode, country: fixed, priority = false }: { 
                   <div className="text-[11px] text-slate-500">TCGplayer market</div>
                   <div className="truncate text-base font-semibold leading-tight text-slate-300 sm:text-lg">≈ {money(h.cents, country)}</div>
                 </>
+              ) : lk ? (
+                <LastKnownPrice lk={lk} country={country} noteFirst />
               ) : (
                 <div className="text-sm font-medium text-slate-500">No price yet</div>
               )}

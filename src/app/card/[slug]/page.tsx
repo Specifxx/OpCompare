@@ -70,6 +70,7 @@ import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
 import { buildCardFaqs, cardMetaDescription, cardTitle } from "@/lib/card-seo";
 import { cheaperAlternatives, priceToolChips, sameCharacter, sameNameCount } from "@/lib/card-related";
 import { elsewhereLine, lastSeen, priceState } from "@/lib/card-price-state";
+import { lastKnownIn } from "@/lib/last-known";
 import { marketPriceListSentence, compareMarkets } from "@/lib/market-comparison";
 import { KEYWORD_BY_SLUG, cardKeywords } from "@/lib/keywords";
 import { marketRows } from "@/lib/quick-view";
@@ -221,6 +222,11 @@ export default async function CardPage({ params }: Props) {
       kind: h.kind,
       cents: h.cents,
       seen: seen ? { cents: seen.priceCents, at: seen.at } : null,
+      // Where the tile would say "—": the newest price this printing's own history
+      // holds for this market (the year the chart below already read), same series
+      // and currency as the headline. Shown muted and labelled; nothing else on the
+      // page (JSON-LD, metadata, FAQ, prose) reads it.
+      lastKnown: h.kind === "none" && !seen ? lastKnownIn(history, m) : null,
       // "N stores" counts real stores only; the TCGplayer and eBay rows are listings, not stores.
       stores: inMarketOf(m).filter((o) => isStoreSource(o.source)).length,
       elsewhere: elsewhereLine(stateIn(m)),

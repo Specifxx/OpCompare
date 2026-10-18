@@ -18,6 +18,7 @@ import { TcgMarketPrice } from "./TcgMarketPrice";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { PriceDropAlertCta } from "./PriceDropAlertCta";
 import { AddToCollectionButton } from "./AddToCollectionButton";
+import { LastKnownPrice } from "./LastKnownPrice";
 
 // The QuickView panel (RiftCompare's QuickViewModal, adapted): art and the
 // "Open full page" link on the left; on the right the printing, the visitor's
@@ -99,6 +100,8 @@ export function QuickView({
   const href = `/card/${slug}`;
   const m = data?.markets[country];
   const best = m?.rows[0] ?? null;
+  // Only where the price line would say "—" (no open row here, no TCGplayer market price).
+  const lastKnown = !best && data?.marketUsd == null ? (data?.lastKnown?.[country] ?? null) : null;
   const name = data ? display(data) : label;
   const ebay = ebayLabel(country);
 
@@ -198,21 +201,28 @@ export function QuickView({
               {/* The visitor's market: the cheapest open listing and its store,
                   or TCGplayer's market price marked ≈ when no store has it. */}
               <div className="mt-3 flex flex-wrap items-end justify-between gap-3 rounded-lg bg-ink-950/50 p-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
-                  <p className="num text-2xl font-extrabold text-accent">
-                    {best ? money(best.priceCents, country) : data.marketUsd != null ? `≈ ${money(usdCentsToCountry(data.marketUsd, country), country)}` : "—"}
-                  </p>
-                  <p className="truncate text-xs text-slate-400">
-                    {best
-                      ? `at ${best.label} · ${m.count} ${m.count === 1 ? "listing" : "listings"} in stock`
-                      : data.marketUsd != null
-                        ? country === "US"
-                          ? "TCGplayer market price — no store we track has it in stock"
-                          : "TCGplayer market price, converted — no store we track has it"
-                        : "No price yet"}
-                  </p>
-                </div>
+                {lastKnown ? (
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">No live price · {co.place}</p>
+                    <LastKnownPrice lk={lastKnown} country={country} amountClass="text-2xl font-semibold" noteClass="text-xs" />
+                  </div>
+                ) : (
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
+                    <p className="num text-2xl font-extrabold text-accent">
+                      {best ? money(best.priceCents, country) : data.marketUsd != null ? `≈ ${money(usdCentsToCountry(data.marketUsd, country), country)}` : "—"}
+                    </p>
+                    <p className="truncate text-xs text-slate-400">
+                      {best
+                        ? `at ${best.label} · ${m.count} ${m.count === 1 ? "listing" : "listings"} in stock`
+                        : data.marketUsd != null
+                          ? country === "US"
+                            ? "TCGplayer market price — no store we track has it in stock"
+                            : "TCGplayer market price, converted — no store we track has it"
+                          : "No price yet"}
+                    </p>
+                  </div>
+                )}
                 <div className="text-right">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">7 days</p>
                   <Delta v={data.change7d} className="text-sm" />

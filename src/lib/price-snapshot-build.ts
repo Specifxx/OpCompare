@@ -14,9 +14,19 @@
 //   deal-inputs, store-prices/<market>, store-stats, store-listings/<market>,
 //   sealed-soldout           the answers to the queries that scan every offer, computed
 //                            here in SQL so a request never has to
+// and, inside prices.json.gz, the additive `lastKnown` table (lib/last-known.ts):
+// for each card with no price in some market, the newest price its history holds
+// there. Built from the local history checkout in the import (HISTORY_DIR, which
+// recordHistory has just written); the eBay pass has no history checkout and does
+// not aggregate (the prices it publishes are the import's), so it carries the
+// previous snapshot's table over unchanged.
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { pub } from "./pubdb";
+import { bucketOf, dayNum, type BucketFile } from "./history";
+import { historyDir, readBucket } from "./history-store";
+import { lastKnownTable, needsLastKnown, type LastKnownCandidate, type LastKnownFile } from "./last-known";
 import { PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type PanelGraded, type PanelListing } from "./listing-panel";
 import { cardImage } from "./images";
 import { MARKETS, type Country } from "./country";
@@ -30,6 +40,7 @@ import {
   pack,
   rangeOf,
   shardOf,
+  snapshotFile,
   type SnapshotMeta,
 } from "./price-snapshot";
 import type { CardDetail, CoreTuple, OfferRow, PriceTuple, SealedLite, SiteStats, StoreListing, StoreStat } from "./data";
@@ -66,6 +77,8 @@ export interface BuildOptions {
 export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise<SnapshotMeta> {
   const log = opts.log ?? (() => {});
   const now = Date.now();
+  // Before the output directory is cleared (a local reader may point at it).
+  const carried = hasLocalHistory() ? null : await previousLastKnown(log);
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(path.join(outDir, "offers"), { recursive: true });
   await fs.mkdir(path.join(outDir, "o"), { recursive: true });
@@ -105,6 +118,17 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     ),
     sets: setLites,
   };
+  let lastKnown: LastKnownFile | null;
+  if (carried) {
+    lastKnown = carried.table;
+  } else {
+    const candidates = cardRows
+      .map((r): LastKnownCandidate => ({ id: r.id, marketUsd: r.marketUsd, low: [r.lowUS, r.lowAU, r.lowUK, r.lowSG, r.lowCA, r.lowEU] }))
+      .filter(needsLastKnown);
+    const series = historySeriesOf(candidates.map((c) => c.id));
+    lastKnown = lastKnownTable(candidates, (id) => series.get(id), dayNum(new Date(now).toISOString()));
+  }
+  log(`last known prices: ${lastKnown ? `${Object.keys(lastKnown).length} cards (${carried ? "carried over from the previous snapshot" : "from the history"})` : "none (no history here and none in the previous snapshot)"}`);
   const prices = {
     ids: cardRows.map((r) => r.id),
     prices: cardRows.map((r): PriceTuple => {
@@ -113,6 +137,8 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
       return [r.marketUsd, low.every((x) => x == null) ? 0 : low, stores.every((x) => x === 0) ? 0 : stores, r.change7d, r.change30d, r.high90Usd];
     }),
     at: new Date(now).toISOString(),
+    // Additive: readers that predate it (the seed, the alerts, an older site) ignore it.
+    ...(lastKnown ? { lastKnown } : {}),
   };
   const cards: Record<string, SnapshotCard> = {};
   for (const r of cardRows) {
@@ -267,6 +293,39 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
   log(`snapshot bytes: ${Object.entries(sizes).map(([k, v]) => `${k} ${(v / 1024).toFixed(0)} KB`).join(", ")}`);
   void RANGE_SIZE;
   return meta;
+}
+
+// ── Last known prices (lib/last-known.ts) ────────────────────────────────────
+// Built from the local history checkout when there is one (the import:
+// HISTORY_DIR holds the bucket files recordHistory has just written), else the
+// table of the snapshot being replaced is carried over (the eBay pass, which has
+// no history checkout and does not aggregate, so the prices it publishes are the
+// import's). Never fails the build: without either, the snapshot has none.
+const hasLocalHistory = () => existsSync(path.join(historyDir(), "products"));
+
+/** The raw series of these products, one bucket file read at a time (only their series are kept). */
+function historySeriesOf(ids: number[]): Map<number, BucketFile["p"][string]> {
+  const byBucket = new Map<string, number[]>();
+  for (const id of ids) (byBucket.get(bucketOf(id)) ?? byBucket.set(bucketOf(id), []).get(bucketOf(id))!).push(id);
+  const out = new Map<number, BucketFile["p"][string]>();
+  for (const [b, pids] of byBucket) {
+    const f = readBucket(b);
+    for (const id of pids) {
+      const series = f.p[String(id)];
+      if (series) out.set(id, series);
+    }
+  }
+  return out;
+}
+
+async function previousLastKnown(log: (m: string) => void): Promise<{ table: LastKnownFile | null }> {
+  try {
+    const prev = await snapshotFile<{ lastKnown?: LastKnownFile }>("prices.json.gz");
+    return { table: prev?.lastKnown ?? null };
+  } catch (e) {
+    log(`last known prices: the previous snapshot could not be read (${(e as Error).message})`);
+    return { table: null };
+  }
 }
 
 type Writer = (rel: string, value: unknown) => Promise<number>;
