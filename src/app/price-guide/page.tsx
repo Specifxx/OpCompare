@@ -21,6 +21,8 @@ import { int, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { cardImage } from "@/lib/images";
 import { headline } from "@/lib/price";
+import { lastKnownFor } from "@/lib/last-known";
+import { LastKnownPrice } from "@/components/LastKnownPrice";
 import { median, releasedSets } from "@/lib/selectors";
 import { breadcrumbLd, faqLd, itemListLd } from "@/lib/jsonld";
 import { guidesForCatalogue } from "@/lib/content/catalogue-guides";
@@ -238,6 +240,8 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
             <tbody>
               {slice.map((x) => {
                 const h = headline(x, country);
+                // Where the cell would say "—": the last known price, muted and dated. The sort and filters never see it (sortPrice).
+                const lk = lastKnownFor(x, country);
                 return (
                   <tr key={x.id}>
                     <td>
@@ -286,6 +290,10 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
                       ) : h.kind === "reference" ? (
                         <span className="text-slate-400">
                           ≈ {money(h.cents, country)}
+                        </span>
+                      ) : lk ? (
+                        <span className="block whitespace-normal">
+                          <LastKnownPrice lk={lk} country={country} amountClass="text-sm font-normal" noteClass="text-[10px]" />
                         </span>
                       ) : (
                         "—"

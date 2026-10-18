@@ -10,6 +10,7 @@ import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
 import { SNAPSHOT_FRESH_MS } from "./price-snapshot";
+import { decodeLastKnownRow, type LastKnown, type LastKnownFile } from "./last-known";
 import {
   snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
   snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreListings, snapStorePrices, snapStoreStats,
@@ -82,6 +83,14 @@ export interface CardLite {
   change7d: number | null;
   change30d: number | null;
   high90Usd: number | null;
+  /**
+   * DISPLAY ONLY (lib/last-known.ts): in a market where this card has no price,
+   * the newest price its published history holds there. Shown muted and labelled
+   * in place of "No price yet"; never a price for sorting, filtering, ranking,
+   * alerts, baskets, values, JSON-LD, metadata or share images (those read `low`
+   * and `marketUsd`). Absent on almost every card.
+   */
+  lastKnown?: Partial<Record<Country, LastKnown>>;
 }
 
 export interface SetLite {
@@ -96,7 +105,8 @@ export interface SetLite {
 }
 
 type CoreFile = { cards: CoreTuple[]; sets: SetLite[] };
-type PricesFile = { ids: number[]; prices: PriceTuple[]; at: string };
+// `lastKnown`: an additive field (2026-10-18), absent from older snapshots (lib/last-known.ts).
+type PricesFile = { ids: number[]; prices: PriceTuple[]; at: string; lastKnown?: LastKnownFile };
 
 async function readCore(): Promise<CoreFile> {
   const c = await snapCore();
@@ -114,7 +124,7 @@ const loadPrices = unstable_cache(
 
 const NO_PRICE: PriceTuple = [null, 0, 0, null, null, null];
 
-function decode(t: CoreTuple, p: PriceTuple, setCode: string | undefined): CardLite {
+function decode(t: CoreTuple, p: PriceTuple, setCode: string | undefined, lastKnown?: CardLite["lastKnown"]): CardLite {
   const low = {} as Record<Country, number | null>;
   const stores = {} as Record<Country, number>;
   MARKETS.forEach((m, i) => {
@@ -126,6 +136,7 @@ function decode(t: CoreTuple, p: PriceTuple, setCode: string | undefined): CardL
     rarity: t[5], variant: t[6], printing: t[7], colors: t[8] ? t[8].split(";") : [], cardType: t[9], cost: t[10],
     power: t[11], counter: t[12], life: t[13], hasImage: t[14] === 1,
     marketUsd: p[0], low, stores, change7d: p[3], change30d: p[4], high90Usd: p[5],
+    ...(lastKnown ? { lastKnown } : {}),
   };
 }
 
@@ -145,11 +156,13 @@ export interface Catalog {
   pricesAt: string;
 }
 
-function catalogOf(core: CoreFile, pr: PricesFile): Catalog {
+/** `withLastKnown`: the pages' catalogue only; the share images never see a last known price. */
+function catalogOf(core: CoreFile, pr: PricesFile, withLastKnown: boolean): Catalog {
   const codeOf = new Map(core.sets.map((s) => [s.id, s.code]));
   const priceById = new Map<number, PriceTuple>();
   pr.ids.forEach((id, i) => priceById.set(id, pr.prices[i]));
-  const cards = core.cards.map((t) => decode(t, priceById.get(t[0]) ?? NO_PRICE, codeOf.get(t[4])));
+  const lk = withLastKnown ? pr.lastKnown : undefined;
+  const cards = core.cards.map((t) => decode(t, priceById.get(t[0]) ?? NO_PRICE, codeOf.get(t[4]), lk ? decodeLastKnownRow(lk[String(t[0])]) : undefined));
   return {
     cards,
     sets: core.sets,
@@ -164,7 +177,7 @@ function catalogOf(core: CoreFile, pr: PricesFile): Catalog {
 export async function getCatalog(): Promise<Catalog> {
   if (memo && Date.now() - memo.at < MEMO_MS) return memo.value;
   const [core, pr] = await Promise.all([loadCore(), loadPrices()]);
-  const value = catalogOf(core, pr);
+  const value = catalogOf(core, pr, true);
   memo = { at: Date.now(), value };
   return value;
 }
@@ -189,7 +202,7 @@ const loadPricesForImages = unstable_cache(async (): Promise<PricesFile> => snap
 export async function getCatalogForImages(): Promise<Catalog> {
   if (imageMemo && Date.now() - imageMemo.at < MEMO_MS) return imageMemo.value;
   const [core, pr] = await Promise.all([loadCoreForImages(), loadPricesForImages()]);
-  const value = catalogOf(core, pr);
+  const value = catalogOf(core, pr, false);
   imageMemo = { at: Date.now(), value };
   return value;
 }

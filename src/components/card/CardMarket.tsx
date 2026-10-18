@@ -24,6 +24,7 @@ import { visitorHistory } from "@/lib/price-history-view";
 import type { BoardModel } from "@/lib/board-model";
 import type { CardPriceState } from "@/lib/card-price-state";
 import type { HistoryPoint } from "@/lib/data";
+import type { LastKnown } from "@/lib/last-known";
 import type { EbayPanelData } from "@/lib/listing-panel";
 import type { BuyRow } from "@/lib/quick-view";
 import { Ago } from "../Ago";
@@ -34,6 +35,7 @@ import { CardTopBuy } from "../CardTopBuy";
 import { useCountry } from "../CountryProvider";
 import { EbayCardBanner } from "../EbayCardBanner";
 import { EbayCardPanelLive } from "../EbayCardPanelLive";
+import { LastKnownPrice } from "../LastKnownPrice";
 import { buildChartData, ChartEmpty } from "../LineChart";
 import { LineChartInteractive } from "../LineChartInteractive";
 import { PriceBoardView } from "../PriceBoardView";
@@ -49,6 +51,12 @@ export interface MarketTile {
   cents: number | null;
   /** The newest sold-out price we saw here, shown when there is no price at all. */
   seen: { cents: number; at: string } | null;
+  /**
+   * No price and no sold-out row here: the newest price this printing's history
+   * holds for this market (lib/last-known.ts), drawn muted and labelled, never as
+   * the cheapest. Display only: the JSON-LD, metadata and FAQ never read it.
+   */
+  lastKnown: LastKnown | null;
   /** Distinct stores with a copy in stock here. */
   stores: number;
   /** "3 stores in other markets". */
@@ -60,19 +68,30 @@ export function MarketTiles({ tiles, now }: { tiles: PerMarket<MarketTile>; now:
   const country = useMarket();
   const co = COUNTRIES[country];
   const t = pickMarket(tiles, country);
+  // Only where the tile would say "—": no listing, no reference, no sold-out row.
+  const lk = t.kind === "none" && !t.seen ? t.lastKnown : null;
   return (
     <>
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
-        <p className="num mt-1 text-xl font-bold text-accent">
-          {t.kind === "listing" ? money(t.cents, country) : t.kind === "reference" ? `≈ ${money(t.cents, country)}` : t.seen ? money(t.seen.cents, country) : "—"}
-        </p>
-        {t.kind === "none" && t.seen ? (
-          <p className="mt-0.5 text-[11px] text-slate-500">
-            Last seen <Ago at={t.seen.at} now={now} />
+      {lk ? (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">No live price · {co.place}</p>
+          <div className="mt-1">
+            <LastKnownPrice lk={lk} country={country} amountClass="text-xl font-semibold" noteClass="mt-0.5 text-[11px]" />
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest · {co.place}</p>
+          <p className="num mt-1 text-xl font-bold text-accent">
+            {t.kind === "listing" ? money(t.cents, country) : t.kind === "reference" ? `≈ ${money(t.cents, country)}` : t.seen ? money(t.seen.cents, country) : "—"}
           </p>
-        ) : null}
-      </div>
+          {t.kind === "none" && t.seen ? (
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              Last seen <Ago at={t.seen.at} now={now} />
+            </p>
+          ) : null}
+        </div>
+      )}
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">In stock at · {co.code}</p>
         <p className="num mt-1 text-xl font-bold text-white">
@@ -150,8 +169,13 @@ export function MarketReference({
 /** A day of the card's history: [day, TCGplayer market (USD cents), each market's low in MARKETS order]. */
 export type HistoryTuple = [day: string, marketUsd: number | null, lows: (number | null)[]];
 
-/** The price-history section in the visitor's market and currency (lib/price-history-view.ts). */
-export function MarketHistory({ history }: { history: HistoryTuple[] }) {
+/**
+ * The price-history section in the visitor's market and currency
+ * (lib/price-history-view.ts). `live`: each market has a live price (a listing or
+ * TCGplayer's market price); where it has none the summary line says "Last
+ * recorded price", muted, not "Now".
+ */
+export function MarketHistory({ history, live }: { history: HistoryTuple[]; live: PerMarket<boolean> }) {
   const country = useMarket();
   const co = COUNTRIES[country];
   const points = useMemo(
@@ -175,7 +199,7 @@ export function MarketHistory({ history }: { history: HistoryTuple[] }) {
         </p>
       </div>
       {data ? (
-        <LineChartInteractive key={country} data={data} />
+        <LineChartInteractive key={country} data={data} live={pickMarket(live, country)} />
       ) : (
         <ChartEmpty text={`Price history starts ${points[0] ? longDate(points[0].day) : "with the first import"} — the chart draws once there are two days of prices.`} />
       )}

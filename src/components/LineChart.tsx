@@ -55,6 +55,7 @@ export function LineChart({
   height = 240,
   width,
   empty,
+  live,
 }: {
   series: Series[];
   format: (v: number) => string;
@@ -62,7 +63,9 @@ export function LineChart({
   /** Width drawn before the wrapper is measured (the QuickView passes its own); the chart then draws in real pixels. */
   width?: number;
   empty?: string;
+  /** False where the chart's market has no live price: "Last recorded price", muted, instead of "Now" (LineChartInteractive). */
+  live?: boolean;
 }) {
   const data = buildChartData(series, format, height, width);
-  return data ? <LineChartInteractive data={data} /> : <ChartEmpty text={empty} />;
+  return data ? <LineChartInteractive data={data} live={live} /> : <ChartEmpty text={empty} />;
 }

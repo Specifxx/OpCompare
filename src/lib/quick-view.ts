@@ -12,6 +12,8 @@ import { affiliateUrl, cardEbayQuery, ebaySearchUrl } from "./affiliate";
 import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
 import type { CardDetail, HistoryPoint, OfferRow } from "./data";
+import { lastSeen } from "./card-price-state";
+import { decodeLastKnown, lastKnownTupleOf, type LastKnown } from "./last-known";
 import { isEbaySource, sourceLabel } from "./stores";
 
 /** Rows per market in the popup; the full page lists the rest ("See all N"). */
@@ -100,6 +102,15 @@ export interface QuickViewPayload {
   markets: Record<Country, QuickViewMarket>;
   /** The last QUICKVIEW_HISTORY_DAYS of the card's US price history (the card page's chart series). */
   history: HistoryPoint[];
+  /**
+   * DISPLAY ONLY (lib/last-known.ts): in each market with no open row and no
+   * TCGplayer market price, the sold-out row the card page shows as "Last seen"
+   * there, else the newest price the card's history (its full year, as on the
+   * card page) holds there: the same figure as the tile. Shown muted and
+   * labelled where the popup would say "—"; never a row, a buy button or
+   * "cheapest". Absent when empty.
+   */
+  lastKnown?: Partial<Record<Country, LastKnown>>;
 }
 
 /** Days of price history the popup's chart shows (the card page shows a year). */
@@ -129,8 +140,13 @@ export function quickViewPayload(
   const loc = `/card/${c.slug}`;
   const query = cardEbayQuery(c);
   const markets = {} as Record<Country, QuickViewMarket>;
+  const lastKnown: Partial<Record<Country, LastKnown>> = {};
   for (const m of MARKETS) {
     const open = marketRows(c.offers, m);
+    // Exactly where the popup would print "—" (no open row here, no TCGplayer market price).
+    // The offers are the card page's own (getCardDetail: fresh rules applied), so lastSeen answers as there.
+    const lk = !open.length && c.marketUsd == null ? decodeLastKnown(lastKnownTupleOf(lastSeen(c.offers, m), history, m), m) : null;
+    if (lk) lastKnown[m] = lk;
     markets[m] = {
       count: open.length,
       ebayRow: open.some((o) => isEbaySource(o.source)),
@@ -160,6 +176,7 @@ export function quickViewPayload(
     tcgHref: affiliateUrl(c.tcgplayerUrl, "tcgplayer", loc),
     markets,
     history: quickViewHistory(history, today),
+    ...(Object.keys(lastKnown).length ? { lastKnown } : {}),
   };
 }
 

@@ -2,6 +2,8 @@ import type { Country } from "@/lib/country";
 import type { CardLite } from "@/lib/data";
 import { money } from "@/lib/format";
 import { headline } from "@/lib/price";
+import { lastKnownFor } from "@/lib/last-known";
+import { LastKnownPrice } from "./LastKnownPrice";
 
 // The card tile is a client component (QuickView on click, the visitor's market
 // from CountryProvider): CardTileClient.tsx. This module stays server-safe so
@@ -9,7 +11,7 @@ import { headline } from "@/lib/price";
 export { CardTile, type CardTileCard } from "./CardTileClient";
 export { CardArt, CardImage } from "./CardImage";
 
-export function PriceLine({ card, country }: { card: Pick<CardLite, "low" | "stores" | "marketUsd">; country: Country }) {
+export function PriceLine({ card, country }: { card: Pick<CardLite, "low" | "stores" | "marketUsd" | "lastKnown">; country: Country }) {
   const h = headline(card, country);
   if (h.kind === "listing") {
     return (
@@ -35,5 +37,8 @@ export function PriceLine({ card, country }: { card: Pick<CardLite, "low" | "sto
       </div>
     );
   }
+  // Where it would say "No price yet": the last known price, muted and dated (display only).
+  const lk = lastKnownFor(card, country);
+  if (lk) return <LastKnownPrice lk={lk} country={country} noteFirst />;
   return <p className="pt-3 text-sm text-slate-500">No price yet</p>;
 }
