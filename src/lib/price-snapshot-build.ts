@@ -227,14 +227,20 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
   if (carried) {
     lastKnown = carried.table;
   } else {
-    const series = historySeriesOf(lastKnownCandidates.map((c) => c.id));
-    const offersOf = new Map<number, OfferRow[]>();
-    const rowsOf = (id: number): OfferRow[] => {
-      let rows = offersOf.get(id);
-      if (!rows) offersOf.set(id, (rows = freshFromSnapshot(byRange.get(rangeOf(id))?.[id] ?? [], now)));
-      return rows;
-    };
-    lastKnown = lastKnownTable(lastKnownCandidates, (id) => series.get(id), dayNum(new Date(now).toISOString()), (id, m) => lastSeen(rowsOf(id), m));
+    // Display-only extra: a failure here drops the table for one publish, never the prices themselves.
+    try {
+      const series = historySeriesOf(lastKnownCandidates.map((c) => c.id));
+      const offersOf = new Map<number, OfferRow[]>();
+      const rowsOf = (id: number): OfferRow[] => {
+        let rows = offersOf.get(id);
+        if (!rows) offersOf.set(id, (rows = freshFromSnapshot(byRange.get(rangeOf(id))?.[id] ?? [], now)));
+        return rows;
+      };
+      lastKnown = lastKnownTable(lastKnownCandidates, (id) => series.get(id), dayNum(new Date(now).toISOString()), (id, m) => lastSeen(rowsOf(id), m));
+    } catch (e) {
+      log(`last known prices: not built this time (${(e as Error).message}); the prices publish without them`);
+      lastKnown = null;
+    }
   }
   log(`last known prices: ${lastKnown ? `${Object.keys(lastKnown).length} cards (${carried ? "carried over from the previous snapshot" : "from sold-out rows and the history"})` : "none (no history here and none in the previous snapshot)"}`);
   // Additive: readers that predate it (the seed, the alerts, an older site) ignore it.
