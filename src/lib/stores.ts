@@ -9,7 +9,8 @@
 // lib/store-import.ts: 30 ShadowPOS shops (US), one Ecwid and one BigCommerce
 // store (both AU). Verification evidence for
 // the third pass and the platforms is summarised in DECISIONS.md ("More
-// stores", 2026-10-03).
+// stores", 2026-10-03). Stores added later, one at a time, are at the end, each
+// with its own DECISIONS entry; a sealed-only store says so (`sealedOnly`).
 //
 // `collections` are the One Piece handles the probe found (or, off Shopify, the
 // category the reader starts from); the Shopify reader also re-discovers
@@ -50,6 +51,13 @@ export interface StoreInfo {
   policyUrl?: string;
   /** Omitted = "shopify". */
   platform?: StorePlatform;
+  /**
+   * The store sells One Piece sealed product only: its listings go through the
+   * sealed matcher alone (lib/match.ts matchStoreProduct), so nothing it lists is
+   * ever priced as a single. A title with a card number is a miss
+   * ("sealed-only-single"); /admin/store-health shows it if singles appear.
+   */
+  sealedOnly?: boolean;
   /** Ecwid only: the store id. The public token is re-read from the storefront on every run. */
   ecwidStoreId?: number;
 }
@@ -462,6 +470,14 @@ const RAW_STORES: StoreInfo[] = [
   // shopper or the storefront itself uses (see each reader's header).
   { key: "mightytoys", name: "Mighty Toys", base: "https://mightytoys.com.au", country: "AU", collections: ["147798763"], platform: "ecwid", ecwidStoreId: 14194057 },
   { key: "grandjgames", name: "Grand J Games", base: "https://grandjgames.com", country: "AU", collections: ["/tcgs/one-piece/one-piece-singles/"], platform: "bigcommerce" },
+  // ── Added one at a time, at the owner's request (DECISIONS.md).
+  // BeachesTCG, Mona Vale NSW (2026-10-19): Shopify, AUD, ships within Australia
+  // only (/meta.json). Its One Piece collection held 27 products that day:
+  // English sealed (starter decks, booster boxes and packs), Japanese packs and
+  // boxes, and an event entry; no singles. Read as a sealed-only store. Postage
+  // is not published (no /policies/shipping-policy; its terms say shipping costs
+  // "are provided at checkout"), so it has no shippingCents and no policyUrl.
+  { key: "beachestcg", name: "BeachesTCG", base: "https://beachestcg.com.au", country: "AU", collections: ["one-piece"], sealedOnly: true },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */

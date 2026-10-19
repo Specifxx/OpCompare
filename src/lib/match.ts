@@ -687,6 +687,15 @@ export function sealedKindOfTitle(title: string): SealedKind | null {
 
 const NOT_SEALED_PRODUCT = /\b(empty|opened|open box|damaged|dented|live break|storage box|deck box|sleeves?|playmat|binder|card case|toploader|acrylic|protector|magnetic|lot of|bundle of|\d+\s?x\b|x\s?\d+\b)\b/i;
 
+// "starter deck 24" (BeachesTCG): a deck's number said after "starter deck",
+// and not a count ("Starter Deck 2-Pack", "2x").
+const STARTER_DECK_NO = /\bstarter deck\s+(\d{1,2})\b(?!\s*-?\s*(?:packs?|pk|x|decks|bundle|lot)\b)/;
+/** The number in a TCGplayer set name "Starter Deck 24: GREEN Jewelry Bonney" (null for "Ultra Deck: …", "Set Sail Deck Set"). */
+const starterDeckNo = (setName: string | null): number | null => {
+  const m = /^starter deck (\d{1,2}):/i.exec(setName ?? "");
+  return m ? Number(m[1]) : null;
+};
+
 export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: number } | { miss: string } {
   if (isForeign(title)) return { miss: "foreign" };
   if (NOT_SEALED_PRODUCT.test(title)) return { miss: "not-sealed" };
@@ -705,11 +714,18 @@ export function matchSealedTitle(title: string, sealed: SealedRef[]): { id: numb
   // "Heroines Edition" is inside "Heroines Edition Vol. 2": when several sets'
   // names are in the title, only the longest (most specific) one is meant.
   const longestName = sealed.reduce((m, s) => Math.max(m, nameIn(s)?.length ?? 0), 0);
+  // A title with no set code and no set name may still say the deck's number:
+  // "starter deck 24" names the set TCGplayer calls "Starter Deck 24: …" and no
+  // other (ST-10 and ST-13 are Ultra Decks, never "Starter Deck 10"). Where two
+  // sets carry the number (ST-01 and its Super Pre-Release edition) it stays
+  // ambiguous unless the title says which.
+  const deckNo = !codes.length && longestName === 0 ? STARTER_DECK_NO.exec(lower)?.[1] : undefined;
   const bySet = (s: SealedRef) => {
     if (!s.setCode) return false;
     const sc = s.setCode.toUpperCase();
     // TCGplayer writes "EB05" where a title says "EB-05" (and "OP15-EB04" for a crossover set).
     if (codes.length) return codes.some((c) => sc === c || sc.replace(/-/g, "") === c.replace("-", "") || sc.startsWith(`${c}-`) || sc.endsWith(`-${c.replace("-", "")}`));
+    if (deckNo != null) return starterDeckNo(s.setName) === Number(deckNo);
     const n = nameIn(s);
     return n != null && n.length === longestName;
   };
@@ -737,20 +753,48 @@ export interface StoreMatchIndexes {
 
 export type StoreMatchPath = "number" | "name" | "don" | "sku" | "sealed";
 
+// ── Event entries ────────────────────────────────────────────────────────────
+// A store's event or tournament entry is never a product, whatever it names.
+// BeachesTCG lists "One Piece - Pirates Party 2026 Vol.3 2-on-2 Battle format -
+// Sat. September 12, 2026 01:00 PM" (product type "Event Entry", tagged SEALED)
+// inside its One Piece collection. A product type that says it is an entry or
+// a ticket, or a title that states a time of day ("@ 1:00pm", "10am Start"),
+// is an event listing on every path.
+const EVENT_PRODUCT_TYPE = /^(?:(?:event|tournament)s?\s+(?:entry|entries|tickets?|registration)|(?:event\s+)?tickets?)$/i;
+const TIME_OF_DAY = /\b\d{1,2}(?::[0-5]\d)?\s?[ap]\.?m\b/i;
+
+export function isEventListing(title: string, productType?: string | null): boolean {
+  return EVENT_PRODUCT_TYPE.test((productType ?? "").trim()) || TIME_OF_DAY.test(title);
+}
+
+/** The miss a sealed-only store reports for a title the sealed path refused. */
+function sealedOnlyMiss(miss: string): string {
+  if (miss === "single") return "sealed-only-single";
+  if (miss === "no-product" || miss === "ambiguous") return `sealed-${miss}`;
+  return miss === "no-kind" ? "not-sealed" : miss;
+}
+
 /**
  * The one product a store listing is, by the strict paths in order — its card
  * number, TCGplayer name + set, a DON!! card, the number in its SKUs, a sealed
  * product — or the reason none fits. The reason names the path that got
  * furthest: "sealed-ambiguous" is a sealed title, "don-no-set" a DON!! card,
- * "name-unmatched" a "Name [Set]" title none of them knew.
+ * "name-unmatched" a "Name [Set]" title none of them knew. A `sealedOnly` store
+ * (lib/stores.ts) runs the sealed path alone: nothing it lists is ever priced
+ * as a single ("sealed-only-single" when a title carries a card number).
  */
 export function matchStoreProduct(
   title: string,
   skus: (string | null | undefined)[],
   ix: StoreMatchIndexes,
-  meta: { tags?: string[] | string | null; productType?: string | null } = {},
+  meta: { tags?: string[] | string | null; productType?: string | null; sealedOnly?: boolean } = {},
 ): { id: number; path: StoreMatchPath } | { miss: string } {
   if (foreignByTags(meta.tags, meta.productType)) return { miss: "foreign" };
+  if (isEventListing(title, meta.productType)) return { miss: "event" };
+  if (meta.sealedOnly) {
+    const s = matchSealedTitle(title, ix.sealed);
+    return "id" in s ? { id: s.id, path: "sealed" } : { miss: sealedOnlyMiss(s.miss) };
+  }
   const r = matchStoreProductInner(title, skus, ix);
   if (!("id" in r)) return r;
   // The one rule every path answers to: when the product's SKUs agree on ONE card

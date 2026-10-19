@@ -82,7 +82,7 @@ lets scripts call `/api/admin/*` with an `Authorization: Bearer` header.
 Matching follows RiftCompare's rule: *understated, never wrong*. A listing is
 matched only when exactly one printing fits its card number (or TCGplayer's exact
 name + set), its card name and its printing words; graded slabs, playsets, lots,
-live breaks and non-English listings are never matched, and a match far from the
+live breaks, event entries and non-English listings are never matched, and a match far from the
 printing's market price is dropped as a probable mismatch.
 
 ## Price history is in GitHub
@@ -148,7 +148,12 @@ Add an entry to `src/lib/stores.ts` (`key`, `name`, `base`, `country`, the One
 Piece collection handles, and `currency` only if it charges something other than
 its market's currency). The importer also re-discovers One Piece collections
 from the store's sitemap each run. Its singles must carry card numbers (or
-TCGplayer-style names) in their titles. A store on another platform sets
+TCGplayer-style names) in their titles. A store that sells only sealed product
+sets `sealedOnly: true` (BeachesTCG): its listings then go through the sealed
+matcher alone, so nothing it lists is ever priced as a single. A store with no
+measured postage needs an `"unmeasured"` line in `src/lib/shipping-rates.json`
+(`tests/shipping.test.ts`); it is priced on the market's estimate until the
+postage probe measures it. A store on another platform sets
 `platform` (`shadowpos`, `ecwid`, `bigcommerce`, `nopcommerce`, `woocommerce`;
 see each reader's header for what `collections` means there). Check a candidate
 first with `npx tsx scripts/probe-stores.ts [--platform=…] <base> <market>`: it

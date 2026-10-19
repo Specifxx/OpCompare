@@ -1,0 +1,464 @@
+{
+ "source": "https://beachestcg.com.au/collections/one-piece/products.json?limit=250&page=1&country=AU, read 2026-10-19 (page 2 was empty); trimmed to the fields the importer reads",
+ "products": [
+  {
+   "title": "ONE PIECE CARD GAME SET SAIL DECK SD-01 STARTER DECK",
+   "handle": "one-piece-card-game-set-sail-deck-sd-01-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "34.99",
+     "available": true,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "One Piece - Pirates Party 2026 Vol.3 2-on-2 Battle format - Sat. September 12, 2026 01:00 PM",
+   "handle": "one-piece-pirates-party-2026-vol-3-2-on-2-battle-format-sat-september-12-2026-01-00-pm",
+   "product_type": "Event Entry",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "10.00",
+     "available": true,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST22 - starter deck",
+   "handle": "one-piece-st22-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "34.99",
+     "available": true,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Op13 booster box English",
+   "handle": "op13-booster-box-english",
+   "product_type": "",
+   "tags": [
+    "OPTCG",
+    "SALE"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "850.00",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "One piece op17 booster box -the worlds strongest",
+   "handle": "one-piece-op17-booster-box-the-worlds-strongest",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "399.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "OP0Y7 JAPANESE BOOSTER PACK",
+   "handle": "op0y7-japanese-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "9.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "OP12 JAPANESE BOOSTER PACK",
+   "handle": "op12-japanese-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "7.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "OP15 JAPANESE Booster Pack",
+   "handle": "op15-japanese-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "7.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "OP14 JPN Booster Pack",
+   "handle": "op14-jpn-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "6.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "EB04 JPN booster pack",
+   "handle": "eb04-jpn-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SALE",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "8.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "starter deck 24",
+   "handle": "starter-deck-24",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "29.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST06 - starter deck",
+   "handle": "one-piece-st06-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "49.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST08 - starter deck",
+   "handle": "one-piece-st08-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "24.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST23 - starter deck",
+   "handle": "one-piece-st23-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "29.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST25 - starter deck",
+   "handle": "one-piece-st25-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "29.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST27 - starter deck",
+   "handle": "one-piece-st27-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "29.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "ST28 - starter deck",
+   "handle": "one-piece-st28-starter-deck",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "29.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "500 Years in the Future OP-07 - Booster Pack",
+   "handle": "one-piece-500-years-in-the-future-op-07-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "14.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Two Legends OP-08 - Booster Pack",
+   "handle": "one-piece-two-legends-op-08-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "9.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Emperors in the New World OP-09 - Booster Pack",
+   "handle": "one-piece-emperors-in-the-new-world-op-09-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "11.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Royal Blood OP-10 - Booster Box",
+   "handle": "one-piece-royal-blood-op-10-booster-box",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "299.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Royal Blood OP-10 - Booster Pack",
+   "handle": "one-piece-royal-blood-op-10-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "9.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Legacy Of The Master OP-12 - Booster Pack",
+   "handle": "one-piece-legacy-of-the-master-op-12-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "11.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "Carrying On His Will OP-13 - Booster Pack",
+   "handle": "one-piece-carrying-on-his-will-op-13-booster-pack",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "9.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "The Best PRB-01 JPN - Booster Box",
+   "handle": "one-piece-the-best-prb-01-booster-box-japanese",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "159.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "The Best PRB-02 JPN - Booster Box",
+   "handle": "one-piece-the-best-prb-02-booster-box-japanese",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "119.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  },
+  {
+   "title": "EB-03 JPN - Booster Pack",
+   "handle": "one-piece-extra-booster-heroines-edition-eb-03-booster-pack-japanese",
+   "product_type": "One Piece",
+   "tags": [
+    "OPTCG",
+    "SEALED"
+   ],
+   "variants": [
+    {
+     "title": "Default Title",
+     "price": "7.99",
+     "available": false,
+     "sku": null
+    }
+   ]
+  }
+ ]
+}
