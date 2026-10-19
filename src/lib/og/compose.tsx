@@ -636,3 +636,86 @@ export function BlogImage({ title, arts, badge = "BLOG", footer = "Live prices f
     </Canvas>
   );
 }
+
+// ── Pre-order pages (/eb05-preorders, /op18-preorders) ──────────────────────
+// Static, like RiftCompare's /radiance-preorders card: no price and no live
+// count (every platform caches a share image, so either would go stale). The
+// art is the set's own TCGplayer product shots, committed under
+// public/preorders and read from disk (images.tsx preorderOg): no network.
+export interface PreorderImageProps {
+  code: string;
+  name: string;
+  /** "30 OCTOBER 2026". */
+  out: string;
+  /** [pack, box] data URIs. */
+  arts: [string | null, string | null];
+}
+
+/** Markets with live stores (Singapore has none yet). */
+const PREORDER_MARKETS = ["US", "AU", "UK", "CA", "EU"];
+
+export function PreorderImage({ code, name, out, arts }: PreorderImageProps) {
+  const plate = (src: string | null, w: number, h: number, extra: CSSProperties) => (
+    <div
+      style={{
+        display: "flex",
+        position: "absolute",
+        alignItems: "center",
+        justifyContent: "center",
+        width: w + 24,
+        height: h + 24,
+        background: OG.white,
+        borderRadius: 16,
+        boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+        ...extra,
+      }}
+    >
+      <Art src={src} width={w} height={h} border={false} />
+    </div>
+  );
+  return (
+    <Canvas padding="0" bg={`radial-gradient(circle at 78% 45%, rgba(217,43,51,0.30) 0%, rgba(217,43,51,0) 45%), ${SEA_BG}`}>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 660, padding: "50px 0 62px 60px" }}>
+        <Lockup hat={52} text={34} />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              alignSelf: "flex-start",
+              padding: "8px 18px",
+              borderRadius: 999,
+              background: "rgba(245,197,66,0.14)",
+              border: `2px solid ${OG.straw}`,
+              color: OG.straw,
+              ...F.bold,
+              fontSize: 22,
+              letterSpacing: 2,
+            }}
+          >
+            {`OUT ${out}`}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 20 }}>
+            <div style={{ display: "flex", ...F.brand, fontSize: 96, color: OG.white, lineHeight: 1 }}>{code}</div>
+            <div style={{ display: "flex", ...F.semi, fontSize: 26, color: OG.slate300, marginTop: 6 }}>{clip(name, 44)}</div>
+            <div style={{ display: "flex", ...F.display, fontSize: 52, color: OG.redWord, letterSpacing: -1, lineHeight: 1.1, marginTop: 10 }}>pre-order prices</div>
+          </div>
+          <div style={{ display: "flex", marginTop: 18, ...F.semi, fontSize: 26, color: OG.slate300, lineHeight: 1.3 }}>
+            Booster boxes, packs and cases at every store we track, side by side.
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {PREORDER_MARKETS.map((m) => (
+            <div key={m} style={{ display: "flex", padding: "7px 15px", marginRight: 10, borderRadius: 10, background: "rgba(255,255,255,0.07)", color: OG.slate100, ...F.bold, fontSize: 22 }}>
+              {m}
+            </div>
+          ))}
+          <div style={{ display: "flex", marginLeft: 6, color: OG.straw, ...F.bold, fontSize: 22 }}>Daily</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", position: "relative", width: 540, height: 630 }}>
+        {plate(arts[0], 180, 298, { left: 20, top: 170, transform: "rotate(-9deg)" })}
+        {plate(arts[1], 282, 300, { left: 170, top: 120, transform: "rotate(4deg)", border: `4px solid ${OG.straw}` })}
+      </div>
+    </Canvas>
+  );
+}

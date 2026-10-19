@@ -27,7 +27,9 @@ import { cardImage } from "../images";
 import { postBySlug } from "../blog";
 import { postContextForImages } from "../blog/context";
 import { ogArt, withThumbs } from "./art";
-import { BlogImage, CardImage, FallbackImage, GuideImage, SealedImage, SetImage, type GuideVariant } from "./compose";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { BlogImage, CardImage, FallbackImage, GuideImage, PreorderImage, SealedImage, SetImage, type GuideVariant } from "./compose";
 import { OG_AFTER_ERROR, OG_CACHED, OG_FALLBACK_TTL, ogResponse } from "./respond";
 import { ogDate } from "./theme";
 import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, setPreviewCards, setTopRows, storesTracked } from "./select";
@@ -233,4 +235,31 @@ export async function risingOg(token: string): Promise<ImageResponse> {
 /** US cents as "$123" / "$12.34" for an image headline. */
 function ogDollars(cents: number): string {
   return cents >= 100_000 ? `$${Math.round(cents / 100).toLocaleString("en-US")}` : `$${(cents / 100).toFixed(2)}`;
+}
+
+/**
+ * The pre-order pages' static share images (/eb05-preorders, /op18-preorders).
+ * No data read: the release dates are Bandai's (TCGplayer's group dates agree:
+ * EB05 2026-10-30, OP18 2026-11-20) and the art is the set's own product shots
+ * in public/preorders (traced in by next.config.js), so no network either.
+ */
+const PREORDER_OG = {
+  EB05: { name: "Extra Booster: Heroines Edition Vol. 2", out: "30 OCTOBER 2026" },
+  OP18: { name: "The Dominance of God", out: "20 NOVEMBER 2026" },
+} as const;
+
+async function localArt(file: string): Promise<string | null> {
+  try {
+    const buf = await readFile(path.join(process.cwd(), "public", "preorders", file));
+    return `data:image/jpeg;base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+export async function preorderOg(code: keyof typeof PREORDER_OG): Promise<ImageResponse> {
+  const c = PREORDER_OG[code];
+  const slug = code.toLowerCase();
+  const arts = await Promise.all([localArt(`${slug}-pack.jpg`), localArt(`${slug}-box.jpg`)]);
+  return ogResponse(<PreorderImage code={code} name={c.name} out={c.out} arts={[arts[0], arts[1]]} />, OG_CACHED);
 }
