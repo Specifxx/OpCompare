@@ -60,7 +60,7 @@ jobs:
     env:
       PUBLIC_DATABASE_URL: postgresql://postgres:pub@localhost:5432/pub
       NODE_OPTIONS: --max-old-space-size=4096
-      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       REVALIDATE_URL: ${{ format('{0}/api/revalidate', vars.SITE_URL || 'https://opcompare.app') }}
       NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}

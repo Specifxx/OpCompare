@@ -22,16 +22,10 @@ import { PrismaClient } from "@prisma/client";
 
 /** Parents before children (foreign keys). */
 export const COPY_ORDER = [
-  "Set",
-  "Card",
-  "Sealed",
   "User",
   "Meta",
   "Counter",
   "ImportRun",
-  "EbayCheck",
-  "EbayListing",
-  "EbayGradedListing",
   "RisingSnapshot",
   "PriceReport",
   "StoreSuggestion",
@@ -51,7 +45,8 @@ export const COPY_ORDER = [
   "CardDemand",
 ] as const;
 /** Deliberately not copied. */
-export const SKIPPED = ["Offer", "ClickEvent"] as const;
+// Public data (GitHub `snapshot` branch since 2026-10-14) and retired tables.
+export const SKIPPED = ["Offer", "ClickEvent", "Set", "Card", "Sealed", "EbayCheck", "EbayListing", "EbayGradedListing"] as const;
 
 const BATCH = 500;
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);

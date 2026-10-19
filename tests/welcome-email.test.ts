@@ -164,9 +164,9 @@ test("the source: bounded query, conditional claim, release on failure, additive
   assert.match(read("prisma/schema.prisma"), /welcomeEmailSentAt\s+DateTime\?/);
 });
 
-test("the outbox workflow runs hourly at minute 23 in its own group, a green no-op without secrets", () => {
+test("the outbox workflow runs every three hours at minute 23 in its own group, a green no-op without secrets", () => {
   const wf = read(".github/workflows/email.yml");
-  assert.match(wf, /cron: "23 \* \* \* \*"/);
+  assert.match(wf, /cron: "23 \*\/3 \* \* \*"/);
   assert.match(wf, /group: email\b/);
   assert.match(wf, /scripts\/email-hourly\.ts/);
   assert.match(wf, /\[ -z "\$DATABASE_URL" \] \|\| \[ -z "\$RESEND_API_KEY" \] \|\| \[ -z "\$EMAIL_FROM" \]/);

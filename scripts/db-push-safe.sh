@@ -12,6 +12,7 @@ set -uo pipefail
 
 # The new database (OP2) wins over the old DATABASE_URL, as in src/lib/db-url.ts.
 if [ -n "${OP2:-}" ]; then export DATABASE_URL="$OP2"; fi
+if [ -n "${OP3:-}" ]; then export DATABASE_URL="$OP3"; fi
 
 out="$(npx prisma db push --skip-generate 2>&1)"
 status=$?

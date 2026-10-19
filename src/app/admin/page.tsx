@@ -14,7 +14,7 @@ export const generateMetadata = (): Promise<Metadata> => adminMetadata({ title: 
 const n = (v: number | null) => (v == null ? "–" : int(v));
 
 const TOOLS = [
-  { href: "/admin/health", icon: "chart", title: "Health", text: "Limits, jobs, eBay, stores and the live site, checked every four hours. You are emailed when something needs you." },
+  { href: "/admin/health", icon: "chart", title: "Health", text: "Limits, jobs, eBay, stores and the live site, checked every eight hours. You are emailed when something needs you." },
   { href: "/admin/accounts", icon: "user", title: "Accounts", text: "Every account, plan and sign-in; grant, revoke, export." },
   { href: "/admin/subscriptions", icon: "chart", title: "Subscriptions", text: "MRR, churn, plan mix and cohorts from Stripe." },
   { href: "/admin/store-health", icon: "store", title: "Store health", text: "Scrapers that broke quietly: failures, drops, match rate." },

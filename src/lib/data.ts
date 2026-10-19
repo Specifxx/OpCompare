@@ -1272,8 +1272,8 @@ export const getSealedSoldOut = unstable_cache(
 // ── end wave2:catalogue ──
 // ── promo ──
 // The launch promotion's counter ("the first 50 accounts get a month of
-// Premium"), read by /api/promo. One Counter row, 30 s cache: a sign-up shows
-// within half a minute. A read error answers "none left" so the popup hides
+// Premium"), read by /api/promo. One Counter row, 15 min cache: a sign-up shows
+// within a quarter of an hour. A read error answers "none left" so the popup hides
 // rather than promising a slot that may not exist.
 import { LAUNCH_PROMO_ENABLED, PROMO_KEY, PROMO_SLOTS, promoStatus, type PromoStatus } from "./launch-promo-shared";
 
@@ -1282,8 +1282,8 @@ const loadPromoClaimed = unstable_cache(
     const row = await prisma.counter.findUnique({ where: { key: PROMO_KEY }, select: { value: true } });
     return row?.value ?? 0;
   },
-  ["launch-promo-claimed-v1"],
-  { revalidate: 30 },
+  ["launch-promo-claimed-v2"],
+  { revalidate: 900 }, // was 30 s: every popup view woke the database (compute, 2026-10-19)
 );
 
 export async function getLaunchPromo(): Promise<PromoStatus> {

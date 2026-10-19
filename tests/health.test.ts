@@ -370,13 +370,13 @@ test("the watchdog workflow: scheduled, read-only but for its issue, never on a 
   const y = read(".github/workflows/watchdog.yml");
   assert.doesNotMatch(y, /^\s*push:/m);
   assert.match(y, /permissions:\s*\n\s*contents: read\s*\n\s*actions: read\s*\n\s*issues: write/);
-  assert.match(y, /DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
+  assert.match(y, /DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
   assert.match(y, /NEON_API_KEY: \$\{\{ secrets\.NEON_API_KEY \}\}/);
   assert.match(y, /group: watchdog/);
   assert.doesNotMatch(y, /EBAY_CLIENT/, "the watchdog never holds the eBay keyset");
   const cron = /cron: "(\d+) ([\d,*/]+) \* \* \*"/.exec(y)!;
   const hours = cron[2].split(",").map(Number);
-  assert.ok(hours.length >= 4 && hours.length <= 8, "a handful of wakes a day: each wakes Neon");
+  assert.ok(hours.length >= 3 && hours.length <= 8, "a handful of wakes a day: each wakes Neon");
   assert.ok(![0, 7, 19].includes(Number(cron[1])) && Number(cron[1]) !== 7 && Number(cron[1]) !== 37 && Number(cron[1]) !== 23, "its own minute slot");
 });
 

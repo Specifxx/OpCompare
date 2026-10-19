@@ -47,7 +47,7 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     env:
-      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
       PUBLIC_DATABASE_URL: postgresql://postgres:pub@localhost:5432/pub
       NODE_OPTIONS: --max-old-space-size=4096
       MOVE_FORCE: ${{ inputs.force && '1' || '' }}

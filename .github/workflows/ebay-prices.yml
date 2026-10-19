@@ -66,7 +66,7 @@ jobs:
       - name: Skip unless eBay and the database are configured
         id: gate
         env:
-          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: |
@@ -125,7 +125,7 @@ jobs:
       # The same additive sync as import-prices.yml (no --accept-data-loss).
       - name: Sync schema
         env:
-          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
         run: bash scripts/db-push-safe.sh && npm run db:generate
       - name: Seed the public working copy from the snapshot
         id: seed
@@ -133,7 +133,7 @@ jobs:
       - name: eBay pass
         id: pass
         env:
-          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
@@ -148,7 +148,7 @@ jobs:
         if: ${{ !cancelled() && steps.seed.outcome == 'success' && steps.pass.outcome != 'skipped' }}
         env:
           # Two facts about runs (when the last import finished, whether this pass ran lately): the only thing read from Neon.
-          DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           SNAPSHOT_DIR: .snapshot-out
         run: npx tsx scripts/price-snapshot.ts
       - name: Publish the price snapshot

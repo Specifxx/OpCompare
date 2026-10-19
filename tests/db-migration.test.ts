@@ -10,6 +10,12 @@ import { COPY_ORDER, SKIPPED } from "../scripts/migrate-db";
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
+test("OP3 wins over OP2, which wins over DATABASE_URL", () => {
+  assert.deepEqual(resolveDatabaseUrl({ OP3: "postgres://three", OP2: "postgres://two", DATABASE_URL: "postgres://old" }), { url: "postgres://three", name: "OP3" });
+  assert.equal(resolveDatabaseUrl({ OP3: "  ", OP2: "postgres://two" })?.name, "OP2", "a blank OP3 is unset");
+  assert.match(read("scripts/db-push-safe.sh"), /if \[ -n "\$\{OP3:-\}" \]; then export DATABASE_URL="\$OP3"; fi/);
+});
+
 test("OP2 wins over DATABASE_URL; DATABASE_URL is the fallback; pasted quotes and spaces are tolerated", () => {
   assert.deepEqual(resolveDatabaseUrl({ OP2: "postgres://new", DATABASE_URL: "postgres://old" }), { url: "postgres://new", name: "OP2" });
   assert.deepEqual(resolveDatabaseUrl({ DATABASE_URL: "postgres://old" }), { url: "postgres://old", name: "DATABASE_URL" });
@@ -36,9 +42,10 @@ test("the copy list covers every Prisma model exactly once: nothing is dropped s
   assert.equal(new Set(listed).size, listed.length, "no table listed twice");
   // Parents come before children (foreign keys).
   const at = (t: string) => (COPY_ORDER as readonly string[]).indexOf(t);
-  for (const child of ["PriceAlert", "CollectionCard"]) assert.ok(at("Card") < at(child) && at("User") < at(child), child);
-  for (const child of ["SealedWatch"]) assert.ok(at("Sealed") < at(child) && at("User") < at(child), child);
-  assert.deepEqual([...SKIPPED].sort(), ["ClickEvent", "Offer"], "only the rebuildable price rows and the retired beacons stay behind");
+  for (const child of ["PriceAlert", "CollectionCard"]) assert.ok(at("User") < at(child), child);
+  for (const pub of ["Set", "Card", "Sealed", "EbayCheck", "EbayListing", "EbayGradedListing"]) assert.ok((SKIPPED as readonly string[]).includes(pub), `${pub} lives in the snapshot, not in Neon`);
+  for (const child of ["SealedWatch"]) assert.ok(at("User") < at(child), child);
+  assert.deepEqual([...SKIPPED].sort(), ["Card", "ClickEvent", "EbayCheck", "EbayGradedListing", "EbayListing", "Offer", "Sealed", "Set"], "only public data (in the snapshot) and the retired beacons stay behind");
 });
 
 test("the script only ever reads the source, refuses a self-copy, and fails on a short target", () => {
@@ -61,13 +68,13 @@ test("the migration workflow is manual, read-only for the repo, in the import's 
   assert.doesNotMatch(wf, /^\s*(schedule|push):/m);
   assert.match(wf, /contents: read/);
   assert.match(wf, /group: import-prices/);
-  assert.match(wf, /SOURCE_DATABASE_URL: \$\{\{ secrets\.DATABASE_URL \}\}/);
-  assert.match(wf, /TARGET_DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \}\}/);
-  assert.doesNotMatch(wf, /echo[^\n]*\$\{?(OLD|NEW|DATABASE_URL|OP2)\b/, "never echo a connection string");
+  assert.match(wf, /SOURCE_DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
+  assert.match(wf, /TARGET_DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \}\}/);
+  assert.doesNotMatch(wf, /echo[^\n]*\$\{?(OLD|NEW|DATABASE_URL|OP2|OP3)\b/, "never echo a connection string");
 });
 
 test("every workflow that touches the database prefers OP2 (a secret or a variable), then the old DATABASE_URL", () => {
-  const expr = "${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}";
+  const expr = "${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}";
   for (const f of fs.readdirSync(path.join(ROOT, ".github/workflows"))) {
     if (f === "migrate-database.yml") continue; // it names both databases on purpose
     const wf = read(`.github/workflows/${f}`);

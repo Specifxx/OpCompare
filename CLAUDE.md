@@ -17,10 +17,10 @@ deploy (`vercel.json`). The site is meant to run passively on the free Neon allo
 (5 GB a month): prices and eBay listings reach pages through the GitHub price
 snapshot, not a deploy, and only code changes wait for the release.
 
-## The database: OP2 holds private state only
+## The database: OP3 holds private state only
 
-The connection string is the variable `OP2` (Vercel and GitHub, a secret or a
-repository variable), falling back to `DATABASE_URL` (`src/lib/db-url.ts`). Neon
+The connection string is the variable `OP3` (Vercel and GitHub, a secret or a
+repository variable), falling back to `OP2`, then `DATABASE_URL` (`src/lib/db-url.ts`). Neon
 holds ONLY private state: users, alerts, watches, collections, inbox, Stripe,
 `ImportRun`, `Meta`, `Counter`, `CardDemand`. The public data (sets, cards, sealed,
 offers, eBay panels and checks) is NOT in Neon: the `snapshot` branch on GitHub is
@@ -89,7 +89,7 @@ read rows through `public-data.ts` / `public-db.ts` (a Prisma-shaped read-only c
 ## Self-monitoring: the owner is not watching
 
 The owner does not check Neon, GitHub or the admin pages. The site tells them.
-`scripts/watchdog.ts` (`.github/workflows/watchdog.yml`, every four hours) gathers
+`scripts/watchdog.ts` (`.github/workflows/watchdog.yml`, every eight hours) gathers
 every limit and health signal (`src/lib/health-collect.ts`), judges it with the pure
 evaluators in `src/lib/health.ts`, stores one report in Meta `health:report` for
 `/admin` and `/admin/health`, and emails **bill.jyang101@gmail.com** (`OWNER_EMAIL`)

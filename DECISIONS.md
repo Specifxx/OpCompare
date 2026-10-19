@@ -2716,3 +2716,26 @@ Before this rule, such a title found no product at all (with no code and no name
 **A comma in the words.** `canonical()` used to split every key on commas, so "luffy, zoro" became "luffy" on the next filter change. Single-value keys now keep their whole value.
 
 Pinned by `tests/browse-filters-search.test.ts` (the field rendered through Next's router contexts, the pages that show or hide it, the set page's and the guide's `q`) and `tests/filter-chips.test.ts` (`withKeywords`, `filterCount`, the chip, `clearFilters`). No loader, cache, `revalidate` or database read was added.
+
+## 2026-10-19: A third Neon database (OP3), and fewer wakes of it
+
+**Why.** OP2 reached Neon's monthly compute limit. A new project resets the allowance;
+the code also asks for less of it.
+
+**Decisions.**
+- **`OP3` wins over `OP2`, then `DATABASE_URL`** (`src/lib/db-url.ts`, `db-push-safe.sh`,
+  every workflow's `DATABASE_URL` expression). The **Migrate database** workflow now copies
+  OP2 (else the old one) to OP3, PRIVATE tables only: the catalogue, offers and eBay state
+  are the snapshot branch since 2026-10-14, so Set/Card/Sealed/Ebay* are in `SKIPPED`.
+  Order: create the project, set `OP3` in GitHub and Vercel, run the migration (dry run
+  first), run the import, then deploy (a Vercel env change needs a build). The old project
+  is only read.
+- **Compute is time the database is awake** (it suspends after about five idle minutes), so
+  every request-time or scheduled query is a wake. Cut: card views are counted in memory
+  and written in one batch per half hour per instance, not one write per view
+  (`card-views-server.ts`); the launch-promo counter is cached 15 minutes, not 30 seconds
+  (every popup view woke it); the email outbox runs every three hours, not hourly; the
+  watchdog three times a day, not six.
+- **Cost of that:** welcome and confirmation emails wait up to three hours; the health report
+  is up to eight hours old; popularity counts lose what an instance holds when it is
+  recycled; a new sign-up shows in the promo counter within 15 minutes.

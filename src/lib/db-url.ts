@@ -1,12 +1,14 @@
-// Which Postgres the app talks to. The database moved to a new Neon project on
+// Which Postgres the app talks to. On 2026-10-19 it moved again, to the Neon project
+// whose string is OP3 (OP2 hit its compute limit); OP3 wins, then OP2, then DATABASE_URL.
+// (Earlier history: The database moved to a new Neon project on
 // 2026-10-08 (owner's call, to start a fresh transfer allowance), and its
 // connection string is the variable OP2, set in Vercel and in GitHub Actions
 // (a secret or a repository variable). OP2 wins; DATABASE_URL is the old
 // database and stays the fallback so an unset OP2 changes nothing, and so the
-// switch can be undone by deleting OP2.
+// switch can be undone by deleting OP2.)
 //
 // Never log the value. Pure: no database import, safe for scripts and tests.
-const NAMES = ["OP2", "op2", "OP2_DATABASE_URL", "DATABASE_URL_OP2", "DATABASE_URL"] as const;
+const NAMES = ["OP3", "op3", "OP2", "op2", "OP2_DATABASE_URL", "DATABASE_URL_OP2", "DATABASE_URL"] as const;
 
 function clean(v: string | undefined): string {
   // A value pasted with quotes, a trailing space or a newline must still work.

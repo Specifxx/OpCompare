@@ -131,3 +131,31 @@ test("every client beacon goes through the once-a-day guard", () => {
 test("the counter is OP Compare's own key in the browser", () => {
   assert.match(code("src/lib/card-views.ts"), /CARD_VIEWS_KEY = "oc_card_views"/);
 });
+
+test("views are counted in memory and written in one batch per half hour, not per request (Neon compute)", async () => {
+  const { countCardView, flushCardViews, FLUSH_MS } = await import("../src/lib/card-views-server");
+  const writes: { cardId: number; view: number; search: number }[] = [];
+  const db = {
+    cardDemand: {
+      upsert: async ({ where, create }: { where: { cardId: number }; create: { viewCount: number; searchCount: number } }) => {
+        writes.push({ cardId: where.cardId, view: create.viewCount, search: create.searchCount });
+        return {};
+      },
+    },
+  } as never;
+  await flushCardViews(db); // start from an empty buffer
+  writes.length = 0;
+  const deps = (t: number) => ({ db, cardId: async (s: string) => (s === "luffy" ? 1 : s === "zoro" ? 2 : null), now: () => t });
+  const T = 1_000_000;
+  await countCardView("luffy", "view", deps(T));
+  await countCardView("luffy", "view", deps(T + 1000));
+  await countCardView("luffy", "search", deps(T + 2000));
+  await countCardView("zoro", "view", deps(T + 3000));
+  await countCardView("nobody", "view", deps(T + 4000));
+  assert.equal(writes.length, 0, "no database write inside the window");
+  await countCardView("zoro", "view", deps(T + FLUSH_MS + 1));
+  assert.deepEqual(writes.sort((a, b) => a.cardId - b.cardId), [
+    { cardId: 1, view: 2, search: 1 },
+    { cardId: 2, view: 2, search: 0 },
+  ], "one batched write per card, with the summed counts");
+});

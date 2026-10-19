@@ -396,7 +396,7 @@ export interface JobExpectation {
 export const JOBS: JobExpectation[] = [
   { file: "import-prices.yml", label: "Price import", maxAgeH: 18, critical: true },
   { file: "ebay-prices.yml", label: "eBay pass", maxAgeH: 30 },
-  { file: "email.yml", label: "Email outbox", maxAgeH: 4 },
+  { file: "email.yml", label: "Email outbox", maxAgeH: 7 },
   { file: "email-weekly.yml", label: "Weekly newsletter", maxAgeH: 24 * 8 },
   { file: "production-deploy.yml", label: "Weekly deploy", maxAgeH: 24 * 8 },
   { file: "shipping-rates.yml", label: "Shipping rates", maxAgeH: null },

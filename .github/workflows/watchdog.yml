@@ -18,7 +18,7 @@ name: Watchdog
 # pass's own run records) and never writes anything but its own Meta rows.
 on:
   schedule:
-    - cron: "47 1,5,9,13,17,21 * * *"
+    - cron: "47 1,9,17 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}

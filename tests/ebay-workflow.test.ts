@@ -67,10 +67,10 @@ test("secrets are scoped to the steps that need them: npm ci never sees one", ()
   const step = (re: RegExp) => steps.find((s) => re.test(s)) ?? "";
   assert.doesNotMatch(step(/run: npm ci/), /secrets\./);
   assert.doesNotMatch(step(/actions\/checkout/), /secrets\./);
-  assert.match(step(/name: Sync schema/), /DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
+  assert.match(step(/name: Sync schema/), /DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
   assert.doesNotMatch(step(/name: Sync schema/), /EBAY_CLIENT/);
   const pass = step(/name: eBay pass/);
-  assert.match(pass, /DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
+  assert.match(pass, /DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
   for (const k of ["EBAY_CLIENT_ID", "EBAY_CLIENT_SECRET"]) assert.match(pass, new RegExp(`${k}: \\$\\{\\{ secrets\\.${k} \\}\\}`));
   // Exactly two places name the eBay credentials: the gate step and the eBay pass step.
   assert.equal((YML.match(/secrets\.EBAY_CLIENT_SECRET/g) ?? []).length, 2);

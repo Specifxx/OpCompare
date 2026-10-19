@@ -30,7 +30,7 @@ export default async function AdminHealth() {
     <div>
       <h1 className="text-3xl text-white">Health</h1>
       <p className="mt-1 text-sm text-slate-400">
-        {report ? `Checked ${ageText(ageH!)} ago, every four hours.` : "No report yet."} You are emailed about anything new; this page is for looking, not for remembering to look.
+        {report ? `Checked ${ageText(ageH!)} ago, every eight hours.` : "No report yet."} You are emailed about anything new; this page is for looking, not for remembering to look.
       </p>
 
       {!report ? (

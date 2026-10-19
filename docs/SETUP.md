@@ -15,7 +15,7 @@ this in the browser.
 1. Create a new Neon project named `opcompare`: Postgres 16+, region AWS US East
    (N. Virginia), next to Vercel's `iad1` functions.
 2. Copy the **pooled** connection string (`…-pooler….neon.tech/neondb?sslmode=require`).
-3. That one string is `DATABASE_URL` everywhere below. Since 2026-10-08 the live database is a SECOND Neon project, whose string is the variable `OP2` (Vercel Production, and GitHub as a secret or a repository variable); `OP2` wins and `DATABASE_URL` (the old project) is only the fallback. Moving to a new project again: create it, set `OP2` to its string, run the **Migrate database** workflow (dry run first), then **Import prices**, then a manual **Production deploy**. The old project is never modified.
+3. That one string is `DATABASE_URL` everywhere below. Since 2026-10-08 the live database is a SECOND Neon project, whose string is the variable `OP2` (Vercel Production, and GitHub as a secret or a repository variable); `OP2` wins and `DATABASE_URL` (the old project) is only the fallback. Since 2026-10-19 the live project is a THIRD one, `OP3` (it wins over `OP2`, then `DATABASE_URL`). Moving to a new project again: create it, set `OP3` (GitHub secret or variable, and Vercel Production) to its string, run the **Migrate database** workflow (copies OP2 → OP3; dry run first), run the **Migrate database** workflow (dry run first), then **Import prices**, then a manual **Production deploy**. The old project is never modified.
 
 There is no history database. Price history lives in GitHub (see 2).
 
@@ -60,7 +60,7 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Search Console | 07:25 UTC, or Run workflow | `GSC_SA_KEY` |
 | IndexNow submit | 08:10 UTC, or Run workflow | `INDEXNOW_KEY` (+ the same key in Vercel) |
 | Stripe setup | by hand: once, and after a price change | `STRIPE_SECRET_KEY` |
-| Watchdog | every four hours at :47 (and Run workflow) | `DATABASE_URL`; optional `NEON_API_KEY`, `NEON_PROJECT_ID`, and the mail secrets so it can email you (without them it opens one GitHub issue instead) |
+| Watchdog | every eight hours at :47 (and Run workflow) | `DATABASE_URL`; optional `NEON_API_KEY`, `NEON_PROJECT_ID`, and the mail secrets so it can email you (without them it opens one GitHub issue instead) |
 | eBay prices | 12:37 UTC daily, or Run workflow (a dispatch shares the same 2,500-a-day ceiling) (never 07:00–08:10 or 19:00–20:10 UTC) | `DATABASE_URL`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (a green no-op without them) |
 
 Each workflow is a no-op until its values exist.
@@ -287,7 +287,7 @@ sends nothing) or `free` to recover a missed 07:07 run.
 
 ## 6c. The watchdog: so you do not have to look (optional keys)
 
-The site checks itself every four hours (the **Watchdog** workflow) and tells you.
+The site checks itself every eight hours (the **Watchdog** workflow) and tells you.
 You do not need to open Neon, GitHub or the admin pages to find out something broke.
 
 What it checks, and what you see in **/admin/health** (and the number on the admin bar):
