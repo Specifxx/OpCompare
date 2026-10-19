@@ -17,6 +17,7 @@ import {
   matchSealedTitle,
   matchStoreProduct,
   foreignByTags,
+  isEventListing,
   plausibleSinglePrice,
   setCodesIn,
   skuCardNumber,
@@ -648,4 +649,165 @@ test("Extra Booster boxes: EB-05 is the catalogue's EB05, and Vol. 2 is never th
   // The first Heroines box, with or without its code, stays the first box.
   assert.equal(id("One Piece Card Game Extra Booster: One Piece Heroines Edition Booster Box"), 666891);
   assert.equal(id("One Piece Card Game EB-03 Heroines Edition Booster Box"), 666891);
+});
+
+// ── BeachesTCG (AU), 2026-10-19: a sealed-only store ─────────────────────────
+// Its whole One Piece collection as read that day (tests/fixtures/stores/
+// beaches-one-piece-products.json), against the real sealed catalogue of the
+// sets it names (the 2026-10-18 snapshot), with the decoys of each set: the
+// display, the case, the sleeved pack. The import then refuses three of the
+// matches as implausible at that day's prices (ST-23, ST-28 and the OP-09 pack,
+// all sold out, under half of TCGplayer's market); that is the price check's
+// call, not the matcher's.
+const BEACHES_SEALED: SealedRef[] = (
+  [
+    [694893, "Set Sail Deck Set", "Starter Deck", "SD01", "Set Sail Deck Set"],
+    [694894, "Set Sail Deck Set Display", "Display", "SD01", "Set Sail Deck Set"],
+    [288221, "Starter Deck 1: Straw Hat Crew", "Starter Deck", "ST-01", "Starter Deck 1: Straw Hat Crew"],
+    [409506, "Super Pre-Release Starter Deck 1: Straw Hat Crew", "Starter Deck", "ST-01 PRE", "Starter Deck 1: Straw Hat Crew (Super Pre-Release Edition)"],
+    [455868, "Starter Deck 6: Absolute Justice", "Starter Deck", "ST-06", "Starter Deck 6: Absolute Justice"],
+    [455869, "Starter Deck 6: Absolute Justice Display", "Display", "ST-06", "Starter Deck 6: Absolute Justice"],
+    [502975, "Starter Deck 8: Monkey.D.Luffy", "Starter Deck", "ST-08", "Starter Deck 8: Monkey.D.Luffy"],
+    [502976, "Starter Deck 8: Monkey.D.Luffy Display", "Display", "ST-08", "Starter Deck 8: Monkey.D.Luffy"],
+    [502982, "Ultra Deck: The Three Captains", "Starter Deck", "ST-10", "Ultra Deck: The Three Captains"],
+    [606575, "Starter Deck EX: Gear 5", "Starter Deck", "ST-21", "Starter Deck 21: EX Gear 5"],
+    [628448, "Starter Deck 22: Ace & Newgate", "Starter Deck", "ST-22", "Starter Deck 22: Ace & Newgate"],
+    [628449, "Starter Deck 22: Ace & Newgate Display", "Display", "ST-22", "Starter Deck 22: Ace & Newgate"],
+    [627669, "Starter Deck 23: RED Shanks", "Starter Deck", "ST-23", "Starter Deck 23: RED Shanks"],
+    [627671, "Starter Deck 24: GREEN Jewelry Bonney Display", "Display", "ST-24", "Starter Deck 24: GREEN Jewelry Bonney"],
+    [627672, "Starter Deck 24: GREEN Jewelry Bonney", "Starter Deck", "ST-24", "Starter Deck 24: GREEN Jewelry Bonney"],
+    [627674, "Starter Deck 25: BLUE Buggy", "Starter Deck", "ST-25", "Starter Deck 25: BLUE Buggy"],
+    [627678, "Starter Deck 27: BLACK Marshall.D.Teach", "Starter Deck", "ST-27", "Starter Deck 27: BLACK Marshall.D.Teach"],
+    [627681, "Starter Deck 28: GREEN/YELLOW Yamato", "Starter Deck", "ST-28", "Starter Deck 28: GREEN/YELLOW Yamato"],
+    [532104, "500 Years in the Future - Booster Pack", "Booster Pack", "OP07", "500 Years in the Future"],
+    [532105, "500 Years in the Future - Sleeved Booster Pack", "Sleeved Booster Pack", "OP07", "500 Years in the Future"],
+    [532106, "500 Years in the Future - Booster Box", "Booster Box", "OP07", "500 Years in the Future"],
+    [542502, "Two Legends - Booster Pack", "Booster Pack", "OP08", "Two Legends"],
+    [542504, "Two Legends - Booster Box", "Booster Box", "OP08", "Two Legends"],
+    [563833, "Emperors in the New World - Booster Pack", "Booster Pack", "OP09", "Emperors in the New World"],
+    [563834, "Emperors in the New World - Booster Box", "Booster Box", "OP09", "Emperors in the New World"],
+    [586670, "Royal Blood Booster Pack", "Booster Pack", "OP10", "Royal Blood"],
+    [586671, "Royal Blood Booster Box", "Booster Box", "OP10", "Royal Blood"],
+    [586673, "Royal Blood Booster Box Case", "Booster Case", "OP10", "Royal Blood"],
+    [628345, "Legacy of the Master Booster Pack", "Booster Pack", "OP12", "Legacy of the Master"],
+    [628346, "Legacy of the Master Booster Box", "Booster Box", "OP12", "Legacy of the Master"],
+    [628351, "Carrying On His Will Booster Pack", "Booster Pack", "OP13", "Carrying On His Will"],
+    [628352, "Carrying On His Will Booster Box", "Booster Box", "OP13", "Carrying On His Will"],
+    [628353, "Carrying On His Will Booster Box Case", "Booster Case", "OP13", "Carrying On His Will"],
+    [682056, "Adventure on Kami's Island Booster Pack", "Booster Pack", "OP15-EB04", "Adventure on Kami's Island"],
+    [704752, "The World's Strongest Warriors Booster Box", "Booster Box", "OP17", "The World's Strongest Warriors"],
+    [704754, "The World's Strongest Warriors Booster Box Case", "Booster Case", "OP17", "The World's Strongest Warriors"],
+    [704756, "The World's Strongest Warriors Booster Pack", "Booster Pack", "OP17", "The World's Strongest Warriors"],
+    [545399, "Premium Booster - Booster Box", "Booster Box", "PRB-01", "Premium Booster -The Best-"],
+    [628452, "Premium Booster Vol. 2 - Booster Box", "Booster Box", "PRB-02", "Premium Booster -The Best- Vol. 2"],
+    [666727, "Extra Booster: One Piece Heroines Edition Pack", "Booster Pack", "EB03", "Extra Booster: One Piece Heroines Edition"],
+  ] as const
+).map(([id, name, kind, setCode, setName]) => ({ id, name, kind, setCode, setName }));
+
+test("a deck's number alone names the set TCGplayer calls \"Starter Deck NN: …\" (BeachesTCG: \"starter deck 24\")", () => {
+  const r = (t: string) => {
+    const x = matchSealedTitle(t, BEACHES_SEALED);
+    return "id" in x ? x.id : x.miss;
+  };
+  // beachestcg.com.au/products/starter-deck-24 (A$29.99, 2026-10-19): no code, no set name.
+  assert.equal(r("starter deck 24"), 627672);
+  // The edges of the rule, around that real title:
+  assert.equal(r("One Piece Starter Deck 24 Display"), 627671);
+  // TCGplayer's ST-21 is "Starter Deck 21: EX Gear 5", the deck "Starter Deck EX: Gear 5".
+  assert.equal(r("One Piece Starter Deck 21"), 606575);
+  // ST-10 is an Ultra Deck: no set is called "Starter Deck 10".
+  assert.equal(r("starter deck 10"), "no-product");
+  // ST-01 and its Super Pre-Release edition both carry the number: only a title that says which.
+  assert.equal(r("starter deck 1"), "ambiguous");
+  assert.equal(r("Starter Deck 1 Super Pre-Release"), 409506);
+  // A count, not a deck number.
+  assert.equal(r("One Piece Starter Deck 2-Pack"), "no-product");
+  assert.equal(r("Starter Deck 24 x2"), "not-sealed");
+  // A code or a set name in the title still decides, as before.
+  assert.equal(r("ST22 - starter deck"), 628448);
+  assert.equal(r("Starter Deck 24 [ST-25]"), 627674);
+});
+
+test("an event entry is never a product, on any path (BeachesTCG lists one in its One Piece collection)", () => {
+  const ix: StoreMatchIndexes = {
+    cards: buildCardIndex([{ id: 643731, name: "Shanks", number: "OP12-007", variant: null, setCode: "OP12", setName: "Legacy of the Master" }]),
+    names: buildNameIndex([]),
+    dons: [],
+    sealed: BEACHES_SEALED,
+  };
+  // beachestcg.com.au/products/one-piece-pirates-party-… : product type "Event Entry", tags OPTCG + SEALED, A$10, in stock.
+  const party = "One Piece - Pirates Party 2026 Vol.3 2-on-2 Battle format - Sat. September 12, 2026 01:00 PM";
+  assert.deepEqual(matchStoreProduct(party, [null], ix, { tags: ["OPTCG", "SEALED"], productType: "Event Entry" }), { miss: "event" });
+  assert.deepEqual(matchStoreProduct(party, [null], ix), { miss: "event" }, "the time of day alone says so");
+  // Its events collection (2026-10-19), type "Event Entry": a time, or the type, is enough.
+  assert.equal(isEventListing("One Piece Store Tournaments Sundays @ 1:00pm"), true);
+  assert.equal(isEventListing("Beaches TCG League Challenge - 10am Start - Rego Open 9am - 1 November"), true);
+  assert.equal(isEventListing("Riftbound 1v1 Nexus Nights", "Event Entry"), true);
+  // A booster box named in an entry's title stays an entry.
+  assert.deepEqual(matchStoreProduct("OP-13 Booster Box Battle - Sat 1:00 PM", [], ix), { miss: "event" });
+  assert.deepEqual(matchStoreProduct("OP-13 Booster Box Draft", [], ix, { productType: "Tournament Entry" }), { miss: "event" });
+  // Not an event: product types and titles stores really use, and release-event PRINTINGS.
+  assert.equal(isEventListing("Royal Blood OP-10 - Booster Box", "One Piece"), false);
+  assert.equal(isEventListing("Op13 booster box English", ""), false);
+  assert.equal(isEventListing("Monet - Legacy of the Master Release Event Cards Foil", "Event Pack"), false);
+  assert.ok("id" in matchStoreProduct("Shanks (OP12-007) [Legacy of the Master]", [], ix));
+});
+
+test("a sealed-only store prices nothing as a single, and every title of BeachesTCG's One Piece collection goes where it should", () => {
+  const fixture = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures/stores/beaches-one-piece-products.json"), "utf8")) as {
+    products: { title: string; product_type: string; tags: string[]; variants: { sku: string | null }[] }[];
+  };
+  const ix: StoreMatchIndexes = {
+    cards: buildCardIndex([{ id: 643731, name: "Shanks", number: "OP12-007", variant: null, setCode: "OP12", setName: "Legacy of the Master" }]),
+    names: buildNameIndex([{ id: 643731, tcgName: "Shanks", setNames: ["Legacy of the Master"] }]),
+    dons: [],
+    sealed: BEACHES_SEALED,
+  };
+  const m = (p: (typeof fixture.products)[number]) => {
+    const x = matchStoreProduct(p.title, p.variants.map((v) => v.sku), ix, { tags: p.tags, productType: p.product_type, sealedOnly: true });
+    return "id" in x ? `${x.path}:${x.id}` : x.miss;
+  };
+  const got = Object.fromEntries(fixture.products.map((p) => [p.title, m(p)]));
+  assert.deepEqual(got, {
+    "ONE PIECE CARD GAME SET SAIL DECK SD-01 STARTER DECK": "sealed:694893",
+    "One Piece - Pirates Party 2026 Vol.3 2-on-2 Battle format - Sat. September 12, 2026 01:00 PM": "event",
+    "ST22 - starter deck": "sealed:628448",
+    "Op13 booster box English": "sealed:628352",
+    "One piece op17 booster box -the worlds strongest": "sealed:704752",
+    // Japanese product is never the English one (the catalogue is TCGplayer's English list).
+    "OP0Y7 JAPANESE BOOSTER PACK": "foreign",
+    "OP12 JAPANESE BOOSTER PACK": "foreign",
+    "OP15 JAPANESE Booster Pack": "foreign",
+    "OP14 JPN Booster Pack": "foreign",
+    "EB04 JPN booster pack": "foreign",
+    "starter deck 24": "sealed:627672",
+    "ST06 - starter deck": "sealed:455868",
+    "ST08 - starter deck": "sealed:502975",
+    "ST23 - starter deck": "sealed:627669",
+    "ST25 - starter deck": "sealed:627674",
+    "ST27 - starter deck": "sealed:627678",
+    "ST28 - starter deck": "sealed:627681",
+    "500 Years in the Future OP-07 - Booster Pack": "sealed:532104",
+    "Two Legends OP-08 - Booster Pack": "sealed:542502",
+    "Emperors in the New World OP-09 - Booster Pack": "sealed:563833",
+    "Royal Blood OP-10 - Booster Box": "sealed:586671",
+    "Royal Blood OP-10 - Booster Pack": "sealed:586670",
+    "Legacy Of The Master OP-12 - Booster Pack": "sealed:628345",
+    "Carrying On His Will OP-13 - Booster Pack": "sealed:628351",
+    "The Best PRB-01 JPN - Booster Box": "foreign",
+    "The Best PRB-02 JPN - Booster Box": "foreign",
+    "EB-03 JPN - Booster Pack": "foreign",
+  });
+  // A single at a sealed-only store is a miss, never a card; the same title elsewhere is the card.
+  assert.deepEqual(matchStoreProduct("Shanks (OP12-007) [Legacy of the Master]", [], ix, { sealedOnly: true }), { miss: "sealed-only-single" });
+  assert.deepEqual(matchStoreProduct("Shanks [Legacy of the Master]", ["OP12-007-EN-NF-1"], ix, { sealedOnly: true }), { miss: "not-sealed" });
+  assert.equal(m({ title: "Shanks (OP12-007) [Legacy of the Master]", product_type: "", tags: [], variants: [] }), "sealed-only-single");
+  assert.ok("id" in matchStoreProduct("Shanks (OP12-007) [Legacy of the Master]", [], ix));
+});
+
+test("the import and the probe hand the store's sealed-only flag to the matcher", () => {
+  for (const f of ["../src/lib/import.ts", "../scripts/probe-stores.ts"]) {
+    const src = fs.readFileSync(path.resolve(__dirname, f), "utf8");
+    assert.match(src, /tags: p\.tags, productType: p\.product_type, sealedOnly: store\.sealedOnly/, f);
+  }
 });

@@ -2665,3 +2665,38 @@ OP Compare still built a preview for every push to every branch. `scripts/vercel
 - Today the cards with a last known price are mostly promo, event, trophy and serial-numbered printings, and some figures are single asks: the history's US$20,000 listing for Rebecca OP15-039 Flame-Flame Fruit Coliseum on 12 October, or sold-out rows such as A$202,999 for the Monkey.D.Luffy ST01-001 Serial Number. A tile shows exactly what the card page already shows as "Last seen" (or what the live headline showed that day); the date and the muted "Last known price" say what it is.
 - The card page's existing "Last seen" tile (a sold-out store row's price, in the accent colour, under "Cheapest") is left as it was; it predates this rule, and changing it is put to the owner.
 - Not done: the set page's "price guide" table (its column is the cheapest in-stock listing only, so its "—" is already the truth), sealed products, the watchlist, the binder and its share page (values), the deck pricer.
+
+## BeachesTCG (AU) joins as a sealed-only store; event entries are never products — 2026-10-19
+
+**Owner:** "Can we add this website to the stores for all the relevant compare sites? I think they might only do sealed products, not sure about singles. Australian. https://beachestcg.com.au/"
+
+**What the store is** (read 19 October). Shopify (`qf1nsm-k0.myshopify.com`), AUD, ships within Australia only (`/meta.json`), robots.txt allows `/collections/*/products.json`. Its sitemap has one One Piece collection, `one-piece`: 27 products (page 2 empty), 3 in stock. English sealed (Set Sail SD-01, starter decks ST-06 to ST-28, OP-07 to OP-13 packs, OP-10/OP-13/OP-17 boxes), 8 Japanese packs and boxes, and one event entry. No singles.
+
+**The entry.** `beachestcg`, "BeachesTCG" (the store's own name), AU, `collections: ["one-piece"]`, `sealedOnly: true`.
+
+**Sealed only (`StoreInfo.sealedOnly`, new).** The store's listings go through `matchSealedTitle` alone. A title with a card number is the miss `sealed-only-single`, so nothing it lists is ever priced as a single, even if singles appear in that collection later. /admin/store-health would then show the misses, and dropping the flag lets the singles matcher read them. That is the owner's call.
+
+**Event entries are never products, at every store and on every path** (`isEventListing` in `lib/match.ts`, the miss `event`). Beaches lists "One Piece - Pirates Party 2026 Vol.3 2-on-2 Battle format - Sat. September 12, 2026 01:00 PM" inside its One Piece collection. Its product type is "Event Entry" and it is tagged SEALED. It was skipped only because no product word happened to fit. Two things now mark a listing as an event:
+- a product type that says it is an entry or a ticket ("Event Entry", "Tournament Entry", "Tickets");
+- a title that states a time of day ("01:00 PM", "@ 1:00pm", "10am Start").
+
+The rule only takes listings away. In the 18 October snapshot, none of the 657,673 store offers has a URL handle that states a time of day, so the title test removes nothing priced today. The snapshot keeps no product types, so the type test could not be replayed; it names only entry and ticket types. Real titles from Beaches' One Piece and events collections are in `tests/match.test.ts`.
+
+**One sealed rule, for a real naming difference.** A title with no set code and no set name that says "starter deck NN" names the set TCGplayer calls "Starter Deck NN: …", and no other. The real title is Beaches' "starter deck 24", which is ST-24.
+- ST-10 and ST-13 are Ultra Decks, so "starter deck 10" names nothing.
+- ST-01 and its Super Pre-Release edition share the number, so a bare "starter deck 1" stays ambiguous.
+- A number followed by pack, x or bundle is a count, not a deck.
+
+Before this rule, such a title found no product at all (with no code and no name, no set fitted). So the rule never moves an existing match: it only turns `sealed-no-product` misses into matches.
+
+"Op13 booster box English" and "ST22 - starter deck" already matched (OP13 box, ST-22) and needed no rule.
+
+**Japanese product** is skipped as `foreign` (FOREIGN_LANG: "JAPANESE", "JPN"), never matched to the English product. The catalogue is TCGplayer's English list.
+
+**Dry run.** The import's own per-product path (matcher with the store's tags, product type and sealed-only flag; the shared-title guard; best variant; AUD→USD; the plausibility check) was run over the saved products.json (`tests/fixtures/stores/beaches-one-piece-products.json`) against the 18 October snapshot's catalogue, writing nothing. `scripts/probe-stores.ts --key=beachestcg` (the live reader, read-only) found the same collection and the same 18 matches before the price check. The result: 15 offers, 2 in stock (Set Sail Deck Set A$34.99, Starter Deck 22 A$34.99). 8 were skipped as foreign and 1 as an event. 3 matched but were refused as implausible: ST-23, ST-28 and the OP-09 pack, all sold out and under half of TCGplayer's market. 3 of 27 is over `IMPLAUSIBLE_SHARE`, so /admin/store-health will list Beaches under "Needs a look" with an implausible-prices alert while those stale prices stand. The threshold is unchanged.
+
+**Postage.** There is no `/policies/shipping-policy` (404). The FAQ gives no rate. The terms (`/pages/terms-conditions`, §4) say "Shipping costs and estimated delivery times are provided at checkout and may vary based on your location and chosen shipping method." So there is no `shippingCents`, no `policyUrl`, and an `"unmeasured"` line in `shipping-rates.json` (the market estimate, never a measured rate). The postage probe carts singles, so it cannot measure this store.
+
+**Health.** No new check. The watchdog's store check (`collectStores`) and every store-health alert (failing, empty read, no listings, stale, listings or match rate dropped, implausible prices) run over the whole registry, so Beaches is counted like any store.
+
+**Before the release.** The import runs from `main`, but the site runs the last release. The site deployed now (8a7d22c) does not know the key. Rendering its board with an offer from `store:beachestcg` gives no crash and no hidden row: the row is labelled with the raw key "beachestcg", with "postage at checkout", on AU sealed pages and quick views. The store is missing from /stores and the sitemap. That lasts until the next Monday release, or about an hour if the change lands on `main` before the 07:07 UTC import on a release Monday. Best Basket prices only its own registry's stores (`basketStoresFor`), so the deployed site leaves Beaches out of it. Beaches lists no singles anyway.

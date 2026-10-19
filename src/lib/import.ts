@@ -337,7 +337,7 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
     }
     const drafts = new Map<number, OfferDraft>();
     // Card number → TCGplayer name → DON!! → SKU number → sealed (lib/match.ts).
-    const matched = fetched.products.map((p) => ({ p, m: matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix, { tags: p.tags, productType: p.product_type }) }));
+    const matched = fetched.products.map((p) => ({ p, m: matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix, { tags: p.tags, productType: p.product_type, sealedOnly: store.sealedOnly }) }));
     // A bare "Name [Set]" title that several of this store's products share is
     // several different cards (the store numbers them -1, -2 ... in the handle),
     // and with no SKU number to tell them apart none of them is safe to price.
