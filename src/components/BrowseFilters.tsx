@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { COLORS, COLOR_KEYS, PRINTINGS, PRINTING_KEYS, RARITIES, SET_KINDS, CARD_TYPES } from "@/lib/constants";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { BrowseQuery } from "@/lib/browse";
+import { QUERY_MAX, type BrowseQuery } from "@/lib/browse";
 import type { SetLite } from "@/lib/data";
-import { canonical, clearFilters, priceInput, toggle, values, withArticle } from "@/lib/filter-chips";
+import { canonical, clearFilters, filterCount, priceInput, toggle, values, withArticle, withKeywords } from "@/lib/filter-chips";
 
 function Section({ title, open = false, children }: { title: string; open?: boolean; children: React.ReactNode }) {
   return (
@@ -35,6 +35,13 @@ function Check({ name, value, checked, onToggle, children }: { name: string; val
 // results in the background; the copy resyncs whenever the URL changes (a
 // chip removed, Back/Forward). Still a real GET form with named inputs, so it
 // works without JavaScript (the "Show results" button submits it then).
+//
+// The search box at the top (owner, 2026-10-19: "a filter by just keywords,
+// so you don't need the search bar at the top of the website") is the same
+// `q` the header search writes, ANDed with every other filter. As on /sealed
+// it applies as you type, after a pause, and at once on Enter or blur.
+// `hide={["q"]}` drops it where the page has its own box for q (the price
+// guide's toolbar); the words then ride along as a hidden field.
 export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] }: { q: BrowseQuery; sets: SetLite[]; country: Country; action?: string; hide?: string[] }) {
   const c = COUNTRIES[country];
   const router = useRouter();
@@ -55,6 +62,22 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
     setMax(values(params, "max")[0] ?? "");
   }, [params]);
 
+  const showSearch = !hide.includes("q");
+  const searchId = useId();
+  const searchBox = useRef<HTMLInputElement>(null);
+  const [text, setText] = useState(q.q);
+  // The words this panel last wrote. While the visitor is still typing, the
+  // URL catching up with an earlier pause must not overwrite what they have
+  // typed since; any other change of q (the header search, a chip, Back,
+  // "Clear") refills the box.
+  const sent = useRef(q.q.trim());
+  const urlQ = params.get("q") ?? "";
+  useEffect(() => {
+    if (document.activeElement === searchBox.current && urlQ.trim() === sent.current) return;
+    setText(urlQ);
+    sent.current = urlQ.trim();
+  }, [urlQ]);
+
   const go = (next: URLSearchParams) => {
     const qs = canonical(next).toString();
     setOpt(qs);
@@ -62,6 +85,31 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
   };
   const on = (key: string, value: string) => values(sp, key).some((v) => v.toLowerCase() === value.toLowerCase());
   const flip = (key: string, value: string) => go(toggle(sp, key, value));
+
+  const applySearch = () => {
+    const words = text.trim();
+    if (!showSearch || words === (sp.get("q") ?? "").trim()) return;
+    sent.current = words;
+    go(withKeywords(sp, words));
+  };
+  // Applies as you type, after a pause (the ticks already apply at once). The
+  // timer calls the LATEST render's applySearch: a tick made during the pause
+  // must not be undone by a query read before it.
+  const latestApply = useRef(applySearch);
+  useEffect(() => {
+    latestApply.current = applySearch;
+  });
+  useEffect(() => {
+    const t = setTimeout(() => latestApply.current(), 350);
+    return () => clearTimeout(t);
+  }, [text]);
+  // Enter applies at once. With JavaScript the form has no submit button and
+  // several text boxes, so the browser never submits it on Enter (see the price boxes).
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    applySearch();
+  };
 
   const applyPrice = (form?: HTMLFormElement | null) => {
     const a = priceInput(min);
@@ -71,7 +119,9 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
       return;
     }
     setPriceError(false);
-    const next = new URLSearchParams(sp);
+    // A submit applies every box at once, the search words included.
+    const next = showSearch ? withKeywords(sp, text) : new URLSearchParams(sp);
+    if (showSearch) sent.current = text.trim();
     if (a) next.set("min", a);
     else next.delete("min");
     if (b) next.set("max", b);
@@ -87,17 +137,24 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
     go(next);
   };
 
-  // Enter in a price box applies it. The form has two text boxes and, with
-  // JavaScript, no submit button, so the browser's implicit submission on
-  // Enter never fires; this is that path.
+  // Enter in a price box applies it. The form has several text boxes and,
+  // with JavaScript, no submit button, so the browser's implicit submission
+  // on Enter never fires; this is that path.
   const onPriceKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
     applyPrice(e.currentTarget.form);
   };
 
-  const activeCount =
-    ["set", "color", "rarity", "type", "printing"].reduce((n, k) => n + values(sp, k).length, 0) + (sp.get("priced") === "1" ? 1 : 0) + (sp.get("min") || sp.get("max") ? 1 : 0);
+  // The words count, and "Clear" empties them, only where the box is shown (as on /sealed).
+  const activeCount = filterCount(sp, { search: showSearch });
+  const clearAll = () => {
+    if (showSearch) {
+      setText("");
+      sent.current = "";
+    }
+    go(clearFilters(sp, showSearch ? [] : ["q"]));
+  };
 
   const byKind = Object.entries(SET_KINDS)
     .sort((a, b) => a[1].order - b[1].order)
@@ -118,12 +175,37 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="rb-eyebrow text-slate-500">Filters</p>
         {activeCount > 0 ? (
-          <button type="button" onClick={() => go(clearFilters(sp))} className="text-xs font-medium text-brand-400 hover:underline">
+          <button type="button" onClick={clearAll} className="text-xs font-medium text-brand-400 hover:underline">
             Clear ({activeCount})
           </button>
         ) : null}
       </div>
-      {q.q ? <input type="hidden" name="q" value={q.q} /> : null}
+      {showSearch ? (
+        <div role="search" className="pb-3">
+          <label htmlFor={searchId} className="mb-2 block text-[12px] font-bold uppercase tracking-[0.1em] text-slate-300">
+            Search
+          </label>
+          <input
+            ref={searchBox}
+            id={searchId}
+            type="search"
+            name="q"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={onSearchKey}
+            onBlur={applySearch}
+            maxLength={QUERY_MAX}
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="Card name or number…"
+            className="input"
+          />
+        </div>
+      ) : q.q ? (
+        <input type="hidden" name="q" value={q.q} />
+      ) : null}
       {/* Sort and page size live in the results bar (SortSelect / PageSizeSelect,
           which navigate on their own); carried here so applying a filter keeps them. */}
       <input type="hidden" name="sort" value={q.sort} />

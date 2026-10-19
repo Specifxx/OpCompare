@@ -196,7 +196,8 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
             Filters
           </label>
           <div className="mt-3 hidden peer-checked:block lg:mt-0 lg:block">
-            <BrowseFilters q={gq.browse} sets={cat.sets} country={country} action="/price-guide" />
+            {/* The toolbar above already has the guide's search box for q, so the panel shows none. */}
+            <BrowseFilters q={gq.browse} sets={cat.sets} country={country} action="/price-guide" hide={["q"]} />
           </div>
         </aside>
         <div className="min-w-0">

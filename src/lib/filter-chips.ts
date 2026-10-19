@@ -1,7 +1,8 @@
 // The /browse filter URL, as data (RiftCompare's Filters + ActiveFilters):
 // which filters are on, how a chip removes one, how a checkbox toggles one,
-// and the one canonical query string they all write. The URL stays the only
-// source of truth; these are pure so tests/filter-chips.test.ts can pin them.
+// how the panel's search box sets the words, and the one canonical query
+// string they all write. The URL stays the only source of truth; these are
+// pure so tests/filter-chips.test.ts can pin them.
 //
 // Multi-value filters are written comma-separated (set=op01-romance-dawn,op02-…)
 // but parseBrowse (lib/browse.ts) also reads repeated keys, so an old
@@ -31,10 +32,9 @@ export function values(sp: ParamsLike, key: string): string[] {
 export function canonical(sp: ParamsLike & { keys(): IterableIterator<string> }, defaults: Record<string, string> = BROWSE_DEFAULTS): URLSearchParams {
   const out = new URLSearchParams();
   for (const k of URL_ORDER) {
-    const vs = values(sp, k);
-    if (!vs.length) continue;
-    const v = (MULTI_KEYS as readonly string[]).includes(k) ? vs.join(",") : vs[0];
-    if (defaults[k] === v) continue;
+    // A single-value key keeps its whole value: the search words may hold a comma.
+    const v = (MULTI_KEYS as readonly string[]).includes(k) ? values(sp, k).join(",") : sp.getAll(k).map((x) => x.trim()).find(Boolean) ?? "";
+    if (!v || defaults[k] === v) continue;
     out.set(k, v);
   }
   for (const k of new Set(sp.keys())) {
@@ -78,9 +78,30 @@ export function withArticle(adjective: string): string {
 
 const title = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-/** Every active filter as a removable chip, in panel order. The search words (q) are not a chip. */
+/** The query after the panel's search box changes: the words trimmed (empty removes q), every other param kept; canonical() then drops the page. */
+export function withKeywords(sp: URLSearchParams, text: string): URLSearchParams {
+  const next = new URLSearchParams(sp);
+  const words = text.trim();
+  if (words) next.set("q", words);
+  else next.delete("q");
+  return next;
+}
+
+/** The panel's "Clear (n)": one per value, one for the price range, and one for the search words when the panel shows the box. */
+export function filterCount(sp: ParamsLike, { search = true }: { search?: boolean } = {}): number {
+  return (
+    (search && sp.get("q")?.trim() ? 1 : 0) +
+    MULTI_KEYS.reduce((n, k) => n + values(sp, k).length, 0) +
+    (sp.get("priced") === "1" ? 1 : 0) +
+    (sp.get("min") || sp.get("max") ? 1 : 0)
+  );
+}
+
+/** Every active filter as a removable chip, in panel order: the search words first, quoted. */
 export function activeChips(sp: ParamsLike, labels: ChipLabels): Chip[] {
   const chips: Chip[] = [];
+  const words = sp.get("q")?.trim();
+  if (words) chips.push({ key: "q", value: "", label: `“${words}”` });
   for (const v of values(sp, "set")) chips.push({ key: "set", value: v, label: labels.set?.(v) ?? v.toUpperCase() });
   for (const v of values(sp, "color")) chips.push({ key: "color", value: v, label: COLORS[title(v) as keyof typeof COLORS]?.label ?? title(v) });
   for (const v of values(sp, "rarity")) chips.push({ key: "rarity", value: v, label: RARITIES[v] ? `${RARITIES[v].label}${RARITIES[v].label === v ? "" : ` (${v})`}` : v });
@@ -112,10 +133,15 @@ export function removeChip(sp: URLSearchParams, chip: Pick<Chip, "key" | "value"
   return next;
 }
 
-/** "Clear all": every filter off, but the search words and the chosen sort and page size stay. */
-export function clearFilters(sp: ParamsLike): URLSearchParams {
+/**
+ * "Clear" / "Clear all": every filter off, the search words included (as on
+ * /sealed); the chosen sort and page size stay. `keep` names keys a control
+ * does not show and so must not clear: the price guide's panel has no search
+ * box (its toolbar owns q), so it keeps ["q"].
+ */
+export function clearFilters(sp: ParamsLike, keep: readonly string[] = []): URLSearchParams {
   const next = new URLSearchParams();
-  for (const k of ["q", "sort", "per"]) {
+  for (const k of [...keep, "sort", "per"]) {
     const v = sp.get(k);
     if (v) next.set(k, v);
   }

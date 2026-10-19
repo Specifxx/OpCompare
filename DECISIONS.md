@@ -2700,3 +2700,19 @@ Before this rule, such a title found no product at all (with no code and no name
 **Health.** No new check. The watchdog's store check (`collectStores`) and every store-health alert (failing, empty read, no listings, stale, listings or match rate dropped, implausible prices) run over the whole registry, so Beaches is counted like any store.
 
 **Before the release.** The import runs from `main`, but the site runs the last release. The site deployed now (8a7d22c) does not know the key. Rendering its board with an offer from `store:beachestcg` gives no crash and no hidden row: the row is labelled with the raw key "beachestcg", with "postage at checkout", on AU sealed pages and quick views. The store is missing from /stores and the sitemap. That lasts until the next Monday release, or about an hour if the change lands on `main` before the 07:07 UTC import on a release Monday. Best Basket prices only its own registry's stores (`basketStoresFor`), so the deployed site leaves Beaches out of it. Beaches lists no singles anyway.
+
+## A search box inside the card filters — 2026-10-19
+
+**Owner:** "In the database, when you have the filters, there should be a search bar in the filters as well — a filter by just keywords — so you don't need to use the search bar at the top of the website."
+
+**What.** `BrowseFilters` opens with a "Search" box (`type="search"`, `name="q"`, placeholder "Card name or number…", `maxLength` = `QUERY_MAX`, 80, what `parseBrowse` reads). It writes the same `q` the header search writes, so it matches what `lib/search.ts` matches (name, number, printing, rarity, type, set, nicknames), ANDed with every other filter. It is the named field the hidden `q` input used to be, so the GET form still works without JavaScript. On /sealed's terms: it applies as you type after a 350 ms pause, and at once on Enter or blur. Every change goes through `withKeywords` and `canonical()`, so the other params stay and the page goes back to 1.
+
+**Where.** /browse and every set page (the set stays fixed; `runBrowse` already searched before it filtered by set). Not in the price guide's panel: its toolbar already has a search box for the same `q` directly above it. Two boxes for one param on one screen would be one too many. There the panel takes `hide={["q"]}` and carries the words as a hidden field. The guide's `runGuide` honours `q` either way.
+
+**The words are a filter now, so they count and they clear** (this reverses "the search words (q) are not a chip" in `lib/filter-chips.ts`, from the 2026-10-03 filter-chips work). The panel's "Clear (n)" counts them, as /sealed's does. `FilterChips` shows them first, quoted (“zoro”), with one tap to remove. "Clear" and "Clear all" empty them, as /sealed's "Clear" does, and the box empties with them. Sort and page size still stay. A panel that does not show the box (the price guide's) neither counts nor clears the words; its chip and "Clear all" still do, so each control clears exactly what it shows.
+
+**Keeping the box and the URL in step.** The box refills whenever `q` changes from elsewhere: the header search, a chip, Back/Forward, "Clear". The one exception is while the visitor is typing in it and the URL is only catching up with what this panel last sent. Without that, a slow render of "luffy" would wipe the " gear" typed since. The pause timer calls the latest render's apply, so a tick made during the pause is not undone by a query read before it.
+
+**A comma in the words.** `canonical()` used to split every key on commas, so "luffy, zoro" became "luffy" on the next filter change. Single-value keys now keep their whole value.
+
+Pinned by `tests/browse-filters-search.test.ts` (the field rendered through Next's router contexts, the pages that show or hide it, the set page's and the guide's `q`) and `tests/filter-chips.test.ts` (`withKeywords`, `filterCount`, the chip, `clearFilters`). No loader, cache, `revalidate` or database read was added.
