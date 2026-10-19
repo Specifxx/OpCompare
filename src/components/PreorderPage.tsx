@@ -10,7 +10,7 @@ import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type SealedLite } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
-import { pageOg } from "@/lib/og/meta";
+import { pageOgOwnImage } from "@/lib/og/meta";
 import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderSummary, productBoard, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
 import { ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
@@ -83,7 +83,7 @@ export async function preorderMetadata(cfg: PreorderConfig): Promise<Metadata> {
     description: `One Piece ${cfg.label} ${name} booster box, case and pack pre-order prices from every tracked store, TCGplayer and eBay, in your currency, refreshed daily.${when}`,
     keywords: cfg.keywords,
     alternates: { canonical: cfg.path },
-    openGraph: pageOg(cfg.path, { title: cfg.ogTitle, description: cfg.ogDescription }),
+    openGraph: pageOgOwnImage(cfg.path, { title: cfg.ogTitle, description: cfg.ogDescription }),
   };
 }
 
