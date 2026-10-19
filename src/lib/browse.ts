@@ -7,6 +7,9 @@ import { RARITIES } from "./constants";
 
 export type SearchParams = Record<string, string | string[] | undefined>;
 
+/** The longest search (?q=) the server reads; the filter panel's box holds no more. */
+export const QUERY_MAX = 80;
+
 export const SORTS = {
   value: "Most valuable",
   "price-asc": "Price: low to high",
@@ -47,7 +50,7 @@ export function parseBrowse(sp: SearchParams): BrowseQuery {
   const per = parseInt(one(sp.per), 10);
   const page = parseInt(one(sp.page), 10);
   return {
-    q: one(sp.q).slice(0, 80),
+    q: one(sp.q).slice(0, QUERY_MAX),
     sets: list(sp.set),
     colors: list(sp.color).map((c) => c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()),
     rarities: list(sp.rarity),
