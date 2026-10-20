@@ -41,6 +41,9 @@ export function Reveal({
     // later and cause exactly the flash-of-motion this layout effect exists to
     // avoid.
     if (prefersReducedMotion() || !("IntersectionObserver" in window)) return; // leave content visible
+    // Crawlers (Googlebot smartphone renders with JS and screenshots the page)
+    // must never see a section parked at opacity 0 waiting for a scroll.
+    if (/bot|crawl|spider|slurp|lighthouse|headless/i.test(navigator.userAgent)) return;
 
     // Hide before paint so the reveal animates from the hidden state.
     el.classList.add(stagger ? "reveal-stagger" : "reveal-init");
