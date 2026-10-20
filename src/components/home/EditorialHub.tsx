@@ -9,10 +9,9 @@ import { HomeUpdatedAgo } from "./HeroStats";
 // RiftCompare's EditorialHub: one card-surface band of three columns — "Start
 // here" (the buying guide for the market, then evergreen explainers), "Latest
 // news" (the newest posts) and "Market updates" (movers, the Index and the
-// market reads). Two rows per column on a phone. OP Compare's posts carry no
+// market reads).. OP Compare's posts carry no
 // hero image, so no column leads with one.
 const NEWS_COUNT = 3;
-const PHONE_ROWS = 2;
 
 type Teaser = {
   href: string;
@@ -63,15 +62,15 @@ export function EditorialHub({ cat, updatedAt, renderedAt, market }: { cat: Cata
       <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         <Column title="Start here">
           <ul>
-            {startHere.map((t, i) => (
-              <TeaserRow key={t.href} t={t} phoneHidden={i >= PHONE_ROWS} />
+            {startHere.map((t) => (
+              <TeaserRow key={t.href} t={t} />
             ))}
           </ul>
         </Column>
         <Column title="Latest news">
           <ul>
-            {news.map((t, i) => (
-              <TeaserRow key={t.href} t={t} phoneHidden={i >= PHONE_ROWS} />
+            {news.map((t) => (
+              <TeaserRow key={t.href} t={t} />
             ))}
           </ul>
         </Column>
@@ -86,8 +85,8 @@ export function EditorialHub({ cat, updatedAt, renderedAt, market }: { cat: Cata
             <li>
               <RowLink href="/market" title="The OP Compare Index" line="One daily number for the value of the One Piece card market." />
             </li>
-            {reads.map((t, i) => (
-              <TeaserRow key={t.href} t={t} phoneHidden={i >= PHONE_ROWS - 1} />
+            {reads.map((t) => (
+              <TeaserRow key={t.href} t={t} />
             ))}
           </ul>
         </Column>
@@ -115,7 +114,7 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function TeaserRow({ t, phoneHidden = false }: { t: Teaser; phoneHidden?: boolean }) {
+function TeaserRow({ t }: { t: Teaser }) {
   const meta = t.date ? (
     <time dateTime={t.date.iso}>
       {t.date.label && <span className="hidden md:inline">{t.date.label} </span>}
@@ -125,7 +124,7 @@ function TeaserRow({ t, phoneHidden = false }: { t: Teaser; phoneHidden?: boolea
     `${t.readMins} min read`
   ) : null;
   return (
-    <li className={phoneHidden ? "hidden md:block" : undefined}>
+    <li>
       <RowLink href={t.href} title={t.title} line={t.line} meta={meta} />
     </li>
   );
