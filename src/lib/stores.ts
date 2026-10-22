@@ -231,7 +231,10 @@ const RAW_STORES: StoreInfo[] = [
   { key: "waywardcitygames", name: "Wayward City Games", base: "https://waywardcitygames.net", country: "US", collections: ["one-piece-card-game"] },
   { key: "zulusgames", name: "Zulus Games", base: "https://zulusgames.com", country: "US", collections: ["one-piece-singles"] },
   { key: "crystalcollectablestcg", name: "Crystal Collectables TCG", base: "https://crystalcollectablestcg.com.au", country: "AU", collections: ["one-piece-singles", "one-piece"] },
-  { key: "dongames", name: "Don Games", base: "https://dongames.com.au", country: "AU", collections: ["st05-one-piece-film-edition"] },
+  // Don Games: its owner made the "One Piece Singles" collection for us (2026-10-22), so it is a configured
+  // handle now (a configured collection that cannot be read keeps the store's last offers rather than
+  // publishing a part-read store); its English sealed collections are configured too.
+  { key: "dongames", name: "Don Games", base: "https://dongames.com.au", country: "AU", collections: ["one-piece-singles", "one-piece-sealed-product", "one-piece-sealed"] },
   { key: "eternalmagic", name: "Eternal Magic", base: "https://eternalmagic.cc", country: "AU", collections: ["one-piece-singles-all", "one-piece-in-stock", "extra-booster-one-piece-heroines-edition"] },
   { key: "frenlybricks", name: "Frenly Bricks", base: "https://frenlybricks.store", country: "AU", collections: ["one-piece-tcg", "one-piece-tcg-singles", "one-piece", "one-piece-sec", "one-piece-sr", "one-piece-purple", "one-piece-red", "one-piece-yellow", "one-piece-black", "one-piece-blue", "one-piece-leaders", "st-10"] },
   { key: "gameology", name: "Gameology", base: "https://www.gameology.com.au", country: "AU", collections: ["one-piece-tcg-single-cards", "one-piece-tcg-op04-kingdoms-of-intrigue-singles", "one-piece-tcg-op05-awakening-of-the-new-era-singles", "one-piece-op01-romance-dawn-singles", "one-piece-tcg-op02-paramount-war-singles", "one-piece-tcg-op03-pillars-of-strength-singles", "one-piece-tcg-op06-wings-of-the-captain-single-cards"] },

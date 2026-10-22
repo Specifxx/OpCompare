@@ -2739,3 +2739,22 @@ the code also asks for less of it.
 - **Cost of that:** welcome and confirmation emails wait up to three hours; the health report
   is up to eight hours old; popularity counts lose what an instance holds when it is
   recycled; a new sign-up shows in the promo counter within 15 minutes.
+
+## 2026-10-22: Don Games asked to be listed more fully
+
+The owner of Don Games (AU, already a store here) wrote through the inbox asking for a
+wider range of their cards, then made a Shopify collection "One Piece Singles" for us.
+That handle was already read (the importer discovers `*one-piece*` collections from the
+sitemap), so the change is that it and the two English sealed collections are now
+CONFIGURED handles: a configured collection that cannot be read fails the store's read
+and keeps its last offers instead of publishing a part-read store. The old
+`st05-one-piece-film-edition` handle is no longer needed (the singles collection holds it).
+
+Measured the same day against their live feed (4,459 singles): 3,642 matched (82%), 2,822 in
+stock. The misses are, by reason: 525 "no printing" (their names for stamped and promo
+variants: "Gift Collection Alternate Art", "Dash Pack", "Extended Art", event names where
+TCGplayer says "Gift Collection 2023", "Box Topper", "Pre-Release", "Judge Pack Vol. 6",
+"Premium Card Collection -Best Selection Vol. 5-", "Promotion Pack 2022", "Full Art"), 204
+DON!! cards with no card number, 25 ambiguous (mostly P- promos), 38 Japanese. No matcher
+rule was loosened: an ambiguous listing is skipped, not guessed. The owner offered to rename
+variants to TCGplayer's wording, which is the safe fix; the exact wording was sent back to him.
