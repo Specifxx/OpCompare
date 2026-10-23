@@ -846,7 +846,7 @@ export const getLibraryDecks = unstable_cache(
   async (): Promise<LibraryDeckRow[]> =>
     (await prisma.publishedDeck.findMany({ where: { status: "live" }, orderBy: { createdAt: "desc" }, take: 300, select: DECK_ROW_SELECT })).map(deckRowOf),
   ["library-decks-v1"],
-  { tags: [DECKS_TAG], revalidate: 3600 },
+  { tags: [DECKS_TAG], revalidate: TTL },
 );
 
 /** One live deck by slug, with its description and list text; null when there is none. */

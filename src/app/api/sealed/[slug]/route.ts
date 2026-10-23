@@ -16,6 +16,6 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const cat = await getCatalog().catch(() => null);
   const set = s.setId != null ? cat?.setById.get(s.setId) ?? null : null;
   return NextResponse.json(sealedQuickViewPayload(s, set ? { code: set.code, name: set.name, slug: set.slug } : null), {
-    headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" },
+    headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
   });
 }

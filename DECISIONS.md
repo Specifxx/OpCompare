@@ -2777,3 +2777,33 @@ RelatedGuides (the set's own guide first). Three guides each target one query
 (`op17-booster-box-price`, `one-piece-booster-pack-price`, `one-piece-starter-deck-prices`),
 built at render from the snapshot like every other post, so a figure always matches the
 page it links to.
+
+## 2026-10-23: Nothing caches for less than six hours
+
+**Owner (team brief):** cut the Vercel bill (Pro, 10 Oct–10 Nov: Fluid CPU, Fast Origin Transfer and ISR writes the largest lines). No Vercel token or dashboard is available, so per-project usage was not measured; this is a code audit (`COST.md`).
+
+The homepage, the five region homes, the two pre-order pages and the three deck routes were ISR for an hour, and the deck library loader held an hour. Prices change twice a day (the import), and the import's `revalidateTag("prices")` purges these pages anyway, so the hourly life only added up to 24 rewrites a page a day of the same data.
+- `revalidate = 21600` on all of them, and `getLibraryDecks` at `TTL` (six hours). Publishing or hiding a deck still revalidates `DECKS_TAG` and the paths at once.
+- `/news-sitemap.xml` and `/release-dates/calendar` at 21600, header included.
+- The QuickView JSON (`/api/card/[slug]`, `/api/sealed/[slug]`) is held by the CDN six hours plus a day stale, not ten minutes: its loaders are six-hour entries, so ten minutes only re-ran the function on the same data.
+- `tests/cost-cut.test.ts` fails on any `export const revalidate` under 21600 in `src/app`.
+
+**Not changed:** `/sets/[slug]`, `/sealed/[slug]`, `/price-guide` and the `/cards/*` facets read `getCountry()` (cookie and geo header), so they render per request and write no ISR. Moving them to the CDN needs the card page's per-market islands (2026-10-17) first; a CDN header on them as they are would serve one visitor's market to everyone.
+
+**Reversal:** put 3600 back in those files and in `tests/home.test.ts`, `tests/published-decks.test.ts`, `tests/preorders.test.ts`.
+
+## 2026-10-23: Purge the site's cache only when the data changed
+
+`publish-history.ts` posted `/api/revalidate` after every import, so every run purged every `prices`-tagged entry and the pages that read them, even a run that changed nothing. `scripts/publish-snapshot.sh` now compares the new snapshot with the published one (every file but `meta.json`, whose `generatedAt` differs each build) and writes `changed` to the step's output; `publish-history.ts` skips the purge when that says `false` AND the history commit is the one already in `Meta.historyRef` (`shouldRevalidate` in `lib/import.ts`). Anything that cannot be compared counts as changed. The snapshot is still pushed every run.
+
+## 2026-10-23: robots.txt: search engines in, bulk scrapers out
+
+Every crawler hit on a long-tail card or set page is a render. Search engines (Google, Bing, DuckDuckGo, Apple, Yandex) and answer engines (OAI-SearchBot, ChatGPT-User, PerplexityBot, GPTBot, ClaudeBot, Google-Extended; the site publishes `llms.txt`, so it wants them) keep full access with no delay. The SEO-tool crawlers and bulk-dataset scrapers that send no visitors (AhrefsBot, SemrushBot, MJ12bot, DotBot, PetalBot, Bytespider, DataForSeoBot, BLEXBot, CCBot) are disallowed, and every other agent is asked for `Crawl-delay: 10`. Each group repeats the private Disallows, because a crawler obeys only its most specific group. Sitemaps unchanged. robots.txt is advisory: the dashboard Firewall is what stops a bot that ignores it.
+
+## 2026-10-23: Web Analytics counts visitors, not us or bots
+
+Web Analytics is billed per event. `<Analytics />` (mounted once, in the root layout, behind consent) now has a `beforeSend` that drops every event (page views and `buy_click`) from `localhost`, `127.0.0.1` and `*.vercel.app`, from `navigator.webdriver` browsers, from bot-like user agents, and from a browser that has visited any page with `?notrack=1` (`localStorage["va-disable"]`; `?notrack=0` clears it). Storage errors never block a real visit. Speed Insights was never installed. The one custom event, `buy_click`, stays: it is the only measure of store clicks.
+
+## 2026-10-23: Builds skip other branches and docs-only releases
+
+`scripts/vercel-ignore-build.sh` keeps the `[deploy]` subject gate and adds two skips: a production build of any branch but `main` (`VERCEL_GIT_COMMIT_REF`), and a `[deploy]` release whose changes since the last deployed commit (`VERCEL_GIT_PREVIOUS_SHA`) are all docs (`*.md`, `docs/`). An empty diff, an unknown previous commit or an unreadable diff still builds. `images.minimumCacheTTL` is a month, though nothing uses `next/image` today. `tests/deploy-gate.test.ts` pins it.

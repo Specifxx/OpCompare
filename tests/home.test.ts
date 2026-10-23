@@ -21,15 +21,15 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 
 // ── Rendering model ──────────────────────────────────────────────────────────
 
-test("the homepage and the region homes are static: no cookie, header or session read, hourly ISR", () => {
+test("the homepage and the region homes are static: no cookie, header or session read, six-hour ISR", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx", "src/components/home/home-data.ts", "src/components/home/HomeSections.tsx", "src/components/home/CinematicHero.tsx", "src/components/home/EditorialHub.tsx"]) {
     const src = codeOnly(read(f));
     assert.doesNotMatch(src, /getCountry|next\/headers|cookies\(\)|headers\(\)|getCurrentUser/, f);
   }
-  assert.match(read("src/app/page.tsx"), /export const revalidate = 3600;/);
+  assert.match(read("src/app/page.tsx"), /export const revalidate = 21600;/);
   for (const r of ["au", "uk", "ca", "sg", "eu"]) {
     const src = read(`src/app/${r}/page.tsx`);
-    assert.match(src, /export const revalidate = 3600;/, r);
+    assert.match(src, /export const revalidate = 21600;/, r);
     assert.match(src, new RegExp(`<RegionHome region="${r.toUpperCase()}" />`), r);
   }
 });

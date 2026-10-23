@@ -28,3 +28,14 @@ test("previews are off unless the SUBJECT carries [preview]; claude/* branches n
   assert.equal(vercel.git.deploymentEnabled["claude/*"], false);
   assert.equal(vercel.git.deploymentEnabled["claude/**"], false);
 });
+
+test("production builds only main, and a [deploy] release of docs alone skips", () => {
+  const prod = { VERCEL_ENV: "production", VERCEL_GIT_COMMIT_MESSAGE: "release: scheduled production deploy [deploy]" };
+  assert.equal(run({ ...prod, VERCEL_GIT_COMMIT_REF: "feature/x" }), 0, "another branch never builds production");
+  assert.equal(run({ ...prod, VERCEL_GIT_COMMIT_REF: "main" }), 1);
+  // An unknown previous deployment builds (fail open).
+  assert.equal(run({ ...prod, VERCEL_GIT_COMMIT_REF: "main", VERCEL_GIT_PREVIOUS_SHA: "0000000000000000000000000000000000000000" }), 1);
+  const src = require("node:fs").readFileSync(SCRIPT, "utf8") as string;
+  assert.match(src, /git diff --name-only "\$prev" HEAD/);
+  assert.match(src, /grep -qvE '\(\\\.md\$\|\^docs\/\)'/);
+});
