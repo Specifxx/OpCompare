@@ -2758,3 +2758,22 @@ TCGplayer says "Gift Collection 2023", "Box Topper", "Pre-Release", "Judge Pack 
 DON!! cards with no card number, 25 ambiguous (mostly P- promos), 38 Japanese. No matcher
 rule was loosened: an ambiguous listing is skipped, not guessed. The owner offered to rename
 variants to TCGplayer's wording, which is the safe fix; the exact wording was sent back to him.
+
+## 2026-10-23: SEO sprint: one store count per framing, sister-site block, three query guides
+
+The homepage meta description said "375 stores" (every market's live stores) while the body
+said "139 stores" (the US). Both are real counts from the same stats, so the framing is now
+explicit, not one number: titles, meta and social copy say "N stores in six markets"
+(`liveStoresAll`), and on-page US counts say "N US stores" (`statsByCountry.US`). The
+homepage FAQ questions are real `<h3>`s inside their `<summary>`, so the visible questions
+match the FAQPage JSON-LD. Organization and WebSite stay site-wide in the root layout (one
+node each, `@id`-referenced); BreadcrumbList stays in `Breadcrumbs.tsx`; card and sealed
+pages keep their Product + AggregateOffer from live offers only (never `lastKnown`).
+
+A static "Compare other TCGs" block (`CompareOtherTcgs.tsx`, from `SISTER_SITES`, game-named
+anchors, followed links) sits on the homepage, card, sealed and article pages; it reads no
+request, so the CDN-cached card page is unaffected. Sealed product pages now show
+RelatedGuides (the set's own guide first). Three guides each target one query
+(`op17-booster-box-price`, `one-piece-booster-pack-price`, `one-piece-starter-deck-prices`),
+built at render from the snapshot like every other post, so a figure always matches the
+page it links to.

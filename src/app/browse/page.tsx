@@ -31,7 +31,7 @@ import { pageOg } from "@/lib/og/meta";
 export const metadata: Metadata = {
   title: "One Piece Card List — Every Card, Live Prices",
   description:
-    "Browse every One Piece Card Game card with live prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU. Filter by set, colour, rarity, type and printing.",
+    "One Piece card list: every card with live prices compared across stores in six markets. Filter by set, colour, rarity, type and printing.",
   alternates: { canonical: "/browse" },
   openGraph: pageOg("/browse"),
 };

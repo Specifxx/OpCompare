@@ -15,6 +15,8 @@ export const CATALOGUE_GUIDES = {
     { slug: "are-one-piece-cards-cheaper-abroad", reason: "Whether a cross-market price gap survives postage and import tax" },
   ],
   sealed: [
+    { slug: "one-piece-booster-pack-price", reason: "What a booster pack costs in every set, beside the box's cost per pack" },
+    { slug: "one-piece-starter-deck-prices", reason: "Every starter deck's price, cheapest first" },
     { slug: "one-piece-booster-box-prices", reason: "What a booster box costs in each market, and where it is cheapest" },
     { slug: "where-to-buy-one-piece-cards", reason: "How the stores we compare differ on price and stock" },
   ],
@@ -46,6 +48,7 @@ export type CatalogueGuideRoute = keyof typeof CATALOGUE_GUIDES;
  * none keeps the generic "sets" list.
  */
 export const SET_GUIDES: Record<string, readonly Ref[]> = {
+  OP17: [{ slug: "op17-booster-box-price", reason: "What an OP17 booster box costs in each market, and the cards behind its price" }],
   OP18: [
     { slug: "op18-green-luffy-leader-deck-guide", reason: "The mono-green Monkey.D.Luffy Leader: its attack-twice effect and the green cards that untap it" },
     { slug: "karoo-leader-guide-op18", reason: "The Red/Blue Karoo Leader: Rush for Characters typed both Animal and Alabasta" },

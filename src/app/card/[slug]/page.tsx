@@ -34,6 +34,7 @@ import {
 } from "@/components/card/CardMarket";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { enabledProviders } from "@/lib/oauth";
@@ -737,6 +738,7 @@ export default async function CardPage({ params }: Props) {
       <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
+      <CompareOtherTcgs className="mt-6" />
       <MarketStickyBuyBar best={best} boardId="price-comparison" page="card" slug={card.slug} name={title} cardId={card.id} />
     </div>
   );

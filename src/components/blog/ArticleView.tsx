@@ -3,6 +3,7 @@ import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
 import { ArticleFaq } from "@/components/ArticleFaq";
+import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { ArticleMarketData } from "@/components/ArticleMarketData";
 import { ArticleSignupCta } from "@/components/ArticleSignupCta";
 import { BlogShopStrip } from "@/components/BlogShopStrip";
@@ -223,6 +224,8 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
             </Link>
           ))}
         </div>
+
+        <CompareOtherTcgs className="mt-6" />
 
         <aside
           className="card-surface mt-6 flex gap-4 p-5"

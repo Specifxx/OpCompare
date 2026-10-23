@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Archivo } from "next/font/google";
+import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { EbayChase } from "@/components/EbayChase";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
@@ -99,7 +100,7 @@ export default async function HomePage() {
           {faqs.map((f) => (
             <details key={f.q} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
-                <span>{f.q}</span>
+                <h3 className="text-base font-semibold text-white">{f.q}</h3>
                 <svg className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -109,6 +110,7 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      <CompareOtherTcgs />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

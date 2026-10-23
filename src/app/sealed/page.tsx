@@ -22,9 +22,9 @@ import { newestBoosterSet } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
 import { SITE_URL } from "@/lib/site";
 
-const TITLE = "One Piece Sealed Products — Booster Box & Deck Prices";
+const TITLE = "One Piece Booster Box & Sealed Prices"; // + " | OP Compare" = 50 chars
 const DESCRIPTION =
-  "One Piece Card Game booster boxes, cases, packs, starter decks, double packs and collections, priced across the stores we track in six markets.";
+  "One Piece booster box prices, plus cases, packs, starter decks and collections, compared across the stores we track in six markets.";
 
 // A filtered /sealed is a thin slice of the same list: noindex, follow, with the
 // canonical on the unfiltered page (sort and layout alone do not count).
