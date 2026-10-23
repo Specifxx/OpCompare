@@ -39,10 +39,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const cat = await getCatalog();
   const s = cat.setBySlug.get(params.slug);
   if (!s) return { title: "Set not found" };
-  const t = `${s.name} (${s.code}) Card List & Prices`;
+  const t = `${s.code} ${s.name} Card List & Prices`;
   return {
     title: { absolute: t.length <= 60 ? t : `${s.code} Card List & Prices` },
-    description: `Every card in One Piece ${s.name} (${s.code}) with live prices compared across stores in six markets — the full card list, the chase cards and the set's sealed product.`,
+    description: `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
     alternates: { canonical: `/sets/${s.slug}` },
     openGraph: pageOgOwnImage(`/sets/${s.slug}`),
     // A filtered, sorted or paged grid is a slice of the same list: noindex, follow.

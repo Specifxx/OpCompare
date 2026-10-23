@@ -141,7 +141,10 @@ function resolves(href: string, cat: Catalog): boolean {
 }
 
 test("the four are published as guides at /guides/<slug>, dated 16 October 2026, newest first, titles kept whole", () => {
-  assert.deepEqual(POSTS.slice(0, 4).map((p) => p.slug).sort(), [...SLUGS].sort());
+  // Newest first: posts dated after 16 October 2026 come ahead of the four, which sit together.
+  const four = POSTS.filter((p) => p.date <= "2026-10-16");
+  assert.deepEqual(four.slice(0, 4).map((p) => p.slug).sort(), [...SLUGS].sort());
+  assert.ok(POSTS.slice(0, POSTS.length - four.length).every((p) => p.date > "2026-10-16"));
   for (const slug of SLUGS) {
     const p = post(slug);
     assert.equal(p.category, "guide", slug);
@@ -300,7 +303,8 @@ test("linked from the pages a reader of OP18 lands on: the set page, the pre-ord
   const own = setOwnGuides("OP18").map((g) => g.href);
   assert.deepEqual(own, ["/guides/op18-green-luffy-leader-deck-guide", "/guides/karoo-leader-guide-op18", "/guides/saint-gunko-leader-guide-op18"]);
   assert.deepEqual(guidesForSet("OP18").map((g) => g.href), own);
-  assert.deepEqual(guidesForSet("OP17"), guidesForCatalogue("sets"), "a set without its own guides keeps the generic list");
+  assert.deepEqual(guidesForSet("OP16"), guidesForCatalogue("sets"), "a set without its own guides keeps the generic list");
+  assert.equal(guidesForSet("OP17")[0].href, "/guides/op17-booster-box-price");
   assert.deepEqual(setOwnGuides("EB05"), []);
   assert.equal(guidesForLeader("OP18-001")[0]?.href, "/guides/karoo-leader-guide-op18");
   assert.equal(guidesForLeader("OP18-022")[0]?.href, "/guides/op18-green-luffy-leader-deck-guide");

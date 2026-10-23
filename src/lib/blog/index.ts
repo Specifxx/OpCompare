@@ -1,6 +1,9 @@
 import { setConcentration } from "./posts/set-concentration";
 import { budgetAltArts } from "./posts/budget-alt-arts";
 import { boosterBoxes } from "./posts/booster-boxes";
+import { boosterPackPrices } from "./posts/booster-pack-prices";
+import { op17BoosterBox } from "./posts/op17-booster-box";
+import { starterDecks } from "./posts/starter-decks";
 import { cheapLeaders } from "./posts/cheap-leaders";
 import { cheaperAbroad } from "./posts/cheaper-abroad";
 import { keywordsExplained } from "./posts/keywords-explained";
@@ -17,6 +20,9 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  op17BoosterBox,
+  boosterPackPrices,
+  starterDecks,
   op18GreenLuffy,
   keywordsExplained,
   op18SaintGunko,

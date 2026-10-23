@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LineChart } from "@/components/LineChart";
+import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { guidesForCatalogue, setOwnGuides } from "@/lib/content/catalogue-guides";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { PriceBoard } from "@/components/PriceBoard";
@@ -327,6 +330,11 @@ export default async function SealedDetailPage({ params }: Props) {
           ]}
         />
       </section>
+      <RelatedGuides
+        guides={[...(set ? setOwnGuides(set.code, 1) : []), ...guidesForCatalogue("sealed")].filter((g, i, a) => a.findIndex((x) => x.slug === g.slug) === i).slice(0, 3)}
+        className="card-surface mt-10 p-5"
+      />
+      <CompareOtherTcgs className="mt-6" />
     </div>
   );
 }
