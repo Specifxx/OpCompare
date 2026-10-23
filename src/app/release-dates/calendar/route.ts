@@ -5,7 +5,7 @@ import { upcomingSets } from "@/lib/selectors";
 // "Add to calendar" for the next dated One Piece set: the phone and desktop half
 // of taking the countdown elsewhere (a calendar syncs across every device its
 // owner uses). Reads the cached catalogue only.
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function GET() {
   const cat = await getCatalog();
@@ -17,7 +17,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8; method=PUBLISH",
       "Content-Disposition": `attachment; filename="one-piece-${next.code.toLowerCase()}-${next.releasedOn}.ics"`,
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
       "X-Robots-Tag": "noindex",
     },
   });

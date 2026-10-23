@@ -20,7 +20,7 @@ import { faqPage, ldJson, webApplication, webPage } from "@/lib/jsonld";
 // callout, HomeSections and the About + FAQ card, with WebPage /
 // WebApplication / FAQPage JSON-LD.
 //
-// STATIC: no cookie or header read. One cached HTML (ISR, hourly) carries every
+// STATIC: no cookie or header read. One cached HTML (ISR, six hours) carries every
 // market's figures and the client localises to the visitor's market
 // (CountryProvider). Archivo is loaded here only, for the homepage's display
 // face (`.rb-display-sans`, globals.css).
@@ -31,7 +31,7 @@ const archivo = Archivo({
   display: "swap",
 });
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export function generateMetadata(): Promise<Metadata> {
   return homeMetadata();

@@ -8,10 +8,10 @@ import { getLibraryDecks } from "@/lib/data";
 import { libraryRows } from "@/lib/deck-library";
 import { pageOg } from "@/lib/og/meta";
 
-// Decks filed under one Leader (RiftCompare's /decks/legend/[legend]). ISR an
-// hour with an EMPTY generateStaticParams (no build-time database load);
+// Decks filed under one Leader (RiftCompare's /decks/legend/[legend]). ISR six
+// hours with an EMPTY generateStaticParams (no build-time database load);
 // noindex while it holds fewer than two decks.
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateStaticParams() {
   return [];

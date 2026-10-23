@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PreorderPage, preorderMetadata, type PreorderConfig } from "@/components/PreorderPage";
 
 // /op18-preorders: the shared pre-order page (components/PreorderPage.tsx) for OP18.
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 const CONFIG: PreorderConfig = {
   code: "OP18",

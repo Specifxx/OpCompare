@@ -42,6 +42,14 @@ if [ "$env" = "preview" ] || [ "$env" = "development" ]; then
   exit 0
 fi
 
+# Production is main only (DECISIONS.md, "Builds skip other branches and docs-only
+# releases", 2026-10-23): another branch promoted to production never builds.
+ref="${VERCEL_GIT_COMMIT_REF:-}"
+if [ -n "$ref" ] && [ "$ref" != "main" ]; then
+  echo "[vercel-ignore-build] production build of branch '$ref' — only main deploys, skipping."
+  exit 0
+fi
+
 msg="${VERCEL_GIT_COMMIT_MESSAGE:-}"
 if [ -z "$msg" ]; then
   msg="$(git log -1 --format=%B 2>/dev/null || true)"
@@ -53,6 +61,17 @@ fi
 
 subject="$(printf '%s\n' "$msg" | head -n 1)"
 if printf '%s' "$subject" | grep -qiF -- "$MARKER"; then
+  # A release whose changes since the last deployed commit are ALL docs (*.md,
+  # docs/) builds nothing new: skip it. Only a non-empty, readable diff of docs
+  # alone skips; an empty release commit with nothing since the last deploy, an
+  # unknown previous commit or an unreadable diff builds, as before.
+  prev="${VERCEL_GIT_PREVIOUS_SHA:-}"
+  if [ -n "$prev" ] && files="$(git diff --name-only "$prev" HEAD 2>/dev/null)" && [ -n "$files" ]; then
+    if ! printf '%s\n' "$files" | grep -qvE '(\.md$|^docs/)'; then
+      echo "[vercel-ignore-build] '$MARKER' in the subject, but only docs changed since $prev — skipping."
+      exit 0
+    fi
+  fi
   echo "[vercel-ignore-build] '$MARKER' in the commit subject — building."
   exit 1
 fi

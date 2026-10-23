@@ -520,6 +520,13 @@ export function utcDay(d: Date = new Date()): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
+/** Purge the site's cache after an import only when the data changed: a new history
+ *  commit, or a snapshot whose data differs (`snapshotChanged` is "false" only when
+ *  scripts/publish-snapshot.sh compared it and found it identical). */
+export function shouldRevalidate(prevRef: string | null, ref: string, snapshotChanged: string | undefined): boolean {
+  return prevRef !== ref || snapshotChanged !== "false";
+}
+
 export async function revalidateSite(log: Log): Promise<void> {
   const url = process.env.REVALIDATE_URL || (process.env.CRON_SECRET && process.env.NEXT_PUBLIC_SITE_URL ? `${SITE_URL}/api/revalidate` : "");
   if (!url || !process.env.CRON_SECRET) {

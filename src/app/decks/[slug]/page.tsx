@@ -19,7 +19,7 @@ import { SITE_URL } from "@/lib/site";
 // prerendered at build (an EMPTY generateStaticParams, the card page's device:
 // it makes Next cache each on-demand render for `revalidate` without adding
 // any build-time database load), and publishing/hiding revalidates it.
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateStaticParams() {
   return [];

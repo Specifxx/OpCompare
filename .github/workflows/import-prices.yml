@@ -151,13 +151,19 @@ jobs:
           SNAPSHOT_LOCAL_DIR: .snapshot-out
         run: npx tsx scripts/store-health.ts
       - name: Publish the price snapshot
+        id: publish
         if: steps.gate.outputs.run == 'true' && steps.snapshot.outcome == 'success'
         env:
           REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
           SNAPSHOT_DIR: .snapshot-out
         run: bash scripts/publish-snapshot.sh
+      # Purges the site's cache only when the snapshot's data or the history
+      # commit changed (SNAPSHOT_CHANGED is empty, so "changed", when the
+      # publish did not run).
       - name: Point the site at it and refresh
         if: steps.gate.outputs.run == 'true'
+        env:
+          SNAPSHOT_CHANGED: ${{ steps.publish.outputs.changed }}
         run: npx tsx scripts/publish-history.ts
 
       # ── Price alerts (scripts/alerts.ts; wave 2, 2026-10-03) ──────────────

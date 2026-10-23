@@ -6,6 +6,9 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     remotePatterns: [{ protocol: "https", hostname: "tcgplayer-cdn.tcgplayer.com" }],
+    // Nothing uses next/image today (card art is hotlinked); if something does,
+    // keep each optimised image a month so it is transformed once, not daily.
+    minimumCacheTTL: 2678400,
   },
   experimental: {
     // Share images read their brand fonts from src/lib/og/fonts at runtime

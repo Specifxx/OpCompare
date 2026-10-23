@@ -238,7 +238,7 @@ test("the pages: pre-order availability, no private data, linked from /sealed an
   assert.doesNotMatch(shared, /generateStaticParams/);
   for (const [code, route] of Object.entries(PREORDER_PAGES)) {
     const page = read(`src/app${route}/page.tsx`);
-    assert.match(page, /export const revalidate = 3600/, route);
+    assert.match(page, /export const revalidate = 21600/, route);
     assert.match(page, new RegExp(`code: "${code}"`), route);
     assert.match(page, new RegExp(`path: "${route}"`), route);
     assert.doesNotMatch(page, /generateStaticParams|@\/lib\/db["']/, route);
