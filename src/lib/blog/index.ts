@@ -11,6 +11,7 @@ import { mostExpensive } from "./posts/most-expensive";
 import { op18GreenLuffy } from "./posts/op18-green-luffy";
 import { op18Karoo } from "./posts/op18-karoo";
 import { op18SaintGunko } from "./posts/op18-saint-gunko";
+import { eb05CardList, eb05ChaseCards, op17MostValuable, op18CardList, op18ChaseCards } from "./posts/set-reveals";
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
 import { whereToBuy } from "./posts/where-to-buy";
@@ -20,6 +21,11 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  op18ChaseCards,
+  op18CardList,
+  eb05ChaseCards,
+  eb05CardList,
+  op17MostValuable,
   op17BoosterBox,
   boosterPackPrices,
   starterDecks,
