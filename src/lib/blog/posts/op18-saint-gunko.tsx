@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardTable } from "@/components/blog/BlogBits";
+import { Callout, CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -215,7 +215,7 @@ export const op18SaintGunko: Post = {
                   ) : null;
                 })}
               </ul>
-              <CardTable cards={key} setById={cat.setById} country={country} caption="Priced as listed today (pre-release listings move daily)" />
+              <CardGrid cards={key} setById={cat.setById} country={country} caption="Priced as listed today (pre-release listings move daily)" />
               <h3>What to watch for</h3>
               <ul>
                 <li>

@@ -4,7 +4,6 @@ import { Breadcrumbs } from "@/components/ui";
 import { POSTS, postHref } from "@/lib/blog";
 import { postContext } from "@/lib/blog/context";
 import { getCountry } from "@/lib/get-country";
-import { cardImage } from "@/lib/images";
 import { shortDate } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
 
@@ -24,7 +23,6 @@ export default async function BlogIndex() {
   const posts = POSTS.filter((p) => p.category !== "guide").map((p) => ({
     p,
     title: p.title(ctx),
-    hero: p.build(ctx).heroCards,
   }));
   return (
     <div>
@@ -69,29 +67,28 @@ export default async function BlogIndex() {
         </span>
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map(({ p, title, hero }, i) => (
+        {posts.map(({ p, title }, i) => (
           <Link
             key={p.slug}
             href={postHref(p)}
-            className="card-surface group flex flex-col overflow-hidden hover:border-ink-600"
+            className="card-surface group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow"
           >
-            <div
-              className="grid h-44 grid-cols-3 gap-1 bg-ink-850 p-2"
-            >
-              {hero.slice(0, 3).map((c) =>
-                c.hasImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={c.id}
-                    src={cardImage.tile(c.id)}
-                    alt=""
-                    loading={i < 3 ? "eager" : "lazy"}
-                    className="h-full w-full rounded object-cover object-top"
-                  />
-                ) : (
-                  <span key={c.id} className="rounded bg-ink-800" />
-                ),
-              )}
+            {/* The thumbnail is the post's own share image (its title beside
+                its hero cards, drawn by blog/[slug]/opengraph-image.tsx and
+                cached a day): RiftCompare's 1.91:1 hero strip, and a post
+                whose cards have no scan yet still gets a real picture (the
+                image draws only cards with art, or its data-free fallback). */}
+            <div className="relative aspect-[1200/630] w-full shrink-0 overflow-hidden border-b border-ink-800 bg-ink-850">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${postHref(p)}/opengraph-image`}
+                alt={title}
+                width={1200}
+                height={630}
+                loading={i < 3 ? "eager" : "lazy"}
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
             </div>
             <div className="flex flex-1 flex-col p-4">
               <div className="flex flex-wrap gap-1.5">

@@ -18,7 +18,7 @@ up, subscribe, change or submit anything on riftcompare.com.
 
 Known, intended differences (don't report these): the logo and name; the brand
 colour (One Piece red with white button text, where RiftCompare is green); the
-site opens in the **light** theme by default; there are no games and no Pokémon
+site opens in the **dark** theme by default; there are no games and no Pokémon
 section; Plus/Premium shows **"Opening soon"** until Stripe is switched on (check
 the notes at the end); email features show nothing until email is switched on.
 

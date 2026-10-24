@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardTable, SimpleTable } from "@/components/blog/BlogBits";
+import { Callout, CardGrid, CardTable, SimpleTable } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { longDate, money } from "../../format";
 import { PREORDER_PAGES } from "../../preorders";
@@ -152,7 +152,7 @@ export const op18ChaseCards: Post = {
           title: "Every OP18 chase printing revealed so far",
           body: chase.length ? (
             <>
-              <CardTable cards={chase} setById={cat.setById} country={country} caption="Priced printings first, then Manga, alt art and Secret Rare" />
+              <CardGrid cards={chase} setById={cat.setById} country={country} caption="Priced printings first, then Manga, alt art and Secret Rare" />
               <p>
                 TCGplayer files some reprints under the set they come in, so a card with another set&apos;s number here is a reprint pulled from OP18 packs.
                 Card images appear as TCGplayer lists them.
@@ -354,7 +354,7 @@ export const eb05ChaseCards: Post = {
         </>
       ),
       sections: [
-        { id: "chase", title: "Every EB05 chase printing", body: <CardTable cards={chase} setById={cat.setById} country={country} caption="Priced printings first, then Manga, SP, alt art and Secret Rare" /> },
+        { id: "chase", title: "Every EB05 chase printing", body: <CardGrid cards={chase} setById={cat.setById} country={country} caption="Priced printings first, then Manga, SP, alt art and Secret Rare" /> },
         {
           id: "sp",
           title: "The EB05 SP cards",
@@ -495,7 +495,7 @@ export const eb05CardList: Post = {
           title: "Alt arts, SPs, Manga and reprints",
           body: (
             <>
-              <CardTable cards={chaseOrder(cards.filter((c) => c.printing !== "standard"))} setById={cat.setById} country={country} />
+              <CardGrid cards={chaseOrder(cards.filter((c) => c.printing !== "standard"))} setById={cat.setById} country={country} />
               <PrintingTable cards={cards} />
               <p>{boxSentence(set, sealed, country)}</p>
             </>

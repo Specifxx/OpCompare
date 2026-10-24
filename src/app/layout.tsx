@@ -92,11 +92,11 @@ export const metadata: Metadata = {
   },
 };
 
-// Brand chrome colour for the browser UI / installed-PWA theme: the light
-// palette's page colour (THEME_COLOR.light), since light is OP Compare's
-// default (DECISIONS "Light theme is the default"). ThemeToggle re-stamps the
-// meta for a dark-theme visitor.
-export const viewport: Viewport = { themeColor: "#f4f6f8" };
+// Brand chrome colour for the browser UI / installed-PWA theme: the dark
+// palette's page colour (THEME_COLOR.dark), since dark is OP Compare's
+// default (DECISIONS "Dark theme is the default again"). ThemeToggle re-stamps
+// the meta for a light-theme visitor.
+export const viewport: Viewport = { themeColor: "#0b0e14" };
 
 // RiftCompare's site-wide Organization node (its layout.tsx orgJsonLd), with
 // OP Compare's facts: the entity and the six markets it serves, no per-locale URLs.
@@ -126,7 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // market on the client (cookie, then /api/geo). Pages that price
   // server-side call getCountry() themselves.
   return (
-    <html lang="en" data-theme="light" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head>
         {/* Impact (TCGplayer affiliate programme) site verification. Impact's own snippet
             uses a `value` attribute rather than `content`, so it is rendered exactly as given. */}

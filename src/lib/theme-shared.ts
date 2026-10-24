@@ -14,11 +14,12 @@
 // `text-white` in light mode is near-black ink, `bg-ink-900` is a white card,
 // `text-slate-400` is a mid grey that still clears 4.5:1 — the test pins that.
 //
-// ── Default is LIGHT (OP Compare; RiftCompare defaults to dark) ───────────────
-// The owner's call (DECISIONS "Light theme is the default", 2026-10-03): the
-// root layout renders <html data-theme="light">, and dark applies only when the
-// visitor chose it with the toggle, remembered in the `theme` cookie for a
-// year. prefers-color-scheme is deliberately NOT consulted, as on RiftCompare:
+// ── Default is DARK (as on RiftCompare) ──────────────────────────────────────
+// The owner's call (DECISIONS "Dark theme is the default again", 2026-10-24,
+// reversing "Light theme is the default", 2026-10-03): the root layout renders
+// <html data-theme="dark">, and light applies only when the visitor chose it
+// with the toggle, remembered in the `theme` cookie for a year. A saved choice
+// (either way) is untouched. prefers-color-scheme is deliberately NOT consulted, as on RiftCompare:
 // the site's look changes only when the visitor asks.
 //
 // ── Why a cookie + inline script, not server rendering ───────────────────────
@@ -27,7 +28,7 @@
 // server cannot know the choice. A tiny inline script in <head> — generated
 // HERE so it cannot drift from the resolver — stamps `data-theme` on <html>
 // before first paint, and CSS does the rest. No attribute at all (script
-// blocked) never happens: the server already renders data-theme="light", the
+// blocked) never happens: the server already renders data-theme="dark", the
 // same as the JS default.
 
 export type ThemeMode = "dark" | "light";
@@ -35,7 +36,7 @@ export type ThemeMode = "dark" | "light";
 export const THEME_COOKIE = "theme";
 export const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-// Browser-chrome colour (<meta name="theme-color">) per theme. Light matches
+// Browser-chrome colour (<meta name="theme-color">) per theme. Dark matches
 // layout.tsx's `viewport.themeColor`; ThemeToggle rewrites the meta on flip.
 export const THEME_COLOR: Record<ThemeMode, string> = { dark: "#0b0e14", light: "#f4f6f8" };
 
@@ -43,8 +44,8 @@ export function isThemeMode(v: unknown): v is ThemeMode {
   return v === "dark" || v === "light";
 }
 
-// The visitor's saved choice wins; otherwise light (OP Compare's default).
-export const DEFAULT_THEME: ThemeMode = "light";
+// The visitor's saved choice wins; otherwise dark (OP Compare's default).
+export const DEFAULT_THEME: ThemeMode = "dark";
 
 export function resolveThemeMode(saved: string | null | undefined): ThemeMode {
   return isThemeMode(saved) ? saved : DEFAULT_THEME;
@@ -67,7 +68,7 @@ export const LEGACY_THEME_KEY = "op:theme";
 export const THEME_BOOT_SCRIPT: string = [
   "(function(){try{",
   `var m=/(?:^|;\\s*)${THEME_COOKIE}=(dark|light)(?:;|$)/.exec(document.cookie);`,
-  'var v=m?m[1]:"light";',
+  `var v=m?m[1]:"${DEFAULT_THEME}";`,
   "if(!m){try{",
   `var l=window.localStorage.getItem("${LEGACY_THEME_KEY}");`,
   `if(l==="dark"||l==="light"){v=l;document.cookie="${THEME_COOKIE}="+l+"; path=/; max-age=${THEME_COOKIE_MAX_AGE}; SameSite=Lax";}`,
