@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardTable } from "@/components/blog/BlogBits";
+import { Callout, CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -235,7 +235,7 @@ export const op18GreenLuffy: Post = {
                     The green OP18 cards above, priced as they are listed today. Before release these are pre-order listings, so treat them as a watchlist, not a
                     valuation:
                   </p>
-                  <CardTable cards={untappers} setById={cat.setById} country={country} />
+                  <CardGrid cards={untappers} setById={cat.setById} country={country} />
                 </>
               ) : null}
               {manga ? (

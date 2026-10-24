@@ -2,6 +2,7 @@ import { EbayChase } from "@/components/EbayChase";
 import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
 import CardQuickLink from "@/components/CardQuickLink";
+import { CardImage } from "@/components/CardImage";
 import { ArticleFaq } from "@/components/ArticleFaq";
 import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { ArticleMarketData } from "@/components/ArticleMarketData";
@@ -22,7 +23,6 @@ import { postContext } from "@/lib/blog/context";
 import type { Post } from "@/lib/blog/types";
 import { longDate, shortDate } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { cardImage } from "@/lib/images";
 import { faqLd } from "@/lib/jsonld";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -137,14 +137,13 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
           >
             {body.heroCards.map((c) => (
               <CardQuickLink key={c.id} slug={c.slug} className="block">
-                {c.hasImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cardImage.tile(c.id)}
-                    alt={`${c.name}${c.variant ? ` (${c.variant})` : ""} ${c.number ?? ""}`}
-                    className="w-full rounded-md"
-                  />
-                ) : null}
+                <CardImage
+                  id={c.id}
+                  hasImage={c.hasImage}
+                  priority
+                  alt={`${c.name}${c.variant ? ` (${c.variant})` : ""} ${c.number ?? ""}`}
+                  className="aspect-[300/419] w-full rounded-md"
+                />
               </CardQuickLink>
             ))}
           </div>

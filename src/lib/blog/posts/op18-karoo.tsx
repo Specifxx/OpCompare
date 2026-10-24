@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardTable } from "@/components/blog/BlogBits";
+import { Callout, CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -140,7 +140,7 @@ export const op18Karoo: Post = {
                   ? ` In TCGplayer's type data as our catalogue held it on ${READ_ON}, ${plural(pool.length, "Character card number")} ${pool.length === 1 ? "is" : "are"} typed both Animal and Alabasta${poolColours.length === 1 ? `, every one ${poolColours[0].toLowerCase()}` : ""}:`
                   : " None is in our catalogue yet; this section fills in as they are listed."}
               </p>
-              {pool.length ? <CardTable cards={pool} setById={cat.setById} country={country} caption="Characters typed both Animal and Alabasta (one printing per card number)" /> : null}
+              {pool.length ? <CardGrid cards={pool} setById={cat.setById} country={country} caption="Characters typed both Animal and Alabasta (one printing per card number)" /> : null}
               {pool.length ? (
                 <p>
                   Two checks before you build. TCGplayer&apos;s types can differ from the printed card, so read each card&apos;s type line. And Bandai&apos;s

@@ -231,6 +231,7 @@ const ALLOWED = new Set([
   "src/components/LastKnownPrice.tsx", // the muted, labelled drawing
   "src/components/CardTileClient.tsx", // the card tile
   "src/components/CardTile.tsx", // PriceLine (the card link grids)
+  "src/components/blog/BlogBits.tsx", // CardGrid, the in-post card tiles
   "src/components/QuickView.tsx", // the popup's price line
   "src/components/card/CardMarket.tsx", // the card page's tile island
   "src/app/card/[slug]/page.tsx", // computes each market's tile

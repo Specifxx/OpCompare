@@ -1205,7 +1205,7 @@ the exception safe still holds: nothing under `src/app` imports `@/lib/db`.
 relative path, re-export, dynamic `import()`, `require`) and that the root
 layout imports none of the per-user libraries.
 
-## 2026-10-03 — Light theme is the default
+## 2026-10-03 — Light theme is the default (reversed 2026-10-24: "Dark theme is the default again")
 
 **Decision.** OP Compare now opens in the light theme. The root layout renders
 `<html data-theme="light">`, and the boot script switches to dark only when the
@@ -2794,3 +2794,41 @@ corners, so nothing crosses text. Reduced motion stops it. The dark theme's ink
 ramp turns violet at the same lightness; brand red, buy and eBay colours are
 untouched. The teaser links to `/search?q=Brook` (no card slug is guessed).
 `tests/season.test.ts` pins the window and the gating.
+
+## 2026-10-24 — Dark theme is the default again
+
+Owner: new visitors get dark, as on RiftCompare. Reverses "Light theme is the
+default" (2026-10-03). `DEFAULT_THEME` is `dark`; the root layout renders
+`<html data-theme="dark">`, the boot script's fallback is `DEFAULT_THEME` (no
+second literal to drift), `viewport.themeColor` is the dark page colour and the
+toggle hydrates as dark. A saved `theme` cookie (either value) and the legacy
+`op:theme` migration are unchanged, so nobody who chose light loses it. Still no
+server-side cookie read and no `prefers-color-scheme`: the CDN-cached pages stay
+one copy, and the inline script stamps the choice before first paint.
+`tests/theme.test.ts` pins the dark fallback.
+
+## 2026-10-24 — Blog thumbnails and in-post card tiles; cards without a scan
+
+**Blog (owner: "like RiftCompare's").** The `/blog` index card's thumbnail is now
+the post's own share image (`/blog/<slug>/opengraph-image`, 1.91:1, RiftCompare's
+hero-strip shape), not three raw card scans: the share image draws only cards
+that have art (or its data-free fallback), so an OP18 post whose cards have no
+scan yet still shows a real picture, and the index no longer builds every post
+to find hero cards. It is the same ISR image (a day) social sites fetch, so it
+is drawn at most once a day. Posts embed RiftCompare-style tile grids
+(`CardGrid` in `components/blog/BlogBits.tsx`: the site's own `CardTile`, price
+in the reader's market) for their chase and key-card lists; long ranked lists
+(top 20, card lists by rarity) stay tables.
+
+**Cards without a scan.** 234 of 7,329 printings in the snapshot have
+`hasImage` false (2026-10-24): every OP18 card (41, before release), OP16
+release-event cards (75), promos (48), LT-01 (35), EB05 (19), demo-deck cards
+(12), 4 others. The import is right: TCGplayer has published no image
+(`tcgplayer-cdn …/<id>_400w.jpg` answers 403 for them). Bandai's card list
+(`en.onepiece-cardgame.com/images/cardlist/card/<CODE>.png`) has EB05 base
+cards but not OP18 yet, maps parallels to `_pN` files we cannot match to a
+TCGplayer printing without guessing, and sends `Cross-Origin-Resource-Policy:
+same-site`, so browsers refuse it as a hotlinked `<img>`. No fallback source,
+then: such a printing shows a card-shaped "Image not published yet" frame
+(`CardImage`/`CardArt`), never another printing's art, and picks up its scan
+from the next import once TCGplayer posts it.

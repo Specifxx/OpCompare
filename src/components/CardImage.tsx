@@ -33,7 +33,7 @@ export function CardImage({
           className="relative z-10 h-full w-full object-cover"
         />
       ) : (
-        <div className="relative z-10 grid h-full w-full place-items-center text-xs text-slate-500">No image</div>
+        <NoScan />
       )}
     </div>
   );
@@ -44,8 +44,8 @@ export function CardImage({
 export function CardArt({ id, hasImage, alt, size = "tile", className = "" }: { id: number; hasImage: boolean; alt: string; size?: "thumb" | "tile" | "large"; className?: string }) {
   if (!hasImage) {
     return (
-      <div className={`grid aspect-[300/419] place-items-center rounded-md bg-ink-800 text-xs text-slate-500 ${className}`}>
-        No image
+      <div className={`relative aspect-[300/419] overflow-hidden rounded-md bg-ink-800 ${className}`}>
+        <NoScan />
       </div>
     );
   }
@@ -60,5 +60,22 @@ export function CardArt({ id, hasImage, alt, size = "tile", className = "" }: { 
       height={419}
       className={`aspect-[300/419] w-full rounded-md bg-ink-800 object-cover ${className}`}
     />
+  );
+}
+
+// A printing TCGplayer has published no scan for yet (new sets before release,
+// some promos: hasImage is false in the snapshot). A plain card-shaped frame
+// that says so, never another printing's art or a guessed URL: Bandai's own
+// card images send `Cross-Origin-Resource-Policy: same-site`, so a hotlink
+// would not load anyway (DECISIONS "Cards without a scan", 2026-10-24).
+function NoScan() {
+  return (
+    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-[inherit] border border-dashed border-ink-700 p-2 text-center">
+      <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="5" y="3" width="14" height="18" rx="2" />
+        <path d="M9 9h6M9 13h6M9 17h3" strokeLinecap="round" />
+      </svg>
+      <span className="text-[11px] leading-tight text-slate-500">Image not published yet</span>
+    </div>
   );
 }
