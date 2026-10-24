@@ -6,6 +6,8 @@ import { CardSearch } from "@/components/CardSearch";
 import { HeroStats } from "./HeroStats";
 import { TrendingChips, type TrendingCard } from "./TrendingChips";
 import { BrandLogo } from "@/components/BrandLogo";
+import { HalloweenDecor } from "./HalloweenDecor";
+import { ThrillerBarkComing } from "./ThrillerBarkComing";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import type { MarketStat } from "@/lib/home";
 
@@ -58,13 +60,15 @@ export function CinematicHero({
   return (
     <ParallaxShell>
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        <div className="absolute inset-0 border-b border-ink-800 bg-ink-950" />
+        <div className="op-hero-band absolute inset-0 border-b border-ink-800 bg-ink-950" />
+        <HalloweenDecor />
       </div>
       {/* Foreground content: its own rail reservation (the band is full-bleed,
           so container-app would otherwise centre under the fixed rail), and
           w-full because it is the flex row's only in-flow item. */}
       <div className="w-full pl-[var(--sidenav-w)]">
         <div className="container-app relative z-10 w-full py-5 text-center sm:py-10">
+          <ThrillerBarkComing />
           <div className="hidden items-center justify-center gap-2 sm:flex">
             <BrandLogo className="h-8 w-8" />
             <span className="text-lg font-extrabold tracking-tight text-white">

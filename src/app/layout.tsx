@@ -28,6 +28,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
+import { SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
@@ -131,6 +132,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             uses a `value` attribute rather than `content`, so it is rendered exactly as given. */}
         <meta name="impact-site-verification" {...IMPACT_VERIFICATION_ATTR} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {/* Seasonal theme (Halloween, 16-31 October): data-season on <html>
+            from the visitor's own date, before first paint. lib/season.ts. No
+            cookie or header read: the CDN-cached pages stay one copy. */}
+        <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
         {/* GA4 + Consent Mode defaults, before anything else measures. */}
         <GoogleAnalytics />
