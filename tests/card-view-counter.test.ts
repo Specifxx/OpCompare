@@ -145,7 +145,7 @@ test("views are counted in memory and written in one batch per half hour, not pe
   } as never;
   await flushCardViews(db); // start from an empty buffer
   writes.length = 0;
-  const deps = (t: number) => ({ db, cardId: async (s: string) => (s === "luffy" ? 1 : s === "zoro" ? 2 : null), now: () => t });
+  const deps = (t: number) => ({ db, cardId: async (s: string) => (s === "luffy" ? 1 : s === "zoro" ? 2 : null), sealedId: async () => null, now: () => t });
   const T = 1_000_000;
   await countCardView("luffy", "view", deps(T));
   await countCardView("luffy", "view", deps(T + 1000));
@@ -158,4 +158,39 @@ test("views are counted in memory and written in one batch per half hour, not pe
     { cardId: 1, view: 2, search: 1 },
     { cardId: 2, view: 2, search: 0 },
   ], "one batched write per card, with the summed counts");
+});
+
+test("a sealed product's opens are counted in Counter rows (sealedview:<id>), batched like cards, a search worth three", async () => {
+  const { countCardView, flushCardViews, FLUSH_MS } = await import("../src/lib/card-views-server");
+  const { SEALED_VIEW_PREFIX } = await import("../src/lib/card-views");
+  const counters: Record<string, number> = {};
+  const db = {
+    cardDemand: { upsert: async () => ({}) },
+    counter: {
+      upsert: async ({ where, create, update }: { where: { key: string }; create: { value: number }; update: { value: { increment: number } } }) => {
+        counters[where.key] = where.key in counters ? counters[where.key] + update.value.increment : create.value;
+        return {};
+      },
+    },
+  } as never;
+  await flushCardViews(db);
+  for (const k of Object.keys(counters)) delete counters[k];
+  const deps = (t: number) => ({ db, cardId: async () => null, sealedId: async (s: string) => (s === "op13-box" ? 77 : null), now: () => t });
+  const T = 5_000_000;
+  await countCardView("op13-box", "view", deps(T));
+  await countCardView("op13-box", "view", deps(T + 1));
+  await countCardView("op13-box", "search", deps(T + 2));
+  await countCardView("not-a-product", "view", deps(T + 3));
+  assert.deepEqual(counters, {}, "nothing is written inside the window");
+  await countCardView("op13-box", "view", deps(T + FLUSH_MS + 1));
+  assert.deepEqual(counters, { [`${SEALED_VIEW_PREFIX}77`]: 1 + 1 + 3 + 1 });
+});
+
+test("the sealed page and quick view send the view, and the eBay pass reads demand from CardDemand and the sealed counters", () => {
+  const read = (p: string) => readFileSync(join(__dirname, "..", p), "utf8");
+  assert.match(read("src/app/sealed/[slug]/page.tsx"), /<SealedViewBeacon slug=\{s\.slug\} productId=\{s\.id\}/);
+  assert.match(read("src/components/SealedQuickView.tsx"), /sendCardView\(slug, "view"/);
+  const imp = read("src/lib/ebay-import.ts");
+  assert.match(imp, /prisma\.cardDemand\.findMany/);
+  assert.match(imp, /startsWith: SEALED_VIEW_PREFIX/);
 });

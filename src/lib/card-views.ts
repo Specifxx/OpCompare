@@ -16,6 +16,9 @@
 
 export type CardViewKind = "view" | "search";
 
+/** Sealed products have no CardDemand row: their opens are Counter rows `sealedview:<productId>` (the eBay pass ranks sealed by them). */
+export const SEALED_VIEW_PREFIX = "sealedview:";
+
 // Crawlers, link unfurlers, headless browsers and plain HTTP clients. A real
 // visitor's beacon comes from a browser's fetch() and carries its user agent;
 // an empty one is never a browser.

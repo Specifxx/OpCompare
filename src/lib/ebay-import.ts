@@ -12,6 +12,7 @@
 // 19:07 store import does all three with the fresh eBay rows.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { SEALED_VIEW_PREFIX } from "./card-views";
 import { pub } from "./pubdb";
 import type { Country } from "./country";
 import { convertUsdCents, toUsdCents } from "./fx";
@@ -35,9 +36,13 @@ import {
 } from "./ebay-match";
 import {
   DAILY_CALL_CAP,
-  DEFAULT_TOP_CARDS,
+  DEFAULT_MIN_VALUE_CENTS,
+  HOT_DEMAND_POINTS,
+  SEALED_MIN_CENTS,
+  SINGLES_ABS_MIN_CENTS,
+  demandPoints,
+  singlesFloor,
   fillPairs,
-  marketFloors,
   marketScope,
   EBAY_MARKETS,
   FOREIGN_SPEND_BUDGET,
@@ -147,7 +152,6 @@ export async function runEbayPass(
   const only = parseOnlyMarket(process.env.EBAY_ONLY_MARKET);
   const force = process.env.EBAY_FORCE === "1";
   const fixedFloor = envInt(process.env.EBAY_MIN_VALUE_CENTS);
-  const topCards = envInt(process.env.EBAY_TOP_CARDS) ?? DEFAULT_TOP_CARDS;
 
   // Our own spend in the current eBay quota day, 07:00 UTC to 07:00 UTC (every eBay run records `spent`, also when
   // it throws). It bounds the budget when eBay's live count can't be read, and
@@ -240,18 +244,37 @@ export async function runEbayPass(
   // "Japanese Version" promo, a Playmat promo, two same-tag printings in a set).
   const matchable = (c: (typeof cardsRaw)[number]) =>
     !c.number || selfMatches({ id: c.id, name: c.name, number: c.number, variant: c.variant, setName: c.set.name, setCode: c.set.code }, idx);
+  // What visitors search and open (private, in Neon): CardDemand for cards, the
+  // "sealedview:<id>" counters for sealed. It decides who is refreshed first
+  // (lib/ebay-plan.ts HOT_DEMAND_POINTS); an unreadable table means no demand,
+  // never a failed run (the plan then ranks by price alone).
+  const demand = new Map<number, number>();
+  try {
+    for (const d of await prisma.cardDemand.findMany({ where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] }, select: { cardId: true, searchCount: true, viewCount: true, lastViewedAt: true } })) {
+      demand.set(d.cardId, demandPoints(d.searchCount, d.viewCount, d.lastViewedAt, now));
+    }
+    for (const c of await prisma.counter.findMany({ where: { key: { startsWith: SEALED_VIEW_PREFIX } }, select: { key: true, value: true } })) {
+      const id = Number(c.key.slice(SEALED_VIEW_PREFIX.length));
+      if (Number.isSafeInteger(id)) demand.set(id, c.value);
+    }
+  } catch (e) {
+    log(`eBay: demand could not be read (${e instanceof Error ? e.message.split("\n")[0] : e}); ranking by price alone`);
+  }
   let products: PlanProduct[] = [
-    ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null })),
-    ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null })),
+    ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null, demand: demand.get(c.id) })),
+    ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null, demand: demand.get(s.id) })),
   ];
-  // Each market's singles floor: the value of the Nth card the market's share of the
-  // day can keep fresh (top 2,000 in the US, fewer in the smaller markets), unless
-  // EBAY_MIN_VALUE_CENTS fixes one for all of them (lib/ebay-plan.ts marketFloors).
-  const sealedPairs = products.filter((p) => p.kind === "sealed" && tierOf(p, "US") != null).length;
-  const floors: Record<EbayMarket, number> = fixedFloor != null
-    ? (Object.fromEntries(EBAY_MARKETS.map((m) => [m, fixedFloor])) as Record<EbayMarket, number>)
-    : marketFloors(cardsRaw.map((c) => c.marketUsd ?? 0), sealedPairs, { topCards });
-  log(`eBay singles floors: ${EBAY_MARKETS.filter((m) => marketScope(m).singles).map((m) => `${m} ${Number.isFinite(floors[m]) ? `US$${(floors[m] / 100).toFixed(2)}` : "none"}`).join(", ")}${fixedFloor != null ? " (EBAY_MIN_VALUE_CENTS)" : (Number.isFinite(topCards) ? ` (top ${topCards} cards)` : " (as many as the daily quota keeps fresh)")}`);
+  // ONE floor (owner, 2026-10-24: nothing under US$20, whatever its demand; US$40 in
+  // the EU): lib/ebay-plan.ts singlesFloor. EBAY_MIN_VALUE_CENTS can only raise it.
+  const floor = Math.max(fixedFloor ?? DEFAULT_MIN_VALUE_CENTS, SINGLES_ABS_MIN_CENTS);
+  const floors = Object.fromEntries(EBAY_MARKETS.map((m) => [m, floor])) as Record<EbayMarket, number>;
+  const tiers = { hot: 0, rotating: 0 };
+  for (const p of products) {
+    const t = tierOf(p, "US", floor) ?? tierOf(p, "AU", floor);
+    if (t === "S1" && (p.demand ?? 0) >= HOT_DEMAND_POINTS) tiers.hot++;
+    else if (t) tiers.rotating++;
+  }
+  log(`eBay floor: US$${(singlesFloor("US", floor) / 100).toFixed(0)} (EU US$${(singlesFloor("EU", floor) / 100).toFixed(0)}); ${demand.size} products have demand, ${tiers.hot} eligible ones are hot (refreshed first, every 48h), ${tiers.rotating} rotate`);
   // Only products that would otherwise be searched somewhere pay for the check.
   const rawById = new Map(cardsRaw.map((c) => [c.id, c]));
   for (const p of products) {
@@ -274,6 +297,28 @@ export async function runEbayPass(
     log(`eBay: only products named "${onlyName}" (${products.length})`);
   }
   const checks = new Map<string, Date>(checkRows.map((r) => [pairKey(r.productId, r.market), r.checkedAt]));
+
+  // Sweep what the floor now excludes: an eBay price or panel left by an earlier
+  // run for a card worth less than the floor (or sealed under US$20) is removed,
+  // so a US$5 card stops showing an eBay price within this run, not after 72h.
+  // A product with NO market price is left alone (launch products are judged by a store price).
+  if (!onlyName) {
+    const swept = { offers: 0, panels: 0 };
+    for (const m of EBAY_MARKETS) {
+      const lowSingles = cardsRaw.filter((c) => c.number && c.marketUsd != null && c.marketUsd < singlesFloor(m, floor)).map((c) => c.id);
+      const lowSealed = marketScope(m).sealed ? sealedRaw.filter((x) => x.marketUsd != null && x.marketUsd < SEALED_MIN_CENTS).map((x) => x.id) : [];
+      const ids = [...lowSingles, ...lowSealed];
+      if (!ids.length) continue;
+      for (let i = 0; i < ids.length; i += 5000) {
+        const chunk = ids.slice(i, i + 5000);
+        swept.offers += (await pub.offer.deleteMany({ where: { productId: { in: chunk }, market: m, source: "ebay" } })).count;
+        if (m === "US") swept.offers += (await pub.offer.deleteMany({ where: { productId: { in: chunk }, market: "CA", source: "ebay_us" } })).count;
+        swept.panels += (await pub.ebayListing.deleteMany({ where: { productId: { in: chunk }, market: m } })).count;
+        swept.panels += (await pub.ebayGradedListing.deleteMany({ where: { productId: { in: chunk }, market: m } })).count;
+      }
+    }
+    log(`eBay floor sweep: ${swept.offers} price rows and ${swept.panels} listing panels under the floor removed`);
+  }
 
   // ── Plan ───────────────────────────────────────────────────────────────────
   const markets = only ? [only] : EBAY_MARKETS;

@@ -12,7 +12,8 @@
 // an instance is recycled costs a few counts of an approximate popularity signal,
 // never a page.
 import { prisma } from "./db";
-import { getCatalog } from "./data";
+import { getCatalog, getSealedCatalog } from "./data";
+import { SEALED_VIEW_PREFIX } from "./card-views";
 
 const SLUG = /^[a-z0-9-]{1,160}$/;
 
@@ -21,10 +22,12 @@ export const FLUSH_MS = 30 * 60 * 1000;
 /** A buffer never grows past this many cards (a flood of slugs cannot exhaust memory). */
 const MAX_BUFFERED = 2000;
 
-type Db = Pick<typeof prisma, "cardDemand">;
+type Db = Pick<typeof prisma, "cardDemand" | "counter">;
 type Counts = { view: number; search: number };
 
+// Cards by TCGplayer id (CardDemand); sealed by id too, in Counter rows (the eBay pass ranks both by them).
 const buffer = new Map<number, Counts>();
+const sealedBuffer = new Map<number, number>();
 let bufferStarted = 0;
 
 /** A card slug's id, from the public catalogue (the catalogue is not in this database). */
@@ -32,13 +35,29 @@ async function cardIdOf(slug: string): Promise<number | null> {
   return (await getCatalog()).bySlug.get(slug)?.id ?? null;
 }
 
+/** A sealed product slug's id (only asked when the slug is not a card). */
+async function sealedIdOf(slug: string): Promise<number | null> {
+  return (await getSealedCatalog()).find((s) => s.slug === slug)?.id ?? null;
+}
+
 /** Write every buffered count in one go and empty the buffer. Swallows errors (the counts are dropped). */
 export async function flushCardViews(db: Db = prisma, now: Date = new Date()): Promise<number> {
-  if (!buffer.size) return 0;
+  if (!buffer.size && !sealedBuffer.size) return 0;
   const rows = [...buffer];
+  const sealedRows = [...sealedBuffer];
   buffer.clear();
+  sealedBuffer.clear();
   bufferStarted = 0;
   let written = 0;
+  for (const [productId, n] of sealedRows) {
+    try {
+      const key = `${SEALED_VIEW_PREFIX}${productId}`;
+      await db.counter.upsert({ where: { key }, create: { key, value: n }, update: { value: { increment: n } } });
+      written++;
+    } catch {
+      /* best-effort */
+    }
+  }
   for (const [cardId, c] of rows) {
     try {
       await db.cardDemand.upsert({
@@ -57,18 +76,24 @@ export async function flushCardViews(db: Db = prisma, now: Date = new Date()): P
 export async function countCardView(
   slug: string,
   kind: "view" | "search",
-  deps: { db?: Db; cardId?: (slug: string) => Promise<number | null>; now?: () => number } = {},
+  deps: { db?: Db; cardId?: (slug: string) => Promise<number | null>; sealedId?: (slug: string) => Promise<number | null>; now?: () => number } = {},
 ): Promise<void> {
   if (!SLUG.test(slug)) return;
   try {
     const cardId = await (deps.cardId ?? cardIdOf)(slug);
-    if (cardId == null) return;
+    const sealedId = cardId == null ? await (deps.sealedId ?? sealedIdOf)(slug) : null;
+    if (cardId == null && sealedId == null) return;
     const t = (deps.now ?? Date.now)();
-    if (!buffer.size) bufferStarted = t;
-    const c = buffer.get(cardId) ?? (buffer.size < MAX_BUFFERED ? { view: 0, search: 0 } : null);
-    if (c) {
-      c[kind]++;
-      buffer.set(cardId, c);
+    if (!buffer.size && !sealedBuffer.size) bufferStarted = t;
+    if (cardId != null) {
+      const c = buffer.get(cardId) ?? (buffer.size < MAX_BUFFERED ? { view: 0, search: 0 } : null);
+      if (c) {
+        c[kind]++;
+        buffer.set(cardId, c);
+      }
+    } else if (sealedId != null && (sealedBuffer.has(sealedId) || sealedBuffer.size < MAX_BUFFERED)) {
+      // A sealed product's search counts as the 3 views a search is worth for a card.
+      sealedBuffer.set(sealedId, (sealedBuffer.get(sealedId) ?? 0) + (kind === "search" ? 3 : 1));
     }
     if (t - bufferStarted >= FLUSH_MS) await flushCardViews(deps.db ?? prisma, new Date(t));
   } catch {

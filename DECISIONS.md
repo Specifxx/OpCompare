@@ -2832,3 +2832,28 @@ same-site`, so browsers refuse it as a hotlinked `<img>`. No fallback source,
 then: such a printing shows a card-shaped "Image not published yet" frame
 (`CardImage`/`CardArt`), never another printing's art, and picks up its scan
 from the next import once TCGplayer posts it.
+
+## 2026-10-24: The eBay quota goes to what visitors click, never under US$20
+
+**Why.** The owner saw US$5 cards with eBay prices while US$50 cards had none. The
+2026-10-09 "as many as the quota allows" rule (`marketFloors`) let each market's floor sink
+to US$3 and ranked cards by price alone, so quota went to cheap, unwanted cards and the
+dearer, searched ones waited. A US$5 click earns almost nothing; the quota is the scarce
+thing.
+
+**Decisions.**
+- **Hard floor US$20** for singles and sealed in every market (US$40 EU kept), whatever the
+  demand (`SINGLES_ABS_MIN_CENTS`, `SEALED_MIN_CENTS`; the env floor can only raise it).
+  `marketFloors` and `EBAY_TOP_CARDS` are removed. The pass now also deletes eBay price rows
+  and panels left under the floor by earlier runs, so cheap cards lose their eBay price at the
+  next pass instead of after 72h.
+- **Demand decides the queue.** Points = searches x 3 + opens (`CardDemand`; half after 45
+  quiet days), for sealed the `sealedview:<id>` Counter rows (new: sealed opens were not
+  counted at all; written by `SealedViewBeacon` and the sealed quick view through the same
+  batched endpoint). HOT = 10 points, or a single of US$100+: tier S1, every 48h, first.
+  Everything else above the floor is tier S2/P1, every 72h, most overdue first (the rotation),
+  ties by price x (1 + demand). The top-up of a run's leftover budget uses the same order, so
+  hot pairs are refreshed ahead of schedule before cold ones.
+- **Not done:** outbound-click data (`ClickEvent`) is retired, so "clicking sealed" means
+  opening the product page or quick view. If click tracking returns, feed it into the same
+  `demand` field.

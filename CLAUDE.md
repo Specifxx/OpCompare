@@ -56,6 +56,15 @@ read rows through `public-data.ts` / `public-db.ts` (a Prisma-shaped read-only c
   never on Vercel: the credentials are GitHub Actions secrets only.
 - eBay is off until both secrets exist (a green no-op run); keys set but
   refused fail the run red.
+- **Who gets a search (owner, 2026-10-24).** Nothing under US$20 is ever searched
+  (US$40 in the EU; `EBAY_MIN_VALUE_CENTS` can only raise it, `SINGLES_ABS_MIN_CENTS`
+  is the hard floor), singles and sealed alike, whatever the demand; the pass also
+  sweeps eBay rows an earlier run left under the floor. Above it, products visitors
+  search and open (`CardDemand`; `sealedview:<id>` Counter rows for sealed, written by
+  `SealedViewBeacon` and the sealed quick view) are HOT (`HOT_DEMAND_POINTS`) and, with
+  singles of US$100+, refreshed every 48h and first in the queue; the rest rotate every
+  72h, most overdue first, price × (1 + demand) breaking ties. Never rank by price alone
+  again, never add a depth-by-budget floor back (`marketFloors` is gone on purpose).
 - The budget is `min(EBAY_MAX_CALLS, remaining − EBAY_QUOTA_RESERVE)` per run
   (unknown `remaining` → daily limit minus our last-24h spend; the cap is at
   most half the spendable day); `spendable` starts at 0 and every Browse call

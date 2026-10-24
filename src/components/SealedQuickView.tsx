@@ -1,5 +1,6 @@
 "use client";
 
+import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { outboundRel } from "@/lib/affiliate";
@@ -52,6 +53,7 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
     counter.current += 1;
     setShown({ slug, thumb: hint?.thumb ?? null, label: hint?.label ?? null, n: counter.current });
     void loadSealedQuickView(slug).catch(() => {});
+    sendCardView(slug, "view", `sealed-${slug}`);
     (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "quickview_open", { card: slug });
   }, []);
   const prefetch = useCallback((slug: string) => void loadSealedQuickView(slug).catch(() => {}), []);

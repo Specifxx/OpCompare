@@ -25,6 +25,7 @@ import {
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { headline } from "@/lib/price";
+import { SealedViewBeacon } from "@/components/SealedViewBeacon";
 import { pageOg } from "@/lib/og/meta";
 import { isPreRelease } from "@/lib/quick-view";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
@@ -98,6 +99,7 @@ export default async function SealedDetailPage({ params }: Props) {
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
     <div>
+      <SealedViewBeacon slug={s.slug} productId={s.id} />
       <JsonLd
         data={{
           "@context": "https://schema.org",

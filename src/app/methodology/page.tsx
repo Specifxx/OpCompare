@@ -35,9 +35,10 @@ export default async function Methodology() {
           <li>
             <strong>eBay.</strong> Once a day we search eBay (US, UK, Australia,
             Spain for EU, and Canada for sealed) for cards worth US$20 or more on
-            TCGplayer (US$40 in the EU) and sealed products worth US$30 or more;
-            cards of US$100 and up every two days, the rest every three days,
-            dearest first, within a fixed daily budget of searches. We show the
+            TCGplayer (US$40 in the EU) and sealed products worth US$20 or more,
+            never anything cheaper. The ones visitors search for and open most,
+            and cards of US$100 and up, are refreshed every two days; the rest every
+            three days, most overdue first, within a fixed daily budget of searches. We show the
             cheapest matching Buy It Now listing as an asking price, never
             re-ranked: it sits among the stores by item price. Canadian card rows
             are the US listing, shipped from the US. Every market also gets a

@@ -7,13 +7,20 @@
 // day (12:37 UTC, .github/workflows/ebay-prices.yml) spends at most
 // min(EBAY_MAX_CALLS (2,500), liveRemaining − EBAY_QUOTA_RESERVE (300),
 // 2,500 − our last-24h spend), split across markets by fixed shares
-// (US-weighted: the largest EPN payouts), and inside each market by the
-// product's TCGplayer market value: singles of US$100+ (the chase cards) every
-// 48h, singles from the floor (US$20; US$40 in the EU) every 72h, sealed of
-// US$30+ every 72h. Rows live 72h, so a pair refreshed on time never goes dark;
-// when the day's budget runs out the dearest cards come first and the rest
-// wait. Below the floor: never searched, the visitor gets the eBay search link
-// instead.
+// (US-weighted: the largest EPN payouts), and inside each market by what a
+// visitor's click is worth (owner, 2026-10-24: "maximise the eBay affiliates for
+// people who click items on demand"):
+//   FLOOR     nothing under US$20 is ever searched (US$40 in the EU), whatever
+//             its demand: the visitor gets the eBay search link instead.
+//   HOT       a card or sealed product people are searching for and opening
+//             (HOT_DEMAND_POINTS), or any single of US$100+, is refreshed every
+//             48h and goes first.
+//   ROTATING  everything else above the floor is refreshed every 72h, most
+//             overdue first, as the budget allows.
+// Within a tier a pair's SCORE (price × (1 + demand)) breaks ties; a run that
+// has searched everything due tops up with the hottest pairs, so no quota is
+// left over. Rows live 72h, so a pair refreshed on time never goes dark; when
+// the day's budget runs out the hot pairs come first and the rest wait.
 //
 // Changing a floor, share or interval changes the arithmetic: update
 // tests/ebay-plan.test.ts, the methodology copy (a test reads it) and DECISIONS.
@@ -35,20 +42,34 @@ export const DEFAULT_MAX_CALLS = 2500; // EBAY_MAX_CALLS: per-run cap, and the b
 /** The hard daily ceiling (owner, 2026-10-07): no run, dispatch or env var can spend more than this in 24h. */
 export const DAILY_CALL_CAP = 2500;
 export const DEFAULT_QUOTA_RESERVE = 300; // EBAY_QUOTA_RESERVE: never spent today
-export const DEFAULT_MIN_VALUE_CENTS = 2000; // EBAY_MIN_VALUE_CENTS: a FIXED singles floor for every market (unset: each market gets its own, see marketFloors)
-/**
- * Singles each market covers: as many of the dearest cards as its share of the
- * day keeps fresh (owner, 2026-10-09: "as many as the quota allows"), so there
- * is no fixed top-N. EBAY_TOP_CARDS can still cap it.
- */
-export const DEFAULT_TOP_CARDS = Number.POSITIVE_INFINITY;
-/** Never search a card worth less than this, whatever the top-N rank says. */
-export const SINGLES_ABS_MIN_CENTS = 300;
+export const DEFAULT_MIN_VALUE_CENTS = 2000; // EBAY_MIN_VALUE_CENTS: the singles floor (it can only RAISE it: see SINGLES_ABS_MIN_CENTS)
+/** Never search a card worth less than this (owner, 2026-10-24: US$20), whatever its demand or EBAY_MIN_VALUE_CENTS. */
+export const SINGLES_ABS_MIN_CENTS = 2000;
+
+// ── Demand ───────────────────────────────────────────────────────────────────
+/** Demand points at which a product is HOT (refreshed every 48h, first in the queue). ~10 card opens, or 3 searches and a few opens. */
+export const HOT_DEMAND_POINTS = 10;
+/** One search counts this many views: a search is a visitor looking for that exact card. */
+export const SEARCH_WEIGHT = 3;
+/** Demand older than this many days counts half (CardDemand keeps lifetime totals, so a card that was hot last month fades). */
+export const DEMAND_HALF_DAYS = 45;
+
+/** Points of demand from a CardDemand row (cards) or a sealed view counter. Never negative; stale demand counts half. */
+export function demandPoints(searchCount: number, viewCount: number, lastViewedAt: Date | null, now: Date): number {
+  const raw = Math.max(0, searchCount) * SEARCH_WEIGHT + Math.max(0, viewCount);
+  const stale = lastViewedAt != null && now.getTime() - lastViewedAt.getTime() > DEMAND_HALF_DAYS * 86_400_000;
+  return stale ? raw / 2 : raw;
+}
+
+/** What a click on this product is worth, relatively: price × (1 + demand). Orders the queue inside a tier. */
+export function pairScore(valueCents: number | null, demand: number | undefined): number {
+  return ((valueCents ?? 0) / 100) * (1 + Math.max(0, demand ?? 0));
+}
 
 // ── Tiers ────────────────────────────────────────────────────────────────────
 export const S1_MIN_CENTS = 10000; // singles of US$100+ — every 48h
 export const EU_MIN_VALUE_CENTS = 4000; // the EU singles floor is max(floor, this)
-export const SEALED_MIN_CENTS = 3000; // sealed of US$30+
+export const SEALED_MIN_CENTS = 2000; // sealed of US$20+ (the same floor as singles)
 export const LAUNCH_WINDOW_DAYS = 60; // unpriced products are searched only this long after release (or in presale), and only with a store reference price
 export const DUE_GRACE_HOURS = 3; // a 24h pair checked at 05:39 yesterday is due at 05:37 today
 
@@ -192,10 +213,13 @@ export interface PlanProduct {
   refUsd?: number | null;
   /** False when the product's own canonical title can't match it (lib/ebay-match.ts selfMatches): never searched. */
   matchable?: boolean;
+  /** Demand points (demandPoints): searches and opens by visitors. Unset = none. */
+  demand?: number;
 }
 
 export function singlesFloor(m: EbayMarket, minValueCents: number = DEFAULT_MIN_VALUE_CENTS): number {
-  return m === "EU" ? Math.max(minValueCents, EU_MIN_VALUE_CENTS) : minValueCents;
+  const floor = Math.max(minValueCents, SINGLES_ABS_MIN_CENTS);
+  return m === "EU" ? Math.max(floor, EU_MIN_VALUE_CENTS) : floor;
 }
 
 /** The tier of a product in a market, or null when it is never searched there. */
@@ -207,12 +231,12 @@ export function tierOf(p: PlanProduct, m: EbayMarket, minValueCents: number = DE
   if (p.kind === "single") {
     if (!scope.singles || !p.number) return null;
     if (p.marketUsd == null) return ref != null && ref >= singlesFloor(m, minValueCents) ? "SU" : null;
-    if (p.marketUsd >= S1_MIN_CENTS) return "S1";
-    if (p.marketUsd >= singlesFloor(m, minValueCents)) return "S2";
-    return null;
+    if (p.marketUsd < singlesFloor(m, minValueCents)) return null; // the floor beats demand
+    return p.marketUsd >= S1_MIN_CENTS || (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "S1" : "S2";
   }
   if (!scope.sealed || !p.sealedKind || !SEARCHED_SEALED_KINDS.has(p.sealedKind)) return null;
-  return (p.marketUsd ?? ref ?? -1) >= SEALED_MIN_CENTS ? "P1" : null;
+  if ((p.marketUsd ?? ref ?? -1) < SEALED_MIN_CENTS) return null;
+  return (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "S1" : "P1";
 }
 
 /** Is a pair due? Never searched → yes; else when its age reaches interval − grace. EBAY_FORCE → always. */
@@ -236,11 +260,13 @@ export interface Pair {
   marketUsd: number | null;
   checkedAt: Date | null;
   cost: number; // modelled calls
+  /** pairScore: what a click is worth (price × (1 + demand)); orders pairs inside a tier. */
+  score: number;
 }
 
 export const pairKey = (productId: number, market: string) => `${productId}|${market}`;
 
-/** Never-searched first, then most overdue, then most valuable. Tier first of all. */
+/** Tier first of all (hot before rotating), then never-searched, then most overdue (the rotation), then the higher score. */
 export function comparePairs(a: Pair, b: Pair, now: Date): number {
   const t = TIER_PRIORITY[a.tier] - TIER_PRIORITY[b.tier];
   if (t) return t;
@@ -250,6 +276,7 @@ export function comparePairs(a: Pair, b: Pair, now: Date): number {
     const ob = now.getTime() - b.checkedAt.getTime() - TIER_INTERVAL_HOURS[b.tier] * 3600_000;
     if (oa !== ob) return ob - oa;
   }
+  if (a.score !== b.score) return b.score - a.score;
   const v = (b.marketUsd ?? -1) - (a.marketUsd ?? -1);
   if (v) return v;
   return a.productId - b.productId;
@@ -269,83 +296,9 @@ export function duePairs(
     if (!tier) continue;
     const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
     if (!isDue(checkedAt, tier, now, opts.force)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST });
+    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand) });
   }
   return out.sort((a, b) => comparePairs(a, b, now));
-}
-
-/**
- * The singles floor of each market (US cents; Infinity = no singles there): the
- * value of the Nth most valuable card, where N is the most cards the market's
- * share of the daily budget can keep inside the 72h freshness window (an eBay
- * row older than that is not shown, so a pair that rotates slower than 72h
- * flickers) and never more than `topCards`. The US reaches the whole top 2,000;
- * the smaller markets reach as deep as their calls allow, dearest first.
- *
- * Per day a market spends: sealed pairs (P1, every 72h) + its S1 chase cards
- * (every 48h) + every other covered card (every 72h), each at the modelled
- * calls per search. `sealedPairs` is how many sealed pairs it searches.
- */
-export function marketFloors(
-  cardValuesCents: number[],
-  sealedPairs: number,
-  opts: { dailyCalls?: number; topCards?: number; absMinCents?: number } = {},
-): Record<EbayMarket, number> {
-  const dailyCalls = opts.dailyCalls ?? DAILY_CALL_CAP;
-  const topCards = opts.topCards ?? DEFAULT_TOP_CARDS;
-  const absMin = opts.absMinCents ?? SINGLES_ABS_MIN_CENTS;
-  const values = cardValuesCents.filter((v) => v > 0).sort((a, b) => b - a);
-  const single = EBAY_MARKETS.filter((m) => marketScope(m).singles);
-  const sealedCost = (m: EbayMarket) => (marketScope(m).sealed ? sealedPairs * (24 / TIER_INTERVAL_HOURS.P1) * SEALED_CALL_COST : 0);
-  /** Daily cost of covering the dearest n cards of a market, and the cards covered. */
-  const coverage = (m: EbayMarket, n: number) => {
-    const euFloor = m === "EU" ? EU_MIN_VALUE_CENTS : 0;
-    const covered = values.slice(0, n).filter((v) => v >= Math.max(absMin, euFloor));
-    const s1 = covered.filter((v) => v >= S1_MIN_CENTS).length;
-    const cost = (covered.length - s1) * (24 / TIER_INTERVAL_HOURS.S2) * SINGLE_CALL_COST + s1 * (24 / TIER_INTERVAL_HOURS.S1) * SINGLE_CALL_COST + sealedCost(m);
-    return { cost, covered: covered.length };
-  };
-  const maxCards = (m: EbayMarket, calls: number) => {
-    let n = 0;
-    for (let lo = 0, hi = Math.min(topCards, values.length); lo <= hi; ) {
-      const mid = (lo + hi) >> 1;
-      if (coverage(m, mid).cost <= calls) {
-        n = mid;
-        lo = mid + 1;
-      } else hi = mid - 1;
-    }
-    return n;
-  };
-  // Each market starts with its share of the day. A market that can cover every
-  // eligible card for less (the US) hands the rest to the others, pro rata, and
-  // the sizes are redone: the run's spill does the same thing at search time.
-  const allowance = {} as Record<EbayMarket, number>;
-  for (const m of EBAY_MARKETS) allowance[m] = Math.floor(dailyCalls * MARKET_SHARES[m]);
-  const counts = {} as Record<EbayMarket, number>;
-  const full = new Set<EbayMarket>();
-  for (let pass = 0; pass < 4; pass++) {
-    let surplus = 0;
-    for (const m of single) {
-      counts[m] = maxCards(m, allowance[m]);
-      const all = Math.min(topCards, values.length);
-      if (counts[m] >= all && !full.has(m)) {
-        full.add(m);
-        surplus += allowance[m] - coverage(m, all).cost;
-        allowance[m] = coverage(m, all).cost;
-      }
-    }
-    if (surplus <= 0) break;
-    const open = single.filter((m) => !full.has(m));
-    const weight = open.reduce((t, m) => t + MARKET_SHARES[m], 0);
-    if (!weight) break;
-    for (const m of open) allowance[m] += Math.floor((surplus * MARKET_SHARES[m]) / weight);
-  }
-  const out = {} as Record<EbayMarket, number>;
-  for (const m of EBAY_MARKETS) {
-    const n = single.includes(m) ? counts[m] : 0;
-    out[m] = n > 0 ? Math.max(absMin, m === "EU" ? EU_MIN_VALUE_CENTS : 0, values[n - 1]) : Infinity;
-  }
-  return out;
 }
 
 /**
@@ -367,7 +320,7 @@ export function fillPairs(
     if (!tier) continue;
     const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
     if (isDue(checkedAt, tier, now)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST });
+    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand) });
   }
   return out.sort((a, b) => comparePairs(a, b, now));
 }

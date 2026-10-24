@@ -28,7 +28,13 @@ import {
   clampLimits,
   duePairs,
   fillPairs,
-  marketFloors,
+  HOT_DEMAND_POINTS,
+  SINGLES_ABS_MIN_CENTS,
+  SEARCH_WEIGHT,
+  DEMAND_HALF_DAYS,
+  demandPoints,
+  pairScore,
+  singlesFloor,
   quotaDayStart,
   ebayRunVerdict,
   pairKey,
@@ -274,7 +280,7 @@ test("due order: S1 before S2, never-searched before stale, then most overdue, t
 });
 
 const pairs = (market: EbayMarket, n: number, kind: "single" | "sealed" = "single"): Pair[] =>
-  Array.from({ length: n }, (_, i) => ({ productId: i + 1, market, kind, tier: "S1", marketUsd: 20000 - i, checkedAt: null, cost: kind === "single" ? 1.25 : 1 }));
+  Array.from({ length: n }, (_, i) => ({ productId: i + 1, market, kind, tier: "S1", marketUsd: 20000 - i, checkedAt: null, cost: kind === "single" ? 1.25 : 1, score: 0 }));;
 
 test("planRun: each market within its share in phase 1, the leftover spills in phase 2", () => {
   const due = { US: pairs("US", 400), UK: pairs("UK", 400), AU: pairs("AU", 400), EU: pairs("EU", 400), CA: pairs("CA", 400, "sealed") };
@@ -291,8 +297,8 @@ test("planRun: each market within its share in phase 1, the leftover spills in p
 });
 
 test("planRun: strict priority — a cheap low-tier pair never jumps a higher-tier one that doesn't fit", () => {
-  const s1: Pair = { productId: 1, market: "US", kind: "single", tier: "S1", marketUsd: 20000, checkedAt: null, cost: 1.25 };
-  const p1: Pair = { productId: 2, market: "US", kind: "sealed", tier: "P1", marketUsd: 9000, checkedAt: null, cost: 1 };
+  const s1: Pair = { productId: 1, market: "US", kind: "single", tier: "S1", marketUsd: 20000, checkedAt: null, cost: 1.25, score: 0 };
+  const p1: Pair = { productId: 2, market: "US", kind: "sealed", tier: "P1", marketUsd: 9000, checkedAt: null, cost: 1, score: 0 };
   const plan = planRun({ US: [s1, p1] }, 1, now, { only: "US" });
   assert.deepEqual(plan.order, []);
   assert.deepEqual(plan.overflow.map((p) => p.productId), [1, 2]);
@@ -324,9 +330,10 @@ test("the methodology page states the plan's floors and intervals", () => {
   assert.ok(page.includes(`worth ${usd(DEFAULT_MIN_VALUE_CENTS)} or more`), "singles floor");
   assert.ok(page.includes(`(${usd(EU_MIN_VALUE_CENTS)} in the EU)`), "EU floor");
   assert.ok(page.includes(`sealed products worth ${usd(SEALED_MIN_CENTS)} or more`), "sealed floor");
-  assert.ok(page.includes(`cards of ${usd(S1_MIN_CENTS)} and up every two days`), "S1");
+  assert.ok(page.includes(`cards of ${usd(S1_MIN_CENTS)} and up, are refreshed every two days`), "S1 and hot");
+  assert.ok(page.includes("visitors search for and open most"), "demand");
   assert.equal(TIER_INTERVAL_HOURS.S1, 48);
-  assert.ok(page.includes("the rest every three days"));
+  assert.ok(page.includes("the rest every three days, most overdue first"));
   assert.equal(TIER_INTERVAL_HOURS.S2, 72);
   assert.equal(TIER_INTERVAL_HOURS.P1, 72);
   assert.ok(page.includes("Once a day"));
@@ -348,39 +355,72 @@ test("the per-run cap is the whole daily ceiling: a shared 5,000-call key lets o
   assert.equal(budgetFor(2500, DEFAULT_MAX_CALLS, RESERVE, null, undefined, { dailyLimit: 2500, ourSpend24h: 0 }), 2200);
 });
 
-// ── As many cards as the quota allows (owner, 2026-10-09) ────────────────────
-// A price list shaped like OP Compare's: 6,875 priced cards, the 2,000th worth ~US$5 (counted 2026-10-09).
-const VALUES = Array.from({ length: 6875 }, (_, i) => Math.max(1, Math.min(500000, Math.round(7862 * Math.pow(500 / (i + 1), 1.95))))); // fitted: 500th US$78, 2,000th US$5
+// ── The floor and demand (owner, 2026-10-24) ─────────────────────────────────
+// "We only use the eBay quota for items that are US$20 or more, prioritising the ones people
+// search and open, on a rotating basis, sealed included."
+const single = (id: number, marketUsd: number | null, o: Partial<PlanProduct> = {}): PlanProduct => ({ id, kind: "single", marketUsd, number: `OP01-${String(id).padStart(3, "0")}`, launch: false, ...o });
+const sealedP = (id: number, marketUsd: number | null, o: Partial<PlanProduct> = {}): PlanProduct => ({ id, kind: "sealed", marketUsd, sealedKind: "Booster Box", launch: false, ...o });
 
-test("marketFloors: each market covers as many dear cards as its calls keep inside 72h, and the plan fits the day", () => {
-  const f = marketFloors(VALUES, 140);
-  const cards = (m: EbayMarket) => (Number.isFinite(f[m]) ? VALUES.filter((v) => v >= f[m]).length : 0);
-  // The US covers everything above the absolute minimum; the others as deep as they can, dearest first.
-  assert.equal(cards("US"), VALUES.filter((v) => v >= 300).length);
-  assert.ok(cards("UK") < cards("US") && cards("AU") < cards("US") && cards("EU") < cards("UK"), JSON.stringify(f));
-  assert.equal(f.CA, Infinity);
-  assert.equal(f.SG, Infinity);
-  assert.ok(f.EU >= EU_MIN_VALUE_CENTS, "the EU keeps its own higher floor");
-  // The modelled steady state (every pair at its interval) never needs more than the day.
-  const counts = (m: EbayMarket) => {
-    const covered = VALUES.filter((v) => v >= f[m]);
-    const s1 = covered.filter((v) => v >= S1_MIN_CENTS).length;
-    return { s1, s2: covered.length - s1 };
-  };
-  let total = 0;
+test("the floor: nothing under US$20 is ever searched, however hot; the EU's is US$40; the env can only raise it", () => {
+  assert.equal(SINGLES_ABS_MIN_CENTS, 2000);
+  assert.equal(SEALED_MIN_CENTS, 2000);
   for (const m of ["US", "UK", "AU", "EU"] as EbayMarket[]) {
-    const { s1, s2 } = counts(m);
-    total += (s1 * 24 / TIER_INTERVAL_HOURS.S1 + s2 * 24 / TIER_INTERVAL_HOURS.S2) * PLAN_SINGLE_COST;
+    assert.equal(tierOf(single(1, 1999, { demand: 500 }), m), null, `${m}: a US$19.99 card with huge demand`);
+    assert.equal(tierOf(single(2, 500, { demand: 500 }), m), null, `${m}: a US$5 card with huge demand`);
   }
-  total += 140 * (24 / TIER_INTERVAL_HOURS.P1) * 5; // 140 sealed pairs in each of the 5 sealed markets
-  assert.ok(total <= DAILY_CALL_CAP, `${total} > ${DAILY_CALL_CAP}`);
-  // A smaller budget covers fewer cards, never more; a cap lowers the depth.
-  const half = marketFloors(VALUES, 140, { dailyCalls: 1250 });
-  assert.ok(half.UK >= f.UK && half.EU >= f.EU);
-  const capped = marketFloors(VALUES, 140, { topCards: 500 });
-  assert.equal(VALUES.filter((v) => v >= capped.US).length, 500);
-  // No cards, no floors.
-  assert.equal(marketFloors([], 0).US, Infinity);
+  assert.notEqual(tierOf(single(3, 2000), "US"), null, "US$20 is in");
+  assert.equal(tierOf(single(3, 2000), "EU"), null, "US$20 is under the EU floor");
+  assert.notEqual(tierOf(single(3, 4000), "EU"), null);
+  assert.equal(tierOf(sealedP(4, 1999, { demand: 500 }), "US"), null, "sealed under US$20 is never searched either");
+  assert.notEqual(tierOf(sealedP(4, 2000), "US"), null);
+  assert.equal(singlesFloor("US", 100), 2000, "an env floor below US$20 is ignored");
+  assert.equal(singlesFloor("US", 5000), 5000, "and one above it raises it");
+  assert.equal(singlesFloor("EU", 2000), EU_MIN_VALUE_CENTS);
+  // Nothing under the floor is due, whatever the checks say.
+  const prods = [single(1, 500, { demand: 99 }), single(2, 1500), single(3, 2500), sealedP(4, 1000, { demand: 99 })];
+  for (const m of ["US", "UK", "AU", "EU", "CA"] as EbayMarket[]) {
+    for (const p of duePairs(prods, m, new Map(), new Date("2026-10-24T12:37:00Z"))) assert.ok((p.marketUsd ?? 0) >= 2000, `${m}: ${p.productId}`);
+  }
+});
+
+test("demand: hot products (or US$100+ singles) refresh every 48h and go first; the rest rotate every 72h", () => {
+  assert.equal(tierOf(single(1, 3000, { demand: HOT_DEMAND_POINTS }), "US"), "S1", "a hot US$30 card");
+  assert.equal(tierOf(single(1, 3000, { demand: HOT_DEMAND_POINTS - 1 }), "US"), "S2", "one point short");
+  assert.equal(tierOf(single(2, S1_MIN_CENTS), "US"), "S1", "a chase card needs no demand");
+  assert.equal(tierOf(sealedP(3, 5000, { demand: HOT_DEMAND_POINTS }), "US"), "S1", "a hot sealed product");
+  assert.equal(tierOf(sealedP(3, 5000), "US"), "P1", "a quiet one rotates");
+  const now = new Date("2026-10-24T12:37:00Z");
+  const hot = single(10, 2500, { demand: 40 });
+  const cold = single(11, 90000 - 85000 + 2000);
+  const prods = [cold, hot];
+  const due = duePairs(prods, "US", new Map(), now);
+  assert.deepEqual(due.map((p) => p.productId), [10, 11], "hot (S1) before a never-searched cold card, though the cold one is dearer");
+});
+
+test("rotation inside a tier: most overdue first, then the higher score (price × demand), never the price alone", () => {
+  const now = new Date("2026-10-24T12:37:00Z");
+  const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
+  const prods = [single(1, 2100, { demand: 8 }), single(2, 9000, { demand: 0 }), single(3, 2500, { demand: 0 })];
+  // All never searched: the score decides. 21×9=189 > 90×1=90 > 25×1=25.
+  assert.deepEqual(duePairs(prods, "US", new Map(), now).map((p) => p.productId), [1, 2, 3]);
+  // The more overdue goes first, whatever its score.
+  const checks = new Map([[pairKey(1, "US"), ago(73)], [pairKey(2, "US"), ago(100)], [pairKey(3, "US"), ago(80)]]);
+  assert.deepEqual(duePairs(prods, "US", checks, now).map((p) => p.productId), [2, 3, 1]);
+  // A tight budget keeps the hot pairs and leaves the cold ones waiting.
+  const hotAndCold = [...Array.from({ length: 5 }, (_, i) => single(100 + i, 3000, { demand: 50 })), ...Array.from({ length: 50 }, (_, i) => single(200 + i, 30000))];
+  const plan = planRun({ US: duePairs(hotAndCold, "US", new Map(), now) }, 20, now, { only: "US" });
+  assert.ok(plan.order.slice(0, 5).every((p) => p.productId >= 100 && p.productId < 105), "the five hot cards are first");
+});
+
+test("demandPoints and pairScore: a search is worth SEARCH_WEIGHT views, stale demand counts half, price × (1 + demand)", () => {
+  const now = new Date("2026-10-24T00:00:00Z");
+  assert.equal(demandPoints(0, 0, null, now), 0);
+  assert.equal(demandPoints(2, 4, now, now), 2 * SEARCH_WEIGHT + 4);
+  assert.equal(demandPoints(2, 4, new Date(now.getTime() - (DEMAND_HALF_DAYS + 1) * 86_400_000), now), (2 * SEARCH_WEIGHT + 4) / 2);
+  assert.equal(demandPoints(-5, -5, now, now), 0, "never negative");
+  assert.equal(pairScore(5000, 0), 50);
+  assert.equal(pairScore(5000, 9), 500);
+  assert.equal(pairScore(null, 9), 0);
 });
 
 test("fillPairs: only eligible pairs that are not due, tier then oldest, so leftover budget has somewhere to go", () => {
