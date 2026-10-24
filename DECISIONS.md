@@ -2777,3 +2777,20 @@ RelatedGuides (the set's own guide first). Three guides each target one query
 (`op17-booster-box-price`, `one-piece-booster-pack-price`, `one-piece-starter-deck-prices`),
 built at render from the snapshot like every other post, so a figure always matches the
 page it links to.
+
+## 2026-10-24 — Halloween ("Thriller Bark awaits"), ported from RiftCompare
+
+Owner: make the site Halloween-themed like RiftCompare, reverting by itself.
+`src/lib/season.ts` is RiftCompare's: 16-31 October in the VISITOR's local
+time, `SEASON_BOOT_SCRIPT` stamps `data-season` on `<html>` before paint (no
+cookie or header, so the CDN-cached `/card` page stays one copy), `?season=
+halloween|off` previews it. Only the home hero carries markup
+(`HalloweenDecor`, `ThrillerBarkComing`, in the HTML a day either side of the
+window via `seasonMarkupLive`); CSS shows it only under the attribute, so on
+1 November it is gone with no deploy. Decor (cobwebs, spiders, bats,
+jack-o'-lanterns) sits in the hero's aria-hidden background layer under the
+content; on phones bats and spiders sit out and pumpkins shrink into the
+corners, so nothing crosses text. Reduced motion stops it. The dark theme's ink
+ramp turns violet at the same lightness; brand red, buy and eBay colours are
+untouched. The teaser links to `/search?q=Brook` (no card slug is guessed).
+`tests/season.test.ts` pins the window and the gating.
