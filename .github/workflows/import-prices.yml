@@ -62,8 +62,8 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=4096
       DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
-      REVALIDATE_URL: ${{ format('{0}/api/revalidate', vars.SITE_URL || 'https://opcompare.app') }}
-      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
+      REVALIDATE_URL: ${{ format('{0}/api/revalidate', vars.SITE_URL || 'https://www.opcompare.app') }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://www.opcompare.app' }}
       IMPORT_STORES: ${{ (github.event_name != 'workflow_dispatch' || inputs.stores) && '1' || '0' }}
       IMPORT_ONLY_STORES: ${{ inputs.only_stores }}
       HISTORY_DIR: .data/history

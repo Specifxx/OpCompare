@@ -5,7 +5,7 @@
 //                  client_email as a Full user on the OP Compare property)
 //   GSC_PROPERTY — "sc-domain:opcompare.app" (Domain property; the workflow's
 //                  default) or "https://opcompare.app/" (URL-prefix property)
-//   SITE_URL     — https://opcompare.app (the workflow's default)
+//   SITE_URL     — https://www.opcompare.app (the workflow's default)
 //
 // Submitting a sitemap needs the account to have Full or Owner permission on the
 // property; the report itself needs only read access.

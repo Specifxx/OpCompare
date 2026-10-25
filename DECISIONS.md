@@ -2857,3 +2857,47 @@ thing.
 - **Not done:** outbound-click data (`ClickEvent`) is retired, so "clicking sealed" means
   opening the product page or quick view. If click tracking returns, feed it into the same
   `demand` field.
+
+## 2026-10-25: One canonical host (www), and a cleaner sitemap
+
+**Why.** The site was served on the apex with www redirecting to it (a 308), the reverse of
+what the owner wants for SEO consolidation. An audit of the live site the same day (8,446
+sitemap URLs, every non-card page and 400 sampled cards): no errors, a self-canonical on every
+page, one `<h1>` each, breadcrumbs everywhere but the home page, no RiftCompare copy outside the
+footer's sister-site links. Defects found: two `noindex` Leader pages in the sitemap, three
+different URLs for the same DON!! card list, 16 groups of duplicate sealed titles (a long name was
+cut at 50 characters, which removed the part that tells "Booster Pack" from "Sleeved Booster Pack"),
+and identical descriptions on /privacy and /terms.
+
+**Decisions.**
+- `SITE_URL` defaults to `https://www.opcompare.app`; the apex gets a real 301 (not Next's
+  308) for `/` and every other path, query strings kept. Exempt: `/api/stripe/webhook` and
+  `/api/ebay/marketplace-deletion` (registered with Stripe and eBay on the apex; neither follows a
+  redirect). Every workflow, script and probe default moved to www, because a POST to the apex
+  (the import's revalidate call) would be redirected.
+- Sitemap: Leader deck pages only with two or more decks (the page is noindex below that); the
+  DON!! rarity and type pages are removed and 301 to `/cards/printing/don`.
+- Titles: `fitTitle` keeps the start and the end of a long sealed name (one pair of same-named
+  products still shares a title). /privacy and /terms have their own descriptions.
+- Search Console: the Domain property `sc-domain:opcompare.app` covers both hosts; the daily
+  workflow submits `${SITE_URL}/sitemap.xml`, so from now on the www sitemap. The old apex
+  sitemap entry can be deleted in Search Console once the www one is read.
+- Cost: members signed in on the apex are signed out once (the session cookie is per host).
+
+**Needs doing outside the code, before this ships:** make www the primary domain in Vercel
+(both domains attached); add `https://www.opcompare.app/api/auth/oauth/google/callback` (and
+discord) as authorised redirect URIs; remove or update `NEXT_PUBLIC_SITE_URL` (Vercel) and
+`SITE_URL` (GitHub variable) if set to the apex.
+
+**Addendum, same day: card titles.** A crawl of ALL 8,446 sitemap URLs (my first pass sampled
+400 of 7,329 cards and missed this) found 354 groups of duplicate titles over 983 pages,
+nearly all cards: promos whose long variant fell off `cardTitle`'s length ladder and left the
+generic word "Promo" (seven pages titled "Tony Tony.Chopper Promo ST01-006"), reprints of one
+number in another set (OP03-108 in OP03 and in PRB-01), DON!! cards with no number, and Event
+cards whose name is a sentence. `cardTitle` now keeps the variant for promos, DON!! cards and
+cards in a reprint set (up to `PROMO_TITLE_MAX`, cutting the middle of a long variant so its end,
+Winner or Participant, survives), names the set code when the card's number belongs to another
+set, and cuts the middle of a name too long for any rung instead of dropping the printing word.
+Measured over the whole catalogue with the real function: 332 groups (938 pages) became 7 groups
+(14 pages) of genuinely identical products. Titles of about 1,400 pages are now longer than 60
+characters; a search result shortens them, and unique beats short.

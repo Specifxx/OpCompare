@@ -96,13 +96,13 @@ test("one email per address, and the email states only facts, with an unsubscrib
   assert.match(e.lines.join(" "), /3 Awakening of the New Era singles have a store price in the United States/);
   assert.match(e.lines.join(" "), /Back in stock for pre-order in the United States: OP-05 Booster Box/);
   const text = renderReleaseEmailText(e, "tok");
-  assert.match(text, /Unsubscribe: https:\/\/opcompare\.app\/alerts\/release\?token=tok/);
+  assert.match(text, /Unsubscribe: https:\/\/www\.opcompare\.app\/alerts\/release\?token=tok/);
   assert.doesNotMatch(text, /ebay|tcgplayer/i, "no affiliate links in emails");
   const html = renderReleaseEmailHtml(e, "tok", emailShell);
   assert.match(html, /at most two emails/);
   assert.doesNotMatch(`${html} ${text}`, /riftbound|riftcompare|radiance/i);
-  assert.equal(releaseStopUrl("a b"), "https://opcompare.app/alerts/release?token=a%20b");
-  assert.equal(releaseOneClickUrl("tok"), "https://opcompare.app/api/alerts/release/unsubscribe?token=tok");
+  assert.equal(releaseStopUrl("a b"), "https://www.opcompare.app/alerts/release?token=a%20b");
+  assert.equal(releaseOneClickUrl("tok"), "https://www.opcompare.app/api/alerts/release/unsubscribe?token=tok");
 });
 
 test("a card signup's email names the card and its price", () => {
@@ -111,7 +111,7 @@ test("a card signup's email names the card and its price", () => {
   ]);
   assert.equal(e.subject, "Monkey.D.Luffy is listed");
   assert.match(e.lines[0]!, /Monkey\.D\.Luffy now has a store price in Australia: A\$45\.00/);
-  assert.equal(e.cta.url, "https://opcompare.app/card/monkey-d-luffy");
+  assert.equal(e.cta.url, "https://www.opcompare.app/card/monkey-d-luffy");
 });
 
 test("signup bodies: a valid address and a real set slug; a card must be an integer id; the honeypot is flagged", () => {

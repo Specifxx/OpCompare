@@ -5,6 +5,7 @@ import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
+  description: "The rules for using OP Compare: prices are for comparison only, store and eBay listings are third-party, how Plus and Premium work, and how to cancel.",
   alternates: { canonical: "/terms" },
   openGraph: pageOg("/terms"),
 };

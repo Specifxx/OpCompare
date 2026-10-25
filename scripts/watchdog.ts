@@ -25,7 +25,7 @@ const DIGEST_KEY = "health:digest-at";
 
 async function main() {
   const now = new Date();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.opcompare.app";
   const { report, inbox } = await collectAll(now);
   await saveReport(report);
   for (const c of report.checks) log(`${c.status.toUpperCase().padEnd(7)} ${c.label}: ${c.detail}`);

@@ -12,7 +12,7 @@
 import Stripe from "stripe";
 import { INTERVALS, PLAN_CENTS, PLAN_CURRENCY, STRIPE_SITE, TIERS, TIER_NAMES, lookupKey } from "../src/lib/plans";
 
-const SITE = (process.env.SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+const SITE = (process.env.SITE_URL || "https://www.opcompare.app").replace(/\/+$/, "");
 const EVENTS = [
   "checkout.session.completed",
   "checkout.session.async_payment_succeeded",
