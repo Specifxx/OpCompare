@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardArt } from "@/components/CardTile";
+import { StoreCodeChip } from "@/components/StoreCodeChip";
 import { Breadcrumbs, InShort, JsonLd, SectionHeader, StatTile } from "@/components/ui";
 import { affiliateUrl, outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, type Country } from "@/lib/country";
@@ -106,6 +107,10 @@ export default async function StorePage({ params }: Props) {
         <a href={out(s.base)} target="_blank" rel={outboundRel()} data-retailer={s.key} data-page="stores" className="text-brand-400 hover:underline">
           {s.base.replace(/^https?:\/\/(www\.)?/, "")}
         </a>
+      </p>
+      {/* A store partner's exclusive code (lib/store-partner-deals.ts); nothing without a live one. */}
+      <p className="mt-2 empty:hidden">
+        <StoreCodeChip href={s.base} />
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="In stock" value={st ? int(st.inStock) : "—"} sub={st ? `${int(st.offers)} listings matched` : "nothing matched yet"} />

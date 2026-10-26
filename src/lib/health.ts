@@ -17,6 +17,8 @@
 // as counts only, in a GitHub issue on a PUBLIC repository (tests/health.test.ts
 // pins that no message text, address or name can reach either).
 
+import { STORE_PARTNER_DEALS, codesNeedingRecheck, type StorePartnerDeal } from "./store-partner-deals";
+
 // Local copies, so this module imports no eBay code (tests/no-ebay-api.test.ts):
 // tests/health.test.ts pins both to lib/ebay-plan.ts's DAILY_CALL_CAP and quotaDayStart.
 export const EBAY_DAILY_CAP = 2500;
@@ -234,6 +236,25 @@ export function evalStores(o: { failed: number | null; total: number | null }): 
     limit: o.total,
     unit: "stores",
     ...(status === "ok" ? {} : { hint: "Open /admin/store-health, section 'Needs a look'. One store failing is usually the store; many at once is usually a code or network problem." }),
+  };
+}
+
+/** Store partner codes hide themselves 30 days after their last checkout test
+ *  (lib/store-partner-deals.ts): warn a week ahead so a live code is re-tested. */
+export function evalStoreCodes(now: Date, deals: readonly StorePartnerDeal[] = STORE_PARTNER_DEALS): Check {
+  const due = codesNeedingRecheck(now, 7, deals);
+  const live = deals.filter((d) => d.code).length;
+  return {
+    id: "store-codes",
+    area: "stores",
+    label: "Store partner codes",
+    status: due.length ? "warn" : "ok",
+    detail: due.length
+      ? `${due.length} partner code${due.length === 1 ? "" : "s"} stop showing soon: ${due.map((d) => `${d.name} (${d.hidesOn})`).join(", ")}.`
+      : live
+        ? `${live} partner code${live === 1 ? "" : "s"}, none due for a re-check this week.`
+        : "No store partner codes yet.",
+    ...(due.length ? { hint: "Test each code at the store's checkout, then move its `checked` date in src/lib/store-partner-deals.ts." } : {}),
   };
 }
 

@@ -18,6 +18,7 @@ import {
   evalNeon,
   evalSite,
   evalSnapshotAge,
+  evalStoreCodes,
   evalStores,
   unknown,
   type Check,
@@ -134,7 +135,7 @@ export async function collectStores(): Promise<Check[]> {
     },
     () => null as number | null,
   );
-  return [evalStores({ failed, total: keys.size })];
+  return [evalStores({ failed, total: keys.size }), evalStoreCodes(new Date())];
 }
 
 export async function collectEbay(now: Date): Promise<Check[]> {

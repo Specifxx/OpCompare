@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { sendCardView } from "@/lib/card-views";
 import { COUNTRIES, MARKETS } from "@/lib/country";
 import { ebayAffiliateUrl, ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
+import { StoreCodeChip } from "./StoreCodeChip";
 import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
@@ -248,6 +249,7 @@ export function QuickView({
                             <span>{r.postage}</span>
                             <span>updated {ago(r.updatedAt)}</span>
                             {isPaidLink(r.href) ? <span className="rounded bg-ink-800 px-1 text-[10px] text-slate-400">Paid link</span> : null}
+                            <StoreCodeChip href={r.href} />
                           </p>
                         </div>
                         <span className={`num shrink-0 text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>

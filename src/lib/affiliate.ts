@@ -13,6 +13,7 @@
 // EPN's `customid` and Impact's `sharedid` carry `oc-<market>-<source>`, so OP
 // Compare's revenue is separable from RiftCompare's (`rc-…`) in both networks'
 // own reports, on the same accounts.
+import { dealForHost, partnerRefUrl } from "./store-partner-deals";
 import { SITE_URL } from "./site";
 import type { Country } from "./country";
 
@@ -131,7 +132,8 @@ export function ebaySearchUrl(country: Country, query: string, source?: string):
 }
 
 /**
- * Tag an outbound product link. eBay EPN → TCGplayer (Impact) → plain link.
+ * Tag an outbound product link. eBay EPN → TCGplayer (Impact) → a store partner's
+ * commission parameter → the store link with our utm_source.
  * `subId` is the retailer key, `loc` the page it was rendered on (path only).
  */
 export function affiliateUrl(url: string | null | undefined, subId = "opcompare", loc: string = SITE_URL): string {
@@ -152,6 +154,19 @@ export function affiliateUrl(url: string | null | undefined, subId = "opcompare"
         `&sharedid=${encodeURIComponent(affiliateSubId("oc", subId, page))}`
       );
     }
+    // A store partner's commission parameter (lib/store-partner-deals.ts).
+    const partner = partnerRefUrl(u);
+    if (partner) return partner;
+    // Every other store link says where the visitor came from (2026-10-26, as
+    // RiftCompare's since 2026-10-22): our anchors are noreferrer, so without it a
+    // store's analytics file our visitors under "direct", and a store deciding on
+    // a partnership could not see what we send. An existing utm_source is kept.
+    if (/^https?:$/.test(u.protocol) && !u.searchParams.has("utm_source")) {
+      u.searchParams.set("utm_source", "opcompare");
+      u.searchParams.set("utm_medium", "referral");
+      u.searchParams.set("utm_campaign", page ?? "home");
+      return u.toString();
+    }
   } catch {
     /* not an absolute URL — leave it untouched */
   }
@@ -169,7 +184,7 @@ export function isPaidLink(href: string | null | undefined): boolean {
     const u = new URL(href);
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
     if (/(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return Boolean(TCGPLAYER_IMPACT_LINK);
-    return false;
+    return dealForHost(u.hostname)?.ref != null;
   } catch {
     return false;
   }

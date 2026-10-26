@@ -13,6 +13,7 @@ import { useCountry } from "./CountryProvider";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { Dialog } from "./ui/Dialog";
+import { StoreCodeChip } from "./StoreCodeChip";
 
 // Quick-view popup for sealed products (RiftCompare's SealedQuickView): a plain
 // left click on a SealedTile opens this instead of leaving /sealed. OP keeps its
@@ -162,6 +163,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-brand-400" : "text-slate-500"}>● {offerStockLabel(state, data.preRelease)}</span>
                           <span className="text-slate-500">checked {ago(l.lastSeen)}</span>
+                          {isOpen ? <StoreCodeChip href={l.href} /> : null}
                         </div>
                       </div>
                       {isBest ? <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span> : null}

@@ -2890,3 +2890,35 @@ real box. OP Compare already had the pack and the community pull rates (Box EV).
   the server never sees it and every visitor gets the one CDN-cached render. No binder
   save yet (RiftCompare's sends the pulls through the collection import); add it if
   people use the tracker.
+
+## Store partner codes — 2026-10-26
+
+Owner, after the strategy review: "execute on all the recommended items". The same
+program as RiftCompare's (its DECISIONS.md, "Store partner codes: the store links
+start earning"): store links earned nothing, eBay and TCGplayer were the only paid
+links. `src/lib/store-partner-deals.ts` lists partners: an exclusive discount code
+shown by `StoreCodeChip` beside that store's rows (the card board, both quick
+views, the store page) and/or the commission parameter of its affiliate app, which
+`affiliateUrl` adds, so `isPaidLink` labels the row. The offer is
+`/stores/partners`, linked from `/stores` and the editorial policy. Empty until a
+store signs.
+
+- A label, never a position: the board stays cheapest first, the shown price is
+  before the code, and nothing that ranks reads the list
+  (`tests/store-partner-deals.test.ts`).
+- A code hides 30 days after its last checkout test or on its end date, decided
+  after mount (pages are cached for hours). The watchdog's `store-codes` check warns
+  a week ahead.
+- **Store links now carry `utm_source=opcompare`** (`utm_medium=referral`,
+  `utm_campaign=<page>`), as RiftCompare's have since 2026-10-22: anchors are
+  noreferrer, so a store could not see what we send, which is the evidence a
+  partnership needs. An existing `utm_source` is kept; eBay, TCGplayer and partner
+  links keep their own tagging.
+- Who to approach first: each store page's "Cheapest in <market>" count.
+
+## One family of sites — 2026-10-26
+
+Same review: one family people recognise, no domain moved. The footer line reads
+"Part of the Compare Empire family" and adds Gundam Compare and Lorcana Compare to
+`SISTER_SITES` (so About and Who writes this name them too). YGO Compare joins once
+it is public.

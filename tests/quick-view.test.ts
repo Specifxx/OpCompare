@@ -82,7 +82,7 @@ test("the payload covers all six markets, top rows only, with tagged links and p
   assert.equal(us.rows[0].source, "tcgplayer");
   assert.equal(us.rows[0].label, "TCGplayer");
   assert.match(us.rows[0].href, /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=oc-tcgplayer-card/);
-  assert.equal(us.rows[1].href, "https://shop.example/store:s0", "a store's own URL is untouched");
+  assert.equal(us.rows[1].href, "https://shop.example/store:s0?utm_source=opcompare&utm_medium=referral&utm_campaign=card", "a store's own URL, with only our utm_source");
   assert.equal(us.ebayRow, false);
   const uk = p.markets.UK;
   assert.equal(uk.ebayRow, true);
@@ -126,7 +126,7 @@ test("cheapestBuyRow is the board's #1 row (CardTopBuy and the sticky bar agree 
   assert.equal(cardDisplayName({ name: "Shanks", variant: "Parallel", number: "OP01-120" }), "Shanks (Parallel) OP01-120");
 });
 
-test("Best Basket links: TCGplayer through Impact, stores untouched", () => {
+test("Best Basket links: TCGplayer through Impact, stores with only our utm_source", () => {
   const post = (cents: number) => () => ({ cents, label: "Standard", tracked: true, basis: "measured" as const, free: false, upTo: false });
   const { plan } = planBasket(
     [
@@ -138,7 +138,7 @@ test("Best Basket links: TCGplayer through Impact, stores untouched", () => {
   );
   const urls = plan.stores.flatMap((s) => s.lines.map((l) => l.url));
   assert.ok(urls.some((u) => /^https:\/\/partner\.tcgplayer\.com\//.test(u)), urls.join(" "));
-  assert.ok(urls.includes("https://x.example/p/b"));
+  assert.ok(urls.some((u) => u.startsWith("https://x.example/p/b?utm_source=opcompare&")), urls.join(" "));
 });
 
 test("wiring: the provider sits in the root layout, which still reads no session", () => {
