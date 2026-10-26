@@ -2883,3 +2883,10 @@ real box. OP Compare already had the pack and the community pull rates (Box EV).
   box we track in the visitor's market, with the affiliate link (`data-page="pack_sim"`),
   "compare box prices" and "buy the singles". No score is stored server-side: the best
   pack lives in `localStorage` only, so the page writes nothing.
+- **The pull tracker (`/tools/pull-tracker`, same day)** reads the same set data
+  (`tools/pack-sim/load.ts`): tap what a real box pulled, see it against what you paid
+  (pre-filled with the cheapest box in your market). Pulls live in `localStorage`; a
+  shared result rides in the link's `#fragment` as card ids (`lib/pull-tracker.ts`), so
+  the server never sees it and every visitor gets the one CDN-cached render. No binder
+  save yet (RiftCompare's sends the pulls through the collection import); add it if
+  people use the tracker.

@@ -104,3 +104,34 @@ test("the real box link is affiliate-tagged on the server and marked for the buy
   assert.match(ui, /rel=\{outboundRel\(\)\}/);
   assert.match(ui, /data-page="pack_sim"/);
 });
+
+// ── The pull tracker (lib/pull-tracker.ts) ───────────────────────────────────
+import { decodePulls, encodePulls, parseFragment, parsePaid, shareFragment, summarisePulls } from "../src/lib/pull-tracker";
+
+test("pulls round-trip through a share fragment, merged and bounded", () => {
+  const frag = shareFragment([{ id: 5, qty: 1 }, { id: 7, qty: 2 }, { id: 5, qty: 2 }], 14230, "AUD");
+  const back = parseFragment(`#${frag}`);
+  assert.deepEqual(back, { lines: [{ id: 5, qty: 3 }, { id: 7, qty: 2 }], paidCents: 14230, currency: "AUD" });
+  assert.equal(encodePulls([{ id: -1, qty: 1 }, { id: 3, qty: 0 }]), "");
+  assert.deepEqual(decodePulls("x:1,4:abc,9:500,<script>"), [{ id: 9, qty: 99 }]);
+  assert.equal(parseFragment("#p="), null);
+  assert.equal(parsePaid("-3"), null);
+  assert.equal(parsePaid("1e9"), null);
+});
+
+test("a pull summary counts unpriced cards as bulk and names the best one", () => {
+  const usd = new Map<number, number | null>([[1, 500], [2, null], [3, 2500]]);
+  const s = summarisePulls([{ id: 1, qty: 2 }, { id: 2, qty: 3 }, { id: 3, qty: 1 }], (id) => usd.get(id) ?? null);
+  assert.deepEqual(s, { totalUsdCents: 3500, copies: 6, unpriced: 3, bestId: 3 });
+});
+
+test("the pull tracker's set pages are CDN-cached and nothing it shares reaches the server", () => {
+  const set = read("src/app/tools/pull-tracker/[set]/page.tsx");
+  assert.match(set, /export const dynamic = "force-dynamic"/);
+  assert.doesNotMatch(set, /generateStaticParams|export const revalidate|searchParams|cookies\(|headers\(/);
+  assert.match(read("next.config.js"), /"\/tools\/pull-tracker\/:set"/);
+  const ui = read("src/components/PullTracker.tsx");
+  assert.match(ui, /window\.location\.hash/);
+  assert.doesNotMatch(ui, /fetch\(/, "the tracker posts nothing");
+  assert.match(ui, /data-page="pull_tracker"/);
+});
