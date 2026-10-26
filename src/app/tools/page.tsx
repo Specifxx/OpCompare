@@ -121,6 +121,16 @@ const GROUPS: ToolGroup[] = [
     label: "Sealed & boxes",
     tools: [
       {
+        href: "/tools/pack-sim",
+        title: "Pack opening simulator",
+        desc: "Open free virtual packs or a whole box from any set, with real cards and live prices on every pull.",
+      },
+      {
+        href: "/tools/pull-tracker",
+        title: "Pull tracker",
+        desc: "Opened a real box? Tap what you pulled and see what it is worth against what you paid.",
+      },
+      {
         href: "/tools/box-ev",
         title: "Box EV calculator",
         desc: "Is ripping a booster box worth it? Compare a box's price against the expected pull value.",
