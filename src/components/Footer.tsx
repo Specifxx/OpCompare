@@ -11,7 +11,7 @@ import { ShareRow } from "./ShareRow";
 // Order: the newsletter slot (collection-alerts' NewsletterSignup, rendered
 // only while getEmailStatus() is "on" — never an email field while nothing
 // sends), the site map, the share band, the always-visible link row, the
-// sister-sites line ("Also from us"), the site line, the affiliate disclosure, the trademark
+// sister-sites line ("Part of the Compare Empire family"), the site line, the affiliate disclosure, the trademark
 // notice and the copyright. No "·" separators: items are spaced by the row's
 // own gap, so nothing dangles at a line end on a phone.
 export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) {
@@ -46,7 +46,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
         {/* Cross-promotion: the owner's sister sites, one per game. Our own sites,
             so plain followed links (no nofollow/sponsored), in a new tab. */}
         <p className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span>Also from us, comparing prices the same way:</span>
+          <span>Part of the Compare Empire family, comparing prices the same way:</span>
           {SISTER_SITES.map((s) => (
             <span key={s.key}>
               <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">

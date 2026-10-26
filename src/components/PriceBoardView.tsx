@@ -3,6 +3,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
 import { ebayLabel, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
+import { StoreCodeChip } from "./StoreCodeChip";
 import { Ago } from "./Ago";
 import { ReportPriceButton } from "./ReportPriceButton";
 
@@ -102,6 +103,7 @@ export function PriceBoardView({
                       updated <Ago at={o.updatedAt} now={now} />
                     </span>
                     {o.paid ? <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span> : null}
+                    {o.ebay ? null : <StoreCodeChip href={o.href} />}
                   </p>
                 </div>
                 <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(o.priceCents, country)}</span>

@@ -49,6 +49,11 @@ export default async function EditorialPolicy() {
             block.
           </>
         ) : null}
+        {" "}Some stores are <Link href="/stores/partners">store partners</Link>: they
+        give our visitors an exclusive discount code, shown as a label beside their
+        price, and may pay us a commission on the orders we send (those links are
+        labelled too). The price we show is before the code, and a partner ranks
+        exactly where its price puts it.
       </p>
       <h2>Corrections</h2>
       <p>

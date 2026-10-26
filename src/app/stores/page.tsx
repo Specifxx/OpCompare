@@ -37,6 +37,10 @@ export default async function StoresPage() {
           <Link href="/stores/suggest" className="text-brand-400 hover:underline">
             suggest a store
           </Link>
+          . Already listed? Give our shoppers an exclusive code and pay only on the sales we send:{" "}
+          <Link href="/stores/partners" className="text-brand-400 hover:underline">
+            become a store partner
+          </Link>
           .
         </InShort>
       </div>
