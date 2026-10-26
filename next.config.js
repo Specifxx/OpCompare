@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
-const CDN_PAGES = ["/card/:slug"];
+const CDN_PAGES = ["/card/:slug", "/tools/pack-sim/:set"];
 
 const nextConfig = {
   poweredByHeader: false,

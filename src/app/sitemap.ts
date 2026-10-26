@@ -7,6 +7,7 @@ import { getStoreStats } from "@/lib/data";
 import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/facets";
 import { KEYWORDS } from "@/lib/keywords";
 import { STORES } from "@/lib/stores";
+import { simSets } from "./tools/pack-sim/load";
 
 // Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
 // Private paths (the admin area, account pages) are never listed here.
@@ -16,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
     "", "/browse", "/price-guide", "/sealed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
-    "/tools/deal-finder", "/tools/box-ev", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
+    "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
     "/tools", "/deck", "/tools/selling-fees", "/singles", "/keywords", "/cards/rarity", "/alerts",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // The five region homes (design track), each a market-locked copy of "/".
@@ -32,11 +33,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [...fixed, ...posts, ...catalogueEntries(null, now)];
   }
   const [cat, sealed] = data;
+  const packSims = await simSets().then((r) => r.sets).catch(() => []);
   return [
     ...fixed,
     ...posts,
     ...COLOR_KEYS.map((k) => ({ url: `${SITE_URL}/colors/${COLORS[k].slug}`, lastModified: now })),
     ...cat.sets.map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: now })),
+    ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pack-sim/${s.slug}`, lastModified: now })),
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),

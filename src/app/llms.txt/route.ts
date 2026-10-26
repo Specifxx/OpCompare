@@ -44,6 +44,7 @@ export async function GET() {
     "## Tools",
     `- [Deck price calculator](${u("/deck")}): paste a decklist (4xOP01-016) and price every card, free`,
     `- [Selling fee calculator](${u("/tools/selling-fees")}): TCGplayer, eBay and Cardmarket fees`,
+    `- [Pack opening simulator](${u("/tools/pack-sim")}): open free virtual packs or a whole box from any set, priced`,
     `- [Box EV calculator](${u("/tools/box-ev")}), [Deal Finder](${u("/tools/deal-finder")}), [Best Basket](${u("/tools/best-basket")}); all tools: [${u("/tools")}](${u("/tools")})`,
     "",
     "## Guides",
