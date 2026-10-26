@@ -5,7 +5,6 @@
 //
 // Nothing here imports Prisma or the route.
 import { rarityLabel } from "./constants";
-import { fitTitle } from "./seo-title";
 import { PRINTING_SHORT, colourList, printingProse, tidy } from "./content/card-narrative";
 import { money, usd } from "./format";
 import type { Country } from "./country";
@@ -14,8 +13,6 @@ import { COUNTRIES } from "./country";
 export const SUFFIX = " | OP Compare";
 /** Google truncates around here; the title is set with `absolute`, suffix included. */
 export const TITLE_MAX = 60;
-/** A promo title keeps its variant, so it may run longer than TITLE_MAX; never past this. */
-export const PROMO_TITLE_MAX = 90;
 export const titleFits = (t: string): boolean => `${t}${SUFFIX}`.length <= TITLE_MAX;
 
 export interface CardTitleInput {
@@ -52,38 +49,8 @@ export function cardTitle(c: CardTitleInput): string {
     `${c.name}${printed}${num}`,
     `${c.name}${num}`,
   ];
-  // A reprint set (Premium Booster, Revision Pack) prints another set's number: OP03-108 exists in
-  // OP03 and in PRB-01, with the same name and printing words. The set code is then the only thing that
-  // separates the pages, so the shortened rungs keep it.
-  const compact = (s: string) => s.replace(/[^a-z0-9]/gi, "").toUpperCase();
-  const away = c.number != null && compact(c.setCode) !== compact(c.number.split("-")[0]);
-  // A promo is printed many times under one name and number (Super Pre-Release,
-  // a Tournament Pack, a Gift Collection...), and the generic word "Promo" is
-  // what the short rungs say for ALL of them: seven pages shared one title
-  // (2026-10-25 audit: 332 groups, 938 pages). For a promo that has a variant
-  // the variant is the only thing that tells the pages apart, so it is kept
-  // even when the title runs past TITLE_MAX (search engines shorten a long
-  // title; they cannot tell two identical ones apart).
-  if (c.variant && (c.printing === "promo" || c.printing === "don" || away)) {
-    const home = away ? ` — ${c.setCode}` : "";
-    const keep = [`${c.name}${vari}${num} ${word}${home}`, `${c.name}${vari}${num}${home}`];
-    const fits = [candidates[0], candidates[1], ...keep].filter((t, i, a) => a.indexOf(t) === i).find(titleFits);
-    if (fits) return `${fits}${SUFFIX}`;
-    // Too long even so: cut the MIDDLE of the variant ("... Vol. 2 Participant" keeps its end, which
-    // is what separates Participant from Finalist and Winner), to PROMO_TITLE_MAX in all.
-    const nm = fitTitle(c.name, "", 44); // an Event card's name can be a whole sentence
-    const rest = `${nm} ()${num} ${word}${SUFFIX}`.length;
-    return `${nm} (${fitTitle(c.variant, "", Math.max(24, PROMO_TITLE_MAX - rest - home.length))})${num} ${word}${home}${SUFFIX}`;
-  }
-  if (away) {
-    const tail = [`${c.name}${printed}${num} ${word} — ${c.setCode}`, `${c.name}${printed}${num} — ${c.setCode}`];
-    const hit = [candidates[0], candidates[1], ...tail].filter((t, i, a) => a.indexOf(t) === i).find(titleFits);
-    return `${hit ?? tail[1]}${SUFFIX}`;
-  }
   const ladder = candidates.filter((t, i) => candidates.indexOf(t) === i);
-  // Nothing fits (a long Event card name): cut the MIDDLE of the name rather than the printing word,
-  // so "Gum-Gum Fire-Fist Pistol Red Hawk" and its Alternate Art keep different titles.
-  const pick = ladder.find(titleFits) ?? `${fitTitle(c.name, "", 44)}${printed}${num}`;
+  const pick = ladder.find(titleFits) ?? ladder.reduce((a, b) => (b.length < a.length ? b : a));
   return `${pick}${SUFFIX}`;
 }
 

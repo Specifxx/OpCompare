@@ -16,7 +16,7 @@ jobs:
     env:
       GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
       GSC_PROPERTY: ${{ vars.GSC_PROPERTY || 'sc-domain:opcompare.app' }}
-      SITE_URL: ${{ vars.SITE_URL || 'https://www.opcompare.app' }}
+      SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

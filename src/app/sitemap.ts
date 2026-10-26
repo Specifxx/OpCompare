@@ -55,12 +55,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 async function deckEntries(now: Date): Promise<MetadataRoute.Sitemap> {
   const decks = await getLibraryDecks().catch(() => []);
   if (!decks.length) return [];
-  // A Leader's page is noindex while it holds fewer than two decks (app/decks/leader/[leader]),
-  // so only Leaders with two or more are listed: the sitemap names indexable pages only.
-  const perLeader = new Map<string, number>();
-  for (const d of decks) perLeader.set(d.leaderSlug, (perLeader.get(d.leaderSlug) ?? 0) + 1);
   const leaders = new Map<string, string>();
-  for (const d of decks) if (!leaders.has(d.leaderSlug) && (perLeader.get(d.leaderSlug) ?? 0) >= 2) leaders.set(d.leaderSlug, d.createdAt);
+  for (const d of decks) if (!leaders.has(d.leaderSlug)) leaders.set(d.leaderSlug, d.createdAt);
   return [
     { url: `${SITE_URL}/decks`, changeFrequency: "daily", priority: 0.7, lastModified: new Date(decks[0].createdAt) },
     ...[...leaders].map(([slug, at]) => ({ url: `${SITE_URL}/decks/leader/${slug}`, changeFrequency: "weekly" as const, priority: 0.5, lastModified: new Date(at) })),

@@ -2,9 +2,9 @@
 // when its client id AND secret are set:
 //   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 //   DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET
-// Redirect URIs to register with each provider (built from SITE_URL, the www host):
-//   https://www.opcompare.app/api/auth/oauth/google/callback
-//   https://www.opcompare.app/api/auth/oauth/discord/callback
+// Redirect URIs to register with each provider:
+//   https://opcompare.app/api/auth/oauth/google/callback
+//   https://opcompare.app/api/auth/oauth/discord/callback
 import { SITE_URL } from "./site";
 
 export type OAuthProvider = "google" | "discord";

@@ -21,9 +21,8 @@ test("cardKeywords reads bracketed keywords, Activate:Main both ways, DON!! ×N 
 
 test("facets cover every printing, rarity and card type, with unique slugs", () => {
   assert.deepEqual(UNFACETED_PRINTINGS, []);
-  // DON!! is one page, the printing page (the rarity and type copies listed the same cards and 301 to it).
-  assert.deepEqual(RARITY_FACETS.map((f) => f.key).sort(), Object.keys(RARITIES).filter((k) => k !== "DON!!").sort());
-  assert.deepEqual(TYPE_FACETS.map((f) => f.key), [...CARD_TYPES].filter((k) => k !== "DON!!"));
+  assert.deepEqual(RARITY_FACETS.map((f) => f.key).sort(), Object.keys(RARITIES).sort());
+  assert.deepEqual(TYPE_FACETS.map((f) => f.key), [...CARD_TYPES]);
   for (const list of [PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS]) {
     assert.equal(new Set(list.map((f) => f.slug)).size, list.length);
     for (const f of list) assert.match(f.slug, /^[a-z0-9-]+$/);

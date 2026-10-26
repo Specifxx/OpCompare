@@ -46,7 +46,7 @@ jobs:
       NEON_COMPUTE_LIMIT_HOURS: ${{ vars.NEON_COMPUTE_LIMIT_HOURS }}
       NEON_STORAGE_LIMIT_MB: ${{ vars.NEON_STORAGE_LIMIT_MB }}
       GITHUB_TOKEN: ${{ github.token }}
-      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://www.opcompare.app' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
     steps:
       - name: Skip unless the database is configured
         id: gate

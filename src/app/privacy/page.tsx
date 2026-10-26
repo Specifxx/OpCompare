@@ -4,7 +4,6 @@ import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "What OP Compare stores about you (an account, your watchlist and alerts), what it never sells, which cookies it sets and how to delete your data.",
   alternates: { canonical: "/privacy" },
 };
 

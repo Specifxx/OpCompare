@@ -107,7 +107,7 @@ export async function notifyOwnerInbox(opts: { db: InboxDb; send?: (subject: str
     await setCursor(now);
     return { sent: 0 };
   }
-  const mail = renderInboxEmail(batch, opts.siteUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.opcompare.app");
+  const mail = renderInboxEmail(batch, opts.siteUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://opcompare.app");
   if (!(await send(mail.subject, mail.html, mail.text))) return { sent: 0, failed: true };
   // A cut-off queue: advance only as far as it was read, so the rest go in the next email.
   await setCursor(batch.advanceTo ?? now);

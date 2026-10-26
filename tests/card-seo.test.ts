@@ -12,7 +12,7 @@ test("a short card keeps the set name and is within 60", () => {
 });
 
 test("the set name is dropped first, the number and printing word never", () => {
-  const s = t({ name: "Monkey.D.Luffy", variant: "Manga · Alternate Art", number: "OP05-119", printing: "manga", setName: "Awakening of the New Era", setCode: "OP05" });
+  const s = t({ name: "Monkey.D.Luffy", variant: "Manga · Alternate Art", number: "OP05-119", printing: "manga", setName: "Awakening of the New Era" });
   assert.ok(s.length <= TITLE_MAX, `${s} (${s.length})`);
   assert.match(s, /OP05-119/);
   assert.match(s, /Manga/);
@@ -27,7 +27,7 @@ test("titles of a Parallel and its standard print differ", () => {
 });
 
 test("when nothing fits the shortest rung ships", () => {
-  const s = t({ name: "Charlotte Linlin Mother Carmel Big Mom Pirates Captain", variant: "Manga · Alternate Art", number: "OP03-099", printing: "manga", setName: "Pillars of Strength", setCode: "OP03" });
+  const s = t({ name: "Charlotte Linlin Mother Carmel Big Mom Pirates Captain", variant: "Manga · Alternate Art", number: "OP03-099", printing: "manga" });
   assert.match(s, /OP03-099/);
   assert.ok(!s.includes("Alternate Art"));
 });
@@ -65,34 +65,4 @@ test("FAQ: no claim about a price when there is none, and pre-release is honest"
   assert.match(f[0].a, /not been released/);
   assert.doesNotMatch(f[0].a, /US\$/);
   assert.ok(!f.some((x) => /worth it/.test(x.q)));
-});
-
-// ── Unique titles for printings of one card number (2026-10-25 audit) ────────
-// The live site had 332 groups (938 pages) sharing a title, almost all promos whose long variant fell
-// off the length ladder and left the generic word "Promo". These are real cards of the catalogue.
-import { cardTitle as titleOf, PROMO_TITLE_MAX } from "../src/lib/card-seo";
-const promo = (variant: string, o: Record<string, unknown> = {}) => ({ name: "Tony Tony.Chopper", variant, number: "ST01-006", setName: "One Piece Promotion Cards", setCode: "OP-PR", printing: "promo", hasPrice: true, ...o });
-
-test("promo printings of one number each keep their variant, so no two share a title", () => {
-  const variants = ["Super Pre-Release", "Alternate Art", "3-on-3 Cup · Participant", "3-on-3 Cup · Finalist", "Offline Regional 2024 Vol. 2 · Participant", "Offline Regional 2024 Vol. 2 · Winner"];
-  const titles = variants.map((v) => titleOf(promo(v)));
-  assert.equal(new Set(titles).size, variants.length, titles.join("\n"));
-  for (const t of titles) assert.ok(t.length <= PROMO_TITLE_MAX + 5, `${t.length} ${t}`);
-  assert.ok(titles[5].includes("Winner") && titles[4].includes("Participant"), "the end of a long variant, which separates the two, survives");
-});
-
-test("a card reprinted in another set (Premium Booster, Revision Pack) names that set in its title", () => {
-  const base = { name: "Charlotte Cracker", variant: "Alternate Art", number: "OP03-108", printing: "alt", hasPrice: true };
-  const home = titleOf({ ...base, setName: "Pillars of Strength", setCode: "OP03" });
-  const prb = titleOf({ ...base, setName: "Premium Booster -The Best-", setCode: "PRB-01" });
-  assert.notEqual(home, prb);
-  assert.ok(prb.includes("PRB-01"));
-  assert.ok(!home.includes("PRB"));
-  // ST-04 and ST04 are the same set: no suffix for a card in its own set.
-  assert.ok(!titleOf({ name: "Sasaki", variant: null, number: "ST04-006", setName: "Starter Deck 4", setCode: "ST-04", printing: "standard", hasPrice: true }).includes("ST-04"));
-});
-
-test("DON!! cards with different variants have different titles", () => {
-  const don = (variant: string) => titleOf({ name: "DON!! Card", variant, number: null, setName: "One Piece Promotion Cards", setCode: "OP-PR", printing: "don", hasPrice: true });
-  assert.notEqual(don("Special DON!! Card Pack - Color"), don("Special DON!! Card Pack - Black and White"));
 });
