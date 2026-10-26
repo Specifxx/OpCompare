@@ -83,6 +83,9 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
+  // Large image previews and full snippets in Google (Search, Discover, Images), as RiftCompare does.
+  // A page that sets its own `robots` (noindex) replaces this whole object.
+  robots: { googleBot: { "max-image-preview": "large", "max-snippet": -1 } },
   // Search Console's "HTML tag" verification and Bing Webmaster Tools'. Each
   // renders only when its variable is set in Vercel (a placeholder would just
   // fail verification).
