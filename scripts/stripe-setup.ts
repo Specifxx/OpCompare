@@ -95,7 +95,9 @@ async function main() {
   }
 
   const hooks = await stripe.webhookEndpoints.list({ limit: 100 });
-  const url = `${SITE}/api/stripe/webhook`;
+  // The webhook stays registered on the apex, which next.config.js leaves unredirected for it
+  // (Stripe does not follow a redirect): never add a second, www endpoint beside it.
+  const url = `${SITE.replace("://www.", "://")}/api/stripe/webhook`;
   const hook = hooks.data.find((h) => h.url === url);
   if (!hook) console.log(`\nWEBHOOK MISSING: add an endpoint for ${url} in the Dashboard with events:\n  ${EVENTS.join("\n  ")}\nand put its signing secret in Vercel as STRIPE_WEBHOOK_SECRET.`);
   else {

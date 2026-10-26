@@ -24,7 +24,7 @@ test("robots.txt names the www sitemaps", async () => {
   assert.equal(robots.host, "https://www.opcompare.app");
 });
 
-test("the apex 301s to www, and only the two provider endpoints registered on the apex are exempt", async () => {
+test("the apex 301s to www, and only the endpoints named on the apex by a provider or a sent email are exempt", async () => {
   type Redirect = { source: string; has?: { value: string }[]; destination: string; statusCode?: number };
   const mod = (await import("../next.config.js")) as unknown as { default?: { redirects: () => Promise<Redirect[]> }; redirects?: () => Promise<Redirect[]> };
   const redirects = await (mod.default?.redirects ?? mod.redirects!)();
@@ -36,8 +36,8 @@ test("the apex 301s to www, and only the two provider endpoints registered on th
   }
   const rest = apex.find((r) => r.source !== "/")!;
   const re = new RegExp("^/" + /\(\(\?!(.*)\)\.\+\)/.exec(rest.source)![0].replace(/^\(\(\?!/, "(?!").replace(/\)\.\+\)$/, ").+"));
-  for (const keep of ["/api/stripe/webhook", "/api/ebay/marketplace-deletion"]) assert.doesNotMatch(keep, re, `${keep} must keep answering on the apex`);
-  for (const go of ["/card/x", "/api/ebay/marketplace-deletion/x", "/api/stripe/webhooks", "/sitemap.xml", "/robots.txt", "/blog/a"]) assert.match(go, re, `${go} must redirect`);
+  for (const keep of ["/api/stripe/webhook", "/api/ebay/marketplace-deletion", "/api/alerts/unsubscribe", "/api/alerts/action", "/api/alerts/release/unsubscribe"]) assert.doesNotMatch(keep, re, `${keep} must keep answering on the apex`);
+  for (const go of ["/card/x", "/api/ebay/marketplace-deletion/x", "/api/stripe/webhooks", "/sitemap.xml", "/robots.txt", "/blog/a", "/alerts/action", "/api/alerts/subscribe", "/api/auth/oauth/google"]) assert.match(go, re, `${go} must redirect`);
   assert.ok(!redirects.some((r) => r.has?.some((h) => h.value === "www.opcompare.app")), "no redirect away from www");
   assert.match(read("src/app/api/ebay/marketplace-deletion/route.ts"), /https:\/\/opcompare\.app\/api\/ebay\/marketplace-deletion/, "eBay's registered endpoint stays on the apex");
 });

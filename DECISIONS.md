@@ -2901,3 +2901,15 @@ set, and cuts the middle of a name too long for any rung instead of dropping the
 Measured over the whole catalogue with the real function: 332 groups (938 pages) became 7 groups
 (14 pages) of genuinely identical products. Titles of about 1,400 pages are now longer than 60
 characters; a search result shortens them, and unique beats short.
+
+**Addendum, 2026-10-26: what stays on the apex, and the switch order.** Review before merge
+found two more things a blanket apex redirect breaks. Every alert email already sent names its
+RFC 8058 one-click unsubscribe on the apex, and a mail provider's one-click POST does not survive
+a 301 (it would arrive as a GET, or not at all), so `/api/alerts/unsubscribe`, `/api/alerts/action`
+and `/api/alerts/release/unsubscribe` are exempt too (all under `/api/`, disallowed in robots.txt,
+so no crawler sees the apex copy). `scripts/stripe-setup.ts` now checks for the apex webhook it
+keeps, not a www one, so it never asks for a second endpoint. Order of the switch: Vercel must
+serve BOTH domains with no domain-level redirect (the old www → apex redirect plus the new apex →
+www one would loop, and a Vercel apex redirect would catch the exempt endpoints); register the www
+OAuth callbacks with Google and Discord, keeping the apex ones until the deploy is live; then
+merge and deploy.

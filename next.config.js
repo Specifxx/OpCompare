@@ -18,7 +18,10 @@ const nextConfig = {
   // name (owner, 2026-10-25). Two endpoints are registered with their provider on
   // the apex and must keep answering there, because a webhook sender and eBay's
   // challenge do not follow a redirect: the Stripe webhook and eBay's
-  // Marketplace Account Deletion route (tests/seo-host.test.ts).
+  // Marketplace Account Deletion route. The three RFC 8058 one-click unsubscribe
+  // targets stay too: every alert email already sent names them on the apex, and
+  // a mail provider's one-click POST must not meet a redirect (/api/ is
+  // disallowed in robots.txt, so search engines never see them; tests/seo-host.test.ts).
   async redirects() {
     return [
       {
@@ -28,7 +31,7 @@ const nextConfig = {
         statusCode: 301,
       },
       {
-        source: "/:path((?!api/stripe/webhook$|api/ebay/marketplace-deletion$).+)",
+        source: "/:path((?!api/stripe/webhook$|api/ebay/marketplace-deletion$|api/alerts/unsubscribe$|api/alerts/action$|api/alerts/release/unsubscribe$).+)",
         has: [{ type: "host", value: "opcompare.app" }],
         destination: "https://www.opcompare.app/:path",
         statusCode: 301,
