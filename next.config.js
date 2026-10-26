@@ -13,15 +13,28 @@ const nextConfig = {
     // key is matched against the route (e.g. /card/[slug]/opengraph-image).
     outputFileTracingIncludes: { "opengraph-image": ["./src/lib/og/fonts/*.ttf", "./public/preorders/*.jpg"] },
   },
-  // www.opcompare.app → opcompare.app, whatever the Vercel domain settings say,
-  // so search engines only ever see the apex host the canonical URLs name.
+  // opcompare.app → www.opcompare.app, a real 301, whatever the Vercel domain
+  // settings say, so search engines only ever see the www host the canonical URLs
+  // name (owner, 2026-10-25). Two endpoints are registered with their provider on
+  // the apex and must keep answering there, because a webhook sender and eBay's
+  // challenge do not follow a redirect: the Stripe webhook and eBay's
+  // Marketplace Account Deletion route. The three RFC 8058 one-click unsubscribe
+  // targets stay too: every alert email already sent names them on the apex, and
+  // a mail provider's one-click POST must not meet a redirect (/api/ is
+  // disallowed in robots.txt, so search engines never see them; tests/seo-host.test.ts).
   async redirects() {
     return [
       {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.opcompare.app" }],
-        destination: "https://opcompare.app/:path*",
-        permanent: true,
+        source: "/",
+        has: [{ type: "host", value: "opcompare.app" }],
+        destination: "https://www.opcompare.app/",
+        statusCode: 301,
+      },
+      {
+        source: "/:path((?!api/stripe/webhook$|api/ebay/marketplace-deletion$|api/alerts/unsubscribe$|api/alerts/action$|api/alerts/release/unsubscribe$).+)",
+        has: [{ type: "host", value: "opcompare.app" }],
+        destination: "https://www.opcompare.app/:path",
+        statusCode: 301,
       },
       // Wave-2 tools (RiftCompare's lineup): the Buy List Planner became Best
       // Basket, the box value page became the Box EV calculator, and the bulk
@@ -29,6 +42,9 @@ const nextConfig = {
       { source: "/tools/buy-list", destination: "/tools/best-basket?source=watchlist", permanent: true },
       { source: "/tools/box-value", destination: "/tools/box-ev", permanent: true },
       { source: "/bulk-pricer", destination: "/deck", permanent: true },
+      // DON!! is one page: as a printing (lib/facets.ts); its rarity and type pages listed the same cards.
+      { source: "/cards/rarity/don", destination: "/cards/printing/don", statusCode: 301 },
+      { source: "/cards/type/don", destination: "/cards/printing/don", statusCode: 301 },
       // A signed-out visit to a member page is a real 307 to the login page,
       // decided before anything streams. These routes have a loading.tsx; the
       // page's own redirect() only runs after that shell has been flushed, and

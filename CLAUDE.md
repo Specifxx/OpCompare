@@ -4,6 +4,21 @@ OP Compare is the One Piece Card Game sister site of RiftCompare
 (`Specifxx/TCGEmpire`). Same rules where they apply; read `README.md` first and
 `DECISIONS.md` for why things are the way they are.
 
+## One host: www.opcompare.app
+
+Search engines see ONE host (owner, 2026-10-25): `www.opcompare.app` (`CANONICAL_HOST`,
+`SITE_URL` in `src/lib/site.ts`). The apex answers every path with a 301 to it
+(`next.config.js`); canonicals, the sitemaps, robots.txt's Sitemap lines, Open Graph and
+JSON-LD are all built from `SITE_URL`, never a hard-coded host (`tests/seo-host.test.ts`
+walks `src`, `scripts` and the workflows). Two endpoints stay answerable on the apex
+because their sender registered that URL and does not follow a redirect: the Stripe webhook
+and eBay's Marketplace Account Deletion route; so do the three one-click unsubscribe targets
+(`/api/alerts/unsubscribe`, `/api/alerts/action`, `/api/alerts/release/unsubscribe`), which
+emails already sent name on the apex. Vercel must not redirect the apex itself (a domain-level
+redirect would catch those endpoints too): both domains serve the project, the app redirects. `NEXT_PUBLIC_SITE_URL` and the GitHub variable
+`SITE_URL` must be unset or `https://www.opcompare.app`, never the apex. The sitemap lists only
+indexable 200 pages: a page that sets `noindex` (a Leader with under two decks) is not in it.
+
 ## Deploys are gated — do not add `[deploy]` to commit subjects
 
 Production builds only for a commit whose SUBJECT LINE carries `[deploy]`

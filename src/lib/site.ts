@@ -2,12 +2,18 @@
 // domain is a one-file change.
 //
 // The production domain is opcompare.app (a .app domain: HTTPS-only, it is on
-// the HSTS preload list). It is the default so a missing env var can never
-// publish canonical URLs, the sitemap, Open Graph or JSON-LD on another host;
-// NEXT_PUBLIC_SITE_URL overrides it (local development, a preview domain).
+// the HSTS preload list), served on ONE host, www.opcompare.app: the apex
+// answers every page with a 301 to it (next.config.js), and every canonical,
+// sitemap line, robots Sitemap line, Open Graph URL and JSON-LD URL is built
+// from SITE_URL, so search engines only ever see the www host (owner,
+// 2026-10-25). It is the default so a missing env var can never publish them on
+// another host; NEXT_PUBLIC_SITE_URL overrides it (local development, a preview
+// domain), and must NOT be set to the apex in Vercel or GitHub.
 export const SITE_NAME = "OP Compare";
 export const SITE_SHORT = "OPCompare";
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+export const CANONICAL_HOST = "www.opcompare.app";
+export const APEX_HOST = "opcompare.app";
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || `https://${CANONICAL_HOST}`).replace(/\/+$/, "");
 export const SITE_TAGLINE = "One Piece Card Game prices, compared";
 export const SITE_DESCRIPTION =
   "Compare One Piece Card Game prices across stores in the US, Australia, the UK, Singapore, Canada and the EU. Every card, every parallel and every sealed product, priced daily.";

@@ -12,7 +12,7 @@
 import Stripe from "stripe";
 import { INTERVALS, PLAN_CENTS, PLAN_CURRENCY, STRIPE_SITE, TIERS, TIER_NAMES, lookupKey } from "../src/lib/plans";
 
-const SITE = (process.env.SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+const SITE = (process.env.SITE_URL || "https://www.opcompare.app").replace(/\/+$/, "");
 const EVENTS = [
   "checkout.session.completed",
   "checkout.session.async_payment_succeeded",
@@ -95,7 +95,9 @@ async function main() {
   }
 
   const hooks = await stripe.webhookEndpoints.list({ limit: 100 });
-  const url = `${SITE}/api/stripe/webhook`;
+  // The webhook stays registered on the apex, which next.config.js leaves unredirected for it
+  // (Stripe does not follow a redirect): never add a second, www endpoint beside it.
+  const url = `${SITE.replace("://www.", "://")}/api/stripe/webhook`;
   const hook = hooks.data.find((h) => h.url === url);
   if (!hook) console.log(`\nWEBHOOK MISSING: add an endpoint for ${url} in the Dashboard with events:\n  ${EVENTS.join("\n  ")}\nand put its signing secret in Vercel as STRIPE_WEBHOOK_SECRET.`);
   else {

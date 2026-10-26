@@ -191,7 +191,7 @@ const PROBES: { path: string; critical: boolean; marker: RegExp }[] = [
 ];
 
 export async function collectSite(): Promise<Check[]> {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.opcompare.app").replace(/\/+$/, "");
   const probes: Probe[] = [];
   for (const p of PROBES) {
     const t0 = Date.now();

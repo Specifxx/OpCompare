@@ -48,7 +48,10 @@ const RARITY_INTRO: Record<string, string> = {
   "DON!!": "DON!! cards: the resource cards, printed with collectable alternate art.",
 };
 
+// DON!! cards are a printing, a rarity and a type at once, and all three pages listed the same cards:
+// /cards/printing/don is the one page (the others 301 to it, next.config.js).
 export const RARITY_FACETS: Facet[] = Object.keys(RARITIES)
+  .filter((k) => k !== "DON!!")
   .sort((a, b) => RARITIES[a].order - RARITIES[b].order)
   .map((k) => ({ slug: RARITY_SLUGS[k] ?? k.toLowerCase(), key: k, label: RARITIES[k].label, title: `${RARITIES[k].label} cards`, intro: RARITY_INTRO[k] ?? "" }));
 
@@ -57,7 +60,6 @@ export const TYPE_FACETS: Facet[] = [
   { slug: "character", key: "Character", label: "Character", title: "Character cards", intro: "Characters: the cards that attack, block and carry most of a deck's effects." },
   { slug: "event", key: "Event", label: "Event", title: "Event cards", intro: "Events: one-shot effects played in your Main Phase or, with [Counter], during your opponent's attack." },
   { slug: "stage", key: "Stage", label: "Stage", title: "Stage cards", intro: "Stages: locations that stay in play and give an ongoing effect; one at a time." },
-  { slug: "don", key: "DON!!", label: "DON!!", title: "DON!! cards", intro: "DON!! cards: the resource you attach to Leaders and Characters, collected for their art." },
 ];
 
 export function facetBySlug(list: Facet[], slug: string): Facet | undefined {

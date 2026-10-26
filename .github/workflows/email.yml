@@ -34,7 +34,7 @@ jobs:
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       EMAIL_LINK_SECRET: ${{ secrets.EMAIL_LINK_SECRET }}
       EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
-      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://www.opcompare.app' }}
     steps:
       - name: Skip unless email and the database are configured
         id: gate

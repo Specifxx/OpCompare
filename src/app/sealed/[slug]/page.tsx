@@ -28,6 +28,7 @@ import { headline } from "@/lib/price";
 import { SealedViewBeacon } from "@/components/SealedViewBeacon";
 import { pageOg } from "@/lib/og/meta";
 import { isPreRelease } from "@/lib/quick-view";
+import { fitTitle } from "@/lib/seo-title";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
@@ -38,9 +39,8 @@ type Props = { params: { slug: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const s = await getSealedDetail(params.slug);
   if (!s) return { title: "Product not found" };
-  const t = `${s.name} Price`;
   return {
-    title: { absolute: t.length <= 60 ? t : `${s.name.slice(0, 50)} Price` },
+    title: { absolute: fitTitle(s.name, " Price") },
     description: `${s.name}: live One Piece Card Game sealed prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${s.marketUsd ? `. TCGplayer market price ${usd(s.marketUsd)}` : ""}.`,
     alternates: { canonical: `/sealed/${s.slug}` },
     // The product shot on TCGplayer's CDN: nothing is generated here. No art: the site default.
