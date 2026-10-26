@@ -2913,3 +2913,36 @@ serve BOTH domains with no domain-level redirect (the old www → apex redirect 
 www one would loop, and a Vercel apex redirect would catch the exempt endpoints); register the www
 OAuth callbacks with Google and Discord, keeping the apex ones until the deploy is live; then
 merge and deploy.
+
+## 2026-10-26: Pack opening simulator (`/tools/pack-sim`)
+
+**Why.** Owner: add features beyond price comparison that bring visits and buy clicks.
+RiftCompare's pack simulator is the only one of its games Google sends people to (124
+clicks in 90 days to 2026-10-16; the rest 0 or 1, TCGEmpire DECISIONS "Seraphine's
+Piano"), "one piece pack simulator" is a common search, and every pull ends beside a
+real box. OP Compare already had the pack and the community pull rates (Box EV).
+
+**Decisions.**
+- **Same pack, same rates as Box EV.** `lib/pack-sim.ts` deals 7 C, 3 UC, an extra slot
+  (Manga, Treasure, SP, Parallel or Leader at each one's per-pack rate, rarest first,
+  else a common) and the rare slot last (SEC, SR, else R), using `derivedRates()`, so the
+  simulator and the calculator never disagree. A pool the set lacks never pays out.
+  `tests/pack-sim.test.ts` pins the shape and that the rates are Box EV's.
+- **Prices are TCGplayer US market, converted in the browser,** as Box EV; an unpriced
+  card is bulk (worth nothing). One render serves every visitor.
+- **One page per released booster/extra/premium set** (`/tools/pack-sim/<set>`, for
+  "OP13 pack simulator" searches) plus the hub on the newest set. Set pages are
+  `force-dynamic` and CDN-cached through `CDN_PAGES` (6 h + a day stale), never ISR or
+  prewarmed; the hub is ISR 86400 like `/tools/box-ev`. Each page ships only its own
+  set's pools.
+- **"Open a box"** deals a whole box and sets its pull against the cheapest in-stock
+  box we track in the visitor's market, with the affiliate link (`data-page="pack_sim"`),
+  "compare box prices" and "buy the singles". No score is stored server-side: the best
+  pack lives in `localStorage` only, so the page writes nothing.
+- **The pull tracker (`/tools/pull-tracker`, same day)** reads the same set data
+  (`tools/pack-sim/load.ts`): tap what a real box pulled, see it against what you paid
+  (pre-filled with the cheapest box in your market). Pulls live in `localStorage`; a
+  shared result rides in the link's `#fragment` as card ids (`lib/pull-tracker.ts`), so
+  the server never sees it and every visitor gets the one CDN-cached render. No binder
+  save yet (RiftCompare's sends the pulls through the collection import); add it if
+  people use the tracker.
