@@ -3005,3 +3005,13 @@ link.
 
 **Measure.** Clicks with `data-page="deck_cart"`, and TCGplayer `sharedid`
 `tcgplayer_cart`.
+## The cheaper marketplace leads the pinned pair — 2026-10-27
+
+The board pinned eBay above TCGplayer whatever their prices. In the US
+TCGplayer is the cheapest row on most cards, so a dearer eBay listing sat on
+top of it, and TCGplayer pays about 2.5 times more per click than eBay (30 days
+to 2026-10-26, across the family). `pinnedOrder` (`lib/board.ts`) now puts the
+cheaper of the two pinned rows first, TCGplayer on a tie; both are the same
+market's rows. Everything else in the entry above stands. Measure: `board_pinned`
+clicks by retailer a week after release against the week before. Same change on
+RiftCompare, Gundam, Lorcana and YGO Compare.

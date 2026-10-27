@@ -2,6 +2,7 @@ import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
 import { ebayLabel, outboundRel } from "@/lib/affiliate";
+import { pinnedOrder } from "@/lib/pinned-order";
 import { money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
@@ -59,11 +60,14 @@ export function PriceBoardView({
   const c = COUNTRIES[country];
   const { rows: open, sold, elsewhere, ebaySearch: ebay } = model;
   const hasEbayRow = open.some((o) => o.ebay);
-  // eBay then TCGplayer first (owner, 2026-10-27), each its cheapest row here;
-  // the rest by price. `rank` stays the PRICE rank (open is cheapest first).
+  // eBay and TCGplayer first (owner, 2026-10-27), each its cheapest row here,
+  // the cheaper of the two on top and TCGplayer on a tie (2026-10-27, DECISIONS:
+  // "The cheaper marketplace leads the pinned pair"); the rest by price. `rank`
+  // stays the PRICE rank (open is cheapest first).
   const pinEbay = open.find((o) => o.ebay) ?? null;
   const pinTcg = open.find((o) => o.source === "tcgplayer") ?? null;
-  const ordered = [...(pinEbay ? [pinEbay] : []), ...(pinTcg ? [pinTcg] : []), ...open.filter((o) => o !== pinEbay && o !== pinTcg)];
+  const pins = pinnedOrder(pinEbay, pinTcg);
+  const ordered = [...pins, ...open.filter((o) => o !== pinEbay && o !== pinTcg)];
   // Outside the US only: there the page's TcgMarketPrice block steps aside (CardMarket MarketReference).
   const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
