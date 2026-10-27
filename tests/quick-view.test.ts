@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import type { CardDetail, OfferRow } from "../src/lib/data";
-import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
+import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, paidAlternativeRow, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
 import { planBasket } from "../src/lib/basket";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -124,6 +124,21 @@ test("cheapestBuyRow is the board's #1 row (CardTopBuy and the sticky bar agree 
   assert.equal(best?.ebay, true);
   assert.equal(cheapestBuyRow(offers, "SG", "/card/x"), null);
   assert.equal(cardDisplayName({ name: "Shanks", variant: "Parallel", number: "OP01-120" }), "Shanks (Parallel) OP01-120");
+});
+
+test("paidAlternativeRow: the cheapest paid row within 20% when a non-paying store is cheapest, never otherwise", () => {
+  const tcg = (priceCents: number) => offer({ source: "tcgplayer", market: "US", priceCents, url: "https://www.tcgplayer.com/product/1" });
+  const store = (priceCents: number) => offer({ source: "store:a", market: "US", priceCents });
+  const alt = paidAlternativeRow([store(1000), tcg(1080)], "US", "/card/x");
+  assert.equal(alt?.row.source, "tcgplayer");
+  assert.equal(alt?.pctMore, 8);
+  assert.match(alt?.row.href ?? "", /^https:\/\/partner\.tcgplayer\.com\//);
+  assert.equal(paidAlternativeRow([store(1000), tcg(1201)], "US", "/card/x"), null, "past the band");
+  assert.equal(paidAlternativeRow([tcg(900), store(1000)], "US", "/card/x"), null, "the cheapest already pays");
+  assert.equal(paidAlternativeRow([store(1000)], "US", "/card/x"), null, "nothing paid in the market");
+  const top = read("src/components/CardTopBuy.tsx");
+  assert.match(top, /data-surface="card_top_alt"/);
+  assert.match(top, />Paid link</);
 });
 
 test("Best Basket links: TCGplayer through Impact, stores with only our utm_source", () => {
