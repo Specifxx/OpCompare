@@ -2986,3 +2986,20 @@ every page body never read as a link network.
 `SISTER_SITES` gains YGO, CamCompare and Compare Empire; the two non-TCGs
 carry `notTcg`, so `CompareOtherTcgs` and About's one-per-game line read
 `TCG_SISTER_SITES`, and About names the other two separately.
+
+## Search Console: one page per search, and RiftCompare's crawl rules — 2026-10-27
+
+**Owner:** port RiftCompare's SEO to every site; where two of our pages compete for one search, merge them.
+
+Search Console (90 days to 24 Oct, the `gsc-cannibal` report in TCGEmpire's maintenance workflow,
+which reads every sister property) found one split on OP Compare: "op18 green luffy deck" and three
+variants showed both `/leaders/monkey-d-luffy-op18-022` (more impressions, 4 clicks) and
+`/guides/op18-green-luffy-leader-deck-guide` (20 clicks: the better answer). The guide now owns
+"<leader> deck": a Leader page with a deck guide links it in its header ("Building the deck?
+Read …") and its card section is "Cards that share <leader>'s types", not "Cards for a <leader>
+deck". Leaders without a guide keep the old heading. Neither URL is redirected: each earns clicks
+for its own searches.
+
+`robots.ts` takes RiftCompare's 2026-10-16 rules: the same bulk scrapers are blocked, and
+query-string URLs are not crawled (every card is in the sitemap; Next's assets, share images and
+icons stay allowed).
