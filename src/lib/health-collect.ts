@@ -170,7 +170,6 @@ export async function collectInbox(now: Date): Promise<{ checks: Check[]; counts
       const oldest = await Promise.all([
         prisma.priceReport.findFirst({ where: { status: "NEW" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
         prisma.storeSuggestion.findFirst({ where: { status: "pending" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
-        prisma.feedback.findFirst({ where: { status: "NEW" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
         prisma.contactMessage.findFirst({ where: { status: "NEW" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
         prisma.supportTicket.findFirst({ where: { status: "OPEN" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
       ]);

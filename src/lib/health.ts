@@ -479,14 +479,16 @@ export interface InboxCounts {
   support: number;
 }
 
-export const inboxTotal = (c: InboxCounts) => c.reports + c.suggestions + c.feedback + c.contact + c.support;
+// Feedback is counted for the admin page but never "waiting" (owner, 2026-10-27:
+// no email about feedback or ratings), so it never raises the inbox alert.
+export const inboxTotal = (c: InboxCounts) => c.reports + c.suggestions + c.contact + c.support;
 
 export function evalInbox(c: InboxCounts | null, oldestNewAt: Date | string | null, now: Date): Check {
   if (!c) return unknown("inbox-new", "inbox", "Inbox", "The inbox could not be counted.");
   const total = inboxTotal(c);
   const waitH = total && oldestNewAt ? hoursAgo(oldestNewAt, now) : 0;
   const status: Status = total === 0 ? "ok" : waitH >= 24 * 7 ? "fail" : waitH >= 72 ? "warn" : "ok";
-  const parts = [c.contact && `${c.contact} message${c.contact === 1 ? "" : "s"}`, c.feedback && `${c.feedback} feedback`, c.reports && `${c.reports} price report${c.reports === 1 ? "" : "s"}`, c.suggestions && `${c.suggestions} store suggestion${c.suggestions === 1 ? "" : "s"}`, c.support && `${c.support} support ticket${c.support === 1 ? "" : "s"}`].filter(Boolean);
+  const parts = [c.contact && `${c.contact} message${c.contact === 1 ? "" : "s"}`, c.reports && `${c.reports} price report${c.reports === 1 ? "" : "s"}`, c.suggestions && `${c.suggestions} store suggestion${c.suggestions === 1 ? "" : "s"}`, c.support && `${c.support} support ticket${c.support === 1 ? "" : "s"}`].filter(Boolean);
   return {
     id: "inbox-new",
     area: "inbox",
