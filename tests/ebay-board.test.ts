@@ -72,9 +72,10 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   assert.match(src, /rel=\{outboundRel\(\)\}/);
 });
 
-test("the board pins eBay then TCGplayer, keeps price ranks, and labels the pin", () => {
+test("the board pins eBay and TCGplayer (the cheaper on top), keeps price ranks, and labels the pin", () => {
   const src = fs.readFileSync(path.resolve(__dirname, "../src/components/PriceBoardView.tsx"), "utf8");
-  assert.match(src, /const ordered = \[\.\.\.\(pinEbay \? \[pinEbay\] : \[\]\), \.\.\.\(pinTcg \? \[pinTcg\] : \[\]\)/);
+  assert.match(src, /const pins = pinnedOrder\(pinEbay, pinTcg\);/);
+  assert.match(src, /const ordered = \[\.\.\.pins, \.\.\.open\.filter/);
   assert.match(src, /const i = open\.indexOf\(o\);/);
   assert.match(src, /\{pinned \? <ShownFirst \/> : null\}/);
   assert.match(src, /% vs cheapest/);
