@@ -60,7 +60,9 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   assert.match(src, /Buy on eBay →/);
   assert.match(src, /Cheapest matching listing we found/);
   assert.match(src, /More listings on \$\{ebayLabel\(country\)\} →/);
-  assert.match(src, /Search \$\{ebayLabel\(country\)\} →/);
+  // The search leads the board when there is no eBay row (2026-10-27).
+  assert.match(src, /data-surface="ebay_fallback"[^>]*>\s*Search eBay →/);
+  assert.ok(src.indexOf('data-retailer="ebay_no_listing"') < src.indexOf("{ordered.map("), "the eBay search sits above the ranked rows");
   assert.match(model, /isPaidLink\(o\.url\)/);
   assert.match(src, /\{o\.paid \? <span[^>]*>Paid link<\/span> : null\}/);
   assert.match(src, /eBay Partner Network affiliate/);
@@ -68,6 +70,15 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   const openDetails = src.lastIndexOf("<details", disc);
   assert.ok(openDetails < 0 || src.lastIndexOf("</details>", disc) > openDetails, "the EPN disclosure is never inside <details>");
   assert.match(src, /rel=\{outboundRel\(\)\}/);
+});
+
+test("the board pins eBay then TCGplayer, keeps price ranks, and labels the pin", () => {
+  const src = fs.readFileSync(path.resolve(__dirname, "../src/components/PriceBoardView.tsx"), "utf8");
+  assert.match(src, /const ordered = \[\.\.\.\(pinEbay \? \[pinEbay\] : \[\]\), \.\.\.\(pinTcg \? \[pinTcg\] : \[\]\)/);
+  assert.match(src, /const i = open\.indexOf\(o\);/);
+  assert.match(src, /\{pinned \? <ShownFirst \/> : null\}/);
+  assert.match(src, /% vs cheapest/);
+  assert.match(src, /TCGplayer may not ship to your country/);
 });
 
 test("JSON-LD: eBay offers carry seller eBay, shipping only when known", () => {

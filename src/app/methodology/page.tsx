@@ -68,7 +68,14 @@ export default async function Methodology() {
       </p>
       <h2>Ranking</h2>
       <p>
-        Offers are ranked cheapest first by item price. Postage is added at each
+        eBay and TCGplayer, our affiliate partners, are shown first in every
+        price comparison, tagged &ldquo;Shown first&rdquo;, whatever their price:
+        the cheapest listing of each in your market, or an eBay search and
+        (outside the US) TCGplayer&apos;s market price as a labelled reference
+        when we have none. Each row&apos;s number is its rank by price, a pinned
+        row that costs more says by how much, and &ldquo;Cheapest&rdquo; stays on
+        the cheapest. The stores under them are ranked cheapest first by item
+        price. Postage is added at each
         store&apos;s checkout and is not included
         {ebayLive ? (
           <>

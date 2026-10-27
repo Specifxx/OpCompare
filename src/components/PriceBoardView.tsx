@@ -3,6 +3,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
 import { ebayLabel, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
+import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { Ago } from "./Ago";
 import { ReportPriceButton } from "./ReportPriceButton";
@@ -34,6 +35,7 @@ export function PriceBoardView({
   slug,
   name,
   preRelease = false,
+  tcgRef,
 }: {
   model: BoardModel;
   productId: number;
@@ -50,10 +52,20 @@ export function PriceBoardView({
   name?: string;
   /** The set has not released: the eBay copy says nothing ships yet. */
   preRelease?: boolean;
+  /** TCGplayer's market price (USD cents) and tagged link: the pinned TCGplayer
+   *  reference row when this market has no TCGplayer listing. */
+  tcgRef?: { marketUsd: number | null; href: string };
 }) {
   const c = COUNTRIES[country];
   const { rows: open, sold, elsewhere, ebaySearch: ebay } = model;
   const hasEbayRow = open.some((o) => o.ebay);
+  // eBay then TCGplayer first (owner, 2026-10-27), each its cheapest row here;
+  // the rest by price. `rank` stays the PRICE rank (open is cheapest first).
+  const pinEbay = open.find((o) => o.ebay) ?? null;
+  const pinTcg = open.find((o) => o.source === "tcgplayer") ?? null;
+  const ordered = [...(pinEbay ? [pinEbay] : []), ...(pinTcg ? [pinTcg] : []), ...open.filter((o) => o !== pinEbay && o !== pinTcg)];
+  // Outside the US only: there the page's TcgMarketPrice block steps aside (CardMarket MarketReference).
+  const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
 
   return (
@@ -69,18 +81,69 @@ export function PriceBoardView({
           </span>
         ) : null}
       </div>
+      {!hasEbayRow || showTcgRef ? (
+        <ol className="divide-y divide-ink-800 border-b border-ink-800">
+          {hasEbayRow ? null : (
+            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="truncate text-[15px] font-semibold text-white">{ebayLabel(country)}</span>
+                  <ShownFirst />
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {preRelease
+                    ? "Not released yet: eBay sellers set their own dispatch dates, so check each listing."
+                    : `No ${ebayLabel(country)} price on file for this ${noun}. Search its current listings.`}{" "}
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-ebay shrink-0 whitespace-nowrap px-3 sm:w-48">
+                Search eBay →
+              </a>
+            </li>
+          )}
+          {showTcgRef && tcgRef?.marketUsd != null ? (
+            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="truncate text-[15px] font-semibold text-white">TCGplayer</span>
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">market price</span>
+                  <ShownFirst />
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  TCGplayer&apos;s US market price, converted at an approximate rate. TCGplayer may not ship to your country.{" "}
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">
+                ≈ {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
+              </span>
+              <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-primary shrink-0 whitespace-nowrap px-3 sm:w-48">
+                <span className="hidden sm:inline">Check on TCGplayer →</span>
+                <span className="sm:hidden">→</span>
+              </a>
+            </li>
+          ) : null}
+        </ol>
+      ) : null}
       {open.length ? (
         <ol className="divide-y divide-ink-800">
-          {open.map((o, i) => {
+          {ordered.map((o) => {
+            const i = open.indexOf(o);
+            const pinned = o === pinEbay || o === pinTcg;
             const tcg = o.source === "tcgplayer";
             const isEbay = Boolean(o.ebay);
+            const surface = pinned ? "board_pinned" : "board_row";
             return (
               <li key={`${o.source}-${country}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-[15px] font-semibold text-white">{o.label}</span>
-                    {i === 0 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
+                    {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
+                    {pinned ? <ShownFirst /> : null}
                   </p>
                   {isEbay ? <p className="mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
@@ -106,11 +169,16 @@ export function PriceBoardView({
                     {o.ebay ? null : <StoreCodeChip href={o.href} />}
                   </p>
                 </div>
-                <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(o.priceCents, country)}</span>
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface="board_row" className={`${isEbay ? "btn-ebay" : "btn-primary"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
+                <span className="shrink-0 text-right">
+                  <span className={`num block text-base font-bold sm:text-lg ${i === 0 ? "text-accent" : "text-white"}`}>{money(o.priceCents, country)}</span>
+                  {pinned && i > 0 && open[0].priceCents > 0 ? (
+                    <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
+                  ) : null}
+                </span>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${isEbay ? "btn-ebay" : "btn-primary"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface="board_row" className={`${isEbay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${isEbay ? "btn-ebay" : "btn-primary"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
                   →
                 </a>
               </li>
@@ -183,29 +251,19 @@ export function PriceBoardView({
       </div>
     </section>
 
-    {/* eBay fallback, DIRECTLY UNDER the board whenever this market has no eBay
-        row (RiftCompare, "Pushing eBay clicks"): a search, never a row, so it
-        cannot outrank a store, and it claims no price or stock. eBay blue. */}
-    {hasEbayRow ? null : (
-      <div>
-        <div className="card-surface flex flex-wrap items-center justify-between gap-3 border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-4">
-          <div className="min-w-0 flex-1 basis-56">
-            <p className="text-sm font-semibold text-white">
-              Search {ebayLabel(country)} for {name ?? `this ${noun}`}
-            </p>
-            <p className="mt-1 text-xs text-slate-400">
-              {preRelease
-                ? "This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing."
-                : `We have no ${ebayLabel(country)} price on file for this ${noun} right now — eBay sellers may still list it.`}
-            </p>
-          </div>
-          <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-ebay shrink-0">
-            {`Search ${ebayLabel(country)} →`}
-          </a>
-        </div>
-        <p className="mt-1.5 text-[11px] text-slate-500">As an eBay Partner Network affiliate, OP Compare earns from qualifying purchases.</p>
-      </div>
-    )}
     </>
+  );
+}
+
+/** The tag on a row pinned to the top of the board (eBay, TCGplayer). */
+function ShownFirst() {
+  return (
+    <span
+      data-shown-first
+      title="eBay and TCGplayer are shown first, whatever their price. Every store below is sorted by price."
+      className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-300"
+    >
+      Shown first
+    </span>
   );
 }
