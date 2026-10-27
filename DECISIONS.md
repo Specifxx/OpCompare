@@ -3032,3 +3032,19 @@ for its own searches.
 `robots.ts` takes RiftCompare's 2026-10-16 rules: the same bulk scrapers are blocked, and
 query-string URLs are not crawled (every card is in the sitemap; Next's assets, share images and
 icons stay allowed).
+
+## Graded price guide — 2026-10-27
+
+`/graded` lists every One Piece card with a live graded slab on eBay in the
+visitor's market: the cheapest PSA 10, PSA 9, BGS 10, BGS 9.5 and CGC 10
+listing (item price, in the market's currency), TCGplayer's raw market price,
+and an EPN-tagged eBay search for the row's best grade. It is the Graded tab of
+every card page, across the catalogue. RiftCompare shipped the same page the
+same day (affiliate channels research, owner: "do all of it").
+
+The rows come from the snapshot's `ebay.json.gz` slabs (zero extra eBay calls)
+through `getGradedGuide(market)` in `data.ts`, cached six hours under the
+`prices` tag, at most 250 rows a market (tens of KB). Slabs older than
+`PANEL_MAX_AGE_HOURS` are left out, as on the card page. They are asking prices
+and the page says so; nothing here enters a price row, an alert or a basket.
+In the sitemap and the nav. Tests: `tests/graded-guide.test.ts`.
