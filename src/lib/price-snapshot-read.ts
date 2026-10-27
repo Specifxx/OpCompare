@@ -118,6 +118,11 @@ export async function snapEbayPanel(productId: number): Promise<EbayPanelData> {
   return { listings: e.listings[String(productId)] ?? [], graded: e.graded[String(productId)] ?? [] };
 }
 
+/** Every product's slabs (the /graded guide). */
+export async function snapEbayGraded(): Promise<SnapshotEbay["graded"]> {
+  return (await need<SnapshotEbay>("ebay.json.gz")).graded;
+}
+
 // ── The answers the import computed in SQL ───────────────────────────────────
 export const snapDealInputs = async (country: Country): Promise<DealInputTuple[]> => (await need<DealInputsFile>("deal-inputs.json.gz"))[country] ?? [];
 
