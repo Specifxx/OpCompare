@@ -2948,3 +2948,18 @@ counts toward `inboxTotal` or the oldest-waiting date, so the watchdog never
 alerts over it. It still shows in `/admin/inbox`. Contact messages, support
 tickets, price reports and store suggestions are still emailed, since those
 need a reply or a fix.
+
+## eBay and TCGplayer lead every price board — 2026-10-27
+
+Owner: eBay and TCGplayer at the very top of every price list, even when they
+are not the cheapest. `PriceBoardView` now draws the market's cheapest eBay row,
+then its cheapest TCGplayer row, then the stores by price. With no eBay row the
+eBay search is the first row (it moved up from under the board); outside the US,
+with no TCGplayer row, TCGplayer's market price is a labelled reference row
+("may not ship to your country") and the card page's separate `TcgMarketPrice`
+block shows in the US only. Pinned rows carry "Shown first" beside "Paid link",
+keep their PRICE rank in the number column, say "+N% vs cheapest" when dearer,
+and "Cheapest" stays on the real cheapest. Clicks: surface `board_pinned`. The
+headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price order.
+`/methodology`, `/about` and `/editorial-policy` say so. Same change as
+RiftCompare's that day.

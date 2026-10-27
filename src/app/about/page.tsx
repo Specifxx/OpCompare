@@ -46,11 +46,11 @@ export default async function About() {
       <p>
         Some outbound links are affiliate links: when you buy through an eBay or
         TCGplayer link, {SITE_NAME} may earn a commission at no extra cost to
-        you. Affiliate status never changes the order of a price comparison — it
-        is always cheapest first. Rows that are paid links are labelled. One
-        labelled exception: on the pre-order pages, eBay and TCGplayer are shown
-        first in their own &ldquo;Marketplaces&rdquo; block, outside the store
-        ranking, which stays cheapest first.
+        you. Rows that are paid links are labelled. Affiliate status changes the
+        order of a price comparison in one labelled way: eBay and TCGplayer are
+        shown first, tagged &ldquo;Shown first&rdquo;, whatever their price
+        (on the pre-order pages, in their own &ldquo;Marketplaces&rdquo; block).
+        The stores below them are always ranked cheapest first.
         {ebayLive ? (
           <>
             {" "}eBay prices are the cheapest matching Buy It Now listing we found,

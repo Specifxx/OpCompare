@@ -169,7 +169,8 @@ export function MarketReference({
   const country = useMarket();
   return (
     <>
-      <TcgMarketPrice marketUsd={marketUsd} country={country} href={tcgHref} page={page} card={card} />
+      {/* Outside the US the board's pinned TCGplayer row carries this figure (2026-10-27). */}
+      {country === "US" ? <TcgMarketPrice marketUsd={marketUsd} country={country} href={tcgHref} page={page} card={card} /> : null}
       <EbayCardBanner country={country} query={query} name={name} page={page} card={card} href={pickMarket(ebayBanner, country)} />
       <TcgplayerBanner country={country} page={page} card={card} href={tcgBanner} />
     </>
