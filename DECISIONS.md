@@ -2987,6 +2987,24 @@ every page body never read as a link network.
 carry `notTcg`, so `CompareOtherTcgs` and About's one-per-game line read
 `TCG_SISTER_SITES`, and About names the other two separately.
 
+## Decks: one TCGplayer cart for the whole list — 2026-10-27
+
+**Owner:** take the affiliate-channels review's recommendations ("let's implement
+all of this"). Its idea #2: a deck's TCGplayer cart is worth more than one card's
+click, because TCGplayer credits the entire cart to the first affiliate click
+(48 hours) and pays about 2.6 times what eBay does per click across the family.
+
+**What.** A published deck (`/decks/[slug]`) and the deck builder (`/deck`) show
+"Buy all on TCGplayer": one Mass Entry link with the whole list in the URL
+(`src/lib/tcgplayer-cart.ts`, product line "One Piece Card Game"), wrapped
+through `affiliateUrl` (sub-id `tcgplayer_cart`). Before this the page offered
+only "Copy list", which earned nothing. Names only: Mass Entry reads a bracket as
+a set code, and our numbers ("OP05-119") are not set codes. RiftCompare got the
+same change the same day, and the Discord bot's `/deck` command uses the same
+link.
+
+**Measure.** Clicks with `data-page="deck_cart"`, and TCGplayer `sharedid`
+`tcgplayer_cart`.
 ## The cheaper marketplace leads the pinned pair — 2026-10-27
 
 The board pinned eBay above TCGplayer whatever their prices. In the US
