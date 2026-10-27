@@ -314,6 +314,9 @@ test("linked from the pages a reader of OP18 lands on: the set page, the pre-ord
   assert.match(read("src/app/sets/[slug]/page.tsx"), /guidesForSet\(set\.code\)/);
   assert.match(read("src/components/PreorderPage.tsx"), /<RelatedGuides guides=\{setOwnGuides\(SET_CODE\)\}/);
   assert.match(read("src/app/leaders/[slug]/page.tsx"), /<RelatedGuides guides=\{guidesForLeader\(base\.number\)\}/);
+  // One page, one phrase (2026-10-27): a Leader with a deck guide links it up top and leaves "<leader> deck" to the guide.
+  assert.match(read("src/app/leaders/[slug]/page.tsx"), /Building the deck\? Read/);
+  assert.match(read("src/app/leaders/[slug]/page.tsx"), /deckGuide \? `Cards that share/);
   assert.match(read("src/app/keywords/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
   assert.match(read("src/app/keywords/[slug]/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
 });

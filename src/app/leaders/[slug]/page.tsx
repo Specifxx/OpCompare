@@ -55,6 +55,7 @@ export default async function LeaderPage({ params }: Props) {
   const detail = await getCardDetail(base.slug);
   const slug = leaderSlug(base.name, base.number);
   const types = text.get(base.number ?? "")?.types ?? detail?.subtypes ?? [];
+  const deckGuide = guidesForLeader(base.number)[0] ?? null;
   const keywords = (text.get(base.number ?? "")?.keywords ?? []).map((k) => KEYWORD_BY_SLUG.get(k)).filter((k) => k != null);
 
   // Cards that share a type with the Leader and sit entirely in its colours:
@@ -121,6 +122,17 @@ export default async function LeaderPage({ params }: Props) {
               ))}
             </p>
           ) : null}
+          {/* One page, one phrase (2026-10-27, Search Console): when a Leader has a deck guide, the guide owns
+              "<leader> deck" and this page says so up top instead of competing with it. */}
+          {deckGuide ? (
+            <p className="mt-4 text-sm text-slate-300">
+              Building the deck? Read{" "}
+              <Link href={deckGuide.href} className="text-brand-400 hover:underline">
+                {deckGuide.title}
+              </Link>
+              .
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-3">
             <CardQuickLink slug={base.slug} className="btn-primary">
               Compare prices
@@ -180,7 +192,7 @@ export default async function LeaderPage({ params }: Props) {
       {related.length ? (
         <section className="mt-10">
           <SectionHeader
-            title={`Cards for a ${base.name} deck`}
+            title={deckGuide ? `Cards that share ${base.name}'s types` : `Cards for a ${base.name} deck`}
             sub={`the most valuable ${base.colors.join("/").toLowerCase()} cards that share a type with this Leader (${types.slice(0, 3).join(", ")}${types.length > 3 ? "…" : ""})`}
           />
           <CardLinkGrid cards={related} cat={cat} country={country} />
