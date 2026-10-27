@@ -2938,3 +2938,13 @@ on the server like `best`). A real row of the board at its real item price with
 how much more it is: never called cheaper, never reordered, and the Buy button
 stays on the cheapest. Its clicks are `buy_click` with `surface: card_top_alt`
 in Vercel Analytics. Same change as RiftCompare's of the same day.
+
+## No email per feedback or rating — 2026-10-27
+
+The owner, across the sites: "stop sending me emails for every single feedback
+… and every single rating … I can check in the admin dashboard." The hourly
+outbox (`owner-notify.ts`) no longer reads feedback, and feedback no longer
+counts toward `inboxTotal` or the oldest-waiting date, so the watchdog never
+alerts over it. It still shows in `/admin/inbox`. Contact messages, support
+tickets, price reports and store suggestions are still emailed, since those
+need a reply or a fix.

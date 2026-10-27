@@ -103,7 +103,8 @@ every limit and health signal (`src/lib/health-collect.ts`), judges it with the 
 evaluators in `src/lib/health.ts`, stores one report in Meta `health:report` for
 `/admin` and `/admin/health`, and emails **bill.jyang101@gmail.com** (`OWNER_EMAIL`)
 about new, worsened and cleared problems, plus a Monday summary. Every new inbox
-item is emailed to the owner by the hourly outbox (`src/lib/owner-notify.ts`).
+item except feedback and ratings is emailed to the owner by the hourly outbox
+(`src/lib/owner-notify.ts`; owner, 2026-10-27: no email per feedback).
 
 - A new thing that can silently break (a job, a limit, a data source) gets a check
   in `health.ts` and a test in `tests/health.test.ts`; a new scheduled workflow goes

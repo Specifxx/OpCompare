@@ -55,21 +55,22 @@ const money = (c: number | null, cur: string | null) => (c == null ? "?" : `${(c
 export async function loadNewInbox(db: InboxDb, since: Date, until: Date): Promise<InboxBatch> {
   const where = { createdAt: { gt: since, lte: until } };
   const q = { where, orderBy: { createdAt: "asc" }, take: PER_QUEUE };
-  const [contact, feedback, reports, suggestions, tickets] = await Promise.all([
+  // No feedback or ratings here (owner, 2026-10-27: "stop sending me emails for
+  // every single feedback … I can check in the admin dashboard"). They wait in
+  // /admin/inbox and never count toward the watchdog's inbox alert either.
+  const [contact, reports, suggestions, tickets] = await Promise.all([
     db.contactMessage.findMany(q),
-    db.feedback.findMany({ ...q, where: { ...where, status: "NEW" } }),
     db.priceReport.findMany(q),
     db.storeSuggestion.findMany(q),
     db.supportTicket.findMany(q),
   ]);
   const items: InboxItem[] = [
     ...contact.map((m): InboxItem => ({ kind: "message", at: m.createdAt, title: `${m.name} <${m.email}>${m.subject ? `: ${m.subject}` : ""}`, lines: [`Category: ${m.category}`, clip(m.message)] })),
-    ...feedback.map((f): InboxItem => ({ kind: "feedback", at: f.createdAt, title: `${f.rating ? `${f.rating}/5` : "No rating"}${f.email ? ` from ${f.email}` : ""}`, lines: [...(f.page ? [`On: ${f.page}`] : []), ...(f.message ? [clip(f.message)] : [])] })),
     ...reports.map((r): InboxItem => ({ kind: "price report", at: r.createdAt, title: `${r.storeName}: ${r.issue}`, lines: [`${r.kind}${r.listingTitle ? `: ${r.listingTitle}` : ""}`, `We showed ${money(r.shownPriceCents, r.currency)}${r.claimedCents != null ? `; they say ${money(r.claimedCents, r.currency)}` : ""}`, ...(r.note ? [clip(r.note, 600)] : [])] })),
     ...suggestions.map((s): InboxItem => ({ kind: "store suggestion", at: s.createdAt, title: `${s.storeName} (${s.country})`, lines: [s.storeUrl, ...(s.note ? [clip(s.note, 600)] : [])] })),
     ...tickets.map((t): InboxItem => ({ kind: "support ticket", at: t.createdAt, title: `OC-${t.number} ${t.subject} from ${t.name} <${t.email}>`, lines: [`Category: ${t.category}`, clip(t.message)] })),
   ].sort((a, b) => a.at.getTime() - b.at.getTime());
-  const cut = [contact, feedback, reports, suggestions, tickets].filter((l) => l.length >= PER_QUEUE).map((l) => l[l.length - 1].createdAt.getTime());
+  const cut = [contact, reports, suggestions, tickets].filter((l) => l.length >= PER_QUEUE).map((l) => l[l.length - 1].createdAt.getTime());
   const advanceTo = cut.length ? new Date(Math.min(...cut)) : null;
   // Items past the cut-off point wait for the next email, so none is sent twice.
   return { items: advanceTo ? items.filter((i) => i.at.getTime() <= advanceTo.getTime()) : items, truncated: cut.length > 0, advanceTo };

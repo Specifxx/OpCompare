@@ -152,11 +152,12 @@ test("evalEmail and evalInbox", () => {
   const none = { reports: 0, suggestions: 0, feedback: 0, contact: 0, support: 0 };
   assert.equal(evalInbox(none, null, NOW).status, "ok");
   const some = { ...none, contact: 2, feedback: 1 };
-  assert.equal(inboxTotal(some), 3);
+  assert.equal(inboxTotal(some), 2, "feedback never counts as waiting (owner, 2026-10-27)");
+  assert.equal(evalInbox({ ...none, feedback: 40 }, H(24 * 30), NOW).status, "ok", "old feedback alone never alerts");
   assert.equal(evalInbox(some, H(5), NOW).status, "ok");
   assert.equal(evalInbox(some, H(80), NOW).status, "warn");
   assert.equal(evalInbox(some, H(24 * 8), NOW).status, "fail");
-  assert.match(evalInbox(some, H(5), NOW).detail, /2 messages, 1 feedback/);
+  assert.match(evalInbox(some, H(5), NOW).detail, /2 waiting \(2 messages\)/);
   assert.equal(evalInbox(null, null, NOW).status, "unknown");
 });
 
@@ -214,7 +215,7 @@ test("alert, digest and issue text: our sentences, escaped, with the link and no
   assert.ok(mail.html.includes("https://opcompare.app/admin/health") && mail.text.includes("https://opcompare.app/admin/health"));
   const back = renderAlertEmail({ raise: [], recovered: [chk("a", "ok", "Price import")] }, rep(chk("a", "ok")), "https://opcompare.app");
   assert.match(back.subject, /back to normal: Price import/);
-  const digest = renderDigestEmail(rep({ id: "neon-transfer", area: "database", label: "Neon network transfer", status: "ok", detail: "1.0 GB of 5.0 GB (20%)", value: GB, limit: 5 * GB, unit: "bytes" }), { reports: 0, suggestions: 0, feedback: 1, contact: 0, support: 0 }, "https://opcompare.app");
+  const digest = renderDigestEmail(rep({ id: "neon-transfer", area: "database", label: "Neon network transfer", status: "ok", detail: "1.0 GB of 5.0 GB (20%)", value: GB, limit: 5 * GB, unit: "bytes" }), { reports: 0, suggestions: 0, feedback: 9, contact: 1, support: 0 }, "https://opcompare.app");
   assert.match(digest.subject, /all healthy/);
   assert.match(digest.text, /Neon network transfer: 1.0 GB of 5.0 GB/);
   assert.match(digest.text, /Inbox: 1 waiting/);
@@ -234,7 +235,7 @@ test("the issue and the alert text are built from the report alone: a visitor's 
   // The collector reads inbox COUNTS, and for the oldest waiting item only its date.
   const collect = read("src/lib/health-collect.ts");
   const firsts = [...collect.matchAll(/(contactMessage|feedback|priceReport|storeSuggestion|supportTicket)\.findFirst\(\{[^\n]*\}\)/g)];
-  assert.equal(firsts.length, 5);
+  assert.equal(firsts.length, 4, "feedback has no oldest-waiting date: it never waits (2026-10-27)");
   for (const m of firsts) assert.match(m[0], /select: \{ createdAt: true \}/);
 });
 
@@ -345,9 +346,10 @@ test("renderInboxEmail covers every queue, one item reads as one email, and a cu
     tickets: [{ number: 12, name: "Cy", email: "cy@example.com", category: "PAYMENT", subject: "Refund", message: "Please help", createdAt: new Date("2026-10-14T10:34:00Z") }],
   });
   const batch = await loadNewInbox(db, new Date("2026-10-14T10:00:00Z"), new Date("2026-10-14T11:00:00Z"));
-  assert.deepEqual(batch.items.map((i) => i.kind), ["message", "feedback", "price report", "store suggestion", "support ticket"]);
+  // Feedback is never emailed (owner, 2026-10-27): it waits in /admin/inbox.
+  assert.deepEqual(batch.items.map((i) => i.kind), ["message", "price report", "store suggestion", "support ticket"]);
   const mail = renderInboxEmail(batch, "https://opcompare.app");
-  assert.match(mail.subject, /5 new items/);
+  assert.match(mail.subject, /4 new items/);
   assert.match(mail.text, /OC-12 Refund/);
   assert.ok(mail.text.endsWith("https://opcompare.app/admin/inbox"));
   const one = renderInboxEmail({ items: [batch.items[0]], truncated: false, advanceTo: null }, "https://opcompare.app");
