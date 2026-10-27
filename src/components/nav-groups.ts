@@ -40,6 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
       { href: "/price-guide", label: "Price Guide", keywords: ["price list", "price guide", "card values", "all prices", "value"] },
+      { href: "/graded", label: "Graded card prices", keywords: ["graded", "psa", "psa 10", "bgs", "cgc", "slab", "graded price"] },
       { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "starter deck", "cases", "sealed", "double pack"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/market/records", label: "Price records", keywords: ["records", "all time high", "most expensive ever", "highs", "lows"] },

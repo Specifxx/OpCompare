@@ -12,7 +12,7 @@ import { slugify } from "./catalog";
 import { SNAPSHOT_FRESH_MS } from "./price-snapshot";
 import { decodeLastKnownRow, type LastKnown, type LastKnownFile } from "./last-known";
 import {
-  snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
+  snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayGraded, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
   snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreListings, snapStorePrices, snapStoreStats,
 } from "./price-snapshot-read";
 
@@ -1230,6 +1230,7 @@ export async function getSetChecklist(setId: number, market: Country): Promise<C
 // support, market stats…). Every one is self-cached with the "prices" tag; never
 // wrap one in another unstable_cache and never call one from inside a cache
 // callback. Entries stay small (the largest is under 100 KB).
+import { gradedGuideRows, type GradedGuideRow } from "./graded-guide";
 import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type EbayPanelData, type PickCard } from "./listing-panel";
 
 /**
@@ -1267,6 +1268,16 @@ export const getEbayPicks = unstable_cache(
 export const getSealedSoldOut = unstable_cache(
   async (): Promise<Record<Country, number[]>> => snapSoldOut(),
   ["sealed-soldout-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/** The /graded guide's rows for one market (lib/graded-guide.ts). At most 250 rows: tens of KB. */
+export const getGradedGuide = unstable_cache(
+  async (market: Country): Promise<GradedGuideRow[]> => {
+    const [graded, cards] = await Promise.all([snapEbayGraded(), snapCardsById()]);
+    return gradedGuideRows(graded, cards, market);
+  },
+  ["graded-guide-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 // ── end wave2:catalogue ──
