@@ -60,7 +60,7 @@ import { cardImage } from "@/lib/images";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
 import { pageOg } from "@/lib/og/meta";
-import { cheapestBuyRow, isPreRelease } from "@/lib/quick-view";
+import { cheapestBuyRow, isPreRelease, paidAlternativeRow } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
 import { aliasesFor } from "@/lib/card-aliases";
@@ -234,6 +234,7 @@ export default async function CardPage({ params }: Props) {
     };
   });
   const best = perMarket((m) => cheapestBuyRow(card.offers, m, loc));
+  const paidAlt = perMarket((m) => paidAlternativeRow(card.offers, m, loc));
   const unpriced = perMarket((m) => inMarketOf(m).length === 0);
   const noListings = perMarket((m) => {
     const st = stateIn(m);
@@ -456,7 +457,7 @@ export default async function CardPage({ params }: Props) {
             </div>
             {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}
             <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mt-4 hidden lg:block" />
-            <MarketTopBuy best={best} page="card" slug={card.slug} />
+            <MarketTopBuy best={best} alt={paidAlt} page="card" slug={card.slug} />
             <MarketAlertCta
               cardId={card.id}
               slug={card.slug}

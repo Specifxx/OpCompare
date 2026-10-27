@@ -104,9 +104,19 @@ export function MarketTiles({ tiles, now }: { tiles: PerMarket<MarketTile>; now:
 }
 
 /** The phone buy block under the card's name: the market's cheapest open row. */
-export function MarketTopBuy({ best, page, slug }: { best: PerMarket<BuyRow | null>; page: string; slug: string }) {
+export function MarketTopBuy({
+  best,
+  alt,
+  page,
+  slug,
+}: {
+  best: PerMarket<BuyRow | null>;
+  alt?: PerMarket<{ row: BuyRow; pctMore: number } | null>;
+  page: string;
+  slug: string;
+}) {
   const country = useMarket();
-  return <CardTopBuy best={pickMarket(best, country)} country={country} page={page} slug={slug} />;
+  return <CardTopBuy best={pickMarket(best, country)} alt={alt ? pickMarket(alt, country) : null} country={country} page={page} slug={slug} />;
 }
 
 /** The pinned phone buy bar: the same row as MarketTopBuy. Keyed by market so it re-measures. */

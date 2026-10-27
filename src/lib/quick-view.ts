@@ -8,7 +8,7 @@
 // eBay search) so one cached response serves every visitor and a market switch
 // needs no second request. Links are affiliate-tagged HERE, on the server, so
 // the environment's partner ids apply (the browser never sees those env vars).
-import { affiliateUrl, cardEbayQuery, ebaySearchUrl } from "./affiliate";
+import { affiliateUrl, cardEbayQuery, ebaySearchUrl, isPaidLink } from "./affiliate";
 import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
 import type { CardDetail, HistoryPoint, OfferRow } from "./data";
@@ -66,6 +66,31 @@ export function buyRow(o: OfferRow, country: Country, loc: string): BuyRow {
 export function cheapestBuyRow(offers: OfferRow[], country: Country, loc: string): BuyRow | null {
   const best = marketRows(offers, country)[0];
   return best ? buyRow(best, country, loc) : null;
+}
+
+/**
+ * The phone Cheapest block's second line (2026-10-27, owner: more eBay and
+ * TCGplayer clicks): when the cheapest open row is a store link that pays
+ * nothing, the cheapest PAID row (eBay, TCGplayer, a partner store) in the same
+ * market, if its item price is within PAID_ALTERNATIVE_BAND of the cheapest.
+ * A real row of the same ranking at its real price, with how much more it is;
+ * never called cheaper, never reordered.
+ */
+export const PAID_ALTERNATIVE_BAND = 1.2;
+
+export function paidAlternativeRow(
+  offers: OfferRow[],
+  country: Country,
+  loc: string,
+  isPaid: (href: string) => boolean = isPaidLink,
+): { row: BuyRow; pctMore: number } | null {
+  const rows = marketRows(offers, country).map((o) => buyRow(o, country, loc));
+  const best = rows[0];
+  if (!best || isPaid(best.href)) return null;
+  const row = rows.find((r) => isPaid(r.href));
+  if (!row || row.priceCents > best.priceCents * PAID_ALTERNATIVE_BAND) return null;
+  const pctMore = best.priceCents > 0 ? Math.round(((row.priceCents - best.priceCents) / best.priceCents) * 100) : 0;
+  return { row, pctMore };
 }
 
 export interface QuickViewMarket {

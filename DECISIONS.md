@@ -2922,3 +2922,19 @@ Same review: one family people recognise, no domain moved. The footer line reads
 "Part of the Compare Empire family" and adds Gundam Compare and Lorcana Compare to
 `SISTER_SITES` (so About and Who writes this name them too). YGO Compare joins once
 it is public.
+
+## The phone Cheapest block names the paid marketplace — 2026-10-27
+
+Owner: more eBay and TCGplayer clicks, placed where buyers see them on a phone
+and clicked because they are worth it. Below lg `CardTopBuy` showed one row
+under the card's name, and in the snapshot of 2026-10-27 a store that pays
+nothing is the cheapest row on 517 US cards (TCGplayer within 20% on 289) and on
+most cards elsewhere (eBay within 20% on 134 in AU, 100 in CA, 38 in the UK).
+
+When the cheapest open row is not a paid link, the block now adds one muted line,
+"or US$10.80 on TCGplayer (+8%) →" with a Paid link tag, for the cheapest paid
+row within 20% (`paidAlternativeRow` in `lib/quick-view.ts`, computed per market
+on the server like `best`). A real row of the board at its real item price with
+how much more it is: never called cheaper, never reordered, and the Buy button
+stays on the cheapest. Its clicks are `buy_click` with `surface: card_top_alt`
+in Vercel Analytics. Same change as RiftCompare's of the same day.
