@@ -518,6 +518,7 @@ export default async function CardPage({ params }: Props) {
             slug={card.slug}
             name={title}
             preRelease={preRelease}
+            tcgRef={{ marketUsd: card.marketUsd, href: tcgHref }}
           />
           <CardConversionCta cardId={card.id} slug={card.slug} name={title} />
           {/* Under the comparison, never in it: TCGplayer's market price as a
