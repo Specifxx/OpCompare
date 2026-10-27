@@ -10,6 +10,8 @@ import { getCatalog, getPublishedDeck } from "@/lib/data";
 import { deckViewLines } from "@/lib/deck-library";
 import { encodeDeckParam } from "@/lib/deck";
 import { deckTotals, massEntry } from "@/lib/published-decks";
+import { tcgplayerCartUrl } from "@/lib/tcgplayer-cart";
+import { affiliateUrl } from "@/lib/affiliate";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { money } from "@/lib/format";
 import { pageOgOwnImage } from "@/lib/og/meta";
@@ -81,6 +83,7 @@ export default async function DeckPage({ params }: { params: { slug: string } })
         lines={lines}
         publishedTotals={deck.publishedTotals}
         massEntry={massEntry(lines.map((l) => ({ qty: l.qty, name: l.card.name, number: l.card.number })))}
+        tcgplayerCartHref={affiliateUrl(tcgplayerCartUrl(lines.map((l) => ({ qty: l.qty, name: l.card.name }))), "tcgplayer_cart", `/decks/${deck.slug}`)}
         basketHref={`/tools/best-basket?list=${param}`}
         builderHref={`/deck?list=${param}`}
       />
