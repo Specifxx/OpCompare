@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
 import { getSiteStats } from "@/lib/data";
-import { CONTACT_EMAIL, SISTER_SITES, SITE_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, SISTER_SITES, SITE_NAME, TCG_SISTER_SITES } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
@@ -33,9 +33,16 @@ export default async function About() {
       <p>
         {SITE_NAME} is one of a family of price-comparison sites run by the
         same team, one per game. The others are{" "}
-        {SISTER_SITES.map((s, i) => (
+        {TCG_SISTER_SITES.map((s, i) => (
           <span key={s.key}>
-            {i ? (i === SISTER_SITES.length - 1 ? ", and " : ", ") : ""}
+            {i ? (i === TCG_SISTER_SITES.length - 1 ? ", and " : ", ") : ""}
+            <a href={s.url}>{s.name}</a> for {s.compares}
+          </span>
+        ))}
+        ; outside card games, the same team runs{" "}
+        {SISTER_SITES.filter((s) => s.notTcg).map((s, i) => (
+          <span key={s.key}>
+            {i ? " and " : ""}
             <a href={s.url}>{s.name}</a> for {s.compares}
           </span>
         ))}

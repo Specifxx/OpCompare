@@ -18,21 +18,30 @@ export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "opcompare
 // Compare is built on. Plain followed links: they are our own sites, never
 // affiliate or sponsored (tests/site-chrome.test.ts pins the footer).
 export interface SisterSite {
-  key: "rift" | "dex" | "mtg" | "gundam" | "lorcana";
+  key: "rift" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cam" | "empire";
   name: string;
   url: string;
   game: string;
   /** What it compares, a few words after "for": "<name> for <compares>". */
   compares: string;
+  /** Not a card game: the footer and Authors list it, "Compare other TCGs" does not. */
+  notTcg?: boolean;
 }
 export const SISTER_SITES: readonly SisterSite[] = [
   { key: "rift", name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound", compares: "Riftbound card prices" },
   { key: "dex", name: "DexCompare", url: "https://www.dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles" },
-  { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering card prices" },
+  { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering sealed prices" },
   // The whole family (2026-10-26, DECISIONS.md "One family of sites").
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam Card Game", compares: "Gundam Card Game prices" },
   { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com", game: "Disney Lorcana", compares: "Disney Lorcana card prices" },
+  // Every site links the whole family (2026-10-27, DECISIONS.md): YGO Compare,
+  // then the two that are not card games.
+  { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh!", compares: "Yu-Gi-Oh! card prices" },
+  { key: "cam", name: "CamCompare", url: "https://www.camcompare.app", game: "cameras", compares: "camera and lens prices", notTcg: true },
+  { key: "empire", name: "Compare Empire", url: "https://www.compareempire.com", game: "tech", compares: "Australian tech prices", notTcg: true },
 ];
+/** The card-game sites only, for "Compare other TCGs" and the one-per-game line on About. */
+export const TCG_SISTER_SITES = SISTER_SITES.filter((s) => !s.notTcg);
 // OP Compare's Discord invite. Unset by default: the header icon, the footer
 // link and the nav entry render only when NEXT_PUBLIC_DISCORD_URL is set, so
 // there is never a dead invite on the page.
