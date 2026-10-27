@@ -11,7 +11,8 @@ import { DeckPublishPanel } from "./decks/DeckPublishPanel";
 import { InlineSignupPrompt } from "./InlineSignupPrompt";
 import { DATA_TABLE } from "./prose";
 import { COUNTRIES, MARKETS, type Country } from "@/lib/country";
-import { outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, outboundRel } from "@/lib/affiliate";
+import { tcgplayerCartUrl } from "@/lib/tcgplayer-cart";
 import { encodeDeckParam, formatDeckLine, DECK_LINE_CAP, DECK_SIZE, COPY_LIMIT, QTY_CAP } from "@/lib/deck";
 import type { DeckPriceResult, DeckLineOut } from "@/lib/deck-price";
 import { money } from "@/lib/format";
@@ -308,6 +309,18 @@ export function DeckBuilder({ initialList, emailOn = false }: { initialList: str
               <Link href={`/tools/best-basket?list=${listParam}`} className="btn-ghost text-sm" title="The cheapest delivered order across stores, postage included">
                 Buy this deck for less →
               </Link>
+            )}
+            {result!.lines.length > 0 && (
+              <a
+                href={affiliateUrl(tcgplayerCartUrl(result!.lines.map((l) => ({ qty: l.qty, name: l.card.name }))), "tcgplayer_cart", "/deck")}
+                target="_blank"
+                rel={outboundRel()}
+                data-retailer="tcgplayer"
+                data-page="deck_cart"
+                className="btn-ghost text-sm"
+              >
+                Buy all on TCGplayer
+              </a>
             )}
           </div>
         )}
