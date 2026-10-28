@@ -7,6 +7,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomeSections } from "@/components/home/HomeSections";
 import { HomeTopDeals } from "@/components/home/HomeTopDeals";
+import { HomeSealedShelf } from "@/components/home/HomeSealedShelf";
 import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
 import { loadHomeData } from "@/components/home/home-data";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -53,6 +54,7 @@ export default async function HomePage() {
       <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
       <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
+      <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} storeCount={storeCount} />
       <section className="card-surface p-6">
