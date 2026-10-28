@@ -3073,3 +3073,22 @@ What shipped instead, at no cost:
   and is linked from RiftCompare's "Compare other TCGs" footer heading. One page
   on the strongest domain, never a copy per site, so the family never competes
   with itself for the generic query.
+
+## A TCGplayer strip of real cards beside every eBay chase strip — 2026-10-28
+
+**Owner:** "more TCGplayer ads and more eBay ads … banner ads with the actual
+cards", every site but RiftCompare.
+
+* `TcgplayerChaseStrip`: the same dearest chase printings as the eBay chase
+  strip, each with its art and TCGplayer's market price, linking to the card's
+  TCGplayer product page (the catalogue id is TCGplayer's productId) through
+  the Impact link, tagged `tcgplayer_strip`. Labelled "Ad", hidden for ad-free
+  members, disclosed underneath. No new data: it reads the chase snapshot.
+* `EbayChase` renders it right after the eBay strip everywhere that strip
+  already ran (home, sealed, sets, price guide, movers, market, articles), and
+  the card page gains the pair at the bottom, after "More from <set>": below
+  the board, the chart and the related cards, never between a buyer and a
+  price. No pop-ups.
+* TCGplayer Direct reached Australia on 2026-10-07 for Magic, Pokémon and
+  Yu-Gi-Oh! singles only, so the strip claims nothing about One Piece shipping
+  outside the US ("US marketplace, prices in US$").

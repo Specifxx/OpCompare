@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { ebayBannerHref } from "@/components/EbayCardBanner";
+import { EbayChase } from "@/components/EbayChase";
 import { EbayTopButton, type EbayTopListing } from "@/components/EbayTopButton";
 import { tcgplayerBannerHref } from "@/components/TcgplayerBanner";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -733,6 +734,10 @@ export default async function CardPage({ params }: Props) {
           </div>
         </section>
       ) : null}
+
+      {/* Real chase cards on eBay and TCGplayer (2026-10-28): below every
+          price, chart and related card, never between a buyer and the board. */}
+      <EbayChase page="card" className="mt-10" />
 
       <DecksUsingCard cardId={card.id} />
 
