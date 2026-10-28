@@ -3092,3 +3092,27 @@ cards", every site but RiftCompare.
 * TCGplayer Direct reached Australia on 2026-10-07 for Magic, Pokémon and
   Yu-Gi-Oh! singles only, so the strip claims nothing about One Piece shipping
   outside the US ("US marketplace, prices in US$").
+
+## Store audit: 41 stores added, 9 dead ones out — 2026-10-28
+
+**Owner:** check every site's store health and make sure the latest stores
+are on it.
+
+* **Health.** Nine stores matched nothing in stock for days (closed, no
+  longer Shopify, or One Piece gone from their collections): removed. The
+  import's "db.$transaction is not a function" in the sealed-watch step is
+  fixed (`sealed-watch-run.ts` builds its db from the public client for
+  offers and sealed and binds `$transaction` to `prisma`).
+* **New stores** came from two places: every store on the eight sister
+  sites' registries, and the official Riftbound store registry's Shopify game
+  stores. Each was probed from a GitHub runner in its market with the real
+  matcher, on the One Piece collections it has; it is added only if real
+  products match and are in stock, it charges its market's currency, and it
+  is not a second address of a store already listed. The comment above each
+  entry is what the probe saw.
+* **Pickup-only stores stay out.** A store whose checkout quotes no postage
+  to any address we measure (Cosmic Bham, PF Comics, Game Academia) is not
+  added: a price nobody can have delivered is not a comparison. Danish and
+  Swedish stores are skipped (they charge DKK/SEK, and prices are never
+  converted).
+* Postage for every new store was measured and is in `shipping-rates.json`.

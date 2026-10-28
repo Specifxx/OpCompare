@@ -555,8 +555,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "jandjgamingfactory", name: "J and J Gaming Factory", base: "https://jandjgamingfactory.com", country: "US", collections: ["one-piece-singles","one-piece","one-piece-sealed"] },
   // 139 matched in stock of 141 read
   { key: "thesocialboardhq", name: "The Social Board", base: "https://thesocialboardhq.com", country: "US", collections: ["one-piece-singles"] },
-  // 1000 matched in stock of 2048 read
-  { key: "gameacademia", name: "Game Academia", base: "https://game-academia.com", country: "SG", collections: ["one-piece-card-game-singles-album","one-piece-booster-box","one-piece-card-game-starter-decks","one-piece-card-game-pre-orders"] },
   // 22 matched in stock of 443 read
   { key: "arcardia", name: "Arcardia Collectibles & Exchange", base: "https://arcardia.ca", country: "CA", collections: ["one-piece-singles","one-piece"] },
   // 23 matched in stock of 76 read
