@@ -1,4 +1,5 @@
 import { EbayPicks } from "@/components/EbayPicks";
+import { FamilySearch } from "@/components/FamilySearch";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SortSelect } from "@/components/SortSelect";
@@ -193,6 +194,9 @@ export default async function BrowsePage({
             </div>
           )}
           <Pagination page={page} totalPages={pages} params={searchParams} basePath="/browse" />
+          {/* The same search on the other card-game sites (2026-10-28): a
+              Pokémon or Riftbound name typed here finds its own site. */}
+          {q.q && <FamilySearch q={q.q} className="mt-6" />}
           <EbayPicks country={country} className="mt-8" page="browse" />
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
