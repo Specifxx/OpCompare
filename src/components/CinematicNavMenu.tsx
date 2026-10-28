@@ -5,7 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
-import { NAV_GROUPS, type NavGroupLink } from "./nav-groups";
+import { NAV_GROUPS, RAIL_GROUPS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { BrandLogo } from "./BrandLogo";
@@ -168,7 +168,10 @@ export function CinematicNavMenu() {
     };
   }, [filter, open]);
   const sections = useMemo(() => {
-    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, icon: g.icon, links: g.links }));
+    // Unfiltered: the same short list as the desktop rail (owner, 2026-10-28:
+    // "more minimalistic … literally just price comparison"). Typing still
+    // searches every page and tool in NAV_GROUPS.
+    if (!filtering) return RAIL_GROUPS.map((g) => ({ title: g.title, icon: g.icon, links: g.links }));
     const hits = searchNav(filter);
     const byGroup = new Map<string, typeof hits>();
     for (const h of hits) {

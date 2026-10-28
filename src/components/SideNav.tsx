@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
-import { NAV_GROUPS } from "./nav-groups";
-import { searchNav } from "./nav-search";
+import { NAV_GROUPS, RAIL_GROUPS } from "./nav-groups";
 import { BrandLogo } from "./BrandLogo";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
@@ -13,8 +12,15 @@ import { COUNTRIES } from "@/lib/country";
 import { PremiumNavLink } from "./PremiumNavLink";
 
 // The persistent desktop navigation rail: the full left edge of the page from
-// `lg` up, carrying the brand, one search affordance, every link in
-// NAV_GROUPS, and a pinned Premium/account block at the foot.
+// `lg` up, carrying the brand, the short RAIL_GROUPS list, and a pinned
+// Premium/account block at the foot.
+//
+// MINIMAL SINCE 2026-10-28 (owner: "too much going on the sidebar, there's too
+// many features … literally just price comparison"). The rail used to render
+// every NAV_GROUPS link (~50) under a "Search features" box; it now renders
+// RAIL_GROUPS (price comparison first, guides and blog last) and no search of
+// its own. Every other tool is still one ⌘K, phone-menu search or footer link
+// away, all of which read the full NAV_GROUPS.
 //
 // IT IS A NAVIGATION SYSTEM AND NOTHING ELSE. An earlier revision opened with
 // a flat list of eight "primary destinations" (Home, Cards, Prices, …) above
@@ -54,7 +60,7 @@ const STORAGE_KEY = "op:sidenav:collapsed-groups";
 // and mostly a scrollbar — you scrolled past Games and Guides to reach Your
 // Collection on every page.
 //
-// Matched by TITLE against NAV_GROUPS, and deliberately not by index: a group
+// Matched by TITLE against RAIL_GROUPS, and deliberately not by index: a group
 // added or reordered tomorrow must not silently become "the open one".
 //
 // GUIDES & NEWS OPENS TOO (2026-09-28, owner: "we need the blog and guides to
@@ -64,13 +70,15 @@ const STORAGE_KEY = "op:sidenav:collapsed-groups";
 // /blog — a crawler reading the rail saw a heading and nothing under it. It is
 // also the second group now (nav-groups.ts). A returning visitor's own
 // collapsed set still wins once it loads.
-const DEFAULT_OPEN_GROUPS: readonly string[] = ["Prices", "Guides & News"];
+// 2026-10-28: the rail is short now, so everything but the account links
+// starts open, guides and blog included (still crawlable from every page).
+const DEFAULT_OPEN_GROUPS: readonly string[] = ["Compare prices", "Market", "Guides & News"];
 
 // The default collapsed set, derived rather than written out, so it cannot
-// drift from NAV_GROUPS. Computed once at module load — it is a pure function
+// drift from RAIL_GROUPS. Computed once at module load — it is a pure function
 // of a static array, and it must be IDENTICAL on the server and on the
 // client's first render or React reports a hydration mismatch.
-const DEFAULT_COLLAPSED: string[] = NAV_GROUPS.map((g) => g.title).filter((t) => !DEFAULT_OPEN_GROUPS.includes(t));
+const DEFAULT_COLLAPSED: string[] = RAIL_GROUPS.map((g) => g.title).filter((t) => !DEFAULT_OPEN_GROUPS.includes(t));
 
 function matchesLink(pathname: string | null, link: { href: string; external?: boolean }): boolean {
   // The current route IS this link, or is nested under it (e.g. /card/abc
@@ -117,7 +125,7 @@ export function SideNav() {
   // link active and to keep that group visible regardless of what the visitor
   // collapsed on an earlier visit.
   const activeGroupTitle = useMemo(
-    () => NAV_GROUPS.find((g) => g.links.some((l) => isActiveLink(pathname, l)))?.title ?? null,
+    () => RAIL_GROUPS.find((g) => g.links.some((l) => isActiveLink(pathname, l)))?.title ?? null,
     [pathname],
   );
 
@@ -127,13 +135,6 @@ export function SideNav() {
   // A returning visitor's own choices load in the effect below.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(DEFAULT_COLLAPSED));
 
-  // What the visitor typed into the feature search above. Empty = show the
-  // normal grouped tree; anything else = show flat, ranked matches instead.
-  const [featureQuery, setFeatureQuery] = useState("");
-  const featureResults = useMemo(
-    () => (featureQuery.trim() ? searchNav(featureQuery).slice(0, 24) : null),
-    [featureQuery],
-  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -233,122 +234,12 @@ export function SideNav() {
         </span>
       </Link>
 
-      {/* ── Search the FEATURES ────────────────────────────────────────
-          Not card search (2026-09-21, owner: "lets make the search bar on the
-          left a search for features"). Card search is the header's job and
-          says so in its own placeholder; this one answers "where is the thing
-          that does X" over the same NAV_GROUPS index the ⌘K launcher and the
-          phone overlay search, via the shared `searchNav()` — so a word that
-          finds a page in one of them finds it in all three.
-
-          It filters the list BELOW it in place rather than opening a panel:
-          the rail is a navigation tree, and narrowing the tree you are
-          already looking at is both simpler and less to explain than a
-          dropdown over the top of it. */}
-      {/* TOUCH TARGETS (2026-09-23). Measured on a 1024x768 touch tablet, 28 of
-          the rail's 29 targets were under 44px (links 32, group toggles 29,
-          this input 38, Get Premium 38): globals.css's coarse 48px floor does
-          not reach these classes. Every `[@media(pointer:coarse)]:py-*` below
-          is touch-only, so the desktop density is unchanged. py-3.5, not py-3,
-          on the input and Get Premium: py-3 measures only 46 there (20 line +
-          24 padding + 2 border).
-          `[&::-webkit-search-cancel-button]:appearance-none` on THIS input
-          only: it is type="search", so WebKit and Chromium drew their native ×
-          beside the Clear button below. The site's other type=search inputs
-          rely on the native one and keep it.
-          HEIGHT BELOW xl (2026-09-23): from 1024 to 1279 the header keeps its
-          card search on a second row (121px with a mouse, 125px on touch), so
-          this block is sized to end exactly on the header's bottom rule — 56px
-          and 60px below the 65px brand block — instead of leaving a 7-15px step
-          in the divider once the page scrolls. From xl the header is 65px again
-          and the block is back to its natural py-3. */}
-      <div className="flex h-14 shrink-0 flex-col justify-center border-b border-ink-800 px-3 [@media(pointer:coarse)]:h-[3.75rem] xl:block xl:h-auto xl:py-3">
-        <div className="relative">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <input
-            type="search"
-            value={featureQuery}
-            onChange={(e) => setFeatureQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setFeatureQuery("");
-            }}
-            placeholder="Search features"
-            aria-label="Search features"
-            autoComplete="off"
-            className="w-full rounded-lg border border-ink-700 bg-ink-950/60 py-2 pl-9 pr-8 text-sm text-slate-200 placeholder:text-slate-500 transition-colors hover:border-ink-600 focus:border-brand-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 [&::-webkit-search-cancel-button]:appearance-none [@media(pointer:coarse)]:py-3.5"
-          />
-          {featureQuery && (
-            <button
-              type="button"
-              onClick={() => setFeatureQuery("")}
-              aria-label="Clear"
-              className="absolute right-1.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded text-slate-500 transition-colors hover:bg-ink-800 hover:text-white"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-3.5 w-3.5">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* ── The index ─────────────────────────────────────────────────────
-          Every NAV_GROUPS link, each group a disclosure. This is the whole
-          navigation system: the same index the ⌘K launcher searches, the
-          footer site-map renders and /llms.txt publishes, so a link added in
-          one place appears in all four. */}
+          RAIL_GROUPS, each group a disclosure: price comparison first, guides
+          and blog last. The full index (NAV_GROUPS) is the ⌘K launcher's, the
+          phone menu search's and the footer site map's. */}
       <div ref={scrollerRef} className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
-        {featureResults ? (
-          // SEARCHING: a flat, ranked list, each row naming the group it came
-          // from — that context is the difference between "Movers" meaning
-          // anything and meaning "the one in Prices". No disclosures here:
-          // when you have typed a query, hiding matches behind a collapsed
-          // section is the opposite of what you asked for.
-          featureResults.length === 0 ? (
-            <p className="px-2 py-6 text-center text-sm text-slate-500">
-              No features match “{featureQuery.trim()}”.
-            </p>
-          ) : (
-            <ul className="space-y-0.5">
-              {featureResults.map((link) => {
-                const active = isActiveLink(pathname, link);
-                const className = `block rounded-md border-l-2 py-1.5 pl-3 pr-2 transition-colors ${
-                  active
-                    ? "border-brand-400 bg-brand-500/10 text-brand-300"
-                    : "border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white"
-                }`;
-                const body = (
-                  <>
-                    <span className="block truncate text-sm font-semibold">{link.label}</span>
-                    <span className="block truncate text-[11px] text-slate-500">{link.group}</span>
-                  </>
-                );
-                return (
-                  <li key={`${link.group}-${link.href}`}>
-                    {link.external ? (
-                      <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
-                        {body}
-                      </a>
-                    ) : (
-                      <Link
-                        href={link.href}
-                        className={className}
-                        aria-current={active ? "page" : undefined}
-                        onClick={() => setFeatureQuery("")}
-                      >
-                        {body}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )
-        ) : (
-        NAV_GROUPS.map((group) => {
+        {RAIL_GROUPS.map((group) => {
           const open = !collapsed.has(group.title);
           const panelId = `sidenav-group-${group.title.replace(/\s+/g, "-").toLowerCase()}`;
           const groupActive = group.title === activeGroupTitle;
@@ -398,8 +289,7 @@ export function SideNav() {
               )}
             </div>
           );
-        })
-        )}
+        })}
       </div>
 
       {/* ── Pinned Premium ───────────────────────────────────────────────

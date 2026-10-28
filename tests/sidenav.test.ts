@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NAV_GROUPS } from "../src/components/nav-groups";
+import { NAV_GROUPS, RAIL_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -66,11 +66,11 @@ test("a group header is a disclosure, never a link — that was the whole compla
   assert.ok(!rail.includes("PRIMARY_NAV"), "the duplicated primary list is gone");
 });
 
-test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidden below lg", () => {
+test("SideNav renders the short RAIL_GROUPS list, hidden below lg", () => {
   const src = read("src/components/SideNav.tsx");
   assert.match(src, /"use client"/);
-  assert.match(src, /import \{ NAV_GROUPS \} from "\.\/nav-groups"/);
-  assert.match(src, /NAV_GROUPS\.map/);
+  assert.match(src, /import \{ NAV_GROUPS, RAIL_GROUPS \} from "\.\/nav-groups"/);
+  assert.match(src, /RAIL_GROUPS\.map\(\(group\)/);
   // Tailwind's lg breakpoint (1024px) — the width at which --sidenav-w first
   // becomes non-zero in globals.css. The two must agree, or the panel either
   // overlaps un-padded content or leaves a gap.
@@ -214,49 +214,40 @@ test("SideNav forces the active page's group open even if it was previously coll
   assert.match(src, /if \(!hydrated \|\| !activeGroupTitle \|\| !collapsed\.has\(activeGroupTitle\)\) return;/);
 });
 
-test("Prices and Guides & News are open on a first visit, and the default is identical on the server and the client", () => {
-  // 2026-09-21, owner: "lets have the default on the left prices is expanded
-  // whilst everything else is rolled up." Every group used to start open,
-  // which made the rail ~60 links long and mostly a scrollbar. 2026-09-28,
-  // owner: the blog and guides must be prominent for AdSense's crawlers, and a
-  // collapsed group renders no links, so Guides & News opens too.
+test("the rail opens price comparison, Market and Guides & News on a first visit, identical on the server and the client", () => {
+  // 2026-10-28, owner: the rail is "literally just price comparison", guides and
+  // blog "to the very bottom". A collapsed group renders no links, so Guides &
+  // News stays open (still crawlable from every page), just last.
   const code = codeOnly(read("src/components/SideNav.tsx"));
-  assert.match(code, /const DEFAULT_OPEN_GROUPS: readonly string\[\] = \["Prices", "Guides & News"\];/, "the open groups are named, not indexes");
-  for (const t of ["Prices", "Guides & News"]) {
-    assert.ok(NAV_GROUPS.some((g) => g.title === t), `"${t}" must name a real group — a typo would roll it up`);
+  assert.match(code, /const DEFAULT_OPEN_GROUPS: readonly string\[\] = \["Compare prices", "Market", "Guides & News"\];/, "the open groups are named, not indexes");
+  for (const t of ["Compare prices", "Market", "Guides & News"]) {
+    assert.ok(RAIL_GROUPS.some((g) => g.title === t), `"${t}" must name a real group — a typo would roll it up`);
   }
-  const guides = NAV_GROUPS.find((g) => g.title === "Guides & News")!;
-  assert.deepEqual(guides.links.slice(0, 2).map((l) => l.href), ["/guides", "/blog"], "its first two links are the guides and the blog");
-  assert.equal(NAV_GROUPS[1].title, "Guides & News", "second in the rail, right under Prices");
-  // Derived from NAV_GROUPS rather than written out, so it cannot drift when a
-  // group is added.
-  assert.match(code, /NAV_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => !DEFAULT_OPEN_GROUPS\.includes\(t\)\)/);
-  // A collapsed group renders no links, which is why the default matters to a crawler.
+  assert.equal(RAIL_GROUPS[0].title, "Compare prices", "price comparison first");
+  const last = RAIL_GROUPS[RAIL_GROUPS.length - 1];
+  assert.equal(last.title, "Guides & News", "guides and blog at the very bottom");
+  assert.deepEqual(last.links.map((l) => l.href), ["/guides", "/blog"]);
+  assert.deepEqual(RAIL_GROUPS[0].links.slice(0, 2).map((l) => l.href), ["/browse", "/sealed"], "cards and sealed lead");
+  assert.match(code, /RAIL_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => !DEFAULT_OPEN_GROUPS\.includes\(t\)\)/);
   assert.match(code, /\{open && \(/);
-  // And it must be the INITIAL React state, not applied in an effect:
-  // localStorage is unreadable on the server, so anything else would make the
-  // client's first render disagree and React would log a hydration mismatch.
   assert.match(code, /useState<Set<string>>\(\(\) => new Set\(DEFAULT_COLLAPSED\)\)/);
 });
 
-test("the rail owns the brand, the search and the whole index; the header owns the session", () => {
+test("the rail owns the brand and the short list; the header owns card search and the session", () => {
   const rail = codeOnly(read("src/components/SideNav.tsx"));
   const nav = codeOnly(read("src/components/Navbar.tsx"));
 
   // Rail-only.
   assert.match(rail, /aria-label="OP Compare home"/, "the rail carries the brand");
   assert.match(nav, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "…and the header hides its copy from lg");
-  // TWO SEARCHES, ONE EACH, and the split is the point (2026-09-21): the rail
-  // searches FEATURES ("where is the thing that does X"), the header searches
-  // CARDS. Each says which it is in its own placeholder, so neither can be
-  // mistaken for the other — which is exactly what went wrong when the rail's
-  // box opened the navigation launcher while being labelled just "Search".
-  assert.match(rail, /placeholder="Search features"/, "the rail searches features");
-  assert.match(rail, /searchNav\(/, "…over the same index the ⌘K launcher uses");
+  // ONE SEARCH (2026-10-28): the rail's "Search features" box went with the
+  // long index; card and sealed search is the header's, the ⌘K launcher finds
+  // features.
+  assert.doesNotMatch(rail, /Search features|searchNav\(/, "the rail has no feature search any more");
   assert.doesNotMatch(rail, /<CardSearch/, "…and never mounts the card search");
   assert.match(nav, /<HeaderSearchSlot>/, "the header carries the desktop card search");
   assert.match(nav, /<HeaderSearchSlot mobile>/, "…and the phone search row");
-  assert.match(codeOnly(read("src/components/CardSearch.tsx")), /"Search for cards"/, "…labelled for cards");
+  assert.match(codeOnly(read("src/components/CardSearch.tsx")), /"Search cards or sealed products"/, "…labelled for cards AND sealed (owner, 2026-10-28)");
 
   // Header-only. The rail must never grow a second session control.
   assert.match(nav, /<NavUser/, "the header carries the account control");
@@ -313,31 +304,15 @@ test("the header's inline card search waits for xl, because the rail leaves it n
   assert.match(nav, /className="pb-3 xl:hidden"/, "the full-width row covers everything below xl, including 1024-1279");
 });
 
-test("every group in the rail is reachable and nothing in NAV_GROUPS was lost to the rework", () => {
-  // The rail is the site's full index. Two shapes were removed from it in one
-  // day (a flat primary list, then the icon mode); neither may have taken a
-  // destination with it.
+test("every rail link is a real NAV_GROUPS link, and the rail stays short", () => {
+  // 2026-10-28: the rail shows a subset; NAV_GROUPS stays the full index for
+  // the launcher, the phone search and the footer, so nothing was lost.
   const rail = read("src/components/SideNav.tsx");
-  assert.match(rail, /NAV_GROUPS\.map/);
   assert.match(rail, /group\.links\.map/, "…down to the leaves, not just the group headers");
-  // OP Compare drops RiftCompare's Games, For stores and Miscellaneous groups.
-  assert.ok(NAV_GROUPS.length >= 7, `expected the full grouped index, found ${NAV_GROUPS.length} groups`);
-  // External links still branch — the contract every NAV_GROUPS renderer follows.
+  const all = new Set(NAV_GROUPS.flatMap((g) => g.links.map((l) => l.href)));
+  const railLinks = RAIL_GROUPS.flatMap((g) => g.links);
+  for (const l of railLinks) assert.ok(all.has(l.href), `${l.href} must also be in NAV_GROUPS`);
+  assert.ok(railLinks.length <= 16, `the rail is meant to be minimal, found ${railLinks.length} links`);
+  assert.ok(NAV_GROUPS.length >= 7, `NAV_GROUPS stays the full grouped index, found ${NAV_GROUPS.length} groups`);
   assert.match(rail, /link\.external \?/, "external links must open in a new tab, never through next/link");
-});
-
-test("the rail's feature search filters the tree in place, and shares the launcher's index", () => {
-  // "Lets make the search bar on the left a search for features." It filters
-  // the list BELOW it rather than opening a panel over it: the rail IS the
-  // navigation tree, so narrowing the tree you are already looking at needs
-  // no explaining.
-  const code = codeOnly(read("src/components/SideNav.tsx"));
-  assert.match(code, /import \{ searchNav \} from "\.\/nav-search"/, "one shared index, not a second matcher");
-  assert.match(code, /featureResults \? \(/, "a query replaces the grouped tree with flat results");
-  assert.match(code, /No features match/, "…and an empty result says so rather than rendering nothing");
-  // Each result names its group: "Movers" alone is ambiguous, "Movers · Prices"
-  // is not.
-  assert.match(code, /\{link\.group\}/, "results must carry the group they came from");
-  // External links still branch, the contract every NAV_GROUPS renderer follows.
-  assert.match(code, /link\.external \?/);
 });

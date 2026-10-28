@@ -6,7 +6,7 @@ import { breadcrumb, faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { CHEAPER_ABROAD_SLUG, COUNTRY_GUIDE_SLUGS, REGION_HOME_PATH } from "@/lib/seo";
 import { CinematicHero } from "./CinematicHero";
 import { EditorialHub } from "./EditorialHub";
-import { HomeSections } from "./HomeSections";
+import { HomePopularCards, HomeSections } from "./HomeSections";
 import { HomeTopDeals } from "./HomeTopDeals";
 import { HomeSealedShelf } from "./HomeSealedShelf";
 import { PriceGuideCallout } from "./PriceGuideCallout";
@@ -49,11 +49,11 @@ export async function RegionHome({ region }: { region: Exclude<Country, "US"> })
         renderedAt={data.renderedAt}
         region={{ code: region, adjective: info.adjective }}
       />
-      <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} market={region} />
-      <HomeTopDeals dealsByCountry={data.dealsByCountry} lockCountry={region} />
       <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} lockCountry={region} />
+      <HomePopularCards data={data} storeCount={stat.stores} />
+      <HomeTopDeals dealsByCountry={data.dealsByCountry} lockCountry={region} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
-      <HomeSections data={data} storeCount={stat.stores} />
+      <HomeSections data={data} />
       <section className="container-app">
         <h2 className="text-xl font-extrabold text-white">Buying One Piece cards in {info.place}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
@@ -99,6 +99,7 @@ export async function RegionHome({ region }: { region: Exclude<Country, "US"> })
           ))}
         </div>
       </section>
+      <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} market={region} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

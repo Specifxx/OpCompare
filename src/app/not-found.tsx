@@ -33,7 +33,7 @@ export default async function NotFound() {
       </div>
       <div className="mx-auto mt-6 max-w-xl">
         <Suspense fallback={<div className="input h-12" />}>
-          <CardSearch size="lg" placeholder="Search any One Piece card…" />
+          <CardSearch size="lg" placeholder="Search any One Piece card or sealed product…" />
         </Suspense>
       </div>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

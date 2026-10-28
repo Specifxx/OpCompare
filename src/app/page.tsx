@@ -5,7 +5,7 @@ import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { EbayChase } from "@/components/EbayChase";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
-import { HomeSections } from "@/components/home/HomeSections";
+import { HomePopularCards, HomeSections } from "@/components/home/HomeSections";
 import { HomeTopDeals } from "@/components/home/HomeTopDeals";
 import { HomeSealedShelf } from "@/components/home/HomeSealedShelf";
 import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
@@ -16,10 +16,11 @@ import { homeFaqs } from "@/lib/home-faq";
 import { homeMetadata } from "@/lib/home-metadata";
 import { faqPage, ldJson, webApplication, webPage } from "@/lib/jsonld";
 
-// The homepage — RiftCompare's app/page.tsx, section for section: the
-// cinematic hero, the editorial band, Today's Top Deals, the price-guide
-// callout, HomeSections and the About + FAQ card, with WebPage /
-// WebApplication / FAQPage JSON-LD.
+// The homepage, price comparison first (owner, 2026-10-28): the hero and its
+// search, the sealed shelf, the most popular cards, then Today's Top Deals,
+// the eBay chase banner, the price-guide callout, HomeSections and the About +
+// FAQ card. The guides and blog band (EditorialHub) sits at the very bottom.
+// WebPage / WebApplication / FAQPage JSON-LD.
 //
 // STATIC: no cookie or header read. One cached HTML (ISR, hourly) carries every
 // market's figures and the client localises to the visitor's market
@@ -51,12 +52,12 @@ export default async function HomePage() {
         updatedAt={data.stats.updatedAt}
         renderedAt={data.renderedAt}
       />
-      <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
-      <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
-      <HomeTopDeals dealsByCountry={data.dealsByCountry} />
       <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} />
+      <HomePopularCards data={data} storeCount={storeCount} />
+      <HomeTopDeals dealsByCountry={data.dealsByCountry} />
+      <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
-      <HomeSections data={data} storeCount={storeCount} />
+      <HomeSections data={data} />
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">
           One Piece card prices in the US, Australia, the UK, Singapore, Canada and the EU — all in one place
@@ -112,6 +113,7 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} />
       <CompareOtherTcgs />
       <script
         type="application/ld+json"
