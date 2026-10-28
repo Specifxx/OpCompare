@@ -8,6 +8,7 @@ import { CinematicHero } from "./CinematicHero";
 import { EditorialHub } from "./EditorialHub";
 import { HomeSections } from "./HomeSections";
 import { HomeTopDeals } from "./HomeTopDeals";
+import { HomeSealedShelf } from "./HomeSealedShelf";
 import { PriceGuideCallout } from "./PriceGuideCallout";
 import { loadHomeData } from "./home-data";
 
@@ -50,6 +51,7 @@ export async function RegionHome({ region }: { region: Exclude<Country, "US"> })
       />
       <EditorialHub cat={data.cat} updatedAt={data.stats.updatedAt} renderedAt={data.renderedAt} market={region} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} lockCountry={region} />
+      <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} lockCountry={region} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} storeCount={stat.stores} />
       <section className="container-app">
