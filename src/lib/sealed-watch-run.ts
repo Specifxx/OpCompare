@@ -209,7 +209,12 @@ export function sealedNotificationTitle(item: Pick<SealedWatchItem, "kind" | "na
 }
 
 export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<SealedWatchRunSummary> {
-  const db = deps.db ?? ({ ...(prisma as unknown as SealedWatchDb), offer: publicDb.offer, sealed: publicDb.sealed } as SealedWatchDb);
+  // $transaction is a method on the client's prototype, which a spread does not
+  // copy: without the explicit bind every run with a write failed ("db.$transaction
+  // is not a function", import logs 2026-10-27).
+  const db =
+    deps.db ??
+    ({ ...(prisma as unknown as SealedWatchDb), offer: publicDb.offer, sealed: publicDb.sealed, $transaction: prisma.$transaction.bind(prisma) } as SealedWatchDb);
   const send = deps.sendSealedWatchEmail ?? sendSealedWatchEmailImpl;
   const notify = deps.notify ?? notifyImpl;
   const emailOn = deps.emailEnabled ?? isEmailEnabled();
