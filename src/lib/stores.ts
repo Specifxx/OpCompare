@@ -179,7 +179,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "endturn", name: "End Turn", base: "https://www.endturn.pt", country: "EU", collections: ["one-piece-single","unnumbered-promos-one-piece","promos-one-piece","starter-deck-one-piece-film-edition","reprints-one-piece","premium-bandai-products-one-piece","judge-promos-one-piece","special-tournament-promos-one-piece"] },
   { key: "gsgameon", name: "GS-GameOn", base: "https://www.gs-gameon.com", country: "EU", collections: ["one-piece-single","onepiece","unnumbered-promos-one-piece","carte-gradate-one-piece","special-tournament-promos-one-piece","promos-one-piece","judge-promos-one-piece","premium-bandai-products-one-piece","one-piece-products","sigillati-one-piece","prodotti-giapponesi-one-piece","one-piece-promo-products"] },
   { key: "lichcards", name: "Lichcards", base: "https://lichcards.nl", country: "EU", collections: ["one-piece-single"] },
-  { key: "manamarketeu", name: "Mana Market EU", base: "https://manamarket.eu", country: "EU", collections: ["one-piece-single","one-piece-singles","one-piece","promos-one-piece"] },
   { key: "nordiclegends", name: "Nordic Legends", base: "https://nordic-legends.com", country: "EU", collections: ["one-piece-single","unnumbered-promos-one-piece","promos-one-piece"] },
   { key: "trextcg", name: "T-REX TCG", base: "https://www.t-rextcg.com", country: "EU", collections: ["one-piece-single","unnumbered-promos-one-piece","promos-one-piece","special-tournament-promos-one-piece","judge-promos-one-piece","starter-deck-one-piece-film-edition","premium-bandai-products-one-piece","reprints-one-piece","one-piece-products","one-piece-preconstructed-decks"] },
   { key: "timetwister", name: "Timetwister Games", base: "https://timetwistergames.it", country: "EU", collections: ["one-piece-single","unnumbered-promos-one-piece","promos-one-piece","judge-promos-one-piece","reprints-one-piece","special-tournament-promos-one-piece","starter-deck-one-piece-film-edition","premium-bandai-products-one-piece"] },
@@ -221,7 +220,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "solacido", name: "Solacido", base: "https://solacido.com", country: "US", collections: ["singles-one-piece", "one-piece"] },
   { key: "superanimestore", name: "Super Anime Store", base: "https://superanimestore.com", country: "US", collections: ["one-piece-tcg-singles"] },
   { key: "castlegames", name: "The Castle Games", base: "https://castlegameshoppe.com", country: "US", collections: ["one-piece-starter-decks-copy", "pillars-of-strength", "one-piece-500-years-in-the-future", "one-piece-wings-of-the-captain", "one-piece-extra-booster-anime-25th-collection", "one-piece", "one-piece-gear-5"] },
-  { key: "haventabletop", name: "The Haven Tabletop Games", base: "https://thehaventabletop.com", country: "US", collections: ["one-piece-singles"] },
   { key: "thehubtcg", name: "The Hub TCG", base: "https://thehubtcg.com", country: "US", collections: ["one-piece-singles"] },
   { key: "lostzone", name: "The Lost Zone Cards & Collectibles", base: "https://thelostzonellc.myshopify.com", country: "US", collections: ["one-piece-singles"] },
   { key: "thetrainercourt", name: "The Trainer Court", base: "https://www.thetrainercourt.com", country: "US", collections: ["one-piece-op11-a-fist-of-divine-speed-singles"] },
@@ -240,7 +238,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "gameology", name: "Gameology", base: "https://www.gameology.com.au", country: "AU", collections: ["one-piece-tcg-single-cards", "one-piece-tcg-op04-kingdoms-of-intrigue-singles", "one-piece-tcg-op05-awakening-of-the-new-era-singles", "one-piece-op01-romance-dawn-singles", "one-piece-tcg-op02-paramount-war-singles", "one-piece-tcg-op03-pillars-of-strength-singles", "one-piece-tcg-op06-wings-of-the-captain-single-cards"] },
   { key: "gamesportal", name: "Games Portal", base: "https://www.gamesportal.com.au", country: "AU", collections: ["one-piece-ccg-singles"] },
   { key: "gatekeepers", name: "Gate Keepers TCG & Collectables", base: "https://www.gatekeeperstcg.com", country: "AU", collections: ["one-piece-sealed"] },
-  { key: "goodgames", name: "Good Games", base: "https://tcg.goodgames.com.au", country: "AU", collections: ["one-piece-card-game-carrying-on-his-will-singles", "one-piece-card-game-the-azure-seas-seven-singles", "one-piece-card-game-singles-in-stock", "one-piece-card-game-op-15-adventure-on-kamis-island", "one-piece-card-game-fist-of-divine-speed-singles", "one-piece-card-game-legacy-of-the-master-singles", "one-piece-card-game-awakening-of-the-new-era-1", "one-piece-card-game-500-years-in-the-future-singles", "one-piece-card-game-royal-blood-singles", "one-piece-card-game-wings-of-the-captain-singles", "one-piece-card-game-premium-booster-vol-2", "one-piece-card-game-the-time-of-battle-singles"] },
   { key: "gggreensborough", name: "Good Games Greensborough", base: "https://gggreensborough.com.au", country: "AU", collections: ["one-piece"] },
   { key: "ggmorley", name: "Good Games Morley", base: "https://www.goodgamesmorley.com.au", country: "AU", collections: ["one-piece-gl", "one-piece-new-cards"] },
   { key: "grailborne", name: "Grailborne", base: "https://grailborne.com.au", country: "AU", collections: ["one-piece", "one-piece-singles", "all-singles", "dragon-ball-one-piece-best-sellers", "one-piece-op-13", "one-piece-op-14", "one-piece-op-15", "one-piece-op-17"] },
@@ -260,7 +257,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "thecardspot", name: "The Card Spot", base: "https://thecardspot.com.au", country: "AU", collections: ["one-piece-trading-cards"] },
   { key: "cardboardgamer", name: "The Cardboard Gamer", base: "https://cardboardgamer.com.au", country: "AU", collections: ["one-piece-singles", "one-piece-paramount-war-singles", "one-piece-pillars-of-strength", "one-piece-kingdoms-of-intrigue-singles", "one-piece-awakening-of-the-new-era-singles"] },
   { key: "collectorsmith", name: "The CollectorSmith", base: "https://www.thecollectorsmith.com.au", country: "AU", collections: ["one-piece-singles-gl"] },
-  { key: "toysucker", name: "Toy Sucker", base: "https://www.toysucker.com.au", country: "AU", collections: ["one-piece-tcg-singles"] },
   { key: "tradingcardmasters", name: "Trading Card Masters", base: "https://www.tradingcardmasters.com.au", country: "AU", collections: ["one-piece-singles", "one-piece-english-singles"] },
   { key: "turtletcg", name: "Turtle TCG", base: "https://turtletcg.com.au", country: "AU", collections: ["one-piece-singles-consignment", "one-piece-singles"] },
   { key: "wonderlandgames", name: "Wonderland Games", base: "https://www.wonderlandgames.com.au", country: "AU", collections: ["one-piece-singles"] },
@@ -273,7 +269,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "gatheringpointgames", name: "Gathering Point Games", base: "https://gatheringpointgames.co.uk", country: "UK", collections: ["one-piece-singles-instock", "one-piece-singles-all-products"] },
   { key: "hiddengemcards", name: "Hidden Gem Trading Cards", base: "https://hiddengemcards.co.uk", country: "UK", collections: ["one-piece", "one-piece-promotion-cards", "cc-onepiece-op05", "cc-onepiece-eb-03", "cc-onepiece-st-01", "cc-onepiece-st21"] },
   { key: "hodges", name: "Hodges Trading Cards", base: "https://hodgestradingcards.com", country: "UK", collections: ["one-piece-card-game-premium-booster-prb-01-singles", "one-piece-card-game-st-collection-singles", "adventure-on-kamis-island-singles", "the-azure-seas-seven-singles", "one-piece-card-game-emperors-in-the-new-world-singles", "one-piece-card-game-pillars-of-strength-singles", "one-piece-card-game-awakening-of-the-new-era-singles", "one-piece-card-game-a-fist-of-divine-speed", "one-piece-card-game-the-worlds-strongest-warriors-singles", "carrying-on-his-will-singles", "one-piece-card-game-kingdoms-of-intrigue-singles", "one-piece-card-game-royal-blood-singles"] },
-  { key: "jetcards", name: "JET Cards", base: "https://www.jetcards.uk", country: "UK", collections: ["one-piece-card-game", "one-piece-single-cards", "one-piece-op13-carrying-on-his-will", "one-piece-op15-adventure-on-kamis-island", "one-piece-op17-the-worlds-strongest-warriors", "one-piece-op-16-the-time-of-battle", "one-piece-eb-03-one-piece-heroines-edition", "one-piece-op07-500-years-in-the-future", "one-piece-prb-02-one-piece-card-the-best-vol-2", "one-piece-op12-legacy-of-the-master", "one-piece-op14-the-azure-seas-seven", "one-piece-prb-01-one-piece-card-the-best"] },
   { key: "jgccollectables", name: "JGC Collectables", base: "https://jgc-collectables.co.uk", country: "UK", collections: ["one-piece", "st05-one-piece-film-edition"] },
   { key: "lvlupgaming", name: "LvL Up Gaming", base: "https://lvlupgaming.co.uk", country: "UK", collections: ["one-piece-singles-in-stock", "one-piece-promotion-cards", "extra-booster-one-piece-heroines-edition"] },
   { key: "managaming", name: "Mana Gaming", base: "https://managaming.shop", country: "UK", collections: ["one-piece-card-game"] },
@@ -343,7 +338,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "littlerootgamesdublin", name: "Littleroot Games - Dublin", base: "https://dublin.littlerootgames.com", country: "US", collections: ["one-piece-singles","one-piece-singles-in-stock","all-one-piece-in-stock"] },
   { key: "ltshobbies", name: "LTs Hobbies", base: "https://www.lthobbies.com", country: "US", collections: ["one-piece-singles"] },
   { key: "nolatcgexperience", name: "NOLA TCG Experience", base: "https://nolatcg.com", country: "US", collections: ["one-piece-tcg-all-singles"] },
-  { key: "onendunncards", name: "OneNDunn Cards", base: "https://onendunncards.com", country: "US", collections: ["one-piece-card-game-singles"] },
   { key: "papajoeyscollectibles", name: "Papa Joey's Collectibles", base: "https://papajoeys.com", country: "US", collections: ["one-piece-card-game-singles"] },
   { key: "redfoxgaming", name: "Red Fox Gaming", base: "https://redfoxgamingonline.com", country: "US", collections: ["one-piece-singles"] },
   { key: "shufflenroll", name: "Shuffle N Roll", base: "https://shufflenroll.com", country: "US", collections: ["optcg-instock-singles"] },
@@ -353,7 +347,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "thegamecornergames", name: "The Game Corner", base: "https://www.thegamecornergames.com", country: "US", collections: ["one-piece"] },
   { key: "evvgamingguild", name: "The Gaming Guild", base: "https://www.evvgamingguild.com", country: "US", collections: ["one-piece","singles"] },
   { key: "mightymeeple", name: "The Mighty Meeple", base: "https://mightymeeple.com", country: "US", collections: ["one-piece"] },
-  { key: "nexuscollectormarket", name: "The Nexus Collector Market", base: "https://thenexusgnv.com", country: "US", collections: ["one-piece-singles"] },
   { key: "vaultgamestore", name: "The Vault", base: "https://vaultgamestore.com", country: "US", collections: ["one-piece-singles","newly-added-pokemon-singles-copy"] },
   { key: "unsettledgeeks", name: "Unsettled Geeks", base: "https://unsettledgeeks.com", country: "US", collections: ["one-piece-in-stock-singles","one-piece-singles","extra-booster-one-piece-heroines-edition"] },
   { key: "wildthingsgames", name: "Wild Things Games LLC", base: "https://pro.wildthingsgames.com", country: "US", collections: ["one-piece-tcg-singles"] },
@@ -444,7 +437,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "evolutiongamestx", name: "Evolution Games", base: "https://evolutiontcg.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "secondhandsoldiers", name: "Secondhand Soldiers", base: "https://secondhandsoldiers.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "jjaspertcg", name: "Jumping Jasper", base: "https://jjaspertcg.com", country: "US", collections: [], platform: "shadowpos" },
-  { key: "thecleverkobold", name: "The Clever Kobold", base: "https://thecleverkobold.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "darksidegames", name: "Darkside Games", base: "https://darksidegames.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "littlespectacles", name: "Little Spectacles", base: "https://littlespectacles.shop", country: "US", collections: [], platform: "shadowpos" },
   { key: "millerscomics", name: "Miller's Comics, Cards, Collectibles", base: "https://millersccct.com", country: "US", collections: [], platform: "shadowpos" },
@@ -465,7 +457,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "superheroesnewnan", name: "Super Heroes Comics Cards and Games", base: "https://summitgames.gg", country: "US", collections: [], platform: "shadowpos" },
   { key: "sealedrelics", name: "Sealed Relics", base: "https://sealedrelics.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "koboldskeep", name: "Kobold's Keep", base: "https://koboldskeep.com", country: "US", collections: [], platform: "shadowpos" },
-  { key: "reddhill", name: "Reddhill Games & Electronics", base: "https://reddhill.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "vossmedia", name: "Voss Media Board Game Cafe", base: "https://vossmediastore.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "lotusgamesmt", name: "Lotus Games (Kalispell)", base: "https://lotusgames.shop", country: "US", collections: [], platform: "shadowpos" },
   { key: "blackmanamarket", name: "Black Mana Market", base: "https://blackmanamarket.com", country: "US", collections: [], platform: "shadowpos" },
@@ -481,6 +472,93 @@ const RAW_STORES: StoreInfo[] = [
   // is not published (no /policies/shipping-policy; its terms say shipping costs
   // "are provided at checkout"), so it has no shippingCents and no policyUrl.
   { key: "beachestcg", name: "BeachesTCG", base: "https://beachestcg.com.au", country: "AU", collections: ["one-piece"], sealedOnly: true },
+  // ── Store audit, 2026-10-28 (DECISIONS.md "Store audit: dead stores out,
+  // stores from the sister sites in"): every store the sister sites track that
+  // OP Compare did not, read through scripts/probe-stores.ts (the import's own
+  // readers and matcher) from GitHub Actions; kept at 20+ matched listings in stock.
+  // 1188 matched in stock of 7102 read
+  { key: "irresistibleforce", name: "Irresistible Force TCG", base: "https://tcg.irresistibleforce.com.au", country: "AU", collections: ["one-piece-singles","one-piece"] },
+  // 37 matched in stock of 426 read
+  { key: "lightofcards", name: "Light of Cards", base: "https://lightofcards.com.au", country: "AU", collections: ["one-piece-single-cards","one-piece","one-piece-booster-box-en","one-piece-en"] },
+  // 26 matched in stock of 50 read
+  { key: "firstgames", name: "First Games", base: "https://firstgames.com.au", country: "AU", collections: ["one-piece-card-game"] },
+  // 25 matched in stock of 44 read
+  { key: "pokesource", name: "PokeSource", base: "https://pokesource.com.au", country: "AU", collections: ["one-piece"] },
+  // 1654 matched in stock of 4317 read
+  { key: "emmettstoystop", name: "Emmett's Toy Stop", base: "https://emmettstoystop.com", country: "CA", collections: ["one-piece-singles","one-piece-trading-card-game","one-piece-card-game","one-piece-card-game-romance-dawn-op-01"] },
+  // 1263 matched in stock of 1350 read
+  { key: "pokegemsmtl", name: "Poke Gems MTL", base: "https://pokegemsmtl.com", country: "CA", collections: ["one-piece-singles","one-piece-sealed","all-one-piece","one-piece-promotion-cards"] },
+  // 1080 matched in stock of 4446 read
+  { key: "sunnyhobbies", name: "Sunny Hobbies", base: "https://sunnyhobbies.com", country: "CA", collections: ["one-piece-singles","one-piece-singles-tcg","one-piece","one-piece-pre-order"] },
+  // 372 matched in stock of 6421 read
+  { key: "pokejeux", name: "PokéJeux", base: "https://pokejeux.ca", country: "CA", collections: ["one-piece-single","one-piece-tcg","special-order-one-piece"] },
+  // 307 matched in stock of 1898 read
+  { key: "mypops", name: "MyPops.ca", base: "https://mypops.ca", country: "CA", collections: ["one-piece-singles","one-piece","one-piece-tcg","one-piece-tcg-weeklies"] },
+  // 212 matched in stock of 259 read
+  { key: "tonkatomstcgstation", name: "TonkaTom's TCG Station", base: "https://tonkatomstcgstation.ca", country: "CA", collections: ["one-piece-singles","one-piece-sealed"] },
+  // 54 matched in stock of 2382 read
+  { key: "yumecards", name: "Yume Cards Inc.", base: "https://www.yumecards.ca", country: "CA", collections: ["one-piece-single"] },
+  // 39 matched in stock of 90 read
+  { key: "remicardtrader", name: "Rémi Card Trader", base: "https://remicardtrader.ca", country: "CA", collections: ["one-piece","precommande-one-piece"] },
+  // 38 matched in stock of 41 read
+  { key: "criticalhitgaminglounge", name: "Critical Hit Gaming Lounge", base: "https://criticalhitgaminglounge.com", country: "CA", collections: ["one-piece-singles","one-piece-sealed","one-piece-preorders"] },
+  // 32 matched in stock of 65 read
+  { key: "tcgandgames", name: "TCG and Games", base: "https://tcgandgames.com", country: "CA", collections: ["one-piece-singles","one-piece-booster-boxes-packs","one-piece-pre-orders","one-piece-starter-deck"] },
+  // 32 matched in stock of 157 read
+  { key: "hkcollectibles", name: "HK Collectibles", base: "https://hkcollectibles.ca", country: "CA", collections: ["one-piece-1","one-piece-set","one-piece-double-pack","one-piece-booster-pack"] },
+  // 25 matched in stock of 94 read
+  { key: "collectorsavenue", name: "Collector's Avenue", base: "https://collectorsavenue.com", country: "CA", collections: ["one-piece"] },
+  // 3379 matched in stock of 4187 read
+  { key: "cartespokemon", name: "Cartes Pokémon", base: "https://cartespokemon.com", country: "EU", collections: ["cartes-one-piece","display-one-piece","booster-one-piece","one-piece"] },
+  // 2047 matched in stock of 3386 read
+  { key: "cardsbeyond", name: "Cards Beyond", base: "https://cardsbeyond.com", country: "EU", collections: ["one-piece-single","promos-one-piece","premium-bandai-products-one-piece","one-piece-products"] },
+  // 517 matched in stock of 1057 read
+  { key: "sunnystore", name: "Sunnystore", base: "https://sunnystore.es", country: "EU", collections: ["one-piece","cartas-one-piece-ingles","chino-one-piece"] },
+  // 465 matched in stock of 912 read
+  { key: "lakecards", name: "Lake Cards", base: "https://lakecards.de", country: "EU", collections: ["one-piece-single","one-piece-display","one-piece-starter-decks","promos-one-piece"] },
+  // 158 matched in stock of 190 read
+  { key: "mrcollect", name: "Poke Planet (Mr Collect)", base: "https://mr-collect.de", country: "EU", collections: ["one-piece","mc-cards-one-piece"] },
+  // 41 matched in stock of 257 read
+  { key: "nortontcg", name: "TCG Group", base: "https://nortontcg.co.uk", country: "UK", collections: ["one-piece-single","one-piece-products","promos-one-piece","premium-bandai-products-one-piece"] },
+  // 796 matched in stock of 2566 read
+  { key: "retrogamingofdenver", name: "Retro Gaming of Denver", base: "https://retrogamingofdenver.com", country: "US", collections: ["one-piece-single-cards","one-piece-trading-cards"] },
+  // 540 matched in stock of 562 read
+  { key: "rocketcitytoys", name: "Rocket City Toys", base: "https://rocketcitytoys.com", country: "US", collections: ["one-piece-singles","one-piece-singles-copy","one-piece"] },
+  // 65 matched in stock of 66 read
+  { key: "cardsnmo", name: "Cards N MO", base: "https://cardsnmo.com", country: "US", collections: ["one-piece"] },
+  // 41 matched in stock of 192 read
+  { key: "doubleinfinitygaming", name: "Double Infinity Gaming", base: "https://doubleinfinitygaming.com", country: "US", collections: ["one-piece","one-piece-new-and-hot"] },
+  // 33 matched in stock of 434 read
+  { key: "collectorstore", name: "Collector Store", base: "https://collectorstore.com", country: "US", collections: ["games-one-piece","one-piece-card","break-one-piece"] },
+  // 33 matched in stock of 168 read
+  { key: "holohorsegames", name: "Holo Horse Games LLC", base: "https://holohorsegames.com", country: "US", collections: ["one-piece-card-game-singles","one-piece-card-game"] },
+  // 30 matched in stock of 115 read
+  { key: "cashcardsunlimited", name: "Cash Cards Unlimited", base: "https://cashcardsunlimited.com", country: "US", collections: ["one-piece-singles-1","one-piece-singles","one-piece","one-piece-1"] },
+  // 27 matched in stock of 280 read
+  { key: "cardpopusa", name: "CARDPOPUSA", base: "https://cardpopusa.com", country: "US", collections: ["one-piece"] },
+  // 21 matched in stock of 133 read
+  { key: "tcghobby", name: "TCG Hobby", base: "https://www.tcghobby.com", country: "US", collections: ["one-piece-single-cards","one-piece","one-piece-booster-box","one-piece-cases"] },
+  // 21 matched in stock of 112 read
+  { key: "collectorsemporium", name: "Collectors Emporium NY", base: "https://collectorsemporium.com", country: "US", collections: ["one-piece","one-piece-tcg","one-piece-booster-box","one-piece-starter-deck"] },
+  // 20 matched in stock of 36 read
+  { key: "commonlands", name: "Common Lands", base: "https://common-lands.com", country: "US", collections: ["one-piece","one-piece-homepage"] },
+  // 20 matched in stock of 32 read
+  { key: "mantisgamestudio", name: "Mantis Game Studio", base: "https://mantisgamestudio.com", country: "US", collections: ["tcgs-other-one-piece"] },
+  // From the official Riftbound store registry (UVS), same probe and bar.
+  // 32 matched in stock of 101 read
+  { key: "heartforcards", name: "Heartforcards", base: "https://heartforcards.com", country: "EU", collections: ["one-piece-displays-englisch","englisch-onepiece","one-piece-1","one-piece-displays-und-boxen"] },
+  // 660 matched in stock of 1290 read
+  { key: "zillerstore", name: "Zillerstore", base: "https://zillerstore.it", country: "EU", collections: ["one-piece-card-game","box-one-piece","edizioni-speciali-one-piece","one-piece-anniversary-bundle"] },
+  // 75 matched in stock of 80 read
+  { key: "asgardkeep", name: "Asgard Keep", base: "https://asgardkeep.com", country: "US", collections: ["one-piece-singles","one-piece"] },
+  // 70 matched in stock of 126 read
+  { key: "jandjgamingfactory", name: "J and J Gaming Factory", base: "https://jandjgamingfactory.com", country: "US", collections: ["one-piece-singles","one-piece","one-piece-sealed"] },
+  // 139 matched in stock of 141 read
+  { key: "thesocialboardhq", name: "The Social Board", base: "https://thesocialboardhq.com", country: "US", collections: ["one-piece-singles"] },
+  // 22 matched in stock of 443 read
+  { key: "arcardia", name: "Arcardia Collectibles & Exchange", base: "https://arcardia.ca", country: "CA", collections: ["one-piece-singles","one-piece"] },
+  // 23 matched in stock of 76 read
+  { key: "zone151", name: "Zone 151", base: "https://zone151.ca", country: "CA", collections: ["one-piece-collection-boxes","one-piece-collection-boxes-copy","one-piece-booster-boxes","one-piece1"] },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */
