@@ -1,0 +1,1652 @@
+{
+  "market": "UK",
+  "generatedAt": "2026-10-28T13:36:58.025Z",
+  "addresses": [
+    {
+      "id": "lon",
+      "label": "London",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "SW1A 1AA",
+      "city": "London"
+    },
+    {
+      "id": "man",
+      "label": "Manchester",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "M1 1AE",
+      "city": "Manchester"
+    },
+    {
+      "id": "edi",
+      "label": "Edinburgh",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "EH1 1YZ",
+      "city": "Edinburgh"
+    },
+    {
+      "id": "bfs",
+      "label": "Belfast",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "zip": "BT1 1AA",
+      "city": "Belfast"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "count",
+      "count": 1
+    },
+    {
+      "id": "S10",
+      "kind": "count",
+      "count": 10
+    },
+    {
+      "id": "V20",
+      "kind": "value",
+      "targetCents": 2000
+    },
+    {
+      "id": "V50",
+      "kind": "value",
+      "targetCents": 5000
+    },
+    {
+      "id": "V100",
+      "kind": "value",
+      "targetCents": 10000
+    },
+    {
+      "id": "V150",
+      "kind": "value",
+      "targetCents": 15000
+    }
+  ],
+  "stores": [
+    {
+      "key": "nortontcg",
+      "name": "TCG Group",
+      "market": "UK",
+      "currency": "GBP",
+      "measuredAt": "2026-10-28T13:36:19.489Z",
+      "base": "https://nortontcg.co.uk",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "one-piece-single"
+      ],
+      "candidates": 59,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "lon",
+          "label": "London",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "SW1A 1AA",
+          "city": "London"
+        },
+        {
+          "id": "man",
+          "label": "Manchester",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "M1 1AE",
+          "city": "Manchester"
+        },
+        {
+          "id": "edi",
+          "label": "Edinburgh",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "EH1 1YZ",
+          "city": "Edinburgh"
+        },
+        {
+          "id": "bfs",
+          "label": "Belfast",
+          "country": "United Kingdom",
+          "countryCode": "GB",
+          "zip": "BT1 1AA",
+          "city": "Belfast"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 60,
+          "items": 1,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 54978376008018,
+              "quantity": 1,
+              "priceCents": 60,
+              "title": "Monkey.D.Luffy (OP04-090) (V.1) - Kingdoms of Intrigue (Super Rare) [OP04-090] - English /"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 1311,
+          "items": 10,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Large Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Large Letter",
+                  "cents": 600,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Large Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Large Letter",
+                  "cents": 600,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Large Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Large Letter",
+                  "cents": 600,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Large Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Large Letter",
+                  "cents": 500,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Large Letter",
+                  "cents": 600,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 53370814398802,
+              "quantity": 1,
+              "priceCents": 198,
+              "title": "T-Bone (EB01-049) - Judge Promos (Rare) [JDG-EB01-049] - English / Near Mint / Normal"
+            },
+            {
+              "id": 53370485834066,
+              "quantity": 1,
+              "priceCents": 198,
+              "title": "Vinsmoke Ichiji (OP06-060) - Promos: Wings of the Captain (Common) [OP06P-060] - English /"
+            },
+            {
+              "id": 54933713224018,
+              "quantity": 1,
+              "priceCents": 188,
+              "title": "DON!! (Shanks DP-12) - One Piece Products (DON!!) - English / Near Mint / Normal"
+            },
+            {
+              "id": 54603469029714,
+              "quantity": 1,
+              "priceCents": 167,
+              "title": "Killer (OP14-005) (V.1) - Unnumbered Promos (Common) [UP-OP14-005] - English / Near Mint /"
+            },
+            {
+              "id": 53461128937810,
+              "quantity": 1,
+              "priceCents": 152,
+              "title": "Sabo (P-044) - Promos (Promo) [P-044] - English / Near Mint / Normal"
+            },
+            {
+              "id": 53370254852434,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Nami (OP08-106) (V.1) - Two Legends (Super Rare) [OP08-106] - English / Near Mint / Normal"
+            },
+            {
+              "id": 54978376270162,
+              "quantity": 1,
+              "priceCents": 94,
+              "title": "Eustass&quot;Captain&quot;Kid (OP14-014) (V.2) - Unnumbered Promos (Rare) [UP-OP14-014] - "
+            },
+            {
+              "id": 54978376106322,
+              "quantity": 1,
+              "priceCents": 85,
+              "title": "Roronoa Zoro (OP01-025) - Ultra Deck: The Three Captains (Super Rare) [ST-10-OP01-025] - E"
+            },
+            {
+              "id": 53370081673554,
+              "quantity": 1,
+              "priceCents": 70,
+              "title": "Monkey.D.Luffy (OP04-090) (V.1) - Kingdoms of Intrigue (Super Rare) [OP04-090] - English /"
+            },
+            {
+              "id": 54978376008018,
+              "quantity": 1,
+              "priceCents": 60,
+              "title": "Monkey.D.Luffy (OP04-090) (V.1) - Kingdoms of Intrigue (Super Rare) [OP04-090] - English /"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2099,
+          "items": 1,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 54100767506770,
+              "quantity": 1,
+              "priceCents": 2099,
+              "title": "Boa Hancock (EB03-026) (V.2) - Heroines Edition (Alternate Art) [EB03-EB03-026] - English "
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5038,
+          "items": 2,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 54137128583506,
+              "quantity": 1,
+              "priceCents": 4698,
+              "title": "Gol.D.Roger (OP09-118) (V.2) - Emperors in the New World (Alternate Art) [OP09-118] - Engl"
+            },
+            {
+              "id": 54100767539538,
+              "quantity": 1,
+              "priceCents": 340,
+              "title": "Izo (OP01-033) (V.4) - The Best (Alternate Art) [PRB01-OP01-033] - English / Excellent / N"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10055,
+          "items": 3,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 54125895647570,
+              "quantity": 1,
+              "priceCents": 7499,
+              "title": "Rebecca (OP05-091) - Wings of the Captain (Special Rare) [OP06-OP05-091] - English / Near "
+            },
+            {
+              "id": 54800548790610,
+              "quantity": 1,
+              "priceCents": 2496,
+              "title": "Monkey.D.Luffy (OP17-093) (V.2) - The World’s Strongest Warriors (Alternate Art) [OP17-093"
+            },
+            {
+              "id": 54978376008018,
+              "quantity": 1,
+              "priceCents": 60,
+              "title": "Monkey.D.Luffy (OP04-090) (V.1) - Kingdoms of Intrigue (Super Rare) [OP04-090] - English /"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15999,
+          "items": 1,
+          "cartCurrency": "GBP",
+          "byAddress": {
+            "lon": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "man": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "edi": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "bfs": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Free Royal Mail 48 (orders £50+)",
+                  "cents": 0,
+                  "currency": "GBP",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Letter",
+                  "cents": 200,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "untracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 2nd Class Signed For Letter",
+                  "cents": 300,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Royal Mail 1st Class Signed For Letter",
+                  "cents": 400,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "Special Delivery Guaranteed by 1pm - £750",
+                  "cents": 850,
+                  "currency": "GBP",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 54634713514322,
+              "quantity": 1,
+              "priceCents": 15999,
+              "title": "Roronoa Zoro (OP13-037) - Adventure on Kami’s Island (Treasure Rare) [OP15-OP13-037] - Eng"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "GBP",
+        "byAddress": {
+          "lon": {
+            "oneCardCents": 200,
+            "oneCardName": "Royal Mail 2nd Class Letter",
+            "oneCardTrackedCents": 300,
+            "freeAtCents": 5038,
+            "paidAtCents": 2099,
+            "untrackedGoneAt": null
+          },
+          "man": {
+            "oneCardCents": 200,
+            "oneCardName": "Royal Mail 2nd Class Letter",
+            "oneCardTrackedCents": 300,
+            "freeAtCents": 5038,
+            "paidAtCents": 2099,
+            "untrackedGoneAt": null
+          },
+          "edi": {
+            "oneCardCents": 200,
+            "oneCardName": "Royal Mail 2nd Class Letter",
+            "oneCardTrackedCents": 300,
+            "freeAtCents": 5038,
+            "paidAtCents": 2099,
+            "untrackedGoneAt": null
+          },
+          "bfs": {
+            "oneCardCents": 200,
+            "oneCardName": "Royal Mail 2nd Class Letter",
+            "oneCardTrackedCents": 300,
+            "freeAtCents": 5038,
+            "paidAtCents": 2099,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": false,
+        "oneCardMinCents": 200,
+        "oneCardMaxCents": 200
+      }
+    }
+  ]
+}

@@ -1,0 +1,3353 @@
+{
+  "market": "EU",
+  "generatedAt": "2026-10-28T13:37:08.235Z",
+  "addresses": [
+    {
+      "id": "es",
+      "label": "Madrid",
+      "country": "Spain",
+      "countryCode": "ES",
+      "province": "M",
+      "zip": "28001",
+      "city": "Madrid"
+    },
+    {
+      "id": "de",
+      "label": "Berlin",
+      "country": "Germany",
+      "countryCode": "DE",
+      "zip": "10115",
+      "city": "Berlin"
+    },
+    {
+      "id": "fr",
+      "label": "Paris",
+      "country": "France",
+      "countryCode": "FR",
+      "zip": "75001",
+      "city": "Paris"
+    },
+    {
+      "id": "nl",
+      "label": "Amsterdam",
+      "country": "Netherlands",
+      "countryCode": "NL",
+      "zip": "1012 AB",
+      "city": "Amsterdam"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "count",
+      "count": 1
+    },
+    {
+      "id": "S10",
+      "kind": "count",
+      "count": 10
+    },
+    {
+      "id": "V20",
+      "kind": "value",
+      "targetCents": 2000
+    },
+    {
+      "id": "V50",
+      "kind": "value",
+      "targetCents": 5000
+    },
+    {
+      "id": "V100",
+      "kind": "value",
+      "targetCents": 10000
+    },
+    {
+      "id": "V150",
+      "kind": "value",
+      "targetCents": 15000
+    }
+  ],
+  "stores": [
+    {
+      "key": "cartespokemon",
+      "name": "Cartes Pokémon",
+      "market": "EU",
+      "currency": "EUR",
+      "measuredAt": "2026-10-28T13:36:23.931Z",
+      "base": "https://cartespokemon.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "cartes-one-piece"
+      ],
+      "candidates": 462,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "es",
+          "label": "Madrid",
+          "country": "Spain",
+          "countryCode": "ES",
+          "province": "M",
+          "zip": "28001",
+          "city": "Madrid"
+        },
+        {
+          "id": "de",
+          "label": "Berlin",
+          "country": "Germany",
+          "countryCode": "DE",
+          "zip": "10115",
+          "city": "Berlin"
+        },
+        {
+          "id": "fr",
+          "label": "Paris",
+          "country": "France",
+          "countryCode": "FR",
+          "zip": "75001",
+          "city": "Paris"
+        },
+        {
+          "id": "nl",
+          "label": "Amsterdam",
+          "country": "Netherlands",
+          "countryCode": "NL",
+          "zip": "1012 AB",
+          "city": "Amsterdam"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 175,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46384050897150,
+              "quantity": 1,
+              "priceCents": 175,
+              "title": "Carte One Piece Two Legends OP08-112 : S-Snake - ⭐ Protection Top-Loader ⭐"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 2010,
+          "items": 10,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46363493662974,
+              "quantity": 1,
+              "priceCents": 275,
+              "title": "Carte One Piece Romance Dawn OP01-024 : Monkey D. Luffy - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 47224397398270,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Carrying on His Will OP13-064 : Gol.D.Roger - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46384178954494,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece  Awakening Of The New Era OP05-093 : Rob Lucci - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46384134226174,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece  Awakening Of The New Era OP05-069 : Trafalgar Law - ⭐ Protection Top-Load"
+            },
+            {
+              "id": 46363477967102,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Romance Dawn OP01-070 : Dracul Mihawk - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46363473412350,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Romance Dawn OP01-094 : Kaido - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46363473019134,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Romance Dawn OP01-096 : King - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46363461812478,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Paramount War OP02-030 : Kozuki Oden - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46363209826558,
+              "quantity": 1,
+              "priceCents": 195,
+              "title": "Carte One Piece Royal Blood OP10-095 : Roronoa Zoro - ⭐ Protection Top-Loader ⭐"
+            },
+            {
+              "id": 46384050897150,
+              "quantity": 1,
+              "priceCents": 175,
+              "title": "Carte One Piece Two Legends OP08-112 : S-Snake - ⭐ Protection Top-Loader ⭐"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2035,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46363454931198,
+              "quantity": 1,
+              "priceCents": 2035,
+              "title": "Carte One Piece Paramount War OP02-071 : Magellan (Parallèle) - ⭐ Protection Top-Loader ⭐"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5035,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 48485780259070,
+              "quantity": 1,
+              "priceCents": 5035,
+              "title": "Carte Promo One Piece - Natsucomi 2026 - Luffy - ⭐ Protection Top-Loader ⭐"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10745,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46384176464126,
+              "quantity": 1,
+              "priceCents": 10745,
+              "title": "Carte One Piece  Awakening Of The New Era [op 05] OP01-121 : Yamato (Parallèle Spéciale) -"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15025,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 660,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 2190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1190,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 470,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile Economy",
+                  "cents": 990,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1390,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+                  "cents": 460,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                },
+                {
+                  "name": "🇪🇺 Direct Europe - Livraison à Domicile",
+                  "cents": 1090,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 46363436548350,
+              "quantity": 1,
+              "priceCents": 13870,
+              "title": "Carte One Piece Mighty Enemies OP03-040 : Nami (Parallèle) - 🔒 Protection Magnetic Loader"
+            },
+            {
+              "id": 46363381956862,
+              "quantity": 1,
+              "priceCents": 1155,
+              "title": "Carte One Piece Kingdoms Of Intrigue OP04-104 : Sanji (Parallèle) - ⭐ Protection Top-Loade"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "EUR",
+        "byAddress": {
+          "es": {
+            "oneCardCents": 660,
+            "oneCardName": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15025,
+            "untrackedGoneAt": null
+          },
+          "de": {
+            "oneCardCents": 1190,
+            "oneCardName": "🇪🇺 Direct Europe - Livraison à Domicile",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15025,
+            "untrackedGoneAt": null
+          },
+          "fr": {
+            "oneCardCents": 470,
+            "oneCardName": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15025,
+            "untrackedGoneAt": null
+          },
+          "nl": {
+            "oneCardCents": 460,
+            "oneCardName": "🇪🇺 Direct Europe - Mondial Relay Livraison en point de retrait",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15025,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 460,
+        "oneCardMaxCents": 1190
+      }
+    },
+    {
+      "key": "cardsbeyond",
+      "name": "Cards Beyond",
+      "market": "EU",
+      "currency": "EUR",
+      "measuredAt": "2026-10-28T13:36:24.050Z",
+      "base": "https://cardsbeyond.com",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "one-piece-single"
+      ],
+      "candidates": 208,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "es",
+          "label": "Madrid",
+          "country": "Spain",
+          "countryCode": "ES",
+          "province": "M",
+          "zip": "28001",
+          "city": "Madrid"
+        },
+        {
+          "id": "de",
+          "label": "Berlin",
+          "country": "Germany",
+          "countryCode": "DE",
+          "zip": "10115",
+          "city": "Berlin"
+        },
+        {
+          "id": "fr",
+          "label": "Paris",
+          "country": "France",
+          "countryCode": "FR",
+          "zip": "75001",
+          "city": "Paris"
+        },
+        {
+          "id": "nl",
+          "label": "Amsterdam",
+          "country": "Netherlands",
+          "countryCode": "NL",
+          "zip": "1012 AB",
+          "city": "Amsterdam"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 95,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56389353570683,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Magellan (OP16-074) - The Time of Battle (Common) [OP16-074] - English / Near Mint / Norma"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 950,
+          "items": 10,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56389356585339,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Marshall.D.Teach (OP16-080) (V.1) - The Time of Battle (Leader) [OP16-080] - English / Nea"
+            },
+            {
+              "id": 56389356552571,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Yamato (OP16-079) (V.1) - The Time of Battle (Leader) [OP16-079] - English / Near Mint / N"
+            },
+            {
+              "id": 56389356454267,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Black Hole (OP16-117) - The Time of Battle (Common) [OP16-117] - English / Near Mint / Nor"
+            },
+            {
+              "id": 56389356388731,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Boa Hancock (OP16-112) - The Time of Battle (Common) [OP16-112] - English / Near Mint / No"
+            },
+            {
+              "id": 56389356355963,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Boa Sandersonia (OP16-111) - The Time of Battle (Common) [OP16-111] - English / Near Mint "
+            },
+            {
+              "id": 56389356323195,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Jesus Burgess (OP16-107) - The Time of Battle (Common) [OP16-107] - English / Near Mint / "
+            },
+            {
+              "id": 56389356290427,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Gecko Moria (OP16-105) - The Time of Battle (Common) [OP16-105] - English / Near Mint / No"
+            },
+            {
+              "id": 56389356224891,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Shiryu (OP16-108) (V.1) - The Time of Battle (Super Rare) [OP16-108] - English / Near Mint"
+            },
+            {
+              "id": 56389353636219,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Monkey.D.Garp (OP16-075) - The Time of Battle (Common) [OP16-075] - English / Near Mint / "
+            },
+            {
+              "id": 56389353570683,
+              "quantity": 1,
+              "priceCents": 95,
+              "title": "Magellan (OP16-074) - The Time of Battle (Common) [OP16-074] - English / Near Mint / Norma"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2090,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56499160678779,
+              "quantity": 1,
+              "priceCents": 1595,
+              "title": "Electrical Luna (OP08-036) (V.1) - Unnumbered Promos (Rare) [UP-OP08-036] - English / Near"
+            },
+            {
+              "id": 56499118965115,
+              "quantity": 1,
+              "priceCents": 495,
+              "title": "Ice Time (EB04-028) - Premium Bandai Products (Rare) [PB-XX-EB04-028] - English / Near Min"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5195,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56498999984507,
+              "quantity": 1,
+              "priceCents": 5195,
+              "title": "Don!! (Elbaph Luffy) - One Piece Products (DON!!) - English / Near Mint / Normal"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10295,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56498992546171,
+              "quantity": 1,
+              "priceCents": 10295,
+              "title": "Monkey.D.Luffy (P-135) (V.1) - Special Tournament Promos (Promo) [STP-135] - English / Nea"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15395,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1029,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 879,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1509,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Packeta (5kg)",
+                  "cents": 1559,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56499031507323,
+              "quantity": 1,
+              "priceCents": 15395,
+              "title": "Nami (OP11-054) - Unnumbered Promos (Super Rare) [UP-OP11-054] - English / Near Mint / Nor"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "EUR",
+        "byAddress": {
+          "es": {
+            "oneCardCents": 1029,
+            "oneCardName": "Packeta (5kg)",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15395,
+            "untrackedGoneAt": null
+          },
+          "de": {
+            "oneCardCents": 879,
+            "oneCardName": "Packeta (5kg)",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15395,
+            "untrackedGoneAt": null
+          },
+          "fr": {
+            "oneCardCents": 1509,
+            "oneCardName": "Packeta (5kg)",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15395,
+            "untrackedGoneAt": null
+          },
+          "nl": {
+            "oneCardCents": 1559,
+            "oneCardName": "Packeta (5kg)",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15395,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 879,
+        "oneCardMaxCents": 1559
+      }
+    },
+    {
+      "key": "sunnystore",
+      "name": "Sunnystore",
+      "market": "EU",
+      "currency": "EUR",
+      "measuredAt": "2026-10-28T13:36:24.270Z",
+      "base": "https://sunnystore.es",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "one-piece"
+      ],
+      "candidates": 93,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "es",
+          "label": "Madrid",
+          "country": "Spain",
+          "countryCode": "ES",
+          "province": "M",
+          "zip": "28001",
+          "city": "Madrid"
+        },
+        {
+          "id": "de",
+          "label": "Berlin",
+          "country": "Germany",
+          "countryCode": "DE",
+          "zip": "10115",
+          "city": "Berlin"
+        },
+        {
+          "id": "fr",
+          "label": "Paris",
+          "country": "France",
+          "countryCode": "FR",
+          "zip": "75001",
+          "city": "Paris"
+        },
+        {
+          "id": "nl",
+          "label": "Amsterdam",
+          "country": "Netherlands",
+          "countryCode": "NL",
+          "zip": "1012 AB",
+          "city": "Amsterdam"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 20,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47497186967849,
+              "quantity": 1,
+              "priceCents": 20,
+              "title": "ONE PIECE CARD GAME OP04-009 SUPER SPOT-BILLED DUCK TROOPS UC &quot;KINGDOMS OF THE INTRIG"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 280,
+          "items": 10,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 47697878974761,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-021 C VIOLA &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot;"
+            },
+            {
+              "id": 47497224651049,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-018 UC ENCHANTING VERTIGO DANCE &quot;KINGDOMS OF THE INTRIGUE JA"
+            },
+            {
+              "id": 47497223471401,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-017 C HAPPINESS PUNCH &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot"
+            },
+            {
+              "id": 47497221079337,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-016 R BAD MANNERS KICK COURSE &quot;KINGDOMS OF THE INTRIGUE JAPO"
+            },
+            {
+              "id": 47497185722665,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-008 CHAKA R &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot;"
+            },
+            {
+              "id": 47497183625513,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-007 SANJI C &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot;"
+            },
+            {
+              "id": 47497180512553,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-006 KOZA C &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot;"
+            },
+            {
+              "id": 47497163505961,
+              "quantity": 1,
+              "priceCents": 30,
+              "title": "ONE PIECE CARD GAME OP04-003 USOPP UC &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot;"
+            },
+            {
+              "id": 47497190801705,
+              "quantity": 1,
+              "priceCents": 20,
+              "title": "ONE PIECE CARD GAME OP04-012 NEFELTARI COBRA C &quot;KINGDOMS OF THE INTRIGUE JAPONÉS&quot"
+            },
+            {
+              "id": 47497186967849,
+              "quantity": 1,
+              "priceCents": 20,
+              "title": "ONE PIECE CARD GAME OP04-009 SUPER SPOT-BILLED DUCK TROOPS UC &quot;KINGDOMS OF THE INTRIG"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2010,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56787515965826,
+              "quantity": 1,
+              "priceCents": 1990,
+              "title": "PROMO LUFFY P-159 SHONEN JUMP 33 2026 STANDARD VERSION"
+            },
+            {
+              "id": 47497186967849,
+              "quantity": 1,
+              "priceCents": 20,
+              "title": "ONE PIECE CARD GAME OP04-009 SUPER SPOT-BILLED DUCK TROOPS UC &quot;KINGDOMS OF THE INTRIG"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5490,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56519092109698,
+              "quantity": 1,
+              "priceCents": 5490,
+              "title": "ONE PIECE OPC01 &quot;ROMANCE DAWN&quot; CAJA CHINO (OPC-01 CN)"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10580,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56519059210626,
+              "quantity": 1,
+              "priceCents": 5990,
+              "title": "ONE PIECE CARD GAME BASE SHOP LIMITED CARD COLLECTION VOL. 1 JAPONÉS"
+            },
+            {
+              "id": 56739307651458,
+              "quantity": 1,
+              "priceCents": 4590,
+              "title": "METAKIRA NATSUCOMI SUMMER COMIC 2026 LIMITED PROMOS - LUFFY NATSUCOMI"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 16080,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Correos Express",
+                  "cents": 475,
+                  "currency": "EUR",
+                  "service": "tracked",
+                  "express": true,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Exprés Internacional",
+                  "cents": 1500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 56880867115394,
+              "quantity": 1,
+              "priceCents": 11490,
+              "title": "CAJA ONE PIECE OP17 - THE WORLD&#39;S STRONGEST WARRIORS (JAPONÉS)"
+            },
+            {
+              "id": 56739307651458,
+              "quantity": 1,
+              "priceCents": 4590,
+              "title": "METAKIRA NATSUCOMI SUMMER COMIC 2026 LIMITED PROMOS - LUFFY NATSUCOMI"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "EUR",
+        "byAddress": {
+          "es": {
+            "oneCardCents": 475,
+            "oneCardName": "Correos Express",
+            "oneCardTrackedCents": 475,
+            "freeAtCents": null,
+            "paidAtCents": 16080,
+            "untrackedGoneAt": null
+          },
+          "de": {
+            "oneCardCents": 1500,
+            "oneCardName": "Exprés Internacional",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 16080,
+            "untrackedGoneAt": null
+          },
+          "fr": {
+            "oneCardCents": 1500,
+            "oneCardName": "Exprés Internacional",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 16080,
+            "untrackedGoneAt": null
+          },
+          "nl": {
+            "oneCardCents": 1500,
+            "oneCardName": "Exprés Internacional",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 16080,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 475,
+        "oneCardMaxCents": 1500
+      }
+    },
+    {
+      "key": "lakecards",
+      "name": "Lake Cards",
+      "market": "EU",
+      "currency": "EUR",
+      "measuredAt": "2026-10-28T13:36:24.115Z",
+      "base": "https://lakecards.de",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "one-piece-single"
+      ],
+      "candidates": 128,
+      "requests": 40,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "es",
+          "label": "Madrid",
+          "country": "Spain",
+          "countryCode": "ES",
+          "province": "M",
+          "zip": "28001",
+          "city": "Madrid"
+        },
+        {
+          "id": "de",
+          "label": "Berlin",
+          "country": "Germany",
+          "countryCode": "DE",
+          "zip": "10115",
+          "city": "Berlin"
+        },
+        {
+          "id": "fr",
+          "label": "Paris",
+          "country": "France",
+          "countryCode": "FR",
+          "zip": "75001",
+          "city": "Paris"
+        },
+        {
+          "id": "nl",
+          "label": "Amsterdam",
+          "country": "Netherlands",
+          "countryCode": "NL",
+          "zip": "1012 AB",
+          "city": "Amsterdam"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 99,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58784101368143,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Kikunojo (EB04-012) - Egghead Crisis (Asia Region Legal) (Super Rare) [EB04-JP-012] - Japa"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 950,
+          "items": 10,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58784104055119,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Sakazuki (OP16-065) - The Time of Battle (Super Rare) [OP16-065] - Englisch / Near Mint / "
+            },
+            {
+              "id": 58784103858511,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Enel (OP15-060) - Adventure on Kami’s Island (Super Rare) [OP15-060] - Englisch / Near Min"
+            },
+            {
+              "id": 58784103661903,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Sabo (OP15-046) - Adventure on Kami’s Island (Super Rare) [OP15-046] - Englisch / Near Min"
+            },
+            {
+              "id": 58784103530831,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Krieg (OP15-008) - Adventure on Kami’s Island (Super Rare) [OP15-008] - Englisch / Near Mi"
+            },
+            {
+              "id": 58784103432527,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Gin (OP15-007) - Adventure on Kami’s Island (Super Rare) [OP15-007] - Englisch / Near Mint"
+            },
+            {
+              "id": 58784103301455,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Koby (EB04-044) - Adventure on Kami’s Island (Super Rare) [OP15-EB04-044] - Englisch / Nea"
+            },
+            {
+              "id": 58784103104847,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Perona (EB03-045) - Heroines Edition (Super Rare) [EB03-045] - Englisch / Near Mint / Regu"
+            },
+            {
+              "id": 58784102908239,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Boa Hancock (EB03-026) - Heroines Edition (Super Rare) [EB03-EB03-026] - Englisch / Near M"
+            },
+            {
+              "id": 58784101433679,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Foxy (EB04-036) - Egghead Crisis (Asia Region Legal) (Super Rare) [EB04-JP-036] - Japanisc"
+            },
+            {
+              "id": 58784101368143,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Kikunojo (EB04-012) - Egghead Crisis (Asia Region Legal) (Super Rare) [EB04-JP-012] - Japa"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2098,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58409935601999,
+              "quantity": 1,
+              "priceCents": 1999,
+              "title": "Monkey.D.Luffy (P-159) - Promos (Promo) [P-159] - Japanisch / Near Mint / Regulär"
+            },
+            {
+              "id": 58784101368143,
+              "quantity": 1,
+              "priceCents": 99,
+              "title": "Kikunojo (EB04-012) - Egghead Crisis (Asia Region Legal) (Super Rare) [EB04-JP-012] - Japa"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5098,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58216548041039,
+              "quantity": 1,
+              "priceCents": 4499,
+              "title": "Charlotte Katakuri (OP11-062) - A Fist of Divine Speed (Alternate Art) [OP11-062] - Englis"
+            },
+            {
+              "id": 58216548630863,
+              "quantity": 1,
+              "priceCents": 599,
+              "title": "DON!! (OP13 Roger) - Carrying on his Will (DON!!) - Japanisch / Near Mint / Regulär"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10999,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58040910741839,
+              "quantity": 1,
+              "priceCents": 10999,
+              "title": "Jewelry Bonney (EB04-001) - Egghead Crisis (Asia Region Legal) (Alternate Art) [EB04-JP-00"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15498,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 1499,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 58040910741839,
+              "quantity": 1,
+              "priceCents": 10999,
+              "title": "Jewelry Bonney (EB04-001) - Egghead Crisis (Asia Region Legal) (Alternate Art) [EB04-JP-00"
+            },
+            {
+              "id": 58216548041039,
+              "quantity": 1,
+              "priceCents": 4499,
+              "title": "Charlotte Katakuri (OP11-062) - A Fist of Divine Speed (Alternate Art) [OP11-062] - Englis"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "EUR",
+        "byAddress": {
+          "es": {
+            "oneCardCents": 1499,
+            "oneCardName": "Standard",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15498,
+            "untrackedGoneAt": null
+          },
+          "de": {
+            "oneCardCents": 499,
+            "oneCardName": "Standard",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15498,
+            "untrackedGoneAt": null
+          },
+          "fr": {
+            "oneCardCents": 1499,
+            "oneCardName": "Standard",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15498,
+            "untrackedGoneAt": null
+          },
+          "nl": {
+            "oneCardCents": 1499,
+            "oneCardName": "Standard",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15498,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 499,
+        "oneCardMaxCents": 1499
+      }
+    },
+    {
+      "key": "mrcollect",
+      "name": "Poke Planet (Mr Collect)",
+      "market": "EU",
+      "currency": "EUR",
+      "measuredAt": "2026-10-28T13:36:24.069Z",
+      "base": "https://mr-collect.de",
+      "robots": {
+        "cartDisallowed": true
+      },
+      "collections": [
+        "one-piece",
+        "mc-cards-one-piece"
+      ],
+      "candidates": 155,
+      "requests": 41,
+      "rateLimited": 2,
+      "addresses": [
+        {
+          "id": "es",
+          "label": "Madrid",
+          "country": "Spain",
+          "countryCode": "ES",
+          "province": "M",
+          "zip": "28001",
+          "city": "Madrid"
+        },
+        {
+          "id": "de",
+          "label": "Berlin",
+          "country": "Germany",
+          "countryCode": "DE",
+          "zip": "10115",
+          "city": "Berlin"
+        },
+        {
+          "id": "fr",
+          "label": "Paris",
+          "country": "France",
+          "countryCode": "FR",
+          "zip": "75001",
+          "city": "Paris"
+        },
+        {
+          "id": "nl",
+          "label": "Amsterdam",
+          "country": "Netherlands",
+          "countryCode": "NL",
+          "zip": "1012 AB",
+          "city": "Amsterdam"
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S1",
+          "kind": "count",
+          "subtotalCents": 100,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66042568245516,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Adio OP09-023 – Parallel Art – Japanisch – Differenzbesteuerung nach § 25a UStG"
+            }
+          ]
+        },
+        {
+          "id": "S10",
+          "kind": "count",
+          "subtotalCents": 2100,
+          "items": 10,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66042851164428,
+              "quantity": 1,
+              "priceCents": 300,
+              "title": "Donquixote Rosinante OP04-119 – Standard – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042480197900,
+              "quantity": 1,
+              "priceCents": 300,
+              "title": "Diamante OP04-028 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042478493964,
+              "quantity": 1,
+              "priceCents": 300,
+              "title": "Basil Hawkins OP07-029 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66044039102732,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Portgas.D.Ace OP07-119 – Standard – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042852606220,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Jack OP08-084 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042851098892,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Trafalgar Law OP10-119 – Standard – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042849263884,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Kuro OP15-025 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042349781260,
+              "quantity": 1,
+              "priceCents": 200,
+              "title": "Crocodile ST30-010 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042854572300,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Sabo OP07-118 – Standard – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66042568245516,
+              "quantity": 1,
+              "priceCents": 100,
+              "title": "Adio OP09-023 – Parallel Art – Japanisch – Differenzbesteuerung nach § 25a UStG"
+            }
+          ]
+        },
+        {
+          "id": "V20",
+          "kind": "value",
+          "targetCents": 2000,
+          "subtotalCents": 2000,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66042843398412,
+              "quantity": 1,
+              "priceCents": 2000,
+              "title": "Lucy OP15-002 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            }
+          ]
+        },
+        {
+          "id": "V50",
+          "kind": "value",
+          "targetCents": 5000,
+          "subtotalCents": 5000,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66042854473996,
+              "quantity": 1,
+              "priceCents": 5000,
+              "title": "Portgas.D.Ace OP02-013 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            }
+          ]
+        },
+        {
+          "id": "V100",
+          "kind": "value",
+          "targetCents": 10000,
+          "subtotalCents": 10100,
+          "items": 1,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66048475398412,
+              "quantity": 1,
+              "priceCents": 10100,
+              "title": "Sanji · PRB01-001 · Parallel Art · Englisch · Differenzbesteuerung nach §25a UStG - Englis"
+            }
+          ]
+        },
+        {
+          "id": "V150",
+          "kind": "value",
+          "targetCents": 15000,
+          "subtotalCents": 15000,
+          "items": 2,
+          "cartCurrency": "EUR",
+          "byAddress": {
+            "es": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "de": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Standard",
+                  "cents": 690,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "fr": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            },
+            "nl": {
+              "status": "ok",
+              "rates": [
+                {
+                  "name": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+                  "cents": 2500,
+                  "currency": "EUR",
+                  "service": "unknown",
+                  "express": false,
+                  "pickup": false,
+                  "source": "shopify"
+                }
+              ]
+            }
+          },
+          "lines": [
+            {
+              "id": 66044045590796,
+              "quantity": 1,
+              "priceCents": 13500,
+              "title": "Portgas.D.Ace ST15-005 – Special Card – Englisch – Differenzbesteuerung nach § 25a UStG"
+            },
+            {
+              "id": 66043080737036,
+              "quantity": 1,
+              "priceCents": 1500,
+              "title": "X.Drake OP10-114 – Alternate Art – Englisch – Differenzbesteuerung nach § 25a UStG"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "summary": {
+        "currency": "EUR",
+        "byAddress": {
+          "es": {
+            "oneCardCents": 2500,
+            "oneCardName": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15000,
+            "untrackedGoneAt": null
+          },
+          "de": {
+            "oneCardCents": 690,
+            "oneCardName": "Standard",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15000,
+            "untrackedGoneAt": null
+          },
+          "fr": {
+            "oneCardCents": 2500,
+            "oneCardName": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15000,
+            "untrackedGoneAt": null
+          },
+          "nl": {
+            "oneCardCents": 2500,
+            "oneCardName": "Europa – Nicht-EU: zzgl. Zoll / Non-EU: duties extra",
+            "oneCardTrackedCents": null,
+            "freeAtCents": null,
+            "paidAtCents": 15000,
+            "untrackedGoneAt": null
+          }
+        },
+        "zonePriced": true,
+        "oneCardMinCents": 690,
+        "oneCardMaxCents": 2500
+      }
+    }
+  ]
+}
