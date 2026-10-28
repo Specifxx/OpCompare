@@ -88,7 +88,7 @@ export interface SearchCard {
 // sealed rows and "See all results" are left out.
 export function CardSearch({
   size = "md",
-  placeholder = "Search for cards",
+  placeholder = "Search cards or sealed products",
   autoFocus = false,
   onPick,
 }: {
