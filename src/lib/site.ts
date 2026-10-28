@@ -26,22 +26,33 @@ export interface SisterSite {
   compares: string;
   /** Not a card game: the footer and Authors list it, "Compare other TCGs" does not. */
   notTcg?: boolean;
+  /** The site's own search for a query, `{q}` replaced by it (its SearchAction
+   *  target). Card games only: the "Searching another game?" line under /browse
+   *  results (components/FamilySearch.tsx). */
+  search?: string;
 }
 export const SISTER_SITES: readonly SisterSite[] = [
-  { key: "rift", name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound", compares: "Riftbound card prices" },
-  { key: "dex", name: "DexCompare", url: "https://www.dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles" },
-  { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering sealed prices" },
+  { key: "rift", name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound", compares: "Riftbound card prices", search: "https://riftcompare.com/browse?q={q}" },
+  { key: "dex", name: "DexCompare", url: "https://www.dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles", search: "https://www.dexcompare.app/us/sealed?q={q}" },
+  { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering sealed prices", search: "https://mtgcompare.app/us/sealed?q={q}" },
   // The whole family (2026-10-26, DECISIONS.md "One family of sites").
-  { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam Card Game", compares: "Gundam Card Game prices" },
-  { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com", game: "Disney Lorcana", compares: "Disney Lorcana card prices" },
+  { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam Card Game", compares: "Gundam Card Game prices", search: "https://gundamcompare.com/cards?q={q}" },
+  { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com", game: "Disney Lorcana", compares: "Disney Lorcana card prices", search: "https://lorcanacompare.com/cards?q={q}" },
   // Every site links the whole family (2026-10-27, DECISIONS.md): YGO Compare,
   // then the two that are not card games.
-  { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh!", compares: "Yu-Gi-Oh! card prices" },
+  { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh!", compares: "Yu-Gi-Oh! card prices", search: "https://ygocompare.com/cards?q={q}" },
   { key: "cam", name: "CamCompare", url: "https://www.camcompare.app", game: "cameras", compares: "camera and lens prices", notTcg: true },
   { key: "empire", name: "Compare Empire", url: "https://www.compareempire.com", game: "tech", compares: "Australian tech prices", notTcg: true },
 ];
 /** The card-game sites only, for "Compare other TCGs" and the one-per-game line on About. */
 export const TCG_SISTER_SITES = SISTER_SITES.filter((s) => !s.notTcg);
+/** Each card-game sister site's search for `q`, for the "Searching another
+ *  game?" line. A plain link per site: nothing is fetched from them. */
+export function familySearchLinks(q: string): { key: SisterSite["key"]; name: string; game: string; href: string }[] {
+  const term = q.trim().slice(0, 80);
+  if (!term) return [];
+  return TCG_SISTER_SITES.filter((s) => s.search).map((s) => ({ key: s.key, name: s.name, game: s.game, href: s.search!.replace("{q}", encodeURIComponent(term)) }));
+}
 // OP Compare's Discord invite. Unset by default: the header icon, the footer
 // link and the nav entry render only when NEXT_PUBLIC_DISCORD_URL is set, so
 // there is never a dead invite on the page.

@@ -144,3 +144,18 @@ test("the root layout carries one Organization + WebSite node, and the WebSite s
   // No Discord sameAs unless the owner has configured a Discord URL.
   assert.match(src, /DISCORD_URL \? \{ sameAs: \[DISCORD_URL\] \} : \{\}/);
 });
+
+test("searching another game: every card-game sister site's own search, nofollow, under /browse results", async () => {
+  const { familySearchLinks, SISTER_SITES } = await import("../src/lib/site");
+  const links = familySearchLinks("Charizard ex");
+  assert.deepEqual(links.map((l) => l.key), ["rift", "dex", "mtg", "gundam", "lorcana", "ygo"]);
+  for (const l of links) {
+    const site = SISTER_SITES.find((s) => s.key === l.key)!;
+    assert.equal(new URL(l.href).host, new URL(site.url).host, l.href);
+    assert.equal(new URL(l.href).searchParams.get("q"), "Charizard ex", l.href);
+  }
+  assert.deepEqual(familySearchLinks(" "), []);
+  const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+  assert.match(read("src/components/FamilySearch.tsx"), /rel="noopener nofollow"/);
+  assert.match(read("src/app/browse/page.tsx"), /\{q\.q && <FamilySearch q=\{q\.q\}/);
+});
