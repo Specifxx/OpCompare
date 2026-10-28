@@ -520,14 +520,10 @@ const RAW_STORES: StoreInfo[] = [
   { key: "mrcollect", name: "Poke Planet (Mr Collect)", base: "https://mr-collect.de", country: "EU", collections: ["one-piece","mc-cards-one-piece"] },
   // 41 matched in stock of 257 read
   { key: "nortontcg", name: "TCG Group", base: "https://nortontcg.co.uk", country: "UK", collections: ["one-piece-single","one-piece-products","promos-one-piece","premium-bandai-products-one-piece"] },
-  // 2226 matched in stock of 2326 read
-  { key: "cosmicbham", name: "Cosmic Games Birmingham", base: "https://cosmicbham.com", country: "US", collections: ["one-piece-tcg-singles","one-piece-card-game","100-one-piece","one-piece-tcg-legacy-of-the-master"] },
   // 796 matched in stock of 2566 read
   { key: "retrogamingofdenver", name: "Retro Gaming of Denver", base: "https://retrogamingofdenver.com", country: "US", collections: ["one-piece-single-cards","one-piece-trading-cards"] },
   // 540 matched in stock of 562 read
   { key: "rocketcitytoys", name: "Rocket City Toys", base: "https://rocketcitytoys.com", country: "US", collections: ["one-piece-singles","one-piece-singles-copy","one-piece"] },
-  // 210 matched in stock of 210 read
-  { key: "pfcomics", name: "Pulp Fiction Comics & Games", base: "https://pfcomics.com", country: "US", collections: ["one-piece-sealed-1"], sealedOnly: true },
   // 65 matched in stock of 66 read
   { key: "cardsnmo", name: "Cards N MO", base: "https://cardsnmo.com", country: "US", collections: ["one-piece"] },
   // 41 matched in stock of 192 read
@@ -548,6 +544,23 @@ const RAW_STORES: StoreInfo[] = [
   { key: "commonlands", name: "Common Lands", base: "https://common-lands.com", country: "US", collections: ["one-piece","one-piece-homepage"] },
   // 20 matched in stock of 32 read
   { key: "mantisgamestudio", name: "Mantis Game Studio", base: "https://mantisgamestudio.com", country: "US", collections: ["tcgs-other-one-piece"] },
+  // From the official Riftbound store registry (UVS), same probe and bar.
+  // 32 matched in stock of 101 read
+  { key: "heartforcards", name: "Heartforcards", base: "https://heartforcards.com", country: "EU", collections: ["one-piece-displays-englisch","englisch-onepiece","one-piece-1","one-piece-displays-und-boxen"] },
+  // 660 matched in stock of 1290 read
+  { key: "zillerstore", name: "Zillerstore", base: "https://zillerstore.it", country: "EU", collections: ["one-piece-card-game","box-one-piece","edizioni-speciali-one-piece","one-piece-anniversary-bundle"] },
+  // 75 matched in stock of 80 read
+  { key: "asgardkeep", name: "Asgard Keep", base: "https://asgardkeep.com", country: "US", collections: ["one-piece-singles","one-piece"] },
+  // 70 matched in stock of 126 read
+  { key: "jandjgamingfactory", name: "J and J Gaming Factory", base: "https://jandjgamingfactory.com", country: "US", collections: ["one-piece-singles","one-piece","one-piece-sealed"] },
+  // 139 matched in stock of 141 read
+  { key: "thesocialboardhq", name: "The Social Board", base: "https://thesocialboardhq.com", country: "US", collections: ["one-piece-singles"] },
+  // 1000 matched in stock of 2048 read
+  { key: "gameacademia", name: "Game Academia", base: "https://game-academia.com", country: "SG", collections: ["one-piece-card-game-singles-album","one-piece-booster-box","one-piece-card-game-starter-decks","one-piece-card-game-pre-orders"] },
+  // 22 matched in stock of 443 read
+  { key: "arcardia", name: "Arcardia Collectibles & Exchange", base: "https://arcardia.ca", country: "CA", collections: ["one-piece-singles","one-piece"] },
+  // 23 matched in stock of 76 read
+  { key: "zone151", name: "Zone 151", base: "https://zone151.ca", country: "CA", collections: ["one-piece-collection-boxes","one-piece-collection-boxes-copy","one-piece-booster-boxes","one-piece1"] },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */
