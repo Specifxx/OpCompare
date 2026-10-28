@@ -8,16 +8,14 @@ import { NextSetCountdownCard } from "./NextSetCountdownCard";
 import { PreorderLinksLine } from "./PreorderLinksLine";
 import { PartnersStrip } from "./PartnersStrip";
 import { PopularCardsCarousel } from "./PopularCardsCarousel";
-import { ReturnVisitCards } from "./ReturnVisitCards";
 import type { HomeData } from "./home-data";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { ldJson } from "@/lib/jsonld";
 import { upcomingPreorderPages } from "@/lib/preorders";
 import { SITE_URL } from "@/lib/site";
 
-// RiftCompare's HomeSections, in its order: (EbayPicks — the catalogue
-// track's, slotted in through `ebayPicks`), the popular-cards carousel, the
-// return-visit tiles, How it works, "Explore the database" (sets, then
+// The lower half of the homepage: (EbayPicks — the catalogue track's, slotted
+// in through `ebayPicks`), How it works, "Explore the database" (sets, then
 // colours), the next-set line (with the "Pre-orders open" links while a set
 // with a pre-order board is unreleased), reviews (only once there are enough), the
 // account strip or welcome-back band, and the partners strip, plus the
@@ -25,9 +23,26 @@ import { SITE_URL } from "@/lib/site";
 const NEW_DAYS = 45;
 const SET_TILES = 12;
 
-export function HomeSections({ data, storeCount, ebayPicks = null }: { data: HomeData; storeCount: number; ebayPicks?: React.ReactNode }) {
+// MINIMAL SINCE 2026-10-28 (owner: "literally just price comparison"): the
+// popular-cards carousel moved up to sit right under the sealed shelf
+// (HomePopularCards below, placed by the page), and the return-visit tool tiles
+// left the homepage; those tools are in the footer and the ⌘K launcher.
+export function HomePopularCards({ data, storeCount }: { data: HomeData; storeCount: number }) {
+  return (
+    <PopularCardsCarousel
+      popular={data.popular}
+      popularKind={data.popularKind}
+      chaseSetName={data.chaseSetName}
+      movers={data.biggestMovers}
+      recentlyUpdated={data.recentlyUpdated}
+      storeCount={storeCount}
+      storeWord={storeCount === 1 ? "store" : "stores"}
+    />
+  );
+}
+
+export function HomeSections({ data, ebayPicks = null }: { data: HomeData; ebayPicks?: React.ReactNode }) {
   const { cat } = data;
-  const storeWord = storeCount === 1 ? "store" : "stores";
   const now = Date.parse(data.renderedAt);
   const today = data.renderedAt.slice(0, 10);
   const newCutoff = new Date(now - NEW_DAYS * 86_400_000).toISOString().slice(0, 10);
@@ -44,18 +59,6 @@ export function HomeSections({ data, storeCount, ebayPicks = null }: { data: Hom
   return (
     <>
       {ebayPicks}
-      <PopularCardsCarousel
-        popular={data.popular}
-        popularKind={data.popularKind}
-        chaseSetName={data.chaseSetName}
-        movers={data.biggestMovers}
-        recentlyUpdated={data.recentlyUpdated}
-        storeCount={storeCount}
-        storeWord={storeWord}
-      />
-      <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
-        <ReturnVisitCards newestSetCode={data.newestSetCode} />
-      </Reveal>
       <HowItWorks totalCards={cat.cards.length} />
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>

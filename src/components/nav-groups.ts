@@ -126,6 +126,53 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+// THE RAIL AND THE PHONE MENU SHOW ONLY THIS (owner, 2026-10-28: "too much
+// going on the sidebar … make it more minimalistic, so it's literally just
+// price comparison", guides and blog "to the very bottom"). Fourteen links,
+// every one already in NAV_GROUPS above, which stays the full index: the ⌘K
+// launcher, the phone menu's search, the footer site map and /llms.txt still
+// reach every tool, so nothing was deleted, only taken off the permanent rail.
+export const RAIL_GROUPS: NavGroup[] = [
+  {
+    title: "Compare prices",
+    icon: "prices",
+    links: [
+      { href: "/browse", label: "Card prices" },
+      { href: "/sealed", label: "Sealed products" },
+      { href: "/price-guide", label: "Price guide" },
+      { href: "/sets", label: "Sets & card lists" },
+      { href: "/graded", label: "Graded card prices" },
+      { href: "/deck", label: "Price a decklist" },
+    ],
+  },
+  {
+    title: "Market",
+    icon: "deals",
+    links: [
+      { href: "/movers", label: "Weekly movers" },
+      { href: "/tools/deal-finder", label: "Deal Finder" },
+      { href: "/stores", label: "Stores we track" },
+    ],
+  },
+  {
+    title: "Your account",
+    icon: "collection",
+    links: [
+      { href: "/watching", label: "My Watchlist" },
+      { href: "/alerts", label: "Price Alerts" },
+      { href: "/portfolio", label: "My Binder" },
+    ],
+  },
+  {
+    title: "Guides & News",
+    icon: "news",
+    links: [
+      { href: "/guides", label: "Guides" },
+      { href: "/blog", label: "Blog" },
+    ],
+  },
+];
+
 // The header's text links (RiftCompare keeps this export; its Navbar hard-codes
 // the same links in its own markup).
 export const PRIMARY_NAV: { href: string; label: string }[] = [

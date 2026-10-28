@@ -87,7 +87,7 @@ export function CinematicHero({
           </p>
           <div className="relative z-20 mx-auto mt-6 hidden max-w-2xl sm:block">
             <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
-              <CardSearch size="lg" placeholder="Search any One Piece card…" />
+              <CardSearch size="lg" placeholder="Search any One Piece card or sealed product…" />
             </Suspense>
           </div>
           <TrendingChips cards={trendingCards} />

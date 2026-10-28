@@ -3092,3 +3092,23 @@ cards", every site but RiftCompare.
 * TCGplayer Direct reached Australia on 2026-10-07 for Magic, Pokémon and
   Yu-Gi-Oh! singles only, so the strip claims nothing about One Piece shipping
   outside the US ("US marketplace, prices in US$").
+
+## A minimal rail and a price-first homepage — 2026-10-28
+
+**Owner:** "too much going on the sidebar … make it more minimalistic, so it's
+literally just price comparison"; guides and blog "to the very bottom"; Today's
+Top Deals below the sealed products and the most popular cards; and the search
+box must say sealed products are searchable too.
+
+* The desktop rail and the phone menu (unfiltered) render `RAIL_GROUPS`, 14
+  links: Compare prices (cards, sealed, price guide, sets, graded, deck pricer),
+  Market (movers, Deal Finder, stores), Your account (collapsed), and Guides &
+  News last. The rail's "Search features" box is gone with the long list.
+  `NAV_GROUPS` stays the full index: ⌘K, the phone menu's search, the footer
+  site map and /llms.txt still reach every tool, so no page lost its links.
+* Homepage and region homes: hero → sealed shelf → popular cards carousel →
+  Today's Top Deals → eBay chase banner → price-guide callout → the rest, with
+  the guides and blog band (`EditorialHub`) at the very bottom. The return-visit
+  tool tiles left the homepage.
+* Placeholders: the hero says "Search any One Piece card or sealed product…",
+  the header "Search cards or sealed products" (`CardSearch`'s default).
