@@ -3149,3 +3149,14 @@ Owner: on card and sealed pages and the quick views the eBay and TCGplayer strip
 - above the footer's text ads (`FooterMiniChase`) on every page without the full strips, except account, admin and sign-in pages. That copy fetches `/api/chase`, a CDN-cached route (6 h + a day stale), so the root layout never reads a loader, which would cut every page's cache life to the loader's.
 
 Clicks report as `*_mini` retailers (`ebay_chase_mini`, `tcgplayer_strip_mini`) and `chase-mini` / `tcgplayer_mini` sub-ids, so this placement is measured apart.
+
+## 2026-10-29 — Amazon links on sealed pages
+
+The owner: Amazon Associates commissions are coming in on the sister sites; every site should carry Amazon. OP Compare had none.
+One Piece sealed (booster boxes, starter decks, double packs) sells on Amazon, singles barely do, so Amazon goes on sealed pages only:
+an "Also on Amazon US / AU" search under the sealed product's price board (`AmazonCheck`, ascsubtag `oc-<market>-sealed-amazon`) and an
+"Amazon →" button beside eBay in `/sealed`'s marketplace searches (`oc-<market>-sealed-page`). `src/lib/amazon.ts`: Amazon US
+(`AMAZON_US_TAG`, else `AMAZON_ASSOCIATE_TAG`, else `riftcompare-20`, the owner's US account until an `opcompare-20` ID exists),
+Amazon AU (`AMAZON_AU_TAG`, else `compareempire-22`); the UK, Canada and the EU only once `AMAZON_UK_TAG` / `AMAZON_CA_TAG` /
+`AMAZON_DE_TAG` is set (an untagged link earns nothing); never Singapore. No Amazon price, rating or stock (no Product Advertising
+API), never a row of the board, never in alerts or baskets; the Associates statement beside every link and in the footer.

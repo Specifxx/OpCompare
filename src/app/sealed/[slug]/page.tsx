@@ -26,6 +26,7 @@ import {
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { MiniChaseAds } from "@/components/MiniChaseAds";
+import { AmazonCheck } from "@/components/AmazonCheck";
 import { headline } from "@/lib/price";
 import { SealedViewBeacon } from "@/components/SealedViewBeacon";
 import { pageOg } from "@/lib/og/meta";
@@ -252,6 +253,8 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
+          {/* Amazon (lib/amazon.ts): a search on the visitor's Amazon under the board, never a row of it (owner, 2026-10-29). */}
+          <AmazonCheck country={country} name={s.name} slug={s.slug} />
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* TCGplayer's market price: a reference under the comparison, with

@@ -77,7 +77,7 @@ export default async function HomePage() {
           <Link href="/stores" className="text-brand-300 underline-offset-2 hover:underline">
             which stores we track
           </Link>{" "}
-          each have a page of their own. OP Compare is paid for by affiliate commission (the eBay Partner Network and TCGplayer) and Plus and
+          each have a page of their own. OP Compare is paid for by affiliate commission (the eBay Partner Network, TCGplayer and Amazon Associates) and Plus and
           Premium subscriptions, and none of them can buy a store a better place in a comparison. More on{" "}
           <Link href="/about" className="text-brand-300 underline-offset-2 hover:underline">
             who runs OP Compare
