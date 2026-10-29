@@ -35,9 +35,9 @@ const UNTAPPERS = ["OP18-025", "OP18-024", "OP18-028", "OP18-031"];
 
 export const op18GreenLuffy: Post = {
   slug: "op18-green-luffy-leader-deck-guide",
-  title: () => "OP18 Green Luffy Leader (OP18-022): Effect and Deck Guide",
+  title: () => "OP18 Green Luffy Deck Guide: How to Play It",
   description:
-    "The OP18 green Monkey.D.Luffy Leader (OP18-022) explained: its attack-twice effect, the green cards that untap it, how the deck plays and where to pre-order.",
+    "How to play the OP18 green Monkey.D.Luffy deck: the leader's attack-twice effect, the green cards that untap it, the game plan and where to pre-order.",
   tags: ["guide", "op18", "leaders", "green"],
   category: "guide",
   date: "2026-10-16",
@@ -118,6 +118,9 @@ export const op18GreenLuffy: Post = {
             <strong>OP18, The Dominance of God, brings a brand-new mono-green Monkey.D.Luffy Leader.</strong>{" "}
             {leaders.length ? `It is one of ${plural(leaders.length, "OP18 Leader")} TCGplayer lists so far. ` : ""}This guide covers what the card does, how to think about building around it, and how to get OP18 without
             overpaying.
+          </p>
+          <p>
+            Prices and every printing of the card itself are on <Link href="/leaders/monkey-d-luffy-op18-022">the Luffy OP18-022 leader page</Link>.
           </p>
           <ReportedNote />
         </>
