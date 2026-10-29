@@ -3173,3 +3173,10 @@ at render time; nothing is typed but set names and the Black Friday date. None i
 belongs to `/sets/<slug>` (RiftCompare split it between two pages and lost position; see its "Split queries" entry).
 When a new set releases, add one row to `SET_VALUE_SPECS`. JSX in these files lives inside functions, never in a
 module-level constant: the tests import the blog index without React in scope.
+
+## 2026-10-29: The OP18 green Luffy guide is the deck guide; the leader page is the card
+
+Search Console showed `/guides/op18-green-luffy-leader-deck-guide` and `/leaders/monkey-d-luffy-op18-022` sharing
+"op18 green luffy (deck)" queries, both near position 7. The guide's title no longer names the leader and its card
+number ("OP18 Green Luffy Deck Guide: How to Play It"), its intro links the leader page for prices and printings,
+and the leader page keeps the card's own query. The slug stays, so no redirect.
