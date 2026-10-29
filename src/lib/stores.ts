@@ -559,6 +559,11 @@ const RAW_STORES: StoreInfo[] = [
   { key: "arcardia", name: "Arcardia Collectibles & Exchange", base: "https://arcardia.ca", country: "CA", collections: ["one-piece-singles","one-piece"] },
   // 23 matched in stock of 76 read
   { key: "zone151", name: "Zone 151", base: "https://zone151.ca", country: "CA", collections: ["one-piece-collection-boxes","one-piece-collection-boxes-copy","one-piece-booster-boxes","one-piece1"] },
+  // Asked by email, 2026-10-29. Its own platform serves Shopify's feed format for
+  // its whole catalogue (WHOLE_CATALOGUE in lib/store-import.ts): 104 One Piece
+  // sealed products of 1,716. Its second storefront, ccctcg.ca, is a copy of the
+  // same stock at the same prices and is left out (DECISIONS.md).
+  { key: "ateliertcg", name: "L'Atelier TCG", base: "https://ateliertcg.com", country: "CA", collections: ["*"], sealedOnly: true },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */
