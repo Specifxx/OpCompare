@@ -207,8 +207,8 @@ export const giftGuide: Post = {
               </p>
               <p>
                 Collectors usually want one premium printing more than ten packs: every set&apos;s Manga Rares, SPs and alt arts are listed in its &ldquo;most valuable
-                cards&rdquo; post, and across every set in <Link href="/guides/one-piece-manga-rare-cards">every Manga Rare</Link> and{" "}
-                <Link href="/guides/one-piece-sp-cards">every SP card</Link>.
+                cards&rdquo; post, and across every set in <Link href="/cards/printing/manga">every Manga Rare</Link> and{" "}
+                <Link href="/cards/printing/sp">every SP card</Link>.
               </p>
             </>
           ),

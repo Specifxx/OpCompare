@@ -3161,13 +3161,14 @@ Amazon AU (`AMAZON_AU_TAG`, else `compareempire-22`); the UK, Canada and the EU 
 `AMAZON_DE_TAG` is set (an untagged link earns nothing); never Singapore. No Amazon price, rating or stock (no Product Advertising
 API), never a row of the board, never in alerts or baskets; the Associates statement beside every link and in the footer.
 
-## 2026-10-29: A chase-card post for every released set, and cross-set printing lists
+## 2026-10-29: A chase-card post for every released set
 
 Owner (29 October): the smaller sites need many more useful posts, and RiftCompare's Google traffic comes from set
 and chase-card searches. So every released booster, Extra and Premium set from OP09 on gets a "<set> most valuable
-cards" post (`src/lib/blog/posts/set-value.tsx`, one factory, one row per set in `SET_VALUE_SPECS`), and the
-list-shaped searches "manga rares", "sp cards" and "treasure rare" each get one guide across all sets
-(`printing-lists.tsx`), plus a holiday gift guide (`gift-guide.tsx`). Every card, count and price is the catalogue's
+cards" post (`src/lib/blog/posts/set-value.tsx`, one factory, one row per set in `SET_VALUE_SPECS`), plus a
+holiday gift guide (`gift-guide.tsx`). Cross-set Manga, SP and Treasure Rare guides were merged and removed the same
+day, before any deploy: `/cards/printing/manga`, `/sp` and `/treasure-rare` already rank those cards under the same
+titles, and a guide repeating the list would split the query with them. Link those facet pages instead. Every card, count and price is the catalogue's
 at render time; nothing is typed but set names and the Black Friday date. None is called a "card list": that query
 belongs to `/sets/<slug>` (RiftCompare split it between two pages and lost position; see its "Split queries" entry).
 When a new set releases, add one row to `SET_VALUE_SPECS`. JSX in these files lives inside functions, never in a
