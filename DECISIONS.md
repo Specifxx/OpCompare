@@ -3136,3 +3136,7 @@ are on it.
   Swedish stores are skipped (they charge DKK/SEK, and prices are never
   converted).
 * Postage for every new store was measured and is in `shipping-rates.json`.
+
+## TCGplayer strip in the Gundam Compare design (2026-10-29)
+
+Owner, after seeing Gundam Compare's "Top Gundam cards on TCGplayer": every card site should have that strip, beside the eBay one. `TcgplayerChaseStrip` keeps its data (the snapshot's chase cards, TCGplayer market price), placements and `tcgplayer_strip` tag, and is now drawn like Gundam's: a boxed, horizontally scrolling row of up to 12 cards with the price on a badge over the art, "TCGplayer market" under the name, an "Ad" label, a "Shop TCGplayer" button and end tile, and the disclosure inside the box.
