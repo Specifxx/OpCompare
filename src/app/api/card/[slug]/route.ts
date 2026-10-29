@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCardDetail, getEbayPanel, getProductHistory } from "@/lib/data";
+import { getCardDetail, getChaseStrip, getEbayPanel, getProductHistory } from "@/lib/data";
 import { quickViewPayload } from "@/lib/quick-view";
 
 // The card QuickView's data (components/QuickView.tsx): one card's facts, every
@@ -20,7 +20,8 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   if (!card) return NextResponse.json({ error: "not found" }, { status: 404, headers: { "Cache-Control": "public, s-maxage=300" } });
   const history = await getProductHistory(card.id).catch(() => []);
   const panel = await getEbayPanel(card.id).catch(() => ({ listings: [], graded: [] }));
-  return NextResponse.json(quickViewPayload(card, undefined, history, panel.graded), {
+  const chase = (await getChaseStrip().catch(() => [])).filter((t) => t.id !== card.id);
+  return NextResponse.json({ ...quickViewPayload(card, undefined, history, panel.graded), chase }, {
     headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" },
   });
 }

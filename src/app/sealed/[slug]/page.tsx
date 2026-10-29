@@ -18,12 +18,14 @@ import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
 import {
   getCatalog,
+  getChaseStrip,
   getProductHistory,
   getSealedCatalog,
   getSealedDetail,
 } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
+import { MiniChaseAds } from "@/components/MiniChaseAds";
 import { headline } from "@/lib/price";
 import { SealedViewBeacon } from "@/components/SealedViewBeacon";
 import { pageOg } from "@/lib/og/meta";
@@ -62,6 +64,7 @@ export default async function SealedDetailPage({ params }: Props) {
   ]);
   if (!s) notFound();
   const history = await getProductHistory(s.id);
+  const chase = await getChaseStrip().catch(() => []);
   const vh = visitorHistory(history, country);
   const lite = all.find((x) => x.id === s.id);
   const h = lite
@@ -230,6 +233,8 @@ export default async function SealedDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+          {/* The small eBay + TCGplayer pair near the top (owner, 2026-10-29). */}
+          <MiniChaseAds tiles={chase} page="sealed" />
           <PriceBoard
             productId={s.id}
             offers={s.offers}

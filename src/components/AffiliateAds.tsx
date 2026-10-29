@@ -1,5 +1,6 @@
 "use client";
 
+import { FooterMiniChase } from "./FooterMiniChase";
 import { usePathname } from "next/navigation";
 import { affiliateUrl, ebayLabel, ebaySearchUrl, outboundRel } from "@/lib/affiliate";
 import { useCountry } from "./CountryProvider";
@@ -39,6 +40,7 @@ export function FooterAds() {
   if (BANNER_FREE.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
   return (
     <div className="container-app flex flex-col items-center gap-3 pb-6 pt-10" data-ad-placement="footer">
+      <FooterMiniChase pathname={pathname} />
       <AdBox href={ebaySearchUrl(country, "One Piece Card Game", "footer-ad")} retailer="ebay_search" tone="border-[#e53238]/30 bg-[#e53238]/[0.04] hover:border-[#e53238]/60">
         <EbayWordmark />
         <span className="text-left">
