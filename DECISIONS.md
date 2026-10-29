@@ -3180,3 +3180,14 @@ Search Console showed `/guides/op18-green-luffy-leader-deck-guide` and `/leaders
 "op18 green luffy (deck)" queries, both near position 7. The guide's title no longer names the leader and its card
 number ("OP18 Green Luffy Deck Guide: How to Play It"), its intro links the leader page for prices and printings,
 and the leader page keeps the card's own query. The slug stays, so no redirect.
+
+## L'Atelier TCG listed in Canada, sealed only, its second storefront left out (2026-10-29)
+
+L'Atelier TCG (Laval, QC) asked by email to be listed on OP Compare. It runs its own platform but serves Shopify's
+feed format for its whole catalogue at `/products.json` (1,716 products on 2026-10-29, every game, CAD; 104 One
+Piece sealed products, of which 43 matched a product with the current sealed catalogue). The collection handle `"*"`
+(`WHOLE_CATALOGUE`, `lib/store-import.ts`) now reads that one feed, keeps only titles that say "One Piece", discovers
+no collections, and links the feed's own `url` when it is on the store's origin. The store is `sealedOnly`: it lists
+no singles. Postage is unmeasured until the next CA shipping probe. It also asked for its second storefront, CCC
+(ccctcg.ca, Dorval): every one of its 284 products is one of L'Atelier's, at the same price and availability, so it
+stays out. One stock shown as two stores would mislead buyers and inflate the store count.

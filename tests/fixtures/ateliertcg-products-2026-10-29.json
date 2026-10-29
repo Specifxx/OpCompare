@@ -1,0 +1,602 @@
+{
+ "products": [
+  {
+   "handle": "one-piece-card-game-9pkt-binder-set-seven-warlords-of-the-sea",
+   "title": "One Piece Card Game 9PKT Binder Set Seven Warlords of the Sea",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-9pkt-binder-set-seven-warlords-of-the-sea/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "490.33",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-dp03-double-pack-set-vol-3",
+   "title": "One Piece Card Game DP03 Double Pack Set Vol 3 (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-dp03-double-pack-set-vol-3/",
+   "product_type": "Booster Pack",
+   "variants": [
+    {
+     "price": "760.52",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-dp04-double-pack-set-vol-4",
+   "title": "One Piece Card Game DP04 Double Pack Set Vol 4 (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-dp04-double-pack-set-vol-4/",
+   "product_type": "Booster Pack",
+   "variants": [
+    {
+     "price": "750.51",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-dp05-double-pack-set-vol-5",
+   "title": "One Piece Card Game DP05 Double Pack Set Vol 5 (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-dp05-double-pack-set-vol-5/",
+   "product_type": "Booster Pack",
+   "variants": [
+    {
+     "price": "415.28",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-dp08-double-pack-set-vol-8",
+   "title": "One Piece Card Game DP08 Double Pack Set Vol 8 (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-dp08-double-pack-set-vol-8/",
+   "product_type": "Booster Pack",
+   "variants": [
+    {
+     "price": "500.34",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-eb-02-extra-booster-box",
+   "title": "One Piece Card Game EB-02 Extra Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-eb-02-extra-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "1450.99",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-ld-01-learn-together-let-s-play-deck-set",
+   "title": "One Piece Card Game LD-01 Learn Together Let's Play Deck Set",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-ld-01-learn-together-let-s-play-deck-set/",
+   "product_type": "Starter Deck",
+   "variants": [
+    {
+     "price": "75.05",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-02-paramount-war-booster-box",
+   "title": "One Piece Card Game OP-02 Paramount War Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-02-paramount-war-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "900.61",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-06-wings-of-the-captain-booster-box",
+   "title": "One Piece Card Game OP-06 Wings of the Captain Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-06-wings-of-the-captain-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "590.40",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-08-two-legends-booster-box",
+   "title": "One Piece Card Game OP-08 Two Legends Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-08-two-legends-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "330.00",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-09-emperors-in-the-new-world",
+   "title": "One Piece Card Game OP-09 Emperors in the New World",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-09-emperors-in-the-new-world/",
+   "product_type": "Product",
+   "variants": [
+    {
+     "price": "1100.75",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-10-royal-blood-booster-box",
+   "title": "One Piece Card Game OP-10 Royal Blood Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-10-royal-blood-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "329.60",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-11-a-fist-of-divine-speed-booster-box",
+   "title": "One Piece Card Game OP-11 a Fist of Divine Speed Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-11-a-fist-of-divine-speed-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "775.53",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-12-legacy-of-the-master-booster-box",
+   "title": "One Piece Card Game OP-12 Legacy of the Master Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-12-legacy-of-the-master-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "400.27",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-13-carrying-on-his-will-booster-box",
+   "title": "One Piece Card Game OP-13 Carrying on His Will Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-13-carrying-on-his-will-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "700.48",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-op-14-the-azure-sea-s-seven-booster-box",
+   "title": "One Piece Card Game OP-14 the Azure Sea's Seven Booster Box",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-op-14-the-azure-sea-s-seven-booster-box/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "400.27",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-prb02-premium-booster-volume-2",
+   "title": "One Piece Card Game PRB02 Premium Booster Volume 2",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-prb02-premium-booster-volume-2/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "575.39",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-best-selection",
+   "title": "One Piece Card Game Premium Card Collection Best Selection",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-best-selection/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "275.19",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-best-selection-v2",
+   "title": "One Piece Card Game Premium Card Collection Best Selection V2",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-best-selection-v2/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "175.12",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-best-selection-v3",
+   "title": "One Piece Card Game Premium Card Collection Best Selection V3",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-best-selection-v3/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "200.14",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-best-selection-v4",
+   "title": "One Piece Card Game Premium Card Collection Best Selection V4",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-best-selection-v4/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "400.27",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-cardfest",
+   "title": "One Piece Card Game Premium Card Collection Cardfest",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-cardfest/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "150.10",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-film-red-ed",
+   "title": "One Piece Card Game Premium Card Collection Film Red Ed",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-film-red-ed/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "304.63",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-live-action",
+   "title": "One Piece Card Game Premium Card Collection Live Action",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-live-action/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "150.10",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-premium-card-collection-uta",
+   "title": "One Piece Card Game Premium Card Collection Uta",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-premium-card-collection-uta/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "155.11",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-sound-loader-vol-2-enel",
+   "title": "One Piece Card Game Sound Loader Vol. 2 Enel",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-sound-loader-vol-2-enel/",
+   "product_type": "Product",
+   "variants": [
+    {
+     "price": "40.03",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-special-set-ace-sabo-luffy",
+   "title": "One Piece Card Game Special Set Ace/Sabo/Luffy",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-special-set-ace-sabo-luffy/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "115.08",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-special-set-former-four-emperors",
+   "title": "One Piece Card Game Special Set Former Four Emperors",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-special-set-former-four-emperors/",
+   "product_type": "Collection Box",
+   "variants": [
+    {
+     "price": "120.08",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st01-starter-display-straw-hat-crew",
+   "title": "One Piece Card Game ST01 Starter Straw Hat Crew (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st01-starter-display-straw-hat-crew/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "600.41",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st02-starter-display-worst-generation",
+   "title": "One Piece Card Game ST02 Starter Worst Generation (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st02-starter-display-worst-generation/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "475.32",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st03-starter-display-seven-warlords",
+   "title": "One Piece Card Game ST03 Starter Seven Warlords (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st03-starter-display-seven-warlords/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "260.18",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st04-starter-display-animal-kingdom",
+   "title": "One Piece Card Game ST04 Starter Animal Kingdom (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st04-starter-display-animal-kingdom/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "315.21",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st06-starter-display-absolute-justice",
+   "title": "One Piece Card Game ST06 Starter Absolute Justice (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st06-starter-display-absolute-justice/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "250.17",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st15-starter-display-red-edward-newgate",
+   "title": "One Piece Card Game ST15 Starter (Red) Edward Newgate",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st15-starter-display-red-edward-newgate/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "84.24",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st16-starter-display-green-uta",
+   "title": "One Piece Card Game ST16 Starter (Green) Uta",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st16-starter-display-green-uta/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "84.24",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st17-starter-display-blue-donquixote-doflamingo",
+   "title": "One Piece Card Game ST17 Starter (Blue) Donquixote Doflamingo (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st17-starter-display-blue-donquixote-doflamingo/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "700.48",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st18-starter-display-purple-monkey-d-luffy",
+   "title": "One Piece Card Game ST18 Starter (Purple) Monkey D. Luffy (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st18-starter-display-purple-monkey-d-luffy/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "1400.95",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st19-starter-display-black-smoker",
+   "title": "One Piece Card Game ST19 Starter (Black) Smoker (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st19-starter-display-black-smoker/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "450.31",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st20-starter-display-yellow-charlotte-katakuri",
+   "title": "One Piece Card Game ST20 Starter (Yellow) Charlotte Katakuri",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st20-starter-display-yellow-charlotte-katakuri/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "69.68",
+     "available": false,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "one-piece-card-game-st21-starter-display-gear5",
+   "title": "One Piece Card Game ST21 Starter GEAR5 (display of 6)",
+   "url": "https://ateliertcg.com/en/product/one-piece-card-game-st21-starter-display-gear5/",
+   "product_type": "Booster Box",
+   "variants": [
+    {
+     "price": "520.35",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "mtg-2015-core-set-two-player-clash-pack-2x60-5-6",
+   "title": "MTG 2015 Core Set Two-Player Clash Pack (2X60/5/6)",
+   "url": "https://ateliertcg.com/en/product/mtg-2015-core-set-two-player-clash-pack-2x60-5-6/",
+   "product_type": "Booster Pack",
+   "variants": [
+    {
+     "price": "104.50",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "mtg-7th-theme-deck",
+   "title": "MTG 7TH Theme Deck",
+   "url": "https://ateliertcg.com/en/product/mtg-7th-theme-deck/",
+   "product_type": "Starter Deck",
+   "variants": [
+    {
+     "price": "440.00",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "mtg-adv-forgotten-realms-prerelease-pack",
+   "title": "MTG Adv Forgotten Realms Prerelease Pack (display of 15)",
+   "url": "https://ateliertcg.com/en/product/mtg-adv-forgotten-realms-prerelease-pack/",
+   "product_type": "Prerelease Kit",
+   "variants": [
+    {
+     "price": "979.00",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "riftbound-league-of-legends-tcg-vendetta-art-sleeves-1-100-count",
+   "title": "Riftbound League of Legends TCG Vendetta Art Sleeves #1 100-Count",
+   "url": "https://ateliertcg.com/en/product/riftbound-league-of-legends-tcg-vendetta-art-sleeves-1-100-count/",
+   "product_type": "Accessory",
+   "variants": [
+    {
+     "price": "15.04",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "riftbound-league-of-legends-tcg-vendetta-art-sleeves-2-100-count",
+   "title": "Riftbound League of Legends TCG Vendetta Art Sleeves #2 100-Count",
+   "url": "https://ateliertcg.com/en/product/riftbound-league-of-legends-tcg-vendetta-art-sleeves-2-100-count/",
+   "product_type": "Accessory",
+   "variants": [
+    {
+     "price": "15.04",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  },
+  {
+   "handle": "riftbound-league-of-legends-tcg-vendetta-art-sleeves-3-100-count",
+   "title": "Riftbound League of Legends TCG Vendetta Art Sleeves #3 100-Count",
+   "url": "https://ateliertcg.com/en/product/riftbound-league-of-legends-tcg-vendetta-art-sleeves-3-100-count/",
+   "product_type": "Accessory",
+   "variants": [
+    {
+     "price": "15.04",
+     "available": true,
+     "title": "Default Title"
+    }
+   ]
+  }
+ ]
+}

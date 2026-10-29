@@ -80,15 +80,25 @@ export async function discoverOnePieceCollections(base: string): Promise<string[
   return [...handles];
 }
 
-async function fetchCollection(store: StoreInfo, handle: string): Promise<{ products: ShopifyProduct[]; failed: boolean }> {
+// The collection handle that means "the store's whole catalogue": /products.json
+// rather than /collections/<handle>/products.json. For a store that serves
+// Shopify's feed format without Shopify's collections (L'Atelier TCG's own
+// platform, every game in one feed). Only titles that say "One Piece" are kept
+// (ONE_PIECE_TITLE), so the store's other games never reach the matcher, and
+// no collections are discovered (the platform has no Shopify sitemap).
+export const WHOLE_CATALOGUE = "*";
+const ONE_PIECE_TITLE = /\bone\s*piece\b/i;
+
+async function fetchCollection(store: StoreInfo, handle: string): Promise<{ products: StoreListing[]; failed: boolean }> {
+  const path = handle === WHOLE_CATALOGUE ? "/products.json" : `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(store.base);
-  if (!allowed(`/collections/${handle}/products.json`)) return { products: [], failed: false };
-  const out: ShopifyProduct[] = [];
+  if (!allowed(path)) return { products: [], failed: false };
+  const out: StoreListing[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     if (page > 1) await sleep(REQUEST_DELAY_MS);
     // ?country= is critical: Shopify Markets prices per visitor country, and the
     // runner is in the US. Forcing the store's market gets its local price.
-    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${isoCountry(store.country)}`;
+    const url = `${store.base}${path}?limit=250&page=${page}&country=${isoCountry(store.country)}`;
     let res: Response | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       if (attempt) await sleep(REQUEST_DELAY_MS * 4);
@@ -103,9 +113,9 @@ async function fetchCollection(store: StoreInfo, handle: string): Promise<{ prod
     if (!res) return { products: out, failed: true };
     if (isRateLimited(res)) return { products: out, failed: true };
     if (!res.ok) return { products: out, failed: res.status !== 404 };
-    let data: { products?: ShopifyProduct[] };
+    let data: { products?: StoreListing[] };
     try {
-      data = (await res.json()) as { products?: ShopifyProduct[] };
+      data = (await res.json()) as { products?: StoreListing[] };
     } catch {
       return { products: out, failed: true }; // an HTML challenge / error page
     }
@@ -123,6 +133,7 @@ async function fetchCollection(store: StoreInfo, handle: string): Promise<{ prod
  * publishing a store with most of its stock missing.
  */
 export async function fetchStoreProducts(store: StoreInfo): Promise<StoreRead> {
+  if (store.collections.includes(WHOLE_CATALOGUE)) return fetchWholeCatalogue(store);
   const discovered = await discoverOnePieceCollections(store.base);
   const configured = new Set(store.collections);
   // Configured handles first (proven), then singles-looking ones, then the rest.
@@ -131,7 +142,7 @@ export async function fetchStoreProducts(store: StoreInfo): Promise<StoreRead> {
     .sort((a, b) => Number(configured.has(b)) - Number(configured.has(a)) || Number(/single/.test(b)) - Number(/single/.test(a)))
     .slice(0, MAX_HANDLES);
   const seen = new Set<string>();
-  const products: ShopifyProduct[] = [];
+  const products: StoreListing[] = [];
   for (const [i, h] of handles.entries()) {
     if (i) await sleep(REQUEST_DELAY_MS);
     const { products: got, failed } = await fetchCollection(store, h);
@@ -142,6 +153,25 @@ export async function fetchStoreProducts(store: StoreInfo): Promise<StoreRead> {
       products.push(p);
     }
   }
+  return { products, failed: false, handles };
+}
+
+/** A whole-catalogue store: its One Piece titles, linking the feed's own page when it is on the store's origin. */
+async function fetchWholeCatalogue(store: StoreInfo): Promise<StoreRead> {
+  const handles = [WHOLE_CATALOGUE];
+  const { products: got, failed } = await fetchCollection(store, WHOLE_CATALOGUE);
+  if (failed) return { products: [], failed: true, handles, note: "/products.json could not be read" };
+  const origin = new URL(store.base).origin;
+  const sameOrigin = (u: unknown) => {
+    try {
+      return typeof u === "string" && new URL(u).origin === origin;
+    } catch {
+      return false;
+    }
+  };
+  const products = got
+    .filter((p) => ONE_PIECE_TITLE.test(p.title ?? ""))
+    .map((p) => (p.url === undefined || sameOrigin(p.url) ? p : { ...p, url: undefined }));
   return { products, failed: false, handles };
 }
 
