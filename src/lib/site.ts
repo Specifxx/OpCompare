@@ -33,7 +33,7 @@ export interface SisterSite {
 }
 export const SISTER_SITES: readonly SisterSite[] = [
   { key: "rift", name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound", compares: "Riftbound card prices", search: "https://riftcompare.com/browse?q={q}" },
-  { key: "dex", name: "DexCompare", url: "https://www.dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles", search: "https://www.dexcompare.app/us/sealed?q={q}" },
+  { key: "dex", name: "DexCompare", url: "https://dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles", search: "https://dexcompare.app/us/sealed?q={q}" },
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering sealed prices", search: "https://mtgcompare.app/us/sealed?q={q}" },
   // The whole family (2026-10-26, DECISIONS.md "One family of sites").
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam Card Game", compares: "Gundam Card Game prices", search: "https://gundamcompare.com/cards?q={q}" },
@@ -44,7 +44,7 @@ export const SISTER_SITES: readonly SisterSite[] = [
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com", game: "miniature wargames", compares: "miniature wargame prices", notTcg: true },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com", game: "anime figures", compares: "anime figure prices", notTcg: true },
   { key: "cam", name: "CamCompare", url: "https://www.camcompare.app", game: "cameras", compares: "camera and lens prices", notTcg: true },
-  { key: "empire", name: "Compare Empire", url: "https://www.compareempire.com", game: "tech", compares: "Australian tech prices", notTcg: true },
+  { key: "empire", name: "Compare Empire", url: "https://compareempire.com", game: "tech", compares: "Australian tech prices", notTcg: true },
 ];
 /** The card-game sites only, for "Compare other TCGs" and the one-per-game line on About. */
 export const TCG_SISTER_SITES = SISTER_SITES.filter((s) => !s.notTcg);

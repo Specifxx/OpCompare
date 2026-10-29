@@ -64,7 +64,7 @@ test("the footer carries the share band, the sister site, the affiliate line and
 
 test("the sister sites: RiftCompare, DexCompare and MTG Compare, each saying what it compares", () => {
   const site = read("src/lib/site.ts");
-  for (const url of ["https://riftcompare.com", "https://www.dexcompare.app", "https://mtgcompare.app"]) assert.ok(site.includes(`url: "${url}"`), url);
+  for (const url of ["https://riftcompare.com", "https://dexcompare.app", "https://mtgcompare.app"]) assert.ok(site.includes(`url: "${url}"`), url);
   assert.doesNotMatch(site, /\bSISTER_SITE\b/, "the single-site constant is gone");
   assert.match(site, /compares: "Pokémon TCG booster boxes, ETBs and bundles"/);
   for (const f of ["src/app/about/page.tsx", "src/app/authors/page.tsx"]) assert.match(read(f), /SISTER_SITES\b/, f);
