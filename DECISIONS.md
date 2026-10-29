@@ -3140,3 +3140,12 @@ are on it.
 ## TCGplayer strip in the Gundam Compare design (2026-10-29)
 
 Owner, after seeing Gundam Compare's "Top Gundam cards on TCGplayer": every card site should have that strip, beside the eBay one. `TcgplayerChaseStrip` keeps its data (the snapshot's chase cards, TCGplayer market price), placements and `tcgplayer_strip` tag, and is now drawn like Gundam's: a boxed, horizontally scrolling row of up to 12 cards with the price on a badge over the art, "TCGplayer market" under the name, an "Ad" label, a "Shop TCGplayer" button and end tile, and the disclosure inside the box.
+
+## Small eBay + TCGplayer pair near the top, and on every shopping page (2026-10-29)
+
+Owner: on card and sealed pages and the quick views the eBay and TCGplayer strips should also show "near the top, but much smaller so it's not intrusive", and every other page (pre-orders, lists, tools…) should carry them too. `MiniChaseAds` draws the same chase cards as the full strips (`getChaseStrip`) as 56px tiles in one slim box: an eBay row (live listing in the visitor's market, else a search link with the card art) and a TCGplayer row (market price). The box has an "Ad" label and the disclosure inside it, and is hidden for ad-free members (`data-ad-placement`). Where it goes:
+- under the buy block on `/card/[slug]` and under the price tiles on `/sealed/[slug]`;
+- in both quick views, which get `chase` added to their `/api/card` and `/api/sealed` payloads;
+- above the footer's text ads (`FooterMiniChase`) on every page without the full strips, except account, admin and sign-in pages. That copy fetches `/api/chase`, a CDN-cached route (6 h + a day stale), so the root layout never reads a loader, which would cut every page's cache life to the loader's.
+
+Clicks report as `*_mini` retailers (`ebay_chase_mini`, `tcgplayer_strip_mini`) and `chase-mini` / `tcgplayer_mini` sub-ids, so this placement is measured apart.

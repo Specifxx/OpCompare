@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniChaseAds } from "./MiniChaseAds";
 import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -142,6 +143,8 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
 
         {data && m ? (
           <div className="p-4">
+            {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
+            {data.chase?.length ? <MiniChaseAds tiles={data.chase} page="sealed-quickview" className="mb-3" /> : null}
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
