@@ -62,7 +62,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
         </p>
         <p className="mt-2">
           Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, {SITE_NAME} earns from qualifying
-          purchases — at no extra cost to you.
+          purchases — at no extra cost to you. As an Amazon Associate I earn from qualifying purchases.
         </p>
         <p className="mt-2">
           {SITE_NAME} is an independent fan-made price comparison site. It is not affiliated with, endorsed or sponsored by

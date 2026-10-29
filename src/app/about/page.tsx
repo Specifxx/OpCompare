@@ -66,6 +66,10 @@ export default async function About() {
             an eBay Partner Network affiliate.
           </>
         ) : null}
+        {" "}Sealed product pages also link to Amazon (Amazon US in the US, Amazon
+        Australia in Australia) with a &ldquo;Check price&rdquo; search: we don&apos;t
+        read Amazon&apos;s prices, so it is never ranked with the stores. As an
+        Amazon Associate I earn from qualifying purchases.
       </p>
       <h2>Not affiliated with Bandai</h2>
       <p>

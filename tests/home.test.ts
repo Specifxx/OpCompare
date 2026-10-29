@@ -141,8 +141,8 @@ test("every FAQ claim is built from the constants it states", () => {
 
 test("the About copy names only revenue OP Compare really has", () => {
   const page = read("src/app/page.tsx");
-  assert.match(page, /affiliate commission \(the eBay Partner Network and TCGplayer\) and Plus and\s+Premium subscriptions/);
-  assert.doesNotMatch(page, /display ads|consulting|Amazon/);
+  assert.match(page, /affiliate commission \(the eBay Partner Network, TCGplayer and Amazon Associates\) and Plus and\s+Premium subscriptions/);
+  assert.doesNotMatch(page, /display ads|consulting/);
 });
 
 // ── SEO ──────────────────────────────────────────────────────────────────────
