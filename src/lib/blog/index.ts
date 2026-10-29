@@ -15,7 +15,6 @@ import { eb05CardList, eb05ChaseCards, op17MostValuable, op18CardList, op18Chase
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
 import { SET_VALUE_SPECS, setMostValuable } from "./posts/set-value";
-import { mangaRares, spCards, treasureRares } from "./posts/printing-lists";
 import { giftGuide } from "./posts/gift-guide";
 import { whereToBuy } from "./posts/where-to-buy";
 import { whereToBuyEb05 } from "./posts/where-to-buy-eb05";
@@ -25,9 +24,6 @@ import type { Post } from "./types";
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
   giftGuide,
-  mangaRares,
-  spCards,
-  treasureRares,
   ...SET_VALUE_SPECS.map(setMostValuable),
   op18ChaseCards,
   op18CardList,
