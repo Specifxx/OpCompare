@@ -93,7 +93,6 @@ export function PriceBoardView({
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="truncate text-[15px] font-semibold text-white">{ebayLabel(country)}</span>
-                  <ShownFirst />
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   {preRelease
@@ -114,7 +113,6 @@ export function PriceBoardView({
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="truncate text-[15px] font-semibold text-white">TCGplayer</span>
                   <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">market price</span>
-                  <ShownFirst />
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   TCGplayer&apos;s US market price, converted at an approximate rate. TCGplayer may not ship to your country.{" "}
@@ -147,7 +145,6 @@ export function PriceBoardView({
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-[15px] font-semibold text-white">{o.label}</span>
                     {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
-                    {pinned ? <ShownFirst /> : null}
                   </p>
                   {isEbay ? <p className="mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
@@ -256,18 +253,5 @@ export function PriceBoardView({
     </section>
 
     </>
-  );
-}
-
-/** The tag on a row pinned to the top of the board (eBay, TCGplayer). */
-function ShownFirst() {
-  return (
-    <span
-      data-shown-first
-      title="eBay and TCGplayer are shown first, whatever their price. Every store below is sorted by price."
-      className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-300"
-    >
-      Shown first
-    </span>
   );
 }

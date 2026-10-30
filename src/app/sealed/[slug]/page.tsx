@@ -236,6 +236,9 @@ export default async function SealedDetailPage({ params }: Props) {
           </div>
           {/* The small eBay + TCGplayer pair near the top (owner, 2026-10-29). */}
           <MiniChaseAds tiles={chase} page="sealed" />
+          {/* Amazon (lib/amazon.ts): a search on the visitor's Amazon, the first tinted row above the board, never a row of it
+              (owner, 2026-10-29; moved above the board 2026-10-30). */}
+          <AmazonCheck country={country} name={s.name} slug={s.slug} />
           <PriceBoard
             productId={s.id}
             offers={s.offers}
@@ -253,8 +256,6 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
-          {/* Amazon (lib/amazon.ts): a search on the visitor's Amazon under the board, never a row of it (owner, 2026-10-29). */}
-          <AmazonCheck country={country} name={s.name} slug={s.slug} />
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* TCGplayer's market price: a reference under the comparison, with

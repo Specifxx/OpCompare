@@ -40,7 +40,7 @@ export default async function EditorialPolicy() {
         never changes how stores are ranked: stores are cheapest first, and posts
         name stores by the data. No store pays to be mentioned. One labelled
         exception: eBay and TCGplayer are shown first in every price comparison,
-        tagged &ldquo;Shown first&rdquo; (on the pre-order pages, in their own
+        marked as paid links (on the pre-order pages, in their own
         &ldquo;Marketplaces&rdquo; block), whatever their price.
         {ebayLive ? (
           <>

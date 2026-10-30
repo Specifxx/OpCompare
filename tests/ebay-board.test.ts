@@ -77,7 +77,7 @@ test("the board pins eBay and TCGplayer (the cheaper on top), keeps price ranks,
   assert.match(src, /const pins = pinnedOrder\(pinEbay, pinTcg\);/);
   assert.match(src, /const ordered = \[\.\.\.pins, \.\.\.open\.filter/);
   assert.match(src, /const i = open\.indexOf\(o\);/);
-  assert.match(src, /\{pinned \? <ShownFirst \/> : null\}/);
+  assert.doesNotMatch(src, /Shown ?first/i, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /% vs cheapest/);
   assert.match(src, /TCGplayer may not ship to your country/);
 });
