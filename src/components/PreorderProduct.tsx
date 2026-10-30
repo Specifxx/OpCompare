@@ -238,7 +238,7 @@ export function PreorderProduct({
       <div className="border-b border-ink-800 bg-ink-850/60">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-4 pt-3 sm:px-5">
           <Sub className="text-xs font-bold uppercase tracking-wider text-slate-300">Marketplaces</Sub>
-          <span className="text-[11px] text-slate-500">individual sellers · shown first, not ranked with the stores · affiliate links</span>
+          <span className="text-[11px] text-slate-500">individual sellers · not ranked with the stores · affiliate links</span>
         </div>
         <ul className="divide-y divide-ink-800/70">
           {ebayLine}

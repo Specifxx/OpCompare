@@ -351,7 +351,7 @@ test("the product block: Marketplaces pinned first and outside the ranking, then
   assert.doesNotMatch(ref, /text-accent/);
   // No guarantee copy (EPN), and the marketplaces say they are not ranked.
   assert.doesNotMatch(card, /money.?back|buyer protection/i);
-  assert.match(card, /shown first, not ranked with the stores · affiliate links/);
+  assert.match(card, /individual sellers · not ranked with the stores · affiliate links/);
 });
 
 test("the summary strip: data only, under the intro, stores never counted with eBay or TCGplayer", () => {

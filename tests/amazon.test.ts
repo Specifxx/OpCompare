@@ -34,9 +34,10 @@ test("the link: a tagged search on the market's Amazon, ascsubtag oc-<market>-<p
   assert.equal(AMAZON_REL, "sponsored nofollow noopener");
 });
 
-test("placed on sealed pages only, beside the statement, never in the board, no Amazon price", () => {
+test("placed on sealed pages only, above the board (owner, 2026-10-30), beside the statement, never in the board, no Amazon price", () => {
   const sealed = read("src/app/sealed/[slug]/page.tsx");
   assert.match(sealed, /<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>/);
+  assert.ok(sealed.indexOf("<AmazonCheck") < sealed.indexOf("<PriceBoard"), "Amazon is the first row, above the board");
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
   assert.match(comp, /rel=\{AMAZON_REL\}/);

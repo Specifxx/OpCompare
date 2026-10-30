@@ -69,7 +69,7 @@ export default async function Methodology() {
       <h2>Ranking</h2>
       <p>
         eBay and TCGplayer, our affiliate partners, are shown first in every
-        price comparison, tagged &ldquo;Shown first&rdquo;, whatever their price:
+        price comparison, marked as paid links, whatever their price:
         the cheapest listing of each in your market, or an eBay search and
         (outside the US) TCGplayer&apos;s market price as a labelled reference
         when we have none. Each row&apos;s number is its rank by price, a pinned
