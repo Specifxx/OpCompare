@@ -33,7 +33,7 @@ import {
 import { DAILY_CALL_CAP, quotaDayStart } from "../src/lib/ebay-plan";
 import { EBAY_DAILY_CAP, ebayQuotaDayStart } from "../src/lib/health";
 import { syncWatchdogIssue } from "../src/lib/health-issue";
-import { DEFAULT_OWNER_EMAIL, loadNewInbox, notifyOwnerInbox, ownerEmail, renderInboxEmail, type InboxDb } from "../src/lib/owner-notify";
+import { DEFAULT_OWNER_EMAIL, inboxEmail, loadNewInbox, notifyOwnerInbox, ownerEmail, renderInboxEmail, type InboxDb } from "../src/lib/owner-notify";
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -304,6 +304,22 @@ test("the owner's address is bill.jyang101@gmail.com unless OWNER_EMAIL says oth
   assert.equal(ownerEmail({ OWNER_EMAIL: "  " }), "bill.jyang101@gmail.com");
 });
 
+test("visitor messages go to the site's own inbox, not the owner's personal address; ratings alone are not emailed", async () => {
+  assert.equal(inboxEmail({}), "opcompareofficial@gmail.com");
+  assert.equal(inboxEmail({ INBOX_EMAIL: " help@example.org " }), "help@example.org");
+  assert.equal(inboxEmail({ INBOX_EMAIL: "a@b.c, d@e.f" }), "opcompareofficial@gmail.com");
+  const { db } = fakeDb({
+    feedback: [
+      { rating: 5, message: "", email: null, page: "/", createdAt: new Date("2026-10-14T10:31:00Z") },
+      { rating: 5, message: "Great", email: null, page: "/", createdAt: new Date("2026-10-14T10:32:00Z") },
+      { rating: null, message: "The OP01 box price is a week old", email: "kim@example.com", page: "/sealed", createdAt: new Date("2026-10-14T10:33:00Z") },
+    ],
+  });
+  const batch = await loadNewInbox(db, new Date("2026-10-14T10:00:00Z"), new Date("2026-10-14T11:00:00Z"));
+  assert.deepEqual(batch.items.map((i) => i.replyTo), ["kim@example.com"]);
+  assert.match(read("src/lib/owner-notify.ts"), /const send = opts\.send \?\? sendInboxEmail;/);
+});
+
 test("notifyOwnerInbox: the first run only sets the cursor; later runs email what is new, once", async () => {
   const sent: { subject: string; html: string; text: string }[] = [];
   const send = async (subject: string, html: string, text: string) => (sent.push({ subject, html, text }), true);
@@ -340,16 +356,16 @@ test("notifyOwnerInbox: a failed send keeps the cursor so the next hour retries"
 test("renderInboxEmail covers every queue, one item reads as one email, and a cut-off queue never loses or repeats an item", async () => {
   const { db } = fakeDb({
     contact: [msg("2026-10-14T10:30:00Z")],
-    feedback: [{ rating: 4, message: "Love it", email: null, page: "/price-guide", createdAt: new Date("2026-10-14T10:31:00Z"), status: "NEW" }],
+    feedback: [{ rating: 4, message: "Love the price guide", email: null, page: "/price-guide", createdAt: new Date("2026-10-14T10:31:00Z"), status: "NEW" }],
     reports: [{ storeName: "Card Spot", issue: "WRONG_PRICE", claimedCents: 1000, shownPriceCents: 5000, currency: "USD", note: null, listingTitle: "Shanks", kind: "card", createdAt: new Date("2026-10-14T10:32:00Z") }],
     suggestions: [{ storeName: "Shop", storeUrl: "https://shop.example", country: "US", note: null, createdAt: new Date("2026-10-14T10:33:00Z") }],
     tickets: [{ number: 12, name: "Cy", email: "cy@example.com", category: "PAYMENT", subject: "Refund", message: "Please help", createdAt: new Date("2026-10-14T10:34:00Z") }],
   });
   const batch = await loadNewInbox(db, new Date("2026-10-14T10:00:00Z"), new Date("2026-10-14T11:00:00Z"));
-  // Feedback is never emailed (owner, 2026-10-27): it waits in /admin/inbox.
-  assert.deepEqual(batch.items.map((i) => i.kind), ["message", "price report", "store suggestion", "support ticket"]);
+  // Written feedback goes to the site inbox (owner, 2026-10-30); a bare rating would not.
+  assert.deepEqual(batch.items.map((i) => i.kind), ["message", "feedback", "price report", "store suggestion", "support ticket"]);
   const mail = renderInboxEmail(batch, "https://opcompare.app");
-  assert.match(mail.subject, /4 new items/);
+  assert.match(mail.subject, /5 new items/);
   assert.match(mail.text, /OC-12 Refund/);
   assert.ok(mail.text.endsWith("https://opcompare.app/admin/inbox"));
   const one = renderInboxEmail({ items: [batch.items[0]], truncated: false, advanceTo: null }, "https://opcompare.app");
