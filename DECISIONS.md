@@ -3201,3 +3201,15 @@ in every tag; this site's is `oc-<market>`.
 Replaced: 5339155911 (WargameCompare, FigureCompare, Compare Empire, K Young), 5339231473 (Lorcana),
 5339231474 (Gundam), 5339234013 (YGO). Old secrets/variables (`EBAY_AFFILIATE_CAMPAIGN`,
 `NEXT_PUBLIC_EBAY_CAMPAIGN_ID`, `EBAY_CAMPAIGN_ID`) are no longer read and can be deleted.
+
+## Visitor messages email the OP Compare inbox — 2026-10-30
+
+The owner: "make sure that contact information is really clear on all of our websites so that any feedback feeds
+into the respective emails". The hourly inbox email (`notifyOwnerInbox`) went to the owner's personal address, and
+the footer and `/contact` tell visitors to write to opcompareofficial@gmail.com. Now it goes to `inboxEmail()`:
+`CONTACT_EMAIL` unless `INBOX_EMAIL` names one valid address, with Reply-To the visitor when the email is about one
+person. Written feedback (10+ characters) is included; a bare star rating is not (the 2026-10-27 rule stands for
+ratings). Watchdog alerts still go to `ownerEmail()`.
+
+The email outbox (`email.yml`) still skips until the repository secrets `RESEND_API_KEY` and `EMAIL_FROM` exist, so
+until then the inbox is read in `/admin/inbox`, and `/contact` leads with the address so visitors can email directly.

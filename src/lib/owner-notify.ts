@@ -1,4 +1,4 @@
-// EMAILS TO THE OWNER (script-side only; nothing under src/app may import this,
+// EMAILS TO THE OWNER AND THE SITE INBOX (script-side only; nothing under src/app may import this,
 // tests/no-email-api.test.ts): every new inbox item, and the watchdog's
 // alerts. The address is bill.jyang101@gmail.com (owner, 2026-10-14), or
 // OWNER_EMAIL when set.
@@ -12,7 +12,14 @@
 //
 // These emails carry visitor text, which is fine in the owner's own mailbox.
 // They are NEVER copied anywhere public (not an issue, not a log line).
+//
+// Since 2026-10-30 the inbox email goes to the site's own mailbox, the address
+// /contact shows (CONTACT_EMAIL, opcompareofficial@gmail.com; INBOX_EMAIL
+// overrides it), not the owner's personal one: "any feedback feeds into the
+// respective emails" (owner). Watchdog alerts stay with ownerEmail(). Written
+// feedback is included; a bare star rating is not.
 import { sendEmail, escapeHtml } from "./email";
+import { CONTACT_EMAIL } from "./site";
 
 export const DEFAULT_OWNER_EMAIL = "bill.jyang101@gmail.com";
 export const ownerEmail = (env: Record<string, string | undefined> = process.env) => env.OWNER_EMAIL?.trim() || DEFAULT_OWNER_EMAIL;
@@ -21,12 +28,25 @@ const PER_QUEUE = 25;
 
 export const sendOwnerEmail = (subject: string, html: string, text: string) => sendEmail(ownerEmail(), subject, html, { text });
 
+const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+export const inboxEmail = (env: Record<string, string | undefined> = process.env) => {
+  const v = env.INBOX_EMAIL?.trim() ?? "";
+  return EMAIL_RE.test(v) ? v : CONTACT_EMAIL;
+};
+/** The visitor messages' email: to the site inbox, Reply-To the visitor when the email is about one person. */
+export const sendInboxEmail = (subject: string, html: string, text: string, replyTo?: string) =>
+  sendEmail(inboxEmail(), subject, html, { text, ...(replyTo ? { headers: { "Reply-To": replyTo } } : {}) });
+/** Feedback shorter than this is a rating with a word or two: it waits in /admin/inbox. */
+export const FEEDBACK_MIN_EMAIL = 10;
+
 export type InboxKind = "message" | "feedback" | "price report" | "store suggestion" | "support ticket";
 export interface InboxItem {
   kind: InboxKind;
   at: Date;
   title: string;
   lines: string[];
+  /** The sender's address, when they gave one (Reply-To on a one-item email). */
+  replyTo?: string;
 }
 export interface InboxBatch {
   items: InboxItem[];
@@ -55,22 +75,26 @@ const money = (c: number | null, cur: string | null) => (c == null ? "?" : `${(c
 export async function loadNewInbox(db: InboxDb, since: Date, until: Date): Promise<InboxBatch> {
   const where = { createdAt: { gt: since, lte: until } };
   const q = { where, orderBy: { createdAt: "asc" }, take: PER_QUEUE };
-  // No feedback or ratings here (owner, 2026-10-27: "stop sending me emails for
-  // every single feedback … I can check in the admin dashboard"). They wait in
-  // /admin/inbox and never count toward the watchdog's inbox alert either.
-  const [contact, reports, suggestions, tickets] = await Promise.all([
+  // Written feedback is emailed to the site inbox (owner, 2026-10-30); bare ratings
+  // are not (owner, 2026-10-27: "stop sending me emails for every single feedback …
+  // and every single rating"). Feedback never counts toward the watchdog's inbox alert.
+  const [contact, rawFeedback, reports, suggestions, tickets] = await Promise.all([
     db.contactMessage.findMany(q),
+    db.feedback.findMany({ ...q, where: { ...where, message: { not: "" } } }),
     db.priceReport.findMany(q),
     db.storeSuggestion.findMany(q),
     db.supportTicket.findMany(q),
   ]);
+  const feedback = rawFeedback.filter((f) => f.message.trim().length >= FEEDBACK_MIN_EMAIL);
+  const reply = (e: string | null | undefined) => (e && EMAIL_RE.test(e.trim()) ? e.trim() : undefined);
   const items: InboxItem[] = [
-    ...contact.map((m): InboxItem => ({ kind: "message", at: m.createdAt, title: `${m.name} <${m.email}>${m.subject ? `: ${m.subject}` : ""}`, lines: [`Category: ${m.category}`, clip(m.message)] })),
+    ...contact.map((m): InboxItem => ({ kind: "message", at: m.createdAt, title: `${m.name} <${m.email}>${m.subject ? `: ${m.subject}` : ""}`, lines: [`Category: ${m.category}`, clip(m.message)], replyTo: reply(m.email) })),
+    ...feedback.map((f): InboxItem => ({ kind: "feedback", at: f.createdAt, title: `${f.rating ? `${f.rating}/5 ` : ""}${f.email ? `from ${f.email}` : "anonymous"}${f.page ? ` on ${f.page}` : ""}`, lines: [clip(f.message)], replyTo: reply(f.email) })),
     ...reports.map((r): InboxItem => ({ kind: "price report", at: r.createdAt, title: `${r.storeName}: ${r.issue}`, lines: [`${r.kind}${r.listingTitle ? `: ${r.listingTitle}` : ""}`, `We showed ${money(r.shownPriceCents, r.currency)}${r.claimedCents != null ? `; they say ${money(r.claimedCents, r.currency)}` : ""}`, ...(r.note ? [clip(r.note, 600)] : [])] })),
     ...suggestions.map((s): InboxItem => ({ kind: "store suggestion", at: s.createdAt, title: `${s.storeName} (${s.country})`, lines: [s.storeUrl, ...(s.note ? [clip(s.note, 600)] : [])] })),
-    ...tickets.map((t): InboxItem => ({ kind: "support ticket", at: t.createdAt, title: `OC-${t.number} ${t.subject} from ${t.name} <${t.email}>`, lines: [`Category: ${t.category}`, clip(t.message)] })),
+    ...tickets.map((t): InboxItem => ({ kind: "support ticket", at: t.createdAt, title: `OC-${t.number} ${t.subject} from ${t.name} <${t.email}>`, lines: [`Category: ${t.category}`, clip(t.message)], replyTo: reply(t.email) })),
   ].sort((a, b) => a.at.getTime() - b.at.getTime());
-  const cut = [contact, reports, suggestions, tickets].filter((l) => l.length >= PER_QUEUE).map((l) => l[l.length - 1].createdAt.getTime());
+  const cut = [contact, rawFeedback, reports, suggestions, tickets].filter((l) => l.length >= PER_QUEUE).map((l) => l[l.length - 1].createdAt.getTime());
   const advanceTo = cut.length ? new Date(Math.min(...cut)) : null;
   // Items past the cut-off point wait for the next email, so none is sent twice.
   return { items: advanceTo ? items.filter((i) => i.at.getTime() <= advanceTo.getTime()) : items, truncated: cut.length > 0, advanceTo };
@@ -92,10 +116,10 @@ export function renderInboxEmail(batch: InboxBatch, siteUrl: string): { subject:
 }
 
 /** One hourly pass. Returns how many items it emailed. */
-export async function notifyOwnerInbox(opts: { db: InboxDb; send?: (subject: string, html: string, text: string) => Promise<boolean>; now?: Date; siteUrl?: string }): Promise<{ sent: number; first?: true; failed?: true }> {
+export async function notifyOwnerInbox(opts: { db: InboxDb; send?: (subject: string, html: string, text: string, replyTo?: string) => Promise<boolean>; now?: Date; siteUrl?: string }): Promise<{ sent: number; first?: true; failed?: true }> {
   const { db } = opts;
   const now = opts.now ?? new Date();
-  const send = opts.send ?? sendOwnerEmail;
+  const send = opts.send ?? sendInboxEmail;
   const row = await db.meta.findUnique({ where: { key: INBOX_CURSOR_KEY } });
   const setCursor = (at: Date) => db.meta.upsert({ where: { key: INBOX_CURSOR_KEY }, create: { key: INBOX_CURSOR_KEY, value: at.toISOString() }, update: { value: at.toISOString() } });
   const since = row ? new Date(row.value) : null;
@@ -109,7 +133,8 @@ export async function notifyOwnerInbox(opts: { db: InboxDb; send?: (subject: str
     return { sent: 0 };
   }
   const mail = renderInboxEmail(batch, opts.siteUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://opcompare.app");
-  if (!(await send(mail.subject, mail.html, mail.text))) return { sent: 0, failed: true };
+  const replyTo = batch.items.length === 1 ? batch.items[0].replyTo : undefined;
+  if (!(await send(mail.subject, mail.html, mail.text, replyTo))) return { sent: 0, failed: true };
   // A cut-off queue: advance only as far as it was read, so the rest go in the next email.
   await setCursor(batch.advanceTo ?? now);
   return { sent: batch.items.length };
