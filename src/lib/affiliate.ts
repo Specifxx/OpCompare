@@ -17,7 +17,9 @@ import { dealForHost, partnerRefUrl } from "./store-partner-deals";
 import { SITE_URL } from "./site";
 import type { Country } from "./country";
 
-export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN || "5339155912";
+// One EPN campaign for every Compare site, hard-coded (owner, 2026-10-30): no
+// variable overrides it; the `oc-` customid prefix tells OP Compare apart.
+export const EBAY_CAMPAIGN_ID = "5339155912";
 export const TCGPLAYER_IMPACT_LINK =
   process.env.TCGPLAYER_IMPACT_LINK || "https://partner.tcgplayer.com/c/7385758/1780961/21018";
 

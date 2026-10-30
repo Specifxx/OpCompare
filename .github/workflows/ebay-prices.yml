@@ -136,7 +136,6 @@ jobs:
           DATABASE_URL: ${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/ebay.ts
       # Publish whatever the pass wrote, even when it stopped red (the failure
       # breaker, a 429, a timeout): the pairs it completed live only in the working

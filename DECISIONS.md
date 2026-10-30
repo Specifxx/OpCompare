@@ -3191,3 +3191,13 @@ no collections, and links the feed's own `url` when it is on the store's origin.
 no singles. Postage is unmeasured until the next CA shipping probe. It also asked for its second storefront, CCC
 (ccctcg.ca, Dorval): every one of its 284 products is one of L'Atelier's, at the same price and availability, so it
 stays out. One stock shown as two stores would mislead buyers and inflate the store count.
+
+## One eBay campaign for every Compare site, hard-coded — 2026-10-30
+
+**Decided (owner).** Every Compare site now sends eBay clicks to ONE EPN campaign, 5339155912 (RiftCompare's,
+already set up), hard-coded in the code: no variable overrides it any more, so a forgotten secret or Vercel
+value can't split the sites again. The sites are told apart by the `customid` prefix alone, which comes first
+in every tag; this site's is `oc-<market>`. 
+Replaced: 5339155911 (WargameCompare, FigureCompare, Compare Empire, K Young), 5339231473 (Lorcana),
+5339231474 (Gundam), 5339234013 (YGO). Old secrets/variables (`EBAY_AFFILIATE_CAMPAIGN`,
+`NEXT_PUBLIC_EBAY_CAMPAIGN_ID`, `EBAY_CAMPAIGN_ID`) are no longer read and can be deleted.

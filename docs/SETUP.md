@@ -46,7 +46,6 @@ it by hand. Its `vercel.json` turns Vercel deployments off for it.
 | Secret | `GSC_SA_KEY` | The Search Console service-account JSON key | **Reuse** the same service account. GitHub secrets can't be read back, so create a new JSON key for it (Google Cloud → IAM → Service accounts → Keys) |
 | Secret | `STRIPE_SECRET_KEY` | OP Compare's Stripe secret key (`sk_live_…`), used by the *Stripe setup* workflow | **New** account (see 6) |
 | Secret | `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` | Optional. The Production App ID and Cert ID of OP Compare's **own** eBay application, used only by *eBay prices*. Never Vercel | **New** app (see 6a), never RiftCompare's |
-| Secret | `EBAY_AFFILIATE_CAMPAIGN` | Optional. The EPN campaign id (defaults to RiftCompare's) | **Reuse** (optional) |
 | Variable | `EBAY_QUOTA_RESERVE` / `EBAY_MAX_CALLS` / `EBAY_MIN_VALUE_CENTS` | Optional eBay tuning; defaults `300` / `2500` / `2000` (see 6a); nothing can raise a day past 2,500 calls | New |
 | Variable | `SITE_URL` | `https://opcompare.app` (also the workflows' default) | New |
 | Variable | `GSC_PROPERTY` | `sc-domain:opcompare.app` (the default), or `https://opcompare.app/` for a URL-prefix property | New |
@@ -96,7 +95,6 @@ Each workflow is a no-op until its values exist.
 | `INDEXNOW_KEY` | `43ac93dd97a44d4894bedf52d621c57c` | **Reuse** |
 | `GOOGLE_SITE_VERIFICATION` | Only for a URL-prefix Search Console property: the HTML tag's `content` | New |
 | `BING_SITE_VERIFICATION` | Optional. Bing's `msvalidate.01` value; import from Search Console instead | New |
-| `EBAY_AFFILIATE_CAMPAIGN` | Optional. The EPN campaign id; the code defaults to RiftCompare's | **Reuse** (optional) |
 | `EBAY_VERIFICATION_TOKEN` | Production. A **new** random 32–80 characters of `[A-Za-z0-9_-]`, also typed into the eBay portal, for the Marketplace Account Deletion route (see 6a) | **New**, never RiftCompare's |
 | `EBAY_DELETION_ENDPOINT` | Production. Exactly `https://opcompare.app/api/ebay/marketplace-deletion` | **New** |
 | `TCGPLAYER_IMPACT_LINK` | Optional. The Impact link base; the code defaults to RiftCompare's | **Reuse** (optional) |
@@ -193,7 +191,6 @@ spends at most 50 calls, but it stays green.
 | `EBAY_CLIENT_SECRET` | **GitHub secret**. Never Vercel | none → eBay off | That app's Production Cert ID |
 | `EBAY_VERIFICATION_TOKEN` | **Vercel**, Production | `""` → the deletion route answers 500 | New random 32–80 chars `[A-Za-z0-9_-]`, also typed into the eBay portal. Not RiftCompare's |
 | `EBAY_DELETION_ENDPOINT` | **Vercel**, Production | `""` → 500 | Exactly `https://opcompare.app/api/ebay/marketplace-deletion` |
-| `EBAY_AFFILIATE_CAMPAIGN` | Optional, GitHub secret and Vercel | `5339155912` | EPN campaign (search links and the Browse `affiliateCampaignId`) |
 | `EBAY_QUOTA_RESERVE` | Optional GitHub **variable** | `600` | Calls never spent today (a negative value is 0) |
 | `EBAY_MAX_CALLS` | Optional GitHub variable | `2500` | Per-run cap; it can only lower the run, never raise a day past the hard 2,500-call ceiling (DAILY_CALL_CAP). Raise it only after a Growth Check raises the limit |
 | `EBAY_MIN_VALUE_CENTS` | Optional GitHub variable | `2000` | Singles floor (US/UK/AU; EU uses at least 5000) |
