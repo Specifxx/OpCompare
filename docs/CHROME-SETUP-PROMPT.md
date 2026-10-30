@@ -109,7 +109,6 @@ time. You need two:
 
    Then copy these from RiftCompare's Vercel project, but only the ones it
    has. Read the values there and change nothing:
-   - `EBAY_AFFILIATE_CAMPAIGN`
    - `TCGPLAYER_IMPACT_LINK`
    - `NEXT_PUBLIC_USD_TO_AUD`, `NEXT_PUBLIC_USD_TO_GBP`,
      `NEXT_PUBLIC_USD_TO_SGD`, `NEXT_PUBLIC_USD_TO_CAD`,
