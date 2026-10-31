@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Dialog from "./Dialog";
+import { QUICK_VIEW_SHEET } from "./ui/Dialog";
 import { QuickView, loadQuickView } from "./QuickView";
 
 // The card QuickView (RiftCompare's QuickViewProvider): a plain left click on any
@@ -142,7 +143,7 @@ export default function QuickViewProvider({ children, providers = [] }: { childr
   return (
     <QuickViewContext.Provider value={{ open, prefetch }}>
       {children}
-      <Dialog open={!!shown} onClose={close} size="3xl" labelledBy="quickview-title">
+      <Dialog open={!!shown} onClose={close} size="3xl" placement="sheet" className={QUICK_VIEW_SHEET} labelledBy="quickview-title">
         {display ? <QuickView key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb ?? null} label={display.label ?? null} onClose={close} providers={providers} /> : null}
       </Dialog>
     </QuickViewContext.Provider>
