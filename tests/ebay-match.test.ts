@@ -11,6 +11,8 @@ import {
   canonicalTitle,
   selfMatches,
   REJECT_LOCATIONS,
+  isLocalSeller,
+  locationFilter,
   cardFilter,
   cardQuery,
   chooseListing,
@@ -143,8 +145,8 @@ test("booster/box words reject a single unless its own printing or set says them
 
 test("a currency mismatch and a non-fixed-price item are rejected", () => {
   const base = "Shanks OP01-120 SEC Romance Dawn English NM";
-  assert.deepEqual(pick([item(base, "6.00", { cur: "USD" })], 1, "UK").rejects, { currency: 1 });
-  assert.ok(pick([item(base, "6.00", { cur: "GBP" })], 1, "UK").listing);
+  assert.deepEqual(pick([item(base, "6.00", { cur: "USD", itemLocation: { country: "GB" } })], 1, "UK").rejects, { currency: 1 });
+  assert.ok(pick([item(base, "6.00", { cur: "GBP", itemLocation: { country: "GB" } })], 1, "UK").listing);
   assert.deepEqual(pick([item(base, "6.00", { buyingOptions: ["AUCTION"] })], 1).rejects, { "not-fixed-price": 1 });
 });
 
@@ -269,7 +271,7 @@ test("unpriced products: no reference → nothing; a store reference → its flo
   // Orica at US$3: the title rejects it before price is even read.
   assert.deepEqual(chooseListing([item("Nico Robin OP18-031 Manga Alt Art One Piece Orica", "3.00")], single(98, 40000), "US").rejects, { "foreign-or-fake": 1 });
   // The server-side floor uses the reference too.
-  assert.equal(cardFilter("US", 40000), "buyingOptions:{FIXED_PRICE},deliveryCountry:US,price:[114.00..],priceCurrency:USD");
+  assert.equal(cardFilter("US", 40000), "buyingOptions:{FIXED_PRICE},deliveryCountry:US,itemLocationCountry:US,price:[114.00..],priceCurrency:USD");
 });
 
 test("postage: a cheap item with dear postage is rejected; the delivered price must be plausible", () => {
@@ -298,11 +300,20 @@ test("chooseListing picks the cheapest DELIVERED listing", () => {
   const cheapItem = item(z, "8.00", { ship: "20.00" });
   const free = item(`${z} NM`, "12.00", { ship: "0.00" });
   assert.equal(pick([cheapItem, free], 80).listing?.itemId, free.itemId);
-  // Unknown postage sorts as 0 but is stored as null.
+  // Unknown postage is never a row (visitor feedback on WargameCompare, 2026-10-31: a hidden postage is a wasted click).
   const unknown = item(`${z} LP`, "11.00", { ship: null });
-  const r = pick([cheapItem, free, unknown], 80).listing!;
-  assert.equal(r.itemId, unknown.itemId);
-  assert.equal(r.shippingCents, null);
+  const r = pick([cheapItem, free, unknown], 80);
+  assert.equal(r.listing?.itemId, free.itemId);
+  assert.equal(r.rejects["postage-unknown"], 1);
+});
+
+test("local sellers only: the market's own country, any EU country for the EU (visitor feedback 2026-10-31)", () => {
+  const z = "Roronoa Zoro OP01-001 Leader Romance Dawn English";
+  assert.deepEqual(pick([item(z, "12.00", { itemLocation: { country: "GB" } })], 80).rejects, { "not-local": 1 }, "a UK seller for a US buyer");
+  assert.ok(pick([item(z, "12.00", { itemLocation: { country: "US" } })], 80).listing);
+  assert.ok(isLocalSeller("EU", "FR") && isLocalSeller("EU", "ES") && !isLocalSeller("EU", "GB"));
+  assert.ok(isLocalSeller("UK", "GB") && !isLocalSeller("UK", "US") && isLocalSeller("SG", "SG"));
+  assert.deepEqual(locationFilter("EU"), [], "eBay Spain stands for the EU: EU sellers are kept after the search");
 });
 
 const L = (cents: number, i: number): EbayListing => ({ itemId: String(i), title: "", priceCents: cents, currency: "USD", shippingCents: 0, url: "", condition: null, location: "US", imageUrl: null });
@@ -339,11 +350,11 @@ test("queries: one name word, no variant words, P- numbers keep One Piece and ge
 
 test("filters: delivery country, price floor in the market currency with 5% FX slack", () => {
   assert.match(priceFilter(1234 / 0.79, "GBP"), /^price:\[12\.3[34]\.\.\],priceCurrency:GBP$/);
-  assert.equal(cardFilter("US", 250), "buyingOptions:{FIXED_PRICE},deliveryCountry:US");
+  assert.equal(cardFilter("US", 250), "buyingOptions:{FIXED_PRICE},deliveryCountry:US,itemLocationCountry:US");
   assert.equal(cardFilter("EU", 10000), "buyingOptions:{FIXED_PRICE},deliveryCountry:ES,price:[26.22..],priceCurrency:EUR");
-  assert.equal(cardFilter("UK", 10000), "buyingOptions:{FIXED_PRICE},deliveryCountry:GB,price:[22.52..],priceCurrency:GBP");
-  assert.equal(sealedFilter("AU", 10000), "buyingOptions:{FIXED_PRICE},conditions:{NEW},deliveryCountry:AU,price:[71.25..],priceCurrency:AUD");
-  assert.equal(sealedFilter("CA", null), "buyingOptions:{FIXED_PRICE},conditions:{NEW},deliveryCountry:CA");
+  assert.equal(cardFilter("UK", 10000), "buyingOptions:{FIXED_PRICE},deliveryCountry:GB,itemLocationCountry:GB,price:[22.52..],priceCurrency:GBP");
+  assert.equal(sealedFilter("AU", 10000), "buyingOptions:{FIXED_PRICE},conditions:{NEW},deliveryCountry:AU,itemLocationCountry:AU,price:[71.25..],priceCurrency:AUD");
+  assert.equal(sealedFilter("CA", null), "buyingOptions:{FIXED_PRICE},conditions:{NEW},deliveryCountry:CA,itemLocationCountry:CA");
 });
 
 test("mapItem: affiliate URL preferred and EPN-tagged, postage in cents, condition label", () => {

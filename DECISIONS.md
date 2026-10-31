@@ -3276,3 +3276,14 @@ movers, set tables, blog posts, search) went straight to the page. `useLinkQuick
 provider) now opens the card or sealed quick view for any plain click on such a link, with the link's own picture and
 name as the loading hint, and warms it on hover. Links inside an open dialog and to the page already shown, and
 modified, middle and new-tab clicks, navigate as before.
+
+## eBay: local sellers and stated postage only (2026-10-31)
+
+A WargameCompare visitor's feedback (the owner passed it on for every sister site): eBay rows from overseas sellers
+carried postage that made "a lot of wasted clicks". OP Compare already refused Asian seller locations and ranked
+delivered; now the Browse search also asks for items located in the market's own country (`locationFilter`:
+`itemLocationCountry`; eBay Spain, standing for the EU, keeps any EU seller and `screenItems` drops the rest,
+`isLocalSeller`), sends the buyer's country and a central postcode as `contextualLocation` (`endUserContext`) so eBay
+quotes real postage, and `screenItems` refuses a listing whose postage eBay does not state (`postage-unknown`), so
+every new row is "delivered". Canada's singles rows stay the labelled cross-border feed ("eBay US + intl postage",
+never compared), now drawn from US sellers only. Stored rows age out with the 72 h sweep.
