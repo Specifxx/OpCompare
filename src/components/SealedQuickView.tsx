@@ -15,6 +15,9 @@ import { ReportPriceButton } from "./ReportPriceButton";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { Dialog, QUICK_VIEW_SHEET } from "./ui/Dialog";
 import { StoreCodeChip } from "./StoreCodeChip";
+import { useLinkQuickView } from "./useLinkQuickView";
+
+const SEALED_PATH = /^\/sealed\/([^/?#]+)\/?$/;
 
 // Quick-view popup for sealed products (RiftCompare's SealedQuickView): a plain
 // left click on a SealedTile opens this instead of leaving /sealed. OP keeps its
@@ -60,6 +63,7 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
   }, []);
   const prefetch = useCallback((slug: string) => void loadSealedQuickView(slug).catch(() => {}), []);
   const close = useCallback(() => setShown(null), []);
+  useLinkQuickView(SEALED_PATH, open, prefetch);
   return (
     <Ctx.Provider value={{ open, prefetch }}>
       {children}
