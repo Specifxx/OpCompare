@@ -3267,3 +3267,12 @@ POST only, 503 until the token is set) still holds.
   comment. Those issues are public, so they link to each report's file and never quote a note. It fails (and
   GitHub emails the owner) when a site has no `reports` branch, or the token stops working or expires within 14
   days (checked only when the token is also a TCGEmpire Actions secret). The ops monitor's job list watches it.
+
+## 2026-10-31 — Every card and sealed link opens the quick view
+
+Owner, 2026-10-31: "Whenever I click on any item … I want a quick view open like K Young." Only `CardQuickLink` and
+`SealedQuickLink` opened the quick views; about 60 other links to `/card/<slug>` and `/sealed/<slug>` (home lists,
+movers, set tables, blog posts, search) went straight to the page. `useLinkQuickView` (one capture-phase listener per
+provider) now opens the card or sealed quick view for any plain click on such a link, with the link's own picture and
+name as the loading hint, and warms it on hover. Links inside an open dialog and to the page already shown, and
+modified, middle and new-tab clicks, navigate as before.

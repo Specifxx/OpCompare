@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Dialog from "./Dialog";
 import { QUICK_VIEW_SHEET } from "./ui/Dialog";
 import { QuickView, loadQuickView } from "./QuickView";
+import { useLinkQuickView } from "./useLinkQuickView";
 
 // The card QuickView (RiftCompare's QuickViewProvider): a plain left click on any
 // card link (CardQuickLink) opens the card in a dialog instead of loading its
@@ -38,6 +39,7 @@ export function useQuickView(): Ctx | null {
 
 const STATE_KEY = "ocQuickView";
 const cardPath = (slug: string) => `/card/${slug}`;
+const CARD_PATH = /^\/card\/([^/?#]+)\/?$/;
 
 interface Shown extends QuickViewOpen {
   slug: string;
@@ -139,6 +141,8 @@ export default function QuickViewProvider({ children, providers = [] }: { childr
   const prefetch = useCallback((slug: string) => {
     void loadQuickView(slug).catch(() => {});
   }, []);
+
+  useLinkQuickView(CARD_PATH, open, prefetch);
 
   return (
     <QuickViewContext.Provider value={{ open, prefetch }}>
