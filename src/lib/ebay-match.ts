@@ -65,8 +65,23 @@ export function priceFilter(minUsdCents: number, currency: string): string {
 /** 5% under our own plausibility floor: our FX rates are constants, eBay converts at live rates. */
 export const FX_SLACK = 0.95;
 
+/** EU member states: the EU market's eBay rows may come from a seller in any of them (no customs, EU postage). */
+export const EU_COUNTRIES: ReadonlySet<string> = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"]);
+
+/**
+ * Local sellers only (visitor feedback on WargameCompare, 2026-10-31: overseas sellers' postage made eBay rows "a lot of
+ * wasted clicks"): the search asks for items located in the market's own country, and for the EU (eBay Spain stands for
+ * it) screenItems keeps any EU seller.
+ */
+export function locationFilter(market: Country): string[] {
+  return market === "EU" ? [] : [`itemLocationCountry:${isoCountry(market)}`];
+}
+export function isLocalSeller(market: Country, country: string): boolean {
+  return market === "EU" ? EU_COUNTRIES.has(country) : country === isoCountry(market);
+}
+
 export function cardFilter(market: Country, marketUsd: number | null): string {
-  const parts = ["buyingOptions:{FIXED_PRICE}", `deliveryCountry:${isoCountry(market)}`];
+  const parts = ["buyingOptions:{FIXED_PRICE}", `deliveryCountry:${isoCountry(market)}`, ...locationFilter(market)];
   // plausibleSinglePrice's 0.3× floor applies from US$3; moved to the server so
   // hundreds of cheap base copies can't push a US$4,000 Manga past `limit`.
   if (marketUsd != null && marketUsd >= 300) parts.push(priceFilter(Math.round(FX_SLACK * 0.3 * marketUsd), currencyOf(market)));
@@ -74,7 +89,7 @@ export function cardFilter(market: Country, marketUsd: number | null): string {
 }
 
 export function sealedFilter(market: Country, marketUsd: number | null): string {
-  const parts = ["buyingOptions:{FIXED_PRICE}", "conditions:{NEW}", `deliveryCountry:${isoCountry(market)}`];
+  const parts = ["buyingOptions:{FIXED_PRICE}", "conditions:{NEW}", `deliveryCountry:${isoCountry(market)}`, ...locationFilter(market)];
   if (marketUsd != null) parts.push(priceFilter(Math.round(FX_SLACK * 0.5 * marketUsd), currencyOf(market)));
   return parts.join(",");
 }
@@ -361,6 +376,10 @@ export function screenItems(items: EbayItem[], target: ChooseTarget, market: Cou
       no("location");
       continue;
     }
+    if (loc && !isLocalSeller(market, loc)) {
+      no("not-local");
+      continue;
+    }
     if (it.conditionId === GRADED_CONDITION_ID || /^graded$/i.test(it.condition ?? "")) {
       no("graded");
       continue;
@@ -373,6 +392,11 @@ export function screenItems(items: EbayItem[], target: ChooseTarget, market: Cou
     const l = mapItem(it);
     if (!l) {
       no("unusable");
+      continue;
+    }
+    // Postage eBay does not state (calculated, or none given) is a cost the row would hide: never a row (2026-10-31).
+    if (l.shippingCents == null) {
+      no("postage-unknown");
       continue;
     }
     if (ref == null) {

@@ -133,7 +133,7 @@ test("prime: live count → budget; the dispatch cap lowers it; spend stops at i
   const s = calls.find((c) => c.url.includes("/item_summary/search"))!;
   const h = s.init.headers as Record<string, string>;
   assert.equal(h["X-EBAY-C-MARKETPLACE-ID"], "EBAY_US");
-  assert.equal(h["X-EBAY-C-ENDUSERCTX"], "affiliateCampaignId=5339155912");
+  assert.equal(h["X-EBAY-C-ENDUSERCTX"], "affiliateCampaignId=5339155912,contextualLocation=country%3DUS%2Czip%3D64101", "the buyer's location, so eBay quotes postage to it");
   assert.ok(s.init.signal, "timeout signal");
   assert.match(s.url, /sort=price/);
 });

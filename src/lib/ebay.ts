@@ -24,6 +24,22 @@ const TIMEOUT_MS = 15_000;
 export const EBAY_MARKETPLACE = { US: "EBAY_US", AU: "EBAY_AU", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" } as const;
 export type EbayMarketplace = (typeof EBAY_MARKETPLACE)[keyof typeof EBAY_MARKETPLACE];
 
+/** Where the buyer is, per marketplace (country + a central postcode), so eBay quotes real postage in shippingOptions. */
+export const BUYER_LOCATION: Record<EbayMarketplace, { country: string; zip: string }> = {
+  EBAY_US: { country: "US", zip: "64101" },
+  EBAY_AU: { country: "AU", zip: "2000" },
+  EBAY_GB: { country: "GB", zip: "B1 1AA" },
+  EBAY_SG: { country: "SG", zip: "238801" },
+  EBAY_CA: { country: "CA", zip: "M5V 2T6" },
+  EBAY_ES: { country: "ES", zip: "28013" },
+};
+
+/** The end-user context header: our campaign, and the buyer's location (visitor feedback, 2026-10-31: real postage). */
+export function endUserContext(marketplace: EbayMarketplace): string {
+  const b = BUYER_LOCATION[marketplace];
+  return `affiliateCampaignId=${EBAY_CAMPAIGN_ID},contextualLocation=${encodeURIComponent(`country=${b.country},zip=${b.zip}`)}`;
+}
+
 export { DEFAULT_MAX_CALLS, DEFAULT_QUOTA_RESERVE };
 
 /** True only when BOTH of OP Compare's eBay credentials are set. */
@@ -208,7 +224,7 @@ export async function searchBrowse(query: BrowseQuery): Promise<BrowseResult> {
       headers: {
         Authorization: `Bearer ${token}`,
         "X-EBAY-C-MARKETPLACE-ID": query.marketplace,
-        "X-EBAY-C-ENDUSERCTX": `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`,
+        "X-EBAY-C-ENDUSERCTX": endUserContext(query.marketplace),
       },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
