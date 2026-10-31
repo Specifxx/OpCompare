@@ -2,12 +2,18 @@
 // contact messages (/api/price-report, /api/stores/suggest, /api/feedback,
 // /api/contact). Inputs arrive already parsed by lib/inbox-rules.ts. Nothing
 // here reads the session (routes pass the user id), stores an IP address or
-// sends email. Every read is one narrow lookup by key.
+// sends email. Every read is one narrow lookup by key. Price reports and store
+// suggestions are also copied, without the user id, to the private reports repo
+// every Compare Empire site shares (lib/reports-github.ts), which a daily job
+// there triages into one GitHub issue per site.
 import { publicDb } from "./public-db";
 import { prisma } from "./db";
 import { formatTicketNumber, nextNumber, type CounterClient } from "./order-number";
 import type { SupportInput, ContactInput, FeedbackInput, PriceReportInput, StoreSuggestionInput } from "./inbox-rules";
 import { STORES, sourceLabel } from "./stores";
+import { cleanReport, saveReport } from "./reports-github";
+
+const cents = (c: number | null | undefined, cur: string | null | undefined) => (c == null ? null : `${(c / 100).toFixed(2)}${cur ? ` ${cur}` : ""}`);
 
 /**
  * A wrong-price report. The product must exist; what we SHOWED (price, currency,
@@ -15,8 +21,8 @@ import { STORES, sourceLabel } from "./stores";
  * request. A vanished offer stores nulls.
  */
 export async function createPriceReport(v: PriceReportInput, userId: string | null): Promise<{ ok: true } | { ok: false; status: 400; error: string }> {
-  const card = await publicDb.card.findUnique({ where: { id: v.productId }, select: { id: true } });
-  const sealed = card ? null : await publicDb.sealed.findUnique({ where: { id: v.productId }, select: { id: true } });
+  const card = await publicDb.card.findUnique({ where: { id: v.productId }, select: { id: true, name: true } });
+  const sealed = card ? null : await publicDb.sealed.findUnique({ where: { id: v.productId }, select: { id: true, name: true } });
   if (!card && !sealed) return { ok: false, status: 400, error: "Unknown product" };
   const offer = await publicDb.offer.findUnique({
     where: { productId_source_market: { productId: v.productId, source: v.source, market: v.market } },
@@ -40,6 +46,11 @@ export async function createPriceReport(v: PriceReportInput, userId: string | nu
       page: v.page,
     },
   });
+  const r = cleanReport(
+    { kind: "wrong-price", product: `${(card ?? sealed)!.name} (#${v.productId})`, store: sourceLabel(v.source, v.market), region: v.market, shown: cents(offer?.priceCents, offer?.currency), actual: cents(v.claimedCents, offer?.currency), issue: v.issue, note: v.note, page: v.page },
+    "opcompare",
+  );
+  if (r.ok) await saveReport(r.report);
   return { ok: true };
 }
 
@@ -65,6 +76,8 @@ export async function createStoreSuggestion(
   const existing = await prisma.storeSuggestion.findFirst({ where: { storeUrl: v.storeUrl }, select: { id: true } });
   if (existing) return { ok: true, alreadySuggested: true };
   await prisma.storeSuggestion.create({ data: { storeName: v.storeName, storeUrl: v.storeUrl, country: v.country, note: v.note, userId } });
+  const r = cleanReport({ kind: "suggest-store", store: v.storeName, storeUrl: v.storeUrl, region: v.country, note: v.note }, "opcompare");
+  if (r.ok) await saveReport(r.report);
   return { ok: true };
 }
 
