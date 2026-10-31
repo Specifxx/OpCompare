@@ -12,7 +12,8 @@
       "data": false,
       "snapshot": false,
       "claude/*": false,
-      "claude/**": false
+      "claude/**": false,
+      "reports": false
     }
   }
 }
