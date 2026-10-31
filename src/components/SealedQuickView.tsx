@@ -13,7 +13,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { Dialog } from "./ui/Dialog";
+import { Dialog, QUICK_VIEW_SHEET } from "./ui/Dialog";
 import { StoreCodeChip } from "./StoreCodeChip";
 
 // Quick-view popup for sealed products (RiftCompare's SealedQuickView): a plain
@@ -63,7 +63,7 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
   return (
     <Ctx.Provider value={{ open, prefetch }}>
       {children}
-      <Dialog open={!!shown} onClose={close} size="2xl" z="overlay" labelledBy="sealed-quickview-title">
+      <Dialog open={!!shown} onClose={close} size="2xl" z="overlay" placement="sheet" className={QUICK_VIEW_SHEET} labelledBy="sealed-quickview-title">
         {display ? <SealedQuickViewModal key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb} label={display.label} onClose={close} /> : null}
       </Dialog>
     </Ctx.Provider>
@@ -91,7 +91,8 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
   const reportable = [...new Map(listings.filter((l) => !l.ebay).map((l) => [l.source, { source: l.source, label: l.label }])).values()];
 
   return (
-    <div className="relative max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
+    <div className="relative max-h-[88vh] overflow-hidden rounded-t-2xl border border-ink-700 bg-ink-900 shadow-2xl sm:rounded-lg">
+      <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-ink-700 sm:hidden" />
       <button type="button" onClick={onClose} aria-label="Close" className="tap-icon absolute right-3 top-3 z-20 rounded-full bg-ink-950/80 text-slate-300 hover:text-white">
         ✕
       </button>

@@ -83,6 +83,11 @@ export function useEscapeLayer(active: boolean, onEscape: () => void) {
   }, [active]);
 }
 
+/** The card and sealed quick views' panel (owner, 2026-10-31: K Young's quick view): with
+ *  `placement="sheet"`, a bottom sheet rising from the bottom edge on phones and a centred
+ *  card from `sm` up. The quick view inside draws its own frame. */
+export const QUICK_VIEW_SHEET = "rounded-t-2xl border-0 bg-transparent shadow-none";
+
 export type DialogSize = "md" | "lg" | "xl" | "2xl" | "3xl";
 export type DialogPlacement = "center" | "top" | "sheet" | "right";
 export type DialogZ = "overlay" | "modal" | "sheet";

@@ -3213,3 +3213,12 @@ ratings). Watchdog alerts still go to `ownerEmail()`.
 
 The email outbox (`email.yml`) still skips until the repository secrets `RESEND_API_KEY` and `EMAIL_FROM` exist, so
 until then the inbox is read in `/admin/inbox`, and `/contact` leads with the address so visitors can email directly.
+
+## 2026-10-31 — The quick views open as K Young's bottom sheet on phones
+
+Owner, 2026-10-31: "I really like the K Young quick view … especially on mobile phone it's so smooth", for every site
+but RiftCompare. OP Compare's card and sealed quick views were centred dialogs that a phone had to scroll as a whole.
+Both now use `Dialog`'s `placement="sheet"` with `QUICK_VIEW_SHEET` (`src/components/ui/Dialog.tsx`): below `sm` the
+panel rises from the bottom edge with a grab handle and scrolls inside itself, from `sm` up it is the same centred card
+as before. The card art is capped at 120px on phones so the prices sit higher. Content, URLs (`/card/<slug>` pushed
+while open) and the server-rendered pages are unchanged.

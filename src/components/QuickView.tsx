@@ -108,7 +108,8 @@ export function QuickView({
   const ebay = ebayLabel(country);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+    <div className="relative overflow-hidden rounded-t-2xl border border-ink-700 bg-ink-900 shadow-2xl sm:rounded-xl">
+      <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-ink-700 sm:hidden" />
       <button
         type="button"
         onClick={onClose}
@@ -121,7 +122,7 @@ export function QuickView({
       <div className="grid sm:grid-cols-[240px_minmax(0,1fr)]">
         {/* Art + the real page. Capped on phones so the prices sit higher. */}
         <div className="bg-ink-950/40 p-4">
-          <div className="mx-auto w-full max-w-[170px] sm:max-w-none">
+          <div className="mx-auto w-full max-w-[120px] sm:max-w-none">
             {data?.hasImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
