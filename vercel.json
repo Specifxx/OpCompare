@@ -13,7 +13,8 @@
       "snapshot": false,
       "claude/*": false,
       "claude/**": false,
-      "reports": false
+      "reports": false,
+      "forum": false
     }
   }
 }

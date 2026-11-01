@@ -1317,6 +1317,19 @@ body {
 }
 /* xmas-site:end */
 
+/* The beta forum (src/components/forum/forum.css) in this site's colours. */
+.fm {
+  --fm-card: rgb(var(--c-ink-900));
+  --fm-sunk: rgb(var(--c-ink-950));
+  --fm-line: rgb(var(--c-ink-700));
+  --fm-ink: rgb(var(--c-slate-100));
+  --fm-muted: rgb(var(--c-slate-400));
+  --fm-accent: rgb(var(--c-brand-400));
+  --fm-on-accent: rgb(var(--c-ink-950));
+  --fm-accent-soft: rgb(var(--c-brand-400) / 0.14);
+  --fm-radius: 12px;
+}
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
