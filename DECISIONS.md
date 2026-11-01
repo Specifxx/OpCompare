@@ -3343,3 +3343,11 @@ type chip to its hub instead of a search. The guide
 their cards, so the two don't compete in search. `getCardText` joins the
 pages' post context only (`text`, optional): the share images keep the
 day-old loaders.
+
+## /contact is email-only; no Resend — 2026-11-01
+
+The owner, asked to switch on Resend for the inbox emails: "I don't want to use like another service for this … They
+can just email us directly". So the email outbox stays off, and `/contact` drops its form: it leads with
+opcompareofficial@gmail.com and gives subject-filled mailto links for prices, stores, payments and feedback. The other
+forms (price reports, store suggestions, support, feedback) still save to `/admin/inbox`; the 2026-10-30 routing to
+`CONTACT_EMAIL` takes effect only if the outbox is ever switched on.
