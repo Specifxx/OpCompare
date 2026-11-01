@@ -3360,3 +3360,12 @@ Owner, 2026-11-01: "the eBay API for all websites should also prioritise the US.
 `executionOrder` runs the US first every day and rotates only the others (each of them still takes the last slot in
 turn), and phase 2 and the overflow list the US's remaining due pairs before any other market's (`usFirst`). Shares,
 floors, tiers and intervals are unchanged (`tests/ebay-plan.test.ts`).
+
+## 2026-11-01: eBay and Amazon rows look like the other price rows
+
+The owner: "the ebay and amazon links should blend in and look exactly the same as the other price rows … reflect that
+change on the other sites that require it." Paid marketplace rows (eBay, Amazon, and TCGplayer where it is pinned) keep
+their place and their "Ad"/paid-link label, but lose their brand tints and brand-coloured buttons: they use the same row
+and the same button as a store. They are still never counted as a store and never re-ranked by commission. This
+reverses the 2026-10-30 "bright, catchy colour" pinned rows; eBay ad strips and panels outside the price rows keep
+their own look.

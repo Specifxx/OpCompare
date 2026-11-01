@@ -56,7 +56,8 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   // The markup is PriceBoardView's; the rows are resolved in lib/board-model.ts.
   const src = fs.readFileSync(path.resolve(__dirname, "../src/components/PriceBoardView.tsx"), "utf8");
   const model = fs.readFileSync(path.resolve(__dirname, "../src/lib/board-model.ts"), "utf8");
-  assert.match(src, /btn-ebay/);
+  // eBay's row wears the stores' red button (owner, 2026-11-01: "blend in").
+  assert.doesNotMatch(src, /isEbay \? "btn-ebay"/);
   assert.match(src, /Buy on eBay →/);
   assert.match(src, /Cheapest matching listing we found/);
   assert.match(src, /More listings on \$\{ebayLabel\(country\)\} →/);

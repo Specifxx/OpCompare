@@ -263,7 +263,7 @@ export function QuickView({
                           data-page={PAGE}
                           data-card={data.slug}
                           data-surface="quickview_row"
-                          className={`${r.ebay ? "btn-ebay" : "btn-primary"} order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
+                          className={`btn-primary order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
                         >
                           {r.source === "tcgplayer" ? "Buy on TCGplayer →" : r.ebay ? "Buy on eBay →" : "View deal →"}
                         </a>
@@ -309,7 +309,7 @@ export function QuickView({
                   data-page={PAGE}
                   data-card={data.slug}
                   data-surface="ebay_fallback"
-                  className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3 transition-colors hover:border-[#0064d2]/70"
+                  className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-ink-800 p-3 transition-colors hover:border-ink-600"
                 >
                   <span className="min-w-0 flex-1 basis-44 text-xs text-slate-300">
                     <span className="block font-semibold text-white">
