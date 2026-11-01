@@ -1017,24 +1017,6 @@ body {
    reduced motion it sets `entered` true (and unmounts) immediately rather than
    waiting out a transition that will never visibly run. */
 
-/* Respect users who prefer less motion: neutralise every animation/transition. */
-@media (prefers-reduced-motion: reduce) {
-  .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    /* Delays too, not just durations: the staggered hero fade-ins
-       (`animate-fade-in [animation-delay:…]`, fill `both`) otherwise sat at
-       opacity 0 for up to 360ms, the LCP h1 included (measured 2026-09-23). */
-    animation-delay: 0s !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-  /* nextjs-toploader's progress bar is pure motion with no informational
-     content once it's gone — nothing here is lost by hiding it outright. */
-  #nprogress { display: none !important; }
-}
-
 /* xmas-common:start (the same block on every Compare site) */
 /* ---------------------------------------------------------------------------
    Christmas (data-season="christmas", lib/season.ts; 1 November to 26 December).
@@ -1334,3 +1316,21 @@ body {
   --xmas-pill-border: rgb(185 28 28 / 0.4);
 }
 /* xmas-site:end */
+
+/* Respect users who prefer less motion: neutralise every animation/transition. */
+@media (prefers-reduced-motion: reduce) {
+  .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    /* Delays too, not just durations: the staggered hero fade-ins
+       (`animate-fade-in [animation-delay:…]`, fill `both`) otherwise sat at
+       opacity 0 for up to 360ms, the LCP h1 included (measured 2026-09-23). */
+    animation-delay: 0s !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* nextjs-toploader's progress bar is pure motion with no informational
+     content once it's gone — nothing here is lost by hiding it outright. */
+  #nprogress { display: none !important; }
+}
