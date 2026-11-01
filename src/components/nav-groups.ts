@@ -57,6 +57,7 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers", "rarities", "where to buy"] },
       { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
+      { href: "/forum", label: "Community forum", keywords: ["forum", "community", "discussion", "talk", "questions"] },
       { href: "/keywords", label: "Keywords glossary", keywords: ["keywords", "glossary", "mechanics", "rules", "rush", "blocker", "banish", "trigger", "double attack", "on play", "what does"] },
       { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
