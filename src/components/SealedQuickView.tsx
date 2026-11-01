@@ -154,7 +154,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this in {cur.place} right now.</p>
-                <a href={m.ebaySearch} target="_blank" rel={outboundRel()} data-retailer="ebay_sealed_search" data-page="sealed" data-card={data.slug} data-surface="ebay_search" className="btn-ebay mt-3 inline-flex text-xs">
+                <a href={m.ebaySearch} target="_blank" rel={outboundRel()} data-retailer="ebay_sealed_search" data-page="sealed" data-card={data.slug} data-surface="ebay_search" className="btn-primary mt-3 inline-flex text-xs">
                   Search eBay →
                 </a>
               </div>
@@ -184,7 +184,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
                         data-page="sealed"
                         data-card={data.slug}
                         data-surface="sealed_quickview"
-                        className={isOpen ? `px-3 py-1.5 text-xs ${l.ebay ? "btn-ebay" : isBest ? "btn-primary" : "btn-primary"}` : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"}
+                        className={isOpen ? `px-3 py-1.5 text-xs btn-primary` : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"}
                       >
                         {l.source === "tcgplayer" ? "TCGplayer →" : l.ebay ? "eBay →" : "View →"}
                       </a>

@@ -60,7 +60,7 @@ export function PreorderProduct({
     href: string;
     retailer: string;
     surface: string;
-    btn: "btn-ebay" | "btn-tcg";
+    btn: "btn-primary";
     wide: string;
     narrow: string;
     aria: string;
@@ -106,7 +106,7 @@ export function PreorderProduct({
         href: ebay.href,
         retailer: ebay.retailer,
         surface: "preorder_marketplace_ebay",
-        btn: "btn-ebay",
+        btn: "btn-primary",
         wide: "Buy on eBay →",
         narrow: "→",
         aria: `Buy on ${ebay.label}`,
@@ -119,7 +119,7 @@ export function PreorderProduct({
         href: ebaySearch,
         retailer: "ebay_search",
         surface: "preorder_marketplace_ebay",
-        btn: "btn-ebay",
+        btn: "btn-primary",
         wide: "Search eBay →",
         narrow: "Search",
         aria: `Search ${ebayLabel(country)} for ${s.name}`,
@@ -134,7 +134,7 @@ export function PreorderProduct({
         href: tcgplayer.href,
         retailer: tcgplayer.retailer,
         surface: "preorder_marketplace_tcgplayer",
-        btn: "btn-tcg",
+        btn: "btn-primary",
         wide: "Buy on TCGplayer →",
         narrow: "→",
         aria: "Buy on TCGplayer",
@@ -148,7 +148,7 @@ export function PreorderProduct({
         href: tcgHref,
         retailer: "tcgplayer",
         surface: "preorder_marketplace_tcgplayer",
-        btn: "btn-tcg",
+        btn: "btn-primary",
         wide: "See TCGplayer →",
         narrow: "→",
         aria: `See ${s.name} on TCGplayer`,

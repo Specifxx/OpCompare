@@ -263,11 +263,11 @@ test("the product card: every outbound link is tagged and rel-marked", () => {
   assert.match(card, /outboundRel/);
 });
 
-test("marketplace buttons wear their own colour: eBay blue, TCGplayer violet, stores the shared red", () => {
+test("marketplace buttons wear the stores' shared red (owner, 2026-11-01: blend in)", () => {
   const card = read("src/components/PreorderProduct.tsx");
   // The Marketplaces block: eBay's listing or search, TCGplayer's listing or link.
-  assert.equal((card.match(/surface: "preorder_marketplace_ebay",\s*btn: "btn-ebay"/g) ?? []).length, 2, "eBay listing and eBay search");
-  assert.equal((card.match(/surface: "preorder_marketplace_tcgplayer",\s*btn: "btn-tcg"/g) ?? []).length, 2, "TCGplayer listing and TCGplayer link");
+  assert.equal((card.match(/surface: "preorder_marketplace_ebay",\s*btn: "btn-primary"/g) ?? []).length, 2, "eBay listing and eBay search");
+  assert.equal((card.match(/surface: "preorder_marketplace_tcgplayer",\s*btn: "btn-primary"/g) ?? []).length, 2, "TCGplayer listing and TCGplayer link");
   // The store ranking: the shared red, its own surface.
   assert.match(card, /data-surface="preorder_row"\s*className="btn-primary/);
   // The old bottom bar is gone: the marketplace links live in the block at the top.
