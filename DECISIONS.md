@@ -3329,3 +3329,17 @@ reason to come back that search rankings alone don't. `/forum` (docs/forum.md):
   DiscussionForumPosting JSON-LD.
 - **Moderation:** the owner asks Claude; a post is removed by an edit to
   `forum.json` (`removeFromForum` in `src/lib/forum/core.ts`).
+
+## 2026-11-01 — Trait hubs: one price list per crew and faction
+
+Bill asked for more SEO-indexable hubs. `/cards/trait/[slug]` lists every card
+number whose type line carries one trait (Straw Hat Crew, Navy, Whitebeard
+Pirates…), base printing first, most valuable first, with `/cards/trait` as the
+index. It reads only the cached `getCardText` index and `getCatalog`, like the
+keyword pages. Traits on fewer than 12 card numbers get no page, and spellings
+that differ only in case ("FILM"/"Film") share one hub. Card pages link a
+type chip to its hub instead of a search. The guide
+`one-piece-card-game-crews-most-valuable` compares the hubs and never lists
+their cards, so the two don't compete in search. `getCardText` joins the
+pages' post context only (`text`, optional): the share images keep the
+day-old loaders.

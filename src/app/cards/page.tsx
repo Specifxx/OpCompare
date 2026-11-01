@@ -8,7 +8,8 @@ import {
   RARITIES,
   RARITY_KEYS,
 } from "@/lib/constants";
-import { getCatalog } from "@/lib/data";
+import { getCardText, getCatalog } from "@/lib/data";
+import { traitHubs } from "@/lib/traits";
 import { printingFacetHref, rarityFacetHref, typeFacetHref } from "@/lib/facets";
 import { int, money } from "@/lib/format";
 import { median } from "@/lib/selectors";
@@ -38,7 +39,8 @@ const PRINTING_NOTES: Record<string, string> = {
 };
 
 export default async function CardsHub() {
-  const cat = await getCatalog();
+  const [cat, text] = await Promise.all([getCatalog(), getCardText()]);
+  const traits = traitHubs(text);
   const stat = (f: (c: (typeof cat.cards)[number]) => boolean) => {
     const cs = cat.cards.filter(f);
     return {
@@ -137,6 +139,24 @@ export default async function CardsHub() {
             );
           })}
         </div>
+      </section>
+      <section className="mt-8">
+        <SectionHeader title="By crew and faction" />
+        <p className="mb-3 text-sm text-slate-400">The type printed under a card&apos;s name, such as Straw Hat Crew or Navy.</p>
+        <ul className="flex flex-wrap gap-2">
+          {traits.slice(0, 30).map((h) => (
+            <li key={h.slug}>
+              <Link href={`/cards/trait/${h.slug}`} className="chip border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600">
+                {h.name} <span className="text-slate-500">{int(h.numbers.size)}</span>
+              </Link>
+            </li>
+          ))}
+          <li>
+            <Link href="/cards/trait" className="chip border border-ink-700 bg-ink-850 text-brand-400 hover:border-ink-600">
+              All {traits.length} types →
+            </Link>
+          </li>
+        </ul>
       </section>
       <p className="mt-8 text-sm text-slate-400">
         Want the whole list on one page?{" "}

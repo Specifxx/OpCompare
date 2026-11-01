@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getCatalog, getLibraryDecks, getSealedCatalog } from "@/lib/data";
+import { getCardText, getCatalog, getLibraryDecks, getSealedCatalog } from "@/lib/data";
+import { traitHubs } from "@/lib/traits";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { AUTHORS, POSTS, postHref } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
@@ -44,6 +45,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
+    // Trait hubs (lib/traits.ts): the index and every type with enough cards.
+    ...(await getCardText().then((t) => ["/cards/trait", ...traitHubs(t).map((h) => `/cards/trait/${h.slug}`)]).catch(() => [] as string[])).map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now })),
     ...catalogueEntries(cat, now),
     ...(await deckEntries(now)),
   ];
