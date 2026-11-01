@@ -326,7 +326,7 @@ export function fillPairs(
 }
 
 export interface RunPlan {
-  /** Pairs to search, in execution order (markets rotated by UTC day). */
+  /** Pairs to search, in execution order (the US first, the other markets rotated by UTC day). */
   order: Pair[];
   /** Due pairs the modelled budget did not reach; searched only if real spend leaves room (they stay due otherwise). */
   overflow: Pair[];
@@ -339,11 +339,26 @@ export interface RunPlan {
 }
 
 /** Execution order of the markets, rotated by UTC day so no market is always last. */
-export function rotateMarkets(markets: EbayMarket[], dayIndex: number): EbayMarket[] {
+export function rotateMarkets<M>(markets: M[], dayIndex: number): M[] {
   const n = markets.length;
   if (!n) return [];
   const k = ((dayIndex % n) + n) % n;
   return [...markets.slice(k), ...markets.slice(0, k)];
+}
+
+/**
+ * The US first (owner, 2026-11-01: "the eBay API for all websites should also prioritise the US"),
+ * then the other markets rotated by UTC day, so a quota stop or 429 mid-run cuts another market, never
+ * the US, and no other market is always the one cut.
+ */
+export function executionOrder(markets: EbayMarket[], dayIndex: number): EbayMarket[] {
+  const others = markets.filter((m) => m !== "US");
+  return [...(markets.includes("US") ? (["US"] as EbayMarket[]) : []), ...rotateMarkets(others, dayIndex)];
+}
+
+/** Spill order: the US's remaining due pairs first, then every other market's, merged by the usual ordering. */
+export function usFirst(a: Pair, b: Pair, now: Date): number {
+  return Number(b.market === "US") - Number(a.market === "US") || comparePairs(a, b, now);
 }
 
 export function utcDayIndex(now: Date): number {
@@ -354,8 +369,9 @@ export function utcDayIndex(now: Date): number {
  * Plan a run.
  * Phase 1: each market gets floor(budget × share) modelled calls and takes its
  *          own due pairs in order until that allowance is used.
- * Phase 2: the unused allowance goes to the remaining due pairs of ALL markets,
- *          merged by the same ordering.
+ * Phase 2: the unused allowance goes to the remaining due pairs, the US's
+ *          first, then all other markets' merged by the same ordering.
+ * The US runs first (executionOrder).
  * With `only` set, that market gets the whole budget and nothing spills.
  */
 export function planRun(
@@ -392,7 +408,7 @@ export function planRun(
   const overflow: Pair[] = [];
   const left = budget - total;
   if (!opts.only && left > 0) {
-    rest.sort((a, b) => comparePairs(a, b, now));
+    rest.sort((a, b) => usFirst(a, b, now));
     let i = 0;
     for (; i < rest.length && spill + rest[i].cost <= left; i++) {
       const p = rest[i];
@@ -401,8 +417,8 @@ export function planRun(
       spill += p.cost;
     }
     overflow.push(...rest.slice(i));
-  } else overflow.push(...rest.sort((a, b) => comparePairs(a, b, now)));
-  const marketOrder = rotateMarkets(markets, opts.dayIndex ?? utcDayIndex(now));
+  } else overflow.push(...rest.sort((a, b) => usFirst(a, b, now)));
+  const marketOrder = executionOrder(markets, opts.dayIndex ?? utcDayIndex(now));
   const order = marketOrder.flatMap((m) => taken.get(m) ?? []);
   return { order, overflow, marketOrder, allowance, used, spill, modelled: total + spill };
 }

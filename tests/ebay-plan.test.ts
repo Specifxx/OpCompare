@@ -45,6 +45,7 @@ import {
   parseOnlyMarket,
   planRun,
   rotateMarkets,
+  executionOrder,
   tierOf,
   type EbayMarket,
   type Pair,
@@ -311,17 +312,28 @@ test("planRun: EBAY_ONLY_MARKET gets the whole budget and nothing spills", () =>
   assert.equal(plan.spill, 0);
 });
 
-test("planRun: the execution order rotates by UTC day, so every market takes the last slot", () => {
+test("planRun: the US runs first every day; the other markets rotate, so each takes the last slot", () => {
   const due = Object.fromEntries((["US", "UK", "AU", "EU", "CA"] as EbayMarket[]).map((m) => [m, pairs(m, 3)]));
   const last = new Set<string>();
-  for (let d = 0; d < 5; d++) {
+  for (let d = 0; d < 4; d++) {
     const plan = planRun(due, 4000, now, { dayIndex: d });
+    assert.equal(plan.marketOrder[0], "US");
+    assert.equal(plan.order[0].market, "US");
     last.add(plan.marketOrder[plan.marketOrder.length - 1]);
     assert.equal(plan.order[plan.order.length - 1].market, plan.marketOrder[plan.marketOrder.length - 1]);
   }
-  assert.equal(last.size, 5);
+  assert.deepEqual([...last].sort(), ["AU", "CA", "EU", "UK"]);
   assert.deepEqual(rotateMarkets(["US", "UK"], 3), ["UK", "US"]);
+  assert.deepEqual(executionOrder(["UK", "AU"], 1), ["AU", "UK"], "no US due: just the rotation");
   assert.deepEqual(EBAY_MARKETS.slice(0, 5), ["US", "UK", "AU", "EU", "CA"]);
+});
+
+test("planRun: the spill goes to the US's due pairs before any other market's", () => {
+  // Every market is short of its share except the US and the UK, which both have far more due.
+  const plan = planRun({ US: pairs("US", 2000), UK: pairs("UK", 2000), AU: pairs("AU", 2) }, 1000, now, { dayIndex: 0 });
+  assert.equal(plan.used.UK, Math.floor(1000 * MARKET_SHARES.UK / 1.25) * 1.25, "the UK keeps its own share and no more");
+  assert.ok(plan.used.US > Math.floor(1000 * MARKET_SHARES.US), "the US takes the spill");
+  assert.equal(plan.overflow[0].market, "US", "overflow lists the US first");
 });
 
 test("the methodology page states the plan's floors and intervals", () => {
