@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Country } from "../country";
-import type { Catalog, CardLite, IndexPoint, SealedLite, SiteStats } from "../data";
+import type { Catalog, CardLite, CardTextIndex, IndexPoint, SealedLite, SiteStats } from "../data";
 
 // Every post is built from OP Compare's own price database at request time
 // (through the same cached loaders as the price pages), so a figure in a post
@@ -12,6 +12,8 @@ export interface PostContext {
   stats: SiteStats;
   index: IndexPoint[];
   country: Country;
+  /** Card types and keywords per number (getCardText). Pages only: the share images' day-old context leaves it out, so a post must cope without it. */
+  text?: CardTextIndex;
 }
 
 export interface PostSection {

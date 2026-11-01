@@ -1,5 +1,6 @@
 import type { Country } from "../country";
 import {
+  getCardText,
   getCatalog,
   getCatalogForImages,
   getIndexSeries,
@@ -12,8 +13,8 @@ import {
 import type { PostContext } from "./types";
 
 export async function postContext(country: Country): Promise<PostContext> {
-  const [cat, sealed, stats, index] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats(), getIndexSeries()]);
-  return { cat, sealed, stats, index, country };
+  const [cat, sealed, stats, index, text] = await Promise.all([getCatalog(), getSealedCatalog(), getSiteStats(), getIndexSeries(), getCardText().catch(() => undefined)]);
+  return { cat, sealed, stats, index, country, text };
 }
 
 /** The same context for a post's share image: the day-old image loaders (lib/data.ts, getCatalogForImages). */

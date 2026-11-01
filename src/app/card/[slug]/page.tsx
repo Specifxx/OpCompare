@@ -52,7 +52,8 @@ import {
 import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, type Country } from "@/lib/country";
-import { getCardDetail, getCatalog, getChaseStrip, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
+import { getCardDetail, getCardText, getCatalog, getChaseStrip, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
+import { traitHref, traitHubs } from "@/lib/traits";
 import { MiniChaseAds } from "@/components/MiniChaseAds";
 import type { EbayPanelData } from "@/lib/listing-panel";
 import { boardModel } from "@/lib/board-model";
@@ -154,10 +155,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CardPage({ params }: Props) {
   const co = COUNTRIES[BASELINE];
-  const [card, cat] = await Promise.all([
+  const [card, cat, text] = await Promise.all([
     getCardDetail(params.slug),
     getCatalog(),
+    getCardText(),
   ]);
+  const traits = traitHubs(text);
   if (!card) notFound();
   const history = await getProductHistory(card.id);
   const lite = cat.bySlug.get(card.slug);
@@ -550,7 +553,7 @@ export default async function CardPage({ params }: Props) {
             {card.subtypes.length || keys.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {card.subtypes.map((t) => (
-                  <Link key={t} href={`/browse?q=${encodeURIComponent(t)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  <Link key={t} href={traitHref(traits, t) ?? `/browse?q=${encodeURIComponent(t)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
                     {t}
                   </Link>
                 ))}
