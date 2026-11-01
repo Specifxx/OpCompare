@@ -3351,3 +3351,12 @@ can just email us directly". So the email outbox stays off, and `/contact` drops
 opcompareofficial@gmail.com and gives subject-filled mailto links for prices, stores, payments and feedback. The other
 forms (price reports, store suggestions, support, feedback) still save to `/admin/inbox`; the 2026-10-30 routing to
 `CONTACT_EMAIL` takes effect only if the outbox is ever switched on.
+
+## 2026-11-01 — The US runs first in the eBay pass
+
+Owner, 2026-11-01: "the eBay API for all websites should also prioritise the US." The US already had the largest share
+(50%), but the execution order rotated every market by UTC day, so one day in five the US ran last and was the market a
+429 or a short quota cut; and phase 2 handed unused allowance to all markets' due pairs merged by price. Now
+`executionOrder` runs the US first every day and rotates only the others (each of them still takes the last slot in
+turn), and phase 2 and the overflow list the US's remaining due pairs before any other market's (`usFirst`). Shares,
+floors, tiers and intervals are unchanged (`tests/ebay-plan.test.ts`).
