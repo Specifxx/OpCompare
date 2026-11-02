@@ -5,23 +5,24 @@
 //   1. collect every limit and health signal (lib/health-collect.ts; each
 //      source guarded, so a broken one is "unknown", not a crash)
 //   2. store the report in Meta "health:report" for /admin and /admin/health
-//   3. tell the owner about NEW problems, worsened ones, reminders and
-//      recoveries: by email to the owner when mail is configured, else through
-//      one GitHub issue (counts only: the repository is public)
-//   4. on Mondays, the weekly summary email
+//   3. tell the owner about RED only (new failures, daily reminders, recoveries):
+//      by email when mail is configured, else through one GitHub issue (counts
+//      only: the repository is public). Warnings wait for Empire HQ.
+//   4. write ops-status.json for Empire HQ (riftcompare.com/admin/hq) and the one
+//      Monday report, which replaced the weekly summary email (2026-11-02)
 //
 // Exits 1 only when it found a problem it could not tell anyone about, so
 // GitHub's own failed-run email is the last resort.
+import { writeFileSync } from "node:fs";
 import { prisma } from "../src/lib/db";
 import { isEmailEnabled } from "../src/lib/email";
 import { collectAll } from "../src/lib/health-collect";
 import { syncWatchdogIssue } from "../src/lib/health-issue";
-import { inboxTotal, planAlerts, renderAlertEmail, renderDigestEmail } from "../src/lib/health";
+import { inboxTotal, planAlerts, renderAlertEmail } from "../src/lib/health";
 import { loadAlertState, saveAlertState, saveReport } from "../src/lib/admin-health-report";
 import { sendOwnerEmail } from "../src/lib/owner-notify";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const DIGEST_KEY = "health:digest-at";
 
 async function main() {
   const now = new Date();
@@ -52,18 +53,13 @@ async function main() {
   // Only remember that the owner was told when someone really was: otherwise the next run retries.
   if (delivered) await saveAlertState(plan.state);
 
-  // Monday summary (once a day at most, between 08:00 and 12:00 UTC, so it lands with the morning).
-  const today = now.toISOString().slice(0, 10);
-  if (now.getUTCDay() === 1 && now.getUTCHours() >= 8 && isEmailEnabled()) {
-    const done = (await prisma.meta.findUnique({ where: { key: DIGEST_KEY } }))?.value;
-    if (done !== today) {
-      const d = renderDigestEmail(report, inbox, siteUrl);
-      if (await sendOwnerEmail(d.subject, d.html, d.text)) {
-        await prisma.meta.upsert({ where: { key: DIGEST_KEY }, create: { key: DIGEST_KEY, value: today }, update: { value: today } });
-        log("Sent the weekly summary.");
-      }
-    }
-  }
+  // Empire HQ's copy (riftcompare.com/admin/hq and the one Monday report, which replaced this
+  // watchdog's own Monday summary; owner, 2026-11-02). The workflow publishes it on the public
+  // `ops-status` branch: status and our own sentences only, never a visitor's text.
+  writeFileSync(
+    process.env.OPS_STATUS_FILE || "ops-status.json",
+    JSON.stringify({ v: 1, site: "opcompare.app", at: report.at, overall: report.overall, checks: report.checks.map((c) => ({ name: c.label, status: c.status, detail: c.detail })), inbox: inbox ? inboxTotal(inbox) : null }, null, 1) + "\n",
+  );
   if (!delivered && plan.raise.some((c) => c.status === "fail")) throw new Error("A problem was found and could not be reported by email or issue: see the log above.");
 }
 

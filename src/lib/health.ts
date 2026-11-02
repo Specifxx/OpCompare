@@ -519,9 +519,12 @@ export const REMIND_FAIL_H = 24;
 export const REMIND_WARN_H = 72;
 
 /**
- * Compare this report with what we told the owner last time. A problem is
- * announced when it first appears or worsens (warn → fail), reminded while it
- * persists, and announced as recovered when it clears. "unknown" never raises
+ * Compare this report with what we told the owner last time. ONLY RED MAILS
+ * (owner, 2026-11-02, the control tower: "one Monday email", amber lives on
+ * Empire HQ, riftcompare.com/admin/hq, and in the Monday report). A failure is
+ * announced when it first appears or worsens from a warning, reminded daily
+ * while it persists, and announced as recovered when it clears. A warning is
+ * recorded but never raised. "unknown" never raises
  * and never clears (a check that cannot be read keeps its last known state).
  * `silent` records the state without raising anything (the very first run).
  */
@@ -536,7 +539,7 @@ export function planAlerts(prev: AlertState, report: HealthReport, now: Date, si
       continue;
     }
     if (c.status === "ok") {
-      if (before && before.status !== "ok" && before.notifiedAt) recovered.push(c);
+      if (before && before.status === "fail" && before.notifiedAt) recovered.push(c);
       continue; // an ok check carries no state
     }
     const worsened = before && before.status === "warn" && c.status === "fail";
@@ -544,7 +547,7 @@ export function planAlerts(prev: AlertState, report: HealthReport, now: Date, si
     const remindH = c.status === "fail" ? REMIND_FAIL_H : REMIND_WARN_H;
     const due = before?.notifiedAt != null && hoursAgo(before.notifiedAt, now) >= remindH;
     const unannounced = before != null && before.notifiedAt == null;
-    const tell = !silent && (isNew || worsened || due || unannounced);
+    const tell = !silent && c.status === "fail" && (isNew || worsened || due || unannounced);
     if (tell) raise.push(c);
     state[c.id] = { status: c.status, since: isNew || !before ? now.toISOString() : before.since, notifiedAt: tell ? now.toISOString() : (before?.notifiedAt ?? (silent ? now.toISOString() : null)) };
   }

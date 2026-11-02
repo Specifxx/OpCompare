@@ -165,47 +165,40 @@ test("evalEmail and evalInbox", () => {
 const chk = (id: string, status: Check["status"], label = id): Check => ({ id, area: "jobs", label, status, detail: `${id} is ${status}` });
 const rep = (...checks: Check[]) => buildReport(checks, NOW);
 
-test("planAlerts: tell once when it appears, again if it worsens, remind a failure daily, announce recovery", () => {
+test("planAlerts: only red mails; told once, reminded daily, recovery announced; amber is recorded, never raised", () => {
   // First ever run records the state and says nothing.
   const first = planAlerts({}, rep(chk("a", "fail")), NOW, true);
   assert.deepEqual(first.raise, []);
   assert.equal(first.state.a.status, "fail");
-  // A new problem is raised, and remembered as told.
+  // A warning is recorded but never raised (Empire HQ and the Monday report show it).
   const t0 = planAlerts({}, rep(chk("a", "warn"), chk("b", "ok")), NOW);
-  assert.deepEqual(t0.raise.map((c) => c.id), ["a"]);
-  assert.ok(t0.state.a.notifiedAt);
-  // The same warning an hour later is quiet.
-  const t1 = planAlerts(t0.state, rep(chk("a", "warn")), new Date(NOW.getTime() + 3_600_000));
-  assert.deepEqual(t1.raise, []);
-  // It worsens: told again straight away.
+  assert.deepEqual(t0.raise, []);
+  assert.equal(t0.state.a.status, "warn");
+  assert.equal(t0.state.a.notifiedAt, null);
+  assert.deepEqual(planAlerts(t0.state, rep(chk("a", "warn")), new Date(NOW.getTime() + 73 * 3_600_000)).raise, []);
+  // It turns red: told straight away.
   const t2 = planAlerts(t0.state, rep(chk("a", "fail")), new Date(NOW.getTime() + 3_600_000));
   assert.deepEqual(t2.raise.map((c) => c.id), ["a"]);
-  // A failure is repeated after 24h, a warning only after 72h.
+  assert.ok(t2.state.a.notifiedAt);
+  // The same failure an hour later is quiet, and repeated after 24h.
+  assert.deepEqual(planAlerts(t2.state, rep(chk("a", "fail")), new Date(NOW.getTime() + 2 * 3_600_000)).raise, []);
   assert.deepEqual(planAlerts(t2.state, rep(chk("a", "fail")), new Date(NOW.getTime() + 25 * 3_600_000)).raise.map((c) => c.id), ["a"]);
-  assert.deepEqual(planAlerts(t0.state, rep(chk("a", "warn")), new Date(NOW.getTime() + 30 * 3_600_000)).raise, []);
-  assert.deepEqual(planAlerts(t0.state, rep(chk("a", "warn")), new Date(NOW.getTime() + 73 * 3_600_000)).raise.map((c) => c.id), ["a"]);
   // It clears: announced once, then gone from the state.
   const t3 = planAlerts(t2.state, rep(chk("a", "ok")), new Date(NOW.getTime() + 5 * 3_600_000));
   assert.deepEqual(t3.recovered.map((c) => c.id), ["a"]);
   assert.equal(t3.state.a, undefined);
   assert.deepEqual(planAlerts(t3.state, rep(chk("a", "ok")), NOW).recovered, []);
+  // A warning that clears is not announced (it was never mailed).
+  assert.deepEqual(planAlerts(t0.state, rep(chk("a", "ok")), NOW).recovered, []);
   // Unknown neither raises nor clears: the last known state is kept.
   const t4 = planAlerts(t2.state, rep(chk("a", "unknown")), new Date(NOW.getTime() + 2 * 3_600_000));
   assert.deepEqual([t4.raise, t4.recovered], [[], []]);
   assert.equal(t4.state.a.status, "fail");
-  // A problem that was never successfully told (the send failed) is told next time.
-  const pending: AlertState = { a: { status: "warn", since: NOW.toISOString(), notifiedAt: null } };
-  assert.deepEqual(planAlerts(pending, rep(chk("a", "warn")), NOW).raise.map((c) => c.id), ["a"]);
+  // A failure that was never successfully told (the send failed) is told next time.
+  const pending: AlertState = { a: { status: "fail", since: NOW.toISOString(), notifiedAt: null } };
+  assert.deepEqual(planAlerts(pending, rep(chk("a", "fail")), NOW).raise.map((c) => c.id), ["a"]);
 });
 
-test("overall status: fail beats warn beats ok, and unknown never counts", () => {
-  assert.equal(overallStatus([chk("a", "ok"), chk("b", "unknown")]), "ok");
-  assert.equal(overallStatus([chk("a", "ok"), chk("b", "warn")]), "warn");
-  assert.equal(overallStatus([chk("a", "warn"), chk("b", "fail"), chk("c", "unknown")]), "fail");
-  assert.equal(overallStatus([]), "ok");
-});
-
-// ── Rendering and privacy ────────────────────────────────────────────────────
 test("alert, digest and issue text: our sentences, escaped, with the link and no private data", () => {
   const bad: Check = { id: "x", area: "ebay", label: "eBay <run>", status: "fail", detail: "It failed & stopped.", hint: "Open the workflow." };
   const report = rep(bad);
@@ -391,6 +384,12 @@ test("the watchdog workflow: scheduled, read-only but for its issue, never on a 
   assert.match(y, /DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
   assert.match(y, /NEON_API_KEY: \$\{\{ secrets\.NEON_API_KEY \}\}/);
   assert.match(y, /group: watchdog/);
+  // Empire HQ's status file is pushed by a separate job: the one holding the database never gets write access.
+  const [watchJob, publishJob] = y.split(/^  publish-status:/m);
+  assert.doesNotMatch(watchJob, /contents: write/);
+  assert.match(publishJob, /contents: write/);
+  assert.doesNotMatch(publishJob, /DATABASE_URL|RESEND|NEON/);
+  assert.match(read("scripts/watchdog.ts"), /ops-status\.json/);
   assert.doesNotMatch(y, /EBAY_CLIENT/, "the watchdog never holds the eBay keyset");
   const cron = /cron: "(\d+) ([\d,*/]+) \* \* \*"/.exec(y)!;
   const hours = cron[2].split(",").map(Number);

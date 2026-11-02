@@ -3388,3 +3388,13 @@ a day stale). Only `/embed/:path+` may be framed (`frame-ancestors *`); the rest
 (`tests/embed.test.ts`). `/embed` shows the snippet (iframe plus one plain text link, the part search engines credit)
 and a plain-HTML store badge. The daily outreach offers the widget instead of asking for a link (owner, 2026-11-02:
 growth must be passive). RiftCompare has had the same widgets since 2026-09.
+
+## 2026-11-02 — The watchdog reports to Empire HQ; only red mails
+
+The owner asked for one Monday email instead of a mail per site (the control tower, approved 2026-11-02). The
+watchdog now mails only failures (new, reminded daily, recovered); a warning is recorded and shown on `/admin/health`,
+Empire HQ (riftcompare.com/admin/hq) and in RiftCompare's one Monday report, which replaces this watchdog's own Monday
+summary (`planAlerts`, `tests/health.test.ts`). Each run writes `ops-status.json`; a second job, the only one with
+write access (the job holding the database URL stays read-only), force-pushes it as `status.json`, one orphan commit,
+to the public `ops-status` branch (never deployed, `vercel.json`). Status and our own sentences only, never a
+visitor's text. RiftCompare mails the owner if the file goes quiet for a day.
