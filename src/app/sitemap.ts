@@ -4,6 +4,7 @@ import { traitHubs } from "@/lib/traits";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { AUTHORS, POSTS, postHref } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
+import { PREORDER_PAGES, upcomingPreorderPages } from "@/lib/preorders";
 import { getStoreStats } from "@/lib/data";
 import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/facets";
 import { KEYWORDS } from "@/lib/keywords";
@@ -18,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
     "", "/browse", "/price-guide", "/graded", "/sealed", "/black-friday", "/embed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
-    "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/stores/partners", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
+    "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/preorders", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/stores/partners", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
     "/tools", "/deck", "/tools/selling-fees", "/singles", "/keywords", "/cards/rarity", "/alerts",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // The five region homes (design track), each a market-locked copy of "/".
@@ -40,6 +41,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...posts,
     ...COLOR_KEYS.map((k) => ({ url: `${SITE_URL}/colors/${COLORS[k].slug}`, lastModified: now })),
     ...cat.sets.map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: now })),
+    // Every automatic pre-order page (/preorders/<code>) while its set is unreleased; the dedicated ones are in `fixed`.
+    ...upcomingPreorderPages(cat.sets, now.toISOString().slice(0, 10)).filter((l) => !PREORDER_PAGES[l.code]).map((l) => ({ url: `${SITE_URL}${l.href}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 })),
     ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pack-sim/${s.slug}`, lastModified: now })),
     ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s.slug}`, lastModified: now })),
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),

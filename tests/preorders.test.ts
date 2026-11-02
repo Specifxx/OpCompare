@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { OfferRow, SealedLite, SetLite } from "../src/lib/data";
 import type { PanelListing } from "../src/lib/listing-panel";
-import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderPageFor, preorderSummary, productBoard, releaseDateOf, shortDateOf, upcomingPreorderPages } from "../src/lib/preorders";
+import { AUTO_PREORDER_KINDS, codeSlug, preorderPageRetired, preorderRouteOf, setForPreorderSlug, daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderPageFor, preorderSummary, productBoard, releaseDateOf, shortDateOf, upcomingPreorderPages } from "../src/lib/preorders";
 import { storesIn } from "../src/lib/stores";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -244,8 +244,8 @@ test("the pages: pre-order availability, no private data, linked from /sealed an
     assert.doesNotMatch(page, /generateStaticParams|@\/lib\/db["']/, route);
     assert.ok(read("src/app/sitemap.ts").includes(`"${route}"`), `${route} in the sitemap`);
   }
-  // /sealed links every dedicated page through the same map.
-  assert.match(read("src/app/sealed/page.tsx"), /PREORDER_PAGES/);
+  // /sealed links every page (dedicated or automatic) through the same helper.
+  assert.match(read("src/app/sealed/page.tsx"), /preorderRouteOf/);
 });
 
 test("EB05 releases before OP18, so its group sorts first and each links to its own page", () => {
@@ -288,7 +288,10 @@ test("preorderPageFor: a set's board only while it is unreleased, and only for a
   assert.equal(preorderPageFor(eb05, "2026-10-29"), "/eb05-preorders");
   assert.equal(preorderPageFor(eb05, "2026-10-30"), null, "release day retires it");
   assert.equal(preorderPageFor({ ...eb05, releasedOn: null }, "2026-10-14"), null, "no date, no self-retiring link");
-  assert.equal(preorderPageFor(set({ id: 4, code: "OP17", releasedOn: "2026-12-01" }), "2026-10-14"), null, "no board, no link");
+  assert.equal(preorderPageFor(set({ id: 4, code: "OP19", releasedOn: "2026-12-01" }), "2026-10-14"), "/preorders/op19", "an upcoming booster set gets the automatic page");
+  assert.equal(preorderPageFor(set({ id: 5, code: "ST31", kind: "starter", releasedOn: "2026-12-01" }), "2026-10-14"), null, "a starter deck gets none");
+  assert.equal(preorderPageFor(set({ id: 6, code: "OP18 RE", kind: "event", releasedOn: "2026-12-01" }), "2026-10-14"), null, "an event promo set gets none");
+  assert.equal(preorderPageFor({ code: "OP19", releasedOn: "2026-12-01" }, "2026-10-14"), null, "no kind, no automatic page");
 });
 
 test("upcomingPreorderPages: every unreleased set with a board, soonest first, each once", () => {
@@ -364,4 +367,41 @@ test("the summary strip: data only, under the intro, stores never counted with e
   for (const label of ["Stores checked", "Taking pre-orders", "Cheapest box at a store", "Release"]) assert.ok(page.includes(`>${label}</dt>`), label);
   assert.match(page, /Across all six markets: \{summary\.all\.listing\}/);
   assert.match(page, /TCGplayer and eBay are not counted as stores\./);
+});
+
+test("automatic pages (2026-11-02): every upcoming booster, extra or premium set, by code, retiring after release", () => {
+  assert.deepEqual([...AUTO_PREORDER_KINDS].sort(), ["booster", "extra", "premium"]);
+  assert.equal(codeSlug("OP19"), "op19");
+  assert.equal(codeSlug("PRB-03"), "prb-03");
+  const sets = [
+    set({ id: 1, code: "OP18", releasedOn: "2026-11-20" }),
+    set({ id: 2, code: "OP19", releasedOn: "2027-02-20" }),
+    set({ id: 3, code: "PRB03", kind: "premium", releasedOn: "2027-01-10" }),
+    set({ id: 4, code: "ST31", kind: "starter", releasedOn: "2027-01-10" }),
+  ];
+  assert.equal(preorderRouteOf(sets[0]), "/op18-preorders", "a dedicated route wins");
+  assert.equal(preorderRouteOf(sets[1]), "/preorders/op19");
+  assert.equal(preorderRouteOf(sets[2]), "/preorders/prb03");
+  assert.equal(preorderRouteOf(sets[3]), null);
+  assert.equal(setForPreorderSlug(sets, "op19")?.id, 2);
+  assert.equal(setForPreorderSlug(sets, "op18")?.id, 1, "a dedicated set is found, so the route can redirect to its page");
+  assert.equal(setForPreorderSlug(sets, "st31"), null, "a starter deck has no page");
+  assert.equal(setForPreorderSlug(sets, "op99"), null);
+  assert.deepEqual(upcomingPreorderPages(sets, "2026-11-02").map((l) => l.href), ["/op18-preorders", "/preorders/prb03", "/preorders/op19"]);
+  assert.equal(preorderPageRetired({ releasedOn: "2027-02-20" }, "2027-04-06"), false, "45 days after release it still stands");
+  assert.equal(preorderPageRetired({ releasedOn: "2027-02-20" }, "2027-04-07"), true);
+  assert.equal(preorderPageRetired({ releasedOn: null }, "2027-04-07"), false);
+});
+
+test("the automatic route and hub: the shared page, no database, its own share image, linked from the nav and the sitemap", () => {
+  const page = read("src/app/preorders/[code]/page.tsx");
+  assert.match(page, /autoPreorderConfig/);
+  assert.match(page, /permanentRedirect\(PREORDER_PAGES\[set\.code\]\)/, "a dedicated set redirects to its own page");
+  assert.doesNotMatch(page, /generateStaticParams|@\/lib\/db["']/);
+  assert.match(read("src/app/preorders/[code]/opengraph-image.tsx"), /autoPreorderOg/);
+  assert.match(read("src/app/preorders/page.tsx"), /upcomingPreorderPages/);
+  assert.match(read("src/components/nav-groups.ts"), /href: "\/preorders"/);
+  const sitemap = read("src/app/sitemap.ts");
+  assert.ok(sitemap.includes('"/preorders"'));
+  assert.match(sitemap, /upcomingPreorderPages/);
 });
