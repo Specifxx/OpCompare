@@ -18,6 +18,7 @@ import { LineChart } from "./LineChart";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { PriceWatchButton } from "./PriceWatchButton";
+import { ShareButton } from "./ShareButton";
 import { PriceDropAlertCta } from "./PriceDropAlertCta";
 import { AddToCollectionButton } from "./AddToCollectionButton";
 import { LastKnownPrice } from "./LastKnownPrice";
@@ -176,7 +177,12 @@ export function QuickView({
                 </p>
               ) : null}
             </div>
-            {data ? <PriceWatchButton cardId={data.id} slug={data.slug} name={display(data)} variant="full" limitInline /> : null}
+            {data ? (
+              <div className="flex shrink-0 items-start gap-2">
+                <PriceWatchButton cardId={data.id} slug={data.slug} name={display(data)} variant="full" limitInline />
+                <ShareButton responsive name={display(data)} rows={(m?.rows ?? []).map((r) => ({ priceCents: r.priceCents, retailerName: r.label }))} path={href} medium="card" />
+              </div>
+            ) : null}
           </div>
 
           {failed ? (

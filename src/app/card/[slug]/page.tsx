@@ -58,7 +58,8 @@ import { MiniChaseAds } from "@/components/MiniChaseAds";
 import type { EbayPanelData } from "@/lib/listing-panel";
 import { boardModel } from "@/lib/board-model";
 import { perMarket, perMarketList } from "@/lib/per-market";
-import { longDate } from "@/lib/format";
+import { priceGap, shareText } from "@/lib/share-link";
+import { longDate, money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
@@ -77,7 +78,7 @@ import { elsewhereLine, lastSeen, priceState } from "@/lib/card-price-state";
 import { lastKnownIn } from "@/lib/last-known";
 import { marketPriceListSentence, compareMarkets } from "@/lib/market-comparison";
 import { KEYWORD_BY_SLUG, cardKeywords } from "@/lib/keywords";
-import { marketRows } from "@/lib/quick-view";
+import { buyRow, marketRows } from "@/lib/quick-view";
 import { MARKETS } from "@/lib/country";
 import { facetBySlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS, leaderSlug } from "@/lib/facets";
 import { COLORS } from "@/lib/constants";
@@ -240,6 +241,8 @@ export default async function CardPage({ params }: Props) {
     };
   });
   const best = perMarket((m) => cheapestBuyRow(card.offers, m, loc));
+  // The share message per market: the real gap between the cheapest and dearest open row (lib/share-link.ts).
+  const shareTexts = perMarket((m) => shareText(title, priceGap(marketRows(card.offers, m).map((o) => ({ priceCents: o.priceCents, retailerName: buyRow(o, m, loc).label }))), (c) => money(c, m)));
   const paidAlt = perMarket((m) => paidAlternativeRow(card.offers, m, loc));
   const unpriced = perMarket((m) => inMarketOf(m).length === 0);
   const noListings = perMarket((m) => {
@@ -458,7 +461,7 @@ export default async function CardPage({ params }: Props) {
               </div>
               <div className="flex shrink-0 items-start gap-2">
                 <PriceWatchButton cardId={card.id} slug={card.slug} name={title} variant="responsive" />
-                <ShareButton responsive />
+                <ShareButton responsive name={title} texts={shareTexts} medium="card" />
               </div>
             </div>
             {aliasesFor(card.slug).length ? <p className="mt-2 text-sm text-slate-400">Also known as {aliasesFor(card.slug).map((a) => `“${a}”`).join(", ")}</p> : null}

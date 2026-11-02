@@ -3398,3 +3398,15 @@ summary (`planAlerts`, `tests/health.test.ts`). Each run writes `ops-status.json
 write access (the job holding the database URL stays read-only), force-pushes it as `status.json`, one orphan commit,
 to the public `ops-status` branch (never deployed, `vercel.json`). Status and our own sentences only, never a
 visitor's text. RiftCompare mails the owner if the file goes quiet for a day.
+
+## 2026-11-02 — Share buttons and shared lists
+
+The owner wants word of mouth to be a big growth driver on every site (RiftCompare's DECISIONS has the twelve-site
+entry). Here: the Share button on card and sealed pages, and now in the quick view, opens the phone's share sheet
+(`navigator.share`), else copies the link with the message. No pop-up, no reward. The message names the real gap in
+the visitor's market (`lib/share-link.ts` `priceGap`: cheapest and dearest open row from two sellers, never
+converted); the card page computes one message per market on the server and the island picks, so the page stays one
+CDN copy with nothing read from the request. The deck builder's share link (`/deck?list=`, already noindex) uses the
+share sheet too. Every shared link carries `utm_source=share&utm_medium=<card|sealed|deck>`: the button sends a
+Vercel `share` event, `ShareArrival` one `share_visit` per tab, and RiftCompare's weekly growth report counts both.
+robots.txt allows `/*utm_source=share` because X's and Reddit's preview fetchers obey it.
