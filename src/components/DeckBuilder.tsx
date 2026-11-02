@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CardQuickLink from "./CardQuickLink";
 import { useCountry } from "./CountryProvider";
+import { track } from "@vercel/analytics";
+import { shareUrl } from "@/lib/share-link";
 import { CardPicker, type PickerCard } from "./CardPicker";
 import { QtyInput } from "./QtyInput";
 import { DeckWatchForm } from "./DeckWatchForm";
@@ -178,7 +180,22 @@ export function DeckBuilder({ initialList, emailOn = false }: { initialList: str
   const listText = result?.text || text;
   const share = async () => {
     if (!listText.trim()) return;
-    const url = `${window.location.origin}/deck?list=${encodeDeckParam(listText)}`;
+    // utm_source=share (lib/share-link.ts): the growth report counts the visits a shared deck brings.
+    const url = shareUrl(window.location.origin, `/deck?list=${encodeDeckParam(listText)}`, "deck");
+    try {
+      track("share", { medium: "deck" });
+    } catch {
+      /* analytics never gets in the way */
+    }
+    const total = result?.totals[country]?.cents;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "My One Piece deck, priced", text: total ? `This One Piece deck costs ${money(total, country)} buying each card where it's cheapest. Compare every store on OP Compare:` : "My One Piece deck, priced at every store on OP Compare:", url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return;
+      }
+    }
     try {
       await navigator.clipboard.writeText(url);
       setShared("copied");
