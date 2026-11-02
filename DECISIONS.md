@@ -3369,3 +3369,12 @@ their place and their "Ad"/paid-link label, but lose their brand tints and brand
 and the same button as a store. They are still never counted as a store and never re-ranked by commission. This
 reverses the 2026-10-30 "bright, catchy colour" pinned rows; eBay ad strips and panels outside the price rows keep
 their own look.
+
+## 2026-11-02 — Black Friday page
+
+`/black-friday` lists sealed products whose cheapest US listing is 5–60% under TCGplayer's market price (US dollars on
+both sides, $10+, no pre-orders; `underMarket` in `src/lib/black-friday.ts`), and the five cheapest in-stock booster
+boxes at a store in each market, in that market's own currency. It reads only `getSealedCatalog` and nothing about the
+visitor, so it is one cached page (`revalidate = 21600`). One URL kept every year so links and rankings carry over; it
+must be indexed weeks before 27 November 2026, so it ships now. Never a "was" price, a countdown or an invented sale.
+Part of the passive-growth plan (owner, 2026-11-02); RiftCompare and every sister site have the same page.
