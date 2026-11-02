@@ -10,6 +10,7 @@ import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/f
 import { KEYWORDS } from "@/lib/keywords";
 import { STORES } from "@/lib/stores";
 import { simSets } from "./tools/pack-sim/load";
+import { thinCardIds } from "@/lib/card-index";
 
 // Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
 // Private paths (the admin area, account pages) are never listed here.
@@ -46,7 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pack-sim/${s.slug}`, lastModified: now })),
     ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s.slug}`, lastModified: now })),
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
-    ...cat.cards.map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
+    // Thin printings are noindex (lib/card-index.ts), so never listed.
+    ...((thin) => cat.cards.filter((c) => !thin.has(c.id)))(thinCardIds(cat.cards)).map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
     // Trait hubs (lib/traits.ts): the index and every type with enough cards.
     ...(await getCardText().then((t) => ["/cards/trait", ...traitHubs(t).map((h) => `/cards/trait/${h.slug}`)]).catch(() => [] as string[])).map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now })),
@@ -85,17 +87,16 @@ function toolsTrackEntries(cat: Awaited<ReturnType<typeof getCatalog>>, stats: A
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));
 }
 
-// The catalogue track's pages: the guides hub, the gallery hub and every set's
-// gallery (a set with no revealed cards is noindex, so not listed), support,
-// authors. The guides themselves are in `posts` through postHref.
-function catalogueEntries(cat: Awaited<ReturnType<typeof getCatalog>> | null, now: Date): MetadataRoute.Sitemap {
-  const withCards = cat ? new Set(cat.cards.map((c) => c.setId)) : new Set<number>();
+// The catalogue track's pages: the guides hub, the gallery hub, support,
+// authors. The guides themselves are in `posts` through postHref. A set's
+// gallery canonicalises to its set page (RiftCompare #186: the two split the
+// set's searches), so it is not listed.
+function catalogueEntries(_cat: Awaited<ReturnType<typeof getCatalog>> | null, now: Date): MetadataRoute.Sitemap {
   return [
     "/guides",
     "/gallery",
     "/support",
     "/learn",
     ...AUTHORS.map((a) => `/authors/${a.slug}`),
-    ...(cat ? cat.sets.filter((s) => withCards.has(s.id)).map((s) => `/sets/${s.slug}/gallery`) : []),
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));
 }

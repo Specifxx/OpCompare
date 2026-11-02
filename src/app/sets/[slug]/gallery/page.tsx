@@ -21,8 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: { absolute: `${setGalleryTitle(s.name, s.code, n)} | OP Compare`.length <= 60 ? `${setGalleryTitle(s.name, s.code, n)} | OP Compare` : setGalleryTitle(s.name, s.code, n) },
     description: setGalleryDescription(s.name, s.code, n, upcoming),
-    alternates: { canonical: `/sets/${s.slug}/gallery` },
-    openGraph: pageOg(`/sets/${s.slug}/gallery`),
+    // The set page is the one URL for the set's searches (RiftCompare #186: a
+    // gallery and its set page split "<set> card list" between them).
+    alternates: { canonical: `/sets/${s.slug}` },
+    openGraph: pageOg(`/sets/${s.slug}`),
     // A pre-release set with nothing revealed has no gallery to index.
     ...(n === 0 ? { robots: { index: false, follow: true } } : {}),
   };

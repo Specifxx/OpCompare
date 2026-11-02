@@ -3501,3 +3501,21 @@ no flags, placed last in the hero).
   ids or clip paths, so a flag works inside a closed menu and many times on a page. The header switcher,
   its menu and `RegionToggle` use it too; the emoji stay only in text-only places. The same file is in
   every Compare Empire repo that has a region switcher; keep the copies identical.
+
+## 2026-11-02 — Thin card printings are noindex and out of the sitemap
+
+Search Console (31 Oct): 2,510 pages indexed, 5,901 "Discovered – currently not indexed", plus 130 robots-blocked,
+49 404s, 23 noindex and 13 soft 404s. Google found all ~7,350 printings through the sitemap and chose not to crawl
+most of them: thousands of near-identical card pages tell it the site is templated.
+
+- **`src/lib/card-index.ts` decides.** A printing is thin when it has no price and no stock anywhere (the soft 404s),
+  or when it is a non-standard printing (promo, reprint, foil…) of a number that has another printing and is worth
+  under US$1 at TCGplayer. Leaders, standard printings, any printing worth US$1+ and any only printing stay
+  indexable. About 1,440 of 7,350 are thin today; they are `noindex, follow` and left out of the sitemap, still
+  linked from their set and their siblings. Never index by `lastKnown`.
+- **Set galleries canonicalise to their set page and leave the sitemap** (RiftCompare #186: the two split "<set>
+  card list").
+- **A moved card URL redirects (308) only to a sure printing** (`movedCardSlug`): the old slug's number with one
+  printing left, or one standard printing whose name matches. Anything less stays a 404.
+- The robots-blocked URLs are the `/*?` query variants, blocked on purpose (robots.ts); the noindex ones are the
+  member pages and empty libraries. Neither needs a fix.

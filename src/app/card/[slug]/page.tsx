@@ -2,7 +2,8 @@ import { AdSlot } from "@/components/AdSlot";
 import { ebayJsonLdOffers } from "@/lib/board";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { cardIsThin, movedCardSlug } from "@/lib/card-index";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { ebayBannerHref } from "@/components/EbayCardBanner";
@@ -147,6 +148,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: title },
     description,
     alternates: { canonical: `/card/${c.slug}` },
+    // A thin printing (lib/card-index.ts) stays linked but asks not to be indexed.
+    ...(lite && cardIsThin(lite, cat.cards) ? { robots: { index: false, follow: true } } : {}),
     // The card's own scan on TCGplayer's CDN: nothing is generated here (a drawn share
     // image per card cost ~1.5 GB of ISR writes every 12 hours). No art: the site default.
     openGraph: pageOg(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}`, ...(art ? { images: [{ url: art, alt: t }] } : {}) }),
@@ -162,7 +165,12 @@ export default async function CardPage({ params }: Props) {
     getCardText(),
   ]);
   const traits = traitHubs(text);
-  if (!card) notFound();
+  if (!card) {
+    // An old URL of a printing that moved: one sure answer redirects, anything else is a 404.
+    const moved = movedCardSlug(params.slug, cat.cards);
+    if (moved) permanentRedirect(`/card/${moved}`);
+    notFound();
+  }
   const history = await getProductHistory(card.id);
   const lite = cat.bySlug.get(card.slug);
   // When this render ran: the islands' "updated 3h ago" lines count from it until the browser's clock takes over.
