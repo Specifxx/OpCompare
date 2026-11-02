@@ -5,7 +5,7 @@ import { PRINTINGS } from "../../constants";
 import { COUNTRIES, type Country } from "../../country";
 import type { CardLite, Catalog, SealedLite, SetLite } from "../../data";
 import { money } from "../../format";
-import { PREORDER_PAGES } from "../../preorders";
+import { preorderRouteOf } from "../../preorders";
 import { byMarketDesc, plural } from "../util";
 
 // Shared by the set-reveal posts (OP18 and EB05 chase cards and card lists, OP17's
@@ -94,7 +94,7 @@ export function ListByRarity({ cards, cat, country }: { cards: CardLite[]; cat: 
 /** The cheapest booster box in the reader's market from the sealed catalogue; "not listed yet" rather than a guess. */
 export function boxSentence(set: SetLite | undefined, sealed: SealedLite[], country: Country): ReactNode {
   const m = COUNTRIES[country];
-  const board = set && PREORDER_PAGES[set.code] && !isReleased(set) ? PREORDER_PAGES[set.code] : null;
+  const board = set && !isReleased(set) ? preorderRouteOf(set) : null;
   const box = set ? sealed.find((s) => s.setId === set.id && s.kind === "Booster Box") : undefined;
   const code = set?.code ?? "";
   if (!box) return <>No {code} booster box is in our catalogue yet.</>;

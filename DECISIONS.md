@@ -3398,3 +3398,20 @@ summary (`planAlerts`, `tests/health.test.ts`). Each run writes `ops-status.json
 write access (the job holding the database URL stays read-only), force-pushes it as `status.json`, one orphan commit,
 to the public `ops-status` branch (never deployed, `vercel.json`). Status and our own sentences only, never a
 visitor's text. RiftCompare mails the owner if the file goes quiet for a day.
+## 2026-11-02 — Pre-order pages build themselves for every upcoming set
+
+Pre-order landings were the family's most visited pages in October, but OP Compare had one only where a session had
+hand-made a route (`/eb05-preorders`, `/op18-preorders`), and the nav link had to be swapped by hand on each release.
+Now every unreleased set of kind `booster`, `extra` or `premium` (`AUTO_PREORDER_KINDS`, `src/lib/preorders.ts`) gets
+`/preorders/<code>` (`src/app/preorders/[code]`) with no edit: the TCGplayer group the import already reads brings the
+code, name and date, and `autoPreorderConfig` builds the same `PreorderPage` config from that row alone (nothing
+invented). Its share image (`autoPreorderOg`) draws the code, name, date and the set's own product shots from the
+day-old image catalogue, and falls back when the set has no date.
+
+- A dedicated route still wins: `PREORDER_PAGES` stays for sets with hand-written copy, and `/preorders/<its code>`
+  308s there. Starter decks, event promos and collections get no page.
+- Everything links through `preorderRouteOf` / `preorderPageFor` (set page, `/sealed`, `/release-dates`, the
+  homepage line, "Also coming soon", the set-reveal posts), so a new set shows up everywhere at once.
+- `/preorders` lists every open page and is what the nav links ("Pre-orders"), so nothing needs swapping on a
+  release day. The sitemap lists the hub and every automatic page while its set is unreleased.
+- An automatic page says "now out" after release and 308s to the set page 45 days later (`preorderPageRetired`).

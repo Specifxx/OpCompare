@@ -23,6 +23,7 @@ import {
   type Catalog,
 } from "../data";
 import { hotListName } from "../rising-snapshot";
+import { setForPreorderSlug } from "../preorders";
 import { cardImage } from "../images";
 import { postBySlug } from "../blog";
 import { postContextForImages } from "../blog/context";
@@ -262,4 +263,26 @@ export async function preorderOg(code: keyof typeof PREORDER_OG): Promise<ImageR
   const slug = code.toLowerCase();
   const arts = await Promise.all([localArt(`${slug}-pack.jpg`), localArt(`${slug}-box.jpg`)]);
   return ogResponse(<PreorderImage code={code} name={c.name} out={c.out} arts={[arts[0], arts[1]]} />, OG_CACHED);
+}
+
+/**
+ * The automatic pre-order pages' share image (/preorders/<code>, 2026-11-02):
+ * the same composition, with the code, name and date from the day-old image
+ * catalogue and the set's own TCGplayer box and pack shots from the sealed
+ * catalogue (ogArt). An unknown code, or a set without a date, draws the
+ * fallback: the date is the image's headline and is never invented.
+ */
+export async function autoPreorderOg(slug: string): Promise<ImageResponse> {
+  try {
+    const cat = await catalogWith((c) => !!setForPreorderSlug(c.sets, slug));
+    const set = cat ? setForPreorderSlug(cat.sets, slug) : null;
+    if (!set?.releasedOn) return fallbackOg();
+    const sealed = await getSealedCatalogForImages().catch(() => [] as Awaited<ReturnType<typeof getSealedCatalogForImages>>);
+    const shot = (kind: string) => sealed.find((s) => s.setId === set.id && s.kind === kind && s.imageUrl)?.imageUrl ?? null;
+    const arts = await Promise.all([ogArt(shot("Booster Pack")), ogArt(shot("Booster Box") ?? setBoxImage(sealed, set.id))]);
+    return ogResponse(<PreorderImage code={set.code} name={set.name} out={ogDate(`${set.releasedOn}T00:00:00Z`).toUpperCase()} arts={[arts[0], arts[1]]} />, OG_CACHED);
+  } catch (err) {
+    warn("autoPreorderOg", err);
+    return fallbackOg();
+  }
 }

@@ -7,11 +7,11 @@ import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { setOwnGuides } from "@/lib/content/catalogue-guides";
 import { COUNTRIES } from "@/lib/country";
-import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type SealedLite } from "@/lib/data";
+import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type SealedLite, type SetLite } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageOgOwnImage } from "@/lib/og/meta";
-import { daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderSummary, productBoard, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
+import { codeSlug, daysUntil, groupForSet, longDateOf, preorderGroups, preorderRouteOf, preorderSummary, productBoard, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
 import { ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
@@ -42,6 +42,8 @@ import { SITE_URL } from "@/lib/site";
 // live prices, and the "also coming" section lists whatever else is not out yet.
 // A route is a PreorderConfig and two exports (see app/eb05-preorders); the
 // route file keeps `export const revalidate = 3600` itself (Next reads it statically).
+// Since 2026-11-02 every other upcoming booster, extra or premium set gets the
+// same page automatically at /preorders/<code> (autoPreorderConfig, below).
 
 export interface PreorderConfig {
   /** Catalogue set code, e.g. "OP18". */
@@ -62,6 +64,35 @@ export interface PreorderConfig {
   ogDescription: string;
   /** Catalogue code of the set's release-event promo cards, if it has one. */
   eventCode?: string;
+}
+
+/** What each automatic kind is called in copy (lib/preorders.ts AUTO_PREORDER_KINDS). */
+const AUTO_KIND: Record<string, { line: string; product: string; explain: PreorderConfig["explain"] }> = {
+  booster: { line: "a main booster set", product: "Booster Box", explain: ["box", "case", "pack"] },
+  extra: { line: "an extra booster set", product: "Booster Box", explain: ["box", "case", "pack"] },
+  premium: { line: "a premium booster set", product: "Premium Booster Box", explain: ["box", "pack"] },
+};
+
+/**
+ * The config of an automatic page (/preorders/<code>, app/preorders/[code]):
+ * everything from the catalogue's set row, so a new TCGplayer group needs no
+ * edit. Only what the row says is used; nothing about the set is invented.
+ */
+export function autoPreorderConfig(set: Pick<SetLite, "code" | "name" | "kind">): PreorderConfig {
+  const k = AUTO_KIND[set.kind] ?? AUTO_KIND.booster;
+  const c = set.code;
+  return {
+    code: c,
+    path: `/preorders/${codeSlug(c)}`,
+    label: c,
+    fallbackName: set.name,
+    kindLine: k.line,
+    explain: k.explain,
+    title: `${c} ${k.product} Pre-Order Prices Compared`,
+    keywords: [`${c} pre-order`, `${c} ${k.product.toLowerCase()} price`, `One Piece ${c} preorder`, `${set.name} booster box`, `cheapest ${c} booster box`, `One Piece ${c} release date`],
+    ogTitle: `One Piece ${c} Pre-Order Prices: Compared Across Every Store`,
+    ogDescription: "Booster boxes, cases and packs: every tracked store's pre-order price beside TCGplayer and eBay, cheapest first.",
+  };
 }
 
 const EXPLAINERS = {
@@ -336,8 +367,8 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
           {others.map((g: PreorderGroup, gi) => (
             <div key={g.releasedOn} className="mt-6">
               <h3 className="mb-3 text-base font-bold text-slate-200">
-                {g.set && PREORDER_PAGES[g.set.code] ? (
-                  <Link href={PREORDER_PAGES[g.set.code]} className="hover:underline">{g.set.code} {g.set.name}</Link>
+                {g.set && preorderRouteOf(g.set) ? (
+                  <Link href={preorderRouteOf(g.set)!} className="hover:underline">{g.set.code} {g.set.name}</Link>
                 ) : g.set ? (
                   `${g.set.code} ${g.set.name}`
                 ) : (
