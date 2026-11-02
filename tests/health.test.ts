@@ -423,3 +423,11 @@ test("health.ts's local eBay constants equal the eBay plan's (it imports no eBay
     assert.equal(ebayQuotaDayStart(new Date(t)).toISOString(), quotaDayStart(new Date(t)).toISOString(), t);
   }
 });
+
+test("family feed: fresh is ok, old only warns (sisters show less), missing is unknown", async () => {
+  const { evalFamilyFeedAge } = await import("../src/lib/health");
+  const now = new Date("2026-11-02T12:00:00Z");
+  assert.equal(evalFamilyFeedAge(new Date("2026-11-02T00:00:00Z"), now).status, "ok");
+  assert.equal(evalFamilyFeedAge(new Date("2026-10-20T00:00:00Z"), now).status, "warn");
+  assert.equal(evalFamilyFeedAge(null, now).status, "unknown");
+});

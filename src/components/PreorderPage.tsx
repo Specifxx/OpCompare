@@ -15,6 +15,7 @@ import { codeSlug, daysUntil, groupForSet, longDateOf, preorderGroups, preorderR
 import { ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { FamilyCluster } from "./FamilyCluster";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // One pre-order page per release (/op18-preorders, /eb05-preorders): the same
@@ -400,6 +401,8 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
         Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, OP Compare earns from qualifying purchases, at no extra cost to you.{" "}
         <Link href="/methodology" className="underline hover:text-slate-300">How we compare prices</Link>
       </p>
+
+      <div className="mt-8"><FamilyCluster kind="preorder" /></div>
 
       <HubFaq faqs={faqs} />
     </div>

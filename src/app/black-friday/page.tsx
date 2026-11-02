@@ -6,6 +6,7 @@ import { getSealedCatalog } from "@/lib/data";
 import { money } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
 import { blackFriday, cyberMonday, longDate, seasonYear, underMarket } from "@/lib/black-friday";
+import { FamilyCluster } from "@/components/FamilyCluster";
 
 // /black-friday (DECISIONS.md, "Black Friday page", 2026-11-02): one URL kept every year. Reads only the cached sealed
 // catalogue and nothing about the visitor, so every market is drawn on the page. Six hours, the floor for pages
@@ -102,6 +103,7 @@ export default async function BlackFridayPage() {
         <Link className="text-brand-400 hover:underline" href="/january-sales">January sales</Link> ·{" "}
         <Link className="text-brand-400 hover:underline" href="/lunar-new-year">Lunar New Year deals</Link>
       </p>
+      <FamilyCluster kind="deal" />
     </div>
   );
 }

@@ -3439,3 +3439,29 @@ CDN copy with nothing read from the request. The deck builder's share link (`/de
 share sheet too. Every shared link carries `utm_source=share&utm_medium=<card|sealed|deck>`: the button sends a
 Vercel `share` event, `ShareArrival` one `share_visit` per tab, and RiftCompare's weekly growth report counts both.
 robots.txt allows `/*utm_source=share` because X's and Reddit's preview fetchers obey it.
+
+## Sites that grow each other: the family feed, cluster blocks and short footers (2026-11-02)
+
+Owner, 2026-11-02: "We need each site to help each other grow as a team effort", and the
+footer family lists were "a bit convoluted … I'm wondering if it actually helps". Plan:
+"Sites that grow each other" in the consolidation doc (https://claude.ai/artifact/QjrWGrfBqH4sKctwdjwptK).
+
+- **Three clusters** (`src/lib/family-network.ts`, the same file in every repo): card games
+  (Rift, OP, Dex, MTG, Gundam, Lorcana, YGO, Cyberpunk), hobby (Wargame, Figure, Gunpla on
+  Gundam Compare) and tech (Compare Empire, CamCompare). KaeYoung stays out.
+- **The family feed.** Each site's own daily data job writes `family-feed.json` (its best real
+  deals and pre-orders today, per region) beside the data it already commits, and copies its
+  cluster sisters' feeds from raw.githubusercontent.com into `family-cluster.json`. Pages read
+  the committed file: no database of another site, no request-time fetch, no new function. A
+  feed older than four days, from the wrong site, with a link off its own host or a saving that
+  isn't the arithmetic of its two prices is dropped (`validFeed`), so a block shows less, never a guess.
+- **One block per page**, on the deals, Black Friday and pre-order pages: one tile per sister with
+  its best item in the visitor's region, else the US price in its own currency. Labels never name
+  a country. Plain followed links inside a cluster.
+- **Footers: one short line.** The sites of our own cluster by name, then one "A Compare Empire
+  site" link to https://compareempire.com/network, which lists every site. Why: nothing counts
+  footer clicks, footer links get few, and Google gives little weight to sitewide links between
+  one owner's look-alike sites (12 sites all cross-linked in every footer is the pattern it can
+  read as a link scheme). Cross-traffic should come from the price blocks, which people have a
+  reason to click.
+- Here: `src/lib/family.ts` builds OP Compare's feed from the snapshot a job just built (US sealed 10–50% under TCGplayer market at an independent store, and every pre-order's cheapest store); `scripts/family-sync.ts` writes it and the sisters' feeds INTO the snapshot in both the import and the eBay job (between build and publish; it always exits 0), so the registry reads `snapshot/family-feed.json`. Pages read the cluster through `getFamilyFeeds` in `data.ts` (six hours, throws when unreadable, the block catches it): `/black-friday`, `/preorders` and the shared pre-order page. The watchdog's `family-feed` check warns after 50 hours, never fails. The footer's family sentence became one "Other card games" line; `SISTER_SITES` stays for /about, /authors and the search hand-off.

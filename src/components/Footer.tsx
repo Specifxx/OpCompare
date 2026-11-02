@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CONTACT_EMAIL, DISCORD_URL, SISTER_SITES, SITE_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME } from "@/lib/site";
+import { NETWORK_PAGE, footerSisters } from "@/lib/family-network";
 import { FooterNav } from "./FooterNav";
 import { ShareRow } from "./ShareRow";
 
@@ -43,18 +44,19 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
           ) : null}
           <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
         </div>
-        {/* Cross-promotion: the owner's sister sites, one per game. Our own sites,
-            so plain followed links (no nofollow/sponsored), in a new tab. */}
-        <p className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span>Part of the Compare Empire family, comparing prices the same way:</span>
-          {SISTER_SITES.map((s) => (
-            <span key={s.key}>
-              <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
-                {s.name}
-              </a>{" "}
-              for {s.compares}
-            </span>
+        {/* One short line (owner, 2026-11-02: the old list of every site was "convoluted"): the other
+            card-game sites, then the network page that lists every site (lib/family-network.ts,
+            DECISIONS.md "Sites that grow each other"). Our own sites: plain followed links. */}
+        <p className="mb-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <span>Other card games:</span>
+          {footerSisters("op").map((s) => (
+            <a key={s.id} href={s.url} rel="noopener" title={s.label} className="tap-link font-semibold text-brand-400 hover:underline">
+              {s.name}
+            </a>
           ))}
+          <a href={NETWORK_PAGE} rel="noopener" className="tap-link hover:underline">
+            A Compare Empire site →
+          </a>
         </p>
         <p>
           {SITE_NAME} · One Piece Card Game database &amp; price comparison for the US, Australia, the UK, Singapore, Canada and
