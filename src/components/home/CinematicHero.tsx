@@ -94,6 +94,9 @@ export function CinematicHero({
               <CardSearch size="lg" placeholder="Search any One Piece card or sealed product…" />
             </Suspense>
           </div>
+          {/* The region chooser, with flags, straight under the search (owner,
+              2026-11-02: make it prominent); under the intro on phones. */}
+          <CountryHeroToggle />
           <TrendingChips cards={trendingCards} />
           <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} updatedAt={updatedAt} renderedAt={renderedAt} lockCountry={region?.code} />
           <div className="mt-6 flex flex-col items-center gap-2">
@@ -103,7 +106,6 @@ export function CinematicHero({
             >
               All {totalCards.toLocaleString("en-US")} cards in the database →
             </Link>
-            <CountryHeroToggle />
           </div>
         </div>
       </div>

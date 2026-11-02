@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { COUNTRY_LIST } from "@/lib/country";
 import { useDismiss } from "@/lib/use-dismiss";
 import { useCountry } from "./CountryProvider";
+import { Flag } from "./Flag";
 
 // Market chooser (RiftCompare's CountrySwitcher): the six markets. Switching
 // re-prices the SAME page for the chosen market and persists it via cookie.
@@ -58,7 +59,7 @@ export function CountrySwitcher({ className = "", anchored = false }: { classNam
         // stays for the box model and turns ink-700 from sm.
         className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-transparent px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-w-0 sm:justify-start sm:gap-1.5 sm:border-ink-700 sm:px-2.5 sm:[@media(pointer:fine)]:min-h-0"
       >
-        <span className="text-base leading-none">{current.flag}</span>
+        <Flag code={current.code} className="text-base" />
         <span className="hidden sm:inline">{current.code}</span>
         {/* Chevron hidden below sm. The flag alone already reads as "tap to
             change market", the whole control is one button either way, and this
@@ -108,7 +109,7 @@ export function CountrySwitcher({ className = "", anchored = false }: { classNam
                 c.code === country ? "bg-ink-800" : ""
               }`}
             >
-              <span className="text-lg leading-none">{c.flag}</span>
+              <Flag code={c.code} className="text-lg" />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-white">{c.label}</div>
                 <div className="text-xs text-slate-500">
