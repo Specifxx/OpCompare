@@ -11,13 +11,15 @@
 //     another printing, worth under US$1 at TCGplayer: the cheap reprint of a
 //     common whose own page already answers the search.
 //
-// Leaders, standard printings, any printing worth US$1+, and any printing that
-// is the only one of its number stay indexable. Reads only `marketUsd`, `low`
+// Leaders, standard printings, any printing worth US$1+, any printing that is
+// the only one of its number, and every card of an unreleased set (spoiler
+// season: revealed cards have no price yet, and are what people search) stay
+// indexable. Reads only `marketUsd`, `low`
 // and `stores`, never the display-only last known price. Pinned by
 // tests/card-index.test.ts. DECISIONS.md, 2026-11-02.
 import type { CardLite } from "./data";
 
-type Indexed = Pick<CardLite, "id" | "number" | "printing" | "cardType" | "marketUsd" | "low" | "stores">;
+type Indexed = Pick<CardLite, "id" | "number" | "printing" | "cardType" | "marketUsd" | "low" | "stores" | "setId">;
 
 /** Cents: a non-standard duplicate printing under this is thin. */
 export const THIN_VARIANT_MAX_CENTS = 100;
@@ -27,11 +29,11 @@ function priced(c: Indexed): boolean {
 }
 
 /** Every thin card's id, decided against the whole catalogue (siblings share a number). */
-export function thinCardIds(cards: readonly Indexed[]): Set<number> {
+export function thinCardIds(cards: readonly Indexed[], upcomingSetIds: ReadonlySet<number> = new Set()): Set<number> {
   const perNumber = new Map<string, number>();
   for (const c of cards) if (c.number) perNumber.set(c.number, (perNumber.get(c.number) ?? 0) + 1);
   const thin = new Set<number>();
-  for (const c of cards) if (isThin(c, c.number ? perNumber.get(c.number) ?? 1 : 1)) thin.add(c.id);
+  for (const c of cards) if (!upcomingSetIds.has(c.setId) && isThin(c, c.number ? perNumber.get(c.number) ?? 1 : 1)) thin.add(c.id);
   return thin;
 }
 
@@ -43,7 +45,8 @@ export function isThin(c: Indexed, printingsOfNumber: number): boolean {
 }
 
 /** The card page's check: counts its siblings in the catalogue it already holds. */
-export function cardIsThin(c: Indexed, cards: readonly Indexed[]): boolean {
+export function cardIsThin(c: Indexed, cards: readonly Indexed[], upcomingSetIds: ReadonlySet<number> = new Set()): boolean {
+  if (upcomingSetIds.has(c.setId)) return false;
   const n = c.number ? cards.reduce((k, x) => k + (x.number === c.number ? 1 : 0), 0) : 1;
   return isThin(c, n);
 }
@@ -65,4 +68,9 @@ export function movedCardSlug(slug: string, cards: readonly Pick<CardLite, "slug
   if (same.length === 1) return same[0].slug;
   const named = same.filter((c) => c.printing === "standard" && (!namePart || c.slug.startsWith(namePart)));
   return named.length === 1 ? named[0].slug : null;
+}
+
+/** The sets not released yet on `today` (YYYY-MM-DD): their revealed cards are always indexable. */
+export function upcomingSetIds(sets: readonly { id: number; releasedOn: string | null }[], today: string = new Date().toISOString().slice(0, 10)): Set<number> {
+  return new Set(sets.filter((s) => !!s.releasedOn && s.releasedOn > today).map((s) => s.id));
 }

@@ -10,7 +10,7 @@ import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/f
 import { KEYWORDS } from "@/lib/keywords";
 import { STORES } from "@/lib/stores";
 import { simSets } from "./tools/pack-sim/load";
-import { thinCardIds } from "@/lib/card-index";
+import { thinCardIds, upcomingSetIds } from "@/lib/card-index";
 
 // Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
 // Private paths (the admin area, account pages) are never listed here.
@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s.slug}`, lastModified: now })),
     ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     // Thin printings are noindex (lib/card-index.ts), so never listed.
-    ...((thin) => cat.cards.filter((c) => !thin.has(c.id)))(thinCardIds(cat.cards)).map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
+    ...((thin) => cat.cards.filter((c) => !thin.has(c.id)))(thinCardIds(cat.cards, upcomingSetIds(cat.sets))).map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
     // Trait hubs (lib/traits.ts): the index and every type with enough cards.
     ...(await getCardText().then((t) => ["/cards/trait", ...traitHubs(t).map((h) => `/cards/trait/${h.slug}`)]).catch(() => [] as string[])).map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now })),
