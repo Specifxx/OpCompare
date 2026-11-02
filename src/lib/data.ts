@@ -9,7 +9,8 @@ import { prisma } from "./db";
 import { bucketOf, chartSeries, dayNum, type BucketFile, type IndexFile } from "./history";
 import { MARKETS, type Country } from "./country";
 import { slugify } from "./catalog";
-import { SNAPSHOT_FRESH_MS } from "./price-snapshot";
+import { SNAPSHOT_FRESH_MS, snapshotFile } from "./price-snapshot";
+import { CLUSTER_FILE, validCluster, type FamilyFeed } from "./family-network";
 import { decodeLastKnownRow, type LastKnown, type LastKnownFile } from "./last-known";
 import {
   snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayGraded, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
@@ -1316,5 +1317,19 @@ export async function getLaunchPromo(): Promise<PromoStatus> {
 export const getChaseStrip = unstable_cache(
   async (): Promise<ChaseTile[]> => snapChaseStrip(),
   ["ebay-chase-strip-v2"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+// ── The Compare Empire network (lib/family-network.ts, DECISIONS.md "Sites that grow each other") ──
+// The sister card sites' feeds, copied into the snapshot by scripts/family-sync.ts. A file that cannot be
+// read throws (rule 1 of price-snapshot-read.ts), so a GitHub hiccup is never cached as "no sisters";
+// the block (components/FamilyCluster.tsx) catches it and draws nothing.
+export const getFamilyFeeds = unstable_cache(
+  async (): Promise<FamilyFeed[]> => {
+    const c = await snapshotFile<unknown>(CLUSTER_FILE);
+    if (c == null) throw new Error(`price snapshot: ${CLUSTER_FILE} could not be read`);
+    return validCluster(c, "op");
+  },
+  ["family-feeds-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );

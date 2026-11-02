@@ -141,6 +141,15 @@ jobs:
         env:
           SNAPSHOT_DIR: .snapshot-out
         run: npx tsx scripts/price-snapshot.ts
+      # The Compare Empire network (DECISIONS.md "Sites that grow each other"): OP Compare's best sealed deals
+      # and pre-orders for the sister sites, and their feeds for the "Other card games" block, written into
+      # the snapshot just built so the publish carries them. The script always exits 0, so the step never
+      # fails the run (and no step between the build and the publish may be allowed to).
+      - name: Family feed
+        if: steps.gate.outputs.run == 'true' && steps.snapshot.outcome == 'success'
+        env:
+          SNAPSHOT_DIR: .snapshot-out
+        run: npx tsx scripts/family-sync.ts
       # Scrapers that broke quietly (lib/store-health.ts): a summary table and
       # up to 20 warnings in this run's log. Never fails the import.
       - name: Store health report

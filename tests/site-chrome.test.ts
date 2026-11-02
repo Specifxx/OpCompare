@@ -50,11 +50,11 @@ test("the footer carries the share band, the sister site, the affiliate line and
   const src = read("src/components/Footer.tsx");
   assert.match(src, /Find OP Compare useful\? Send it to someone who plays One Piece\./);
   assert.match(src, /<ShareRow source="footer" size="sm"/);
-  // The sister sites: every one of the owner's other sites, from one list, as plain
-  // followed links in a new tab (our own sites: never nofollow or sponsored).
-  assert.match(src, /SISTER_SITES\.map\(/);
-  assert.match(src, /<a href=\{s\.url\} target="_blank" rel="noopener" /);
-  assert.doesNotMatch(src.slice(src.indexOf("SISTER_SITES.map"), src.indexOf("SISTER_SITES.map") + 400), /nofollow|sponsored|outboundRel/);
+  // One short line of the other card-game sites, then the network page (owner, 2026-11-02:
+  // the full list was convoluted). Our own sites: never nofollow or sponsored.
+  assert.match(src, /footerSisters\("op"\)\.map\(/);
+  assert.match(src, /href=\{NETWORK_PAGE\}/);
+  assert.doesNotMatch(src.slice(src.indexOf("footerSisters("), src.indexOf("footerSisters(") + 500), /nofollow|sponsored|outboundRel/);
   assert.match(src, /eBay Partner Network affiliate and a TCGplayer affiliate/);
   assert.match(src, /Bandai, Eiichiro Oda, Shueisha or Toei Animation/);
   // No email capture in the footer while nothing sends: the newsletter is a

@@ -220,6 +220,11 @@ export const evalImportAge = (at: Date | string | null, now: Date): Check =>
 export const evalSnapshotAge = (at: Date | string | null, now: Date): Check =>
   evalAge({ id: "snapshot-age", area: "prices", label: "GitHub price snapshot", at, warnH: 30, failH: 46, now, what: "snapshot", hint: "Pages read the snapshot first and fall back to the database after 48 hours. A stale snapshot means the import's publish step is failing." });
 
+/** The Compare Empire family feed (DECISIONS.md "Sites that grow each other"): written into every snapshot by
+ *  scripts/family-sync.ts. Never a fail: the sister sites only show less. Missing before its first run. */
+export const evalFamilyFeedAge = (at: Date | string | null, now: Date): Check =>
+  evalAge({ id: "family-feed", area: "prices", label: "Family feed (sister sites)", at, warnH: 50, failH: Number.POSITIVE_INFINITY, now, what: "family feed", hint: "The sister sites read OP Compare's best deals from snapshot/family-feed.json. Read the Family feed step of the Import prices workflow." });
+
 // ── Stores ───────────────────────────────────────────────────────────────────
 
 export function evalStores(o: { failed: number | null; total: number | null }): Check {

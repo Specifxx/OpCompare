@@ -17,7 +17,7 @@ import {
   evalJobs,
   evalNeon,
   evalSite,
-  evalSnapshotAge,
+  evalSnapshotAge, evalFamilyFeedAge,
   evalStoreCodes,
   evalStores,
   unknown,
@@ -115,7 +115,23 @@ export async function collectPrices(now: Date): Promise<Check[]> {
     },
     () => null as Date | null,
   );
-  return [importAt ? evalImportAge(importAt, now) : unknown("import-age", "prices", "Price import", "The last import could not be read."), snapshotAt ? evalSnapshotAge(snapshotAt, now) : unknown("snapshot-age", "prices", "GitHub price snapshot", "The snapshot's date could not be read.")];
+  const familyAt = await guarded(
+    "family feed",
+    async () => {
+      const base = (process.env.SNAPSHOT_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
+      const res = await withTimeout(`${base}/snapshot/family-feed.json`);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`family feed answered ${res.status}`);
+      const m = (await res.json()) as { generatedAt?: string };
+      return m.generatedAt ? new Date(m.generatedAt) : null;
+    },
+    () => undefined as Date | null | undefined,
+  );
+  return [
+    importAt ? evalImportAge(importAt, now) : unknown("import-age", "prices", "Price import", "The last import could not be read."),
+    snapshotAt ? evalSnapshotAge(snapshotAt, now) : unknown("snapshot-age", "prices", "GitHub price snapshot", "The snapshot's date could not be read."),
+    familyAt === undefined ? unknown("family-feed", "prices", "Family feed (sister sites)", "The family feed could not be read.") : evalFamilyFeedAge(familyAt, now),
+  ];
 }
 
 export async function collectStores(): Promise<Check[]> {

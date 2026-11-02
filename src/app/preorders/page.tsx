@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/ui";
 import { getCatalog } from "@/lib/data";
 import { pageOg } from "@/lib/og/meta";
 import { daysUntil, longDateOf, upcomingPreorderPages } from "@/lib/preorders";
+import { FamilyCluster } from "@/components/FamilyCluster";
 
 // /preorders: every unreleased set's pre-order page (dedicated or automatic,
 // lib/preorders.ts), soonest release first. The nav's "Pre-orders" link points
@@ -55,6 +56,7 @@ export default async function PreordersHub() {
           </p>
         </div>
       )}
+      <div className="mt-8"><FamilyCluster kind="preorder" /></div>
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/release-dates" className="btn-ghost">Release dates</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
