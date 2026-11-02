@@ -3415,3 +3415,14 @@ day-old image catalogue, and falls back when the set has no date.
 - `/preorders` lists every open page and is what the nav links ("Pre-orders"), so nothing needs swapping on a
   release day. The sitemap lists the hub and every automatic page while its set is unreleased.
 - An automatic page says "now out" after release and 308s to the set page 45 days later (`preorderPageRetired`).
+
+## 2026-11-02 — Seasonal sale pages
+
+`/boxing-day`, `/january-sales` and `/lunar-new-year` (owner-approved growth plan, 2026-11-02): one URL each,
+kept every year like `/black-friday`, built weeks ahead so they are indexed before the day. They list the same
+real rows as `/black-friday` (sealed under TCGplayer's market price in the US, the cheapest booster boxes in
+every market in its own currency), with the market where the day is a sale day first. The opening sentence
+names every market, never one country. Dates, the year a page is about (it rolls over a week after the event)
+and the intro are pure in `src/lib/sale-seasons.ts` (`tests/sale-seasons.test.ts`); Lunar New Year is a
+published-date table to 2040 (6 February 2027). Not in the nav (the minimal-nav rule): the sitemap and
+`/black-friday` link them. Never a "was" price, a countdown or an invented sale.
