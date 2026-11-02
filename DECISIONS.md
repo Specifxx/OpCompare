@@ -3486,3 +3486,18 @@ The rules we keep, on every Compare Empire site:
 - Every link tagged, rel="sponsored nofollow"; no incentive (cashback, discount) for buying through it.
 - Here: the sealed page's Amazon row lost Amazon's orange (site surface and ghost button); the footer and
   the Amazon row carry the trademark line; the /sealed marketplace block is no longer headed "deals".
+
+## 2026-11-02 — The hero's region chooser is prominent, with drawn flags
+
+Owner: "the region switcher must be more prevalent on all sites, on the main home page hero etc … and have
+the flags as well". This reverses the hero toggle's "deliberately quiet" styling (9px label, slate-500 chips,
+no flags, placed last in the hero).
+
+- `CountryHeroToggle` now sits straight under the hero search (under the intro on phones), with an 11px
+  "Shopping from" label, white flag + code chips and a brand outline on the active one; three by two on
+  phones, one row from sm. The header's `CountrySwitcher` stays, so both can be above the fold at once.
+- **Flags are inline SVG (`src/components/Flag.tsx`), not the country list's emoji and not image files.**
+  The emoji render as the letters "AU"/"US" on Windows; image files would be new requests and hosting. No
+  ids or clip paths, so a flag works inside a closed menu and many times on a page. The header switcher,
+  its menu and `RegionToggle` use it too; the emoji stay only in text-only places. The same file is in
+  every Compare Empire repo that has a region switcher; keep the copies identical.
