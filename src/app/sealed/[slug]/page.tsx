@@ -16,6 +16,8 @@ import { SealedWatchButton } from "@/components/SealedWatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
+import { priceGap, shareText } from "@/lib/share-link";
+import { buyRow, marketRows } from "@/lib/quick-view";
 import {
   getCatalog,
   getChaseStrip,
@@ -192,7 +194,7 @@ export default async function SealedDetailPage({ params }: Props) {
               </div>
               <div className="flex shrink-0 items-start gap-2">
                 <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="max-w-xs" />
-                <ShareButton responsive />
+                <ShareButton responsive name={s.name} medium="sealed" text={shareText(s.name, priceGap(marketRows(s.offers, country).map((o) => ({ priceCents: o.priceCents, retailerName: buyRow(o, country, `/sealed/${s.slug}`).label }))), (c) => money(c, country))} />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

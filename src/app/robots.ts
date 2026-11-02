@@ -16,7 +16,8 @@ const BLOCKED_BOTS = [
   "Bytespider", "meta-externalagent", "Meta-ExternalAgent",
   "MJ12bot", "DotBot", "PetalBot", "DataForSeoBot", "BLEXBot", "Barkrowler", "serpstatbot", "SeekportBot", "ImagesiftBot", "Timpibot",
 ];
-const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon"];
+// A shared link (utm_source=share, lib/share-link.ts) too: X and Reddit fetch its preview and obey robots.txt.
+const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon", "/*utm_source=share"];
 
 export default function robots(): MetadataRoute.Robots {
   return {
