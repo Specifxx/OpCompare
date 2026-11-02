@@ -6,7 +6,7 @@
 // an out-of-range number is a 400, never a clamp.
 import { isCountry, MARKETS } from "./country";
 
-export const REPORT_ISSUES = ["PRICE_WRONG", "OUT_OF_STOCK", "WRONG_PRINTING", "WRONG_ITEM", "LINK_BROKEN", "OTHER"] as const;
+export const REPORT_ISSUES = ["PRICE_WRONG", "OUT_OF_STOCK", "WRONG_PRINTING", "WRONG_ITEM", "LINK_BROKEN", "STORE_UNTRUSTED", "OTHER"] as const;
 export type ReportIssue = (typeof REPORT_ISSUES)[number];
 export const ISSUE_LABELS: Record<ReportIssue, string> = {
   PRICE_WRONG: "Price is wrong",
@@ -14,6 +14,7 @@ export const ISSUE_LABELS: Record<ReportIssue, string> = {
   WRONG_PRINTING: "Wrong printing (parallel / alt art / manga / other set)",
   WRONG_ITEM: "Wrong item",
   LINK_BROKEN: "Link is broken",
+  STORE_UNTRUSTED: "I don't trust this store / had a problem ordering",
   OTHER: "Something else",
 };
 
