@@ -41,9 +41,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
       { href: "/price-guide", label: "Price Guide", keywords: ["price list", "price guide", "card values", "all prices", "value"] },
       { href: "/graded", label: "Graded card prices", keywords: ["graded", "psa", "psa 10", "bgs", "cgc", "slab", "graded price"] },
-      // The next release's pre-order page (lib/preorders.ts PREORDER_PAGES), the family's most visited kind of page. Swap it for
-      // the next set's when OP18 releases (20 Nov 2026).
-      { href: "/op18-preorders", label: "OP18 pre-orders", keywords: ["preorder", "pre-order", "op18", "dominance of god", "next set", "booster box preorder"] },
+      // Every upcoming set's pre-order page (app/preorders, lib/preorders.ts), the family's most visited kind of page. The hub
+      // lists whatever is unreleased, so this link never needs swapping when a set comes out (2026-11-02).
+      { href: "/preorders", label: "Pre-orders", keywords: ["preorder", "pre-order", "op18", "op19", "dominance of god", "next set", "booster box preorder", "upcoming"] },
       { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "starter deck", "cases", "sealed", "double pack"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/market/records", label: "Price records", keywords: ["records", "all time high", "most expensive ever", "highs", "lows"] },

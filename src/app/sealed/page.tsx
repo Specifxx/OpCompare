@@ -18,7 +18,7 @@ import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog, getSealedSoldOut } from "@/lib/data";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { longDateOf, PREORDER_PAGES, preorderGroups } from "@/lib/preorders";
+import { longDateOf, preorderGroups, preorderRouteOf } from "@/lib/preorders";
 import { newestBoosterSet } from "@/lib/selectors";
 import { pageOg } from "@/lib/og/meta";
 import { SITE_URL } from "@/lib/site";
@@ -57,7 +57,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
   const newest = newestBoosterSet(cat.sets);
   // A pre-order page is linked only while its set is unreleased (each retires itself afterwards), soonest release first.
   const preorderLinks = preorderGroups(sealed, cat.sets, new Date().toISOString().slice(0, 10)).flatMap((g) =>
-    g.set && PREORDER_PAGES[g.set.code] ? [{ code: g.set.code, href: PREORDER_PAGES[g.set.code], releasedOn: g.releasedOn }] : [],
+    g.set && preorderRouteOf(g.set) ? [{ code: g.set.code, href: preorderRouteOf(g.set)!, releasedOn: g.releasedOn }] : [],
   );
   const sets = cat.sets
     .filter((s) => s.sealedCount > 0)

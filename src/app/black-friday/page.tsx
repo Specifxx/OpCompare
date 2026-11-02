@@ -97,6 +97,11 @@ export default async function BlackFridayPage() {
         <Link className="text-brand-400 hover:underline" href="/sealed">Every sealed product →</Link> · <Link className="text-brand-400 hover:underline" href="/tools/deal-finder">Deal Finder →</Link> ·{" "}
         <Link className="text-brand-400 hover:underline" href="/market">Market index →</Link>
       </p>
+      <p className="text-sm text-slate-400">
+        Later in the season: <Link className="text-brand-400 hover:underline" href="/boxing-day">Boxing Day deals</Link> ·{" "}
+        <Link className="text-brand-400 hover:underline" href="/january-sales">January sales</Link> ·{" "}
+        <Link className="text-brand-400 hover:underline" href="/lunar-new-year">Lunar New Year deals</Link>
+      </p>
     </div>
   );
 }

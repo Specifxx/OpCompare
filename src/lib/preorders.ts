@@ -29,13 +29,44 @@ export function releaseDateOf(s: Pick<SealedLite, "releasedOn" | "setId">, setBy
 /** Set code → its dedicated pre-order route (a group of that set links to it). */
 export const PREORDER_PAGES: Record<string, string> = { EB05: "/eb05-preorders", OP18: "/op18-preorders" };
 
+// AUTOMATIC PAGES (2026-11-02). Every other upcoming set of these kinds gets a
+// page at /preorders/<code> (app/preorders/[code]) with no edit: the TCGplayer
+// group the import already reads brings its code, name and date, and the page
+// is drawn from the catalogue like the dedicated ones. A dedicated route above
+// wins (its code redirects there); starter decks, event promos and collections
+// get none (a release day is not what people search them by).
+export const AUTO_PREORDER_KINDS: ReadonlySet<string> = new Set(["booster", "extra", "premium"]);
+
+/** A set code as a URL segment ("OP19" → "op19", "OP18 RE" → "op18-re"). */
+export const codeSlug = (code: string) => code.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+/** The route of a set's pre-order page: its dedicated one, else /preorders/<code> for a set of an automatic kind, else null. */
+export function preorderRouteOf(set: Pick<SetLite, "code"> & Partial<Pick<SetLite, "kind">>): string | null {
+  if (PREORDER_PAGES[set.code]) return PREORDER_PAGES[set.code];
+  return set.kind && AUTO_PREORDER_KINDS.has(set.kind) && codeSlug(set.code) ? `/preorders/${codeSlug(set.code)}` : null;
+}
+
+/** The set an automatic /preorders/<code> URL names, or null (a dedicated set redirects, so it is found too). */
+export function setForPreorderSlug<T extends Pick<SetLite, "code" | "kind">>(sets: T[], slug: string): T | null {
+  return sets.find((s) => codeSlug(s.code) === slug && (PREORDER_PAGES[s.code] || AUTO_PREORDER_KINDS.has(s.kind))) ?? null;
+}
+
+/** Days an automatic page stays up after release (it then says "now out"), before it redirects to the set page. */
+export const RETIRE_AFTER_DAYS = 45;
+
+/** An automatic page past its life: released more than RETIRE_AFTER_DAYS before `today`. */
+export function preorderPageRetired(set: Pick<SetLite, "releasedOn">, today: string): boolean {
+  if (!set.releasedOn) return false;
+  return (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${set.releasedOn}T00:00:00Z`)) / 86_400_000 > RETIRE_AFTER_DAYS;
+}
+
 /**
  * A set's pre-order page while the set is unreleased (its release date is after
  * `today`), else null. Self-retiring: the link goes on release day, with no edit.
- * The set page and /release-dates link through this.
+ * The set page, /sealed, /release-dates and the homepage link through this.
  */
-export function preorderPageFor(set: Pick<SetLite, "code" | "releasedOn">, today: string): string | null {
-  const href = PREORDER_PAGES[set.code];
+export function preorderPageFor(set: Pick<SetLite, "code" | "releasedOn"> & Partial<Pick<SetLite, "kind">>, today: string): string | null {
+  const href = preorderRouteOf(set);
   return href && set.releasedOn && set.releasedOn > today ? href : null;
 }
 
@@ -47,7 +78,7 @@ export interface PreorderLink {
 }
 
 /** Every set with a pre-order page that is still unreleased (preorderPageFor), soonest release first: the homepage's "Pre-orders open" line. */
-export function upcomingPreorderPages(sets: Pick<SetLite, "code" | "name" | "releasedOn">[], today: string): PreorderLink[] {
+export function upcomingPreorderPages(sets: (Pick<SetLite, "code" | "name" | "releasedOn"> & Partial<Pick<SetLite, "kind">>)[], today: string): PreorderLink[] {
   const seen = new Set<string>();
   return sets
     .flatMap((s) => {
