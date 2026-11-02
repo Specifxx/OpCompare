@@ -18,7 +18,7 @@ export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "opcompare
 // Compare is built on. Plain followed links: they are our own sites, never
 // affiliate or sponsored (tests/site-chrome.test.ts pins the footer).
 export interface SisterSite {
-  key: "rift" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "wargame" | "figure" | "cam" | "empire";
+  key: "rift" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure" | "cam" | "empire";
   name: string;
   url: string;
   game: string;
@@ -41,10 +41,11 @@ export const SISTER_SITES: readonly SisterSite[] = [
   // Every site links the whole family (2026-10-27, DECISIONS.md): YGO Compare,
   // then the two that are not card games.
   { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh!", compares: "Yu-Gi-Oh! card prices", search: "https://ygocompare.com/cards?q={q}" },
+  { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", game: "Cyberpunk TCG", compares: "Cyberpunk TCG card prices", search: "https://cyberpunkcompare.com/cards?q={q}" },
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com", game: "miniature wargames", compares: "miniature wargame prices", notTcg: true },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com", game: "anime figures", compares: "anime figure prices", notTcg: true },
   { key: "cam", name: "CamCompare", url: "https://www.camcompare.app", game: "cameras", compares: "camera and lens prices", notTcg: true },
-  { key: "empire", name: "Compare Empire", url: "https://compareempire.com", game: "tech", compares: "Australian tech prices", notTcg: true },
+  { key: "empire", name: "Compare Empire", url: "https://compareempire.com", game: "tech", compares: "tech and appliance prices", notTcg: true },
 ];
 /** The card-game sites only, for "Compare other TCGs" and the one-per-game line on About. */
 export const TCG_SISTER_SITES = SISTER_SITES.filter((s) => !s.notTcg);
