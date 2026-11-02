@@ -17,6 +17,8 @@ export const AMAZON_US_DEFAULT_TAG = "riftcompare-20";
 export const AMAZON_AU_DEFAULT_TAG = "compareempire-22";
 /** The Associates programme's required statement, word for word, beside every Amazon link and in the footer. */
 export const AMAZON_STATEMENT = "As an Amazon Associate I earn from qualifying purchases.";
+/** Amazon's trademark notice (Operating Agreement Dos and Don'ts, 2026-11-02): in the footer and beside the Amazon link. */
+export const AMAZON_TRADEMARK = "Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.";
 
 interface Store {
   host: string;
