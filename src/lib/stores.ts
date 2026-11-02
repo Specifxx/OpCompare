@@ -77,7 +77,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "cardboardanddie", name: "Cardboard and Die", base: "https://cardboardanddie.com", country: "US", collections: ["one-piece-singles-in-stock"] },
   { key: "danireon", name: "Danireon Cards & Games", base: "https://www.danireon.com", country: "US", collections: ["one-piece-tcg-singles","one-piece-the-azure-seas-seven-singles","one-piece-premium-booster-the-best-vol-2-singles","one-piece-premium-booster-the-best-singles","one-piece-carrying-on-his-will-singles","one-piece-wings-of-the-captain-singles","one-piece-emperors-in-the-new-world-singles","one-piece-romance-dawn-singles","one-piece-pillars-of-strength-singles","one-piece-a-fist-of-divine-speed-singles","one-piece-paramount-war-singles","one-piece-legacy-of-the-master-singles"] },
   { key: "fabricatorsforge", name: "Fabricator's Forge", base: "https://shop.fabricatorsforge.com", country: "US", collections: ["one-piece-singles"] },
-  { key: "foxandfable", name: "Fox and Fable Games", base: "https://foxandfablegames.com", country: "US", collections: ["one-piece-singles"] },
   { key: "gachaboba", name: "Gacha Boba", base: "https://gachaboba.com", country: "US", collections: ["one-piece-singles","one-piece-op01-singles","one-piece-op04-singles-1","one-piece-op03-singles","one-piece-op02-singles","one-piece-op04-singles"] },
   { key: "gatorscardden", name: "Gator's Card Den", base: "https://gatorscardden.com", country: "US", collections: ["one-piece-singles"] },
   { key: "gglegends", name: "GG Legends", base: "https://store.gglehi.com", country: "US", collections: ["one-piece-tcg-singles-in-stock","one-piece-more-than-4","one-piece-last-1","one-piece-2-4"] },
@@ -226,7 +225,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "tier1games", name: "Tier 1 Games", base: "https://tier1games.com", country: "US", collections: ["one-piece-card-game-all-products", "one-piece-card-game-in-stock"] },
   { key: "tradingcardworld", name: "Trading Card World", base: "https://tradingcardworld.store", country: "US", collections: ["one-piece-singles", "one-piece"] },
   { key: "triadcards", name: "Triad Cards and Gaming", base: "https://triadgroup.shop", country: "US", collections: ["one-piece-singles", "one-piece"] },
-  { key: "waywardcitygames", name: "Wayward City Games", base: "https://waywardcitygames.net", country: "US", collections: ["one-piece-card-game"] },
   { key: "zulusgames", name: "Zulus Games", base: "https://zulusgames.com", country: "US", collections: ["one-piece-singles"] },
   { key: "crystalcollectablestcg", name: "Crystal Collectables TCG", base: "https://crystalcollectablestcg.com.au", country: "AU", collections: ["one-piece-singles", "one-piece"] },
   // Don Games: its owner made the "One Piece Singles" collection for us (2026-10-22), so it is a configured
@@ -436,7 +434,6 @@ const RAW_STORES: StoreInfo[] = [
   { key: "haikugaming", name: "Haiku Gaming", base: "https://haikugaming.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "evolutiongamestx", name: "Evolution Games", base: "https://evolutiontcg.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "secondhandsoldiers", name: "Secondhand Soldiers", base: "https://secondhandsoldiers.com", country: "US", collections: [], platform: "shadowpos" },
-  { key: "jjaspertcg", name: "Jumping Jasper", base: "https://jjaspertcg.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "darksidegames", name: "Darkside Games", base: "https://darksidegames.com", country: "US", collections: [], platform: "shadowpos" },
   { key: "littlespectacles", name: "Little Spectacles", base: "https://littlespectacles.shop", country: "US", collections: [], platform: "shadowpos" },
   { key: "millerscomics", name: "Miller's Comics, Cards, Collectibles", base: "https://millersccct.com", country: "US", collections: [], platform: "shadowpos" },
