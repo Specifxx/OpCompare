@@ -39,10 +39,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const cat = await getCatalog();
   const s = cat.setBySlug.get(params.slug);
   if (!s) return { title: "Set not found" };
-  const t = `${s.code} ${s.name} Card List & Prices`;
+  // Spoiler season (RiftCompare's strongest non-brand searches, "riftbound legacy spoilers"): until release day a set with
+  // revealed cards is titled for the spoiler search, with the count of cards revealed so far. Release day turns it back
+  // into the card list, at the same URL, so the page keeps what it earned.
+  const revealed = cat.cards.filter((c) => c.setId === s.id).length;
+  const upcoming = !!s.releasedOn && s.releasedOn > new Date().toISOString().slice(0, 10);
+  const spoilers = upcoming && revealed > 0;
+  const t = spoilers ? `${s.code} ${s.name} Spoilers: ${revealed} Cards Revealed` : `${s.code} ${s.name} Card List & Prices`;
+  const short = spoilers ? `${s.code} Spoilers: ${revealed} Cards Revealed & Prices` : `${s.code} Card List & Prices`;
   return {
-    title: { absolute: t.length <= 60 ? t : `${s.code} Card List & Prices` },
-    description: `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
+    title: { absolute: t.length <= 60 ? t : short },
+    description: spoilers
+      ? `Every ${s.code} ${s.name} card revealed so far (${revealed} and counting), with pre-order prices as stores list them. Releases ${s.releasedOn}; updated as new spoilers land.`
+      : `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
     alternates: { canonical: `/sets/${s.slug}` },
     openGraph: pageOgOwnImage(`/sets/${s.slug}`),
     // A filtered, sorted or paged grid is a slice of the same list: noindex, follow.
@@ -95,16 +104,16 @@ export default async function SetPage({ params, searchParams }: Props) {
         {set.code} · {kind}
       </p>
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-        {set.name} card list &amp; prices
+        {future && cards.length > 0 ? <>{set.name} spoilers: every card revealed so far</> : <>{set.name} card list &amp; prices</>}
       </h1>
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>
           {set.name} ({set.code}){" "}
           {future ? "is listed for release on" : "was released on"}{" "}
-          {longDate(set.releasedOn) || "a date not yet announced"}. It has{" "}
-          {int(cards.length)} printings on TCGplayer — every rarity and every
-          Parallel, Manga, SP and promo version counted separately, because each
-          is priced separately.
+          {longDate(set.releasedOn) || "a date not yet announced"}.{" "}
+          {future
+            ? `${int(cards.length)} of its cards have been revealed and listed on TCGplayer so far; this list grows as each spoiler is listed, and prices fill in as stores take pre-orders.`
+            : `It has ${int(cards.length)} printings on TCGplayer — every rarity and every Parallel, Manga, SP and promo version counted separately, because each is priced separately.`}
         </p>
         <p>
           Each card below shows the cheapest in-stock listing we track in{" "}

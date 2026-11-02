@@ -3519,3 +3519,11 @@ most of them: thousands of near-identical card pages tell it the site is templat
   printing left, or one standard printing whose name matches. Anything less stays a 404.
 - The robots-blocked URLs are the `/*?` query variants, blocked on purpose (robots.ts); the noindex ones are the
   member pages and empty libraries. Neither needs a fix.
+
+## 2026-11-02 — An unreleased set's page is its spoiler tracker
+
+RiftCompare's best non-brand searches are spoiler searches ("riftbound legacy spoilers"). Until release day, a set page with
+revealed cards is titled "<code> <name> Spoilers: N Cards Revealed" with an h1 and intro to match; release day turns it back
+into "Card List & Prices" at the same URL, so the page keeps what it earned (one URL per set, RiftCompare #186). Every card of
+an unreleased set is indexable even without a price (`upcomingSetIds` in lib/card-index.ts): revealed cards are what people
+search during spoiler season.

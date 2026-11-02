@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { cardIsThin, movedCardSlug, thinCardIds } from "../src/lib/card-index";
+import { cardIsThin, movedCardSlug, thinCardIds, upcomingSetIds } from "../src/lib/card-index";
 import type { CardLite } from "../src/lib/data";
 
 const c = (id: number, number: string | null, over: Partial<CardLite> = {}): CardLite => ({
@@ -47,4 +47,13 @@ test("the card page and the sitemap both apply the rule; galleries point at thei
   assert.match(readFileSync("src/app/sitemap.ts", "utf8"), /thinCardIds\(/);
   assert.doesNotMatch(readFileSync("src/app/sitemap.ts", "utf8"), /\/gallery`/);
   assert.match(readFileSync("src/app/sets/[slug]/gallery/page.tsx", "utf8"), /canonical: `\/sets\/\$\{s\.slug\}` \}/);
+});
+
+test("a revealed card of an unreleased set stays indexable with no price (spoiler season)", () => {
+  const spoiler = c(9, "OP18-001", { setId: 18, marketUsd: null });
+  const up = upcomingSetIds([{ id: 18, releasedOn: "2026-11-20" }, { id: 1, releasedOn: "2022-12-02" }], "2026-11-02");
+  assert.deepEqual([...up], [18]);
+  assert.equal(cardIsThin(spoiler, [spoiler], up), false);
+  assert.equal(thinCardIds([spoiler], up).size, 0);
+  assert.equal(cardIsThin(spoiler, [spoiler], upcomingSetIds([{ id: 18, releasedOn: "2026-11-20" }], "2026-11-21")), true);
 });

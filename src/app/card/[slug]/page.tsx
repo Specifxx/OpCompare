@@ -3,7 +3,7 @@ import { ebayJsonLdOffers } from "@/lib/board";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { cardIsThin, movedCardSlug } from "@/lib/card-index";
+import { cardIsThin, movedCardSlug, upcomingSetIds } from "@/lib/card-index";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { ebayBannerHref } from "@/components/EbayCardBanner";
@@ -149,7 +149,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: `/card/${c.slug}` },
     // A thin printing (lib/card-index.ts) stays linked but asks not to be indexed.
-    ...(lite && cardIsThin(lite, cat.cards) ? { robots: { index: false, follow: true } } : {}),
+    ...(lite && cardIsThin(lite, cat.cards, upcomingSetIds(cat.sets)) ? { robots: { index: false, follow: true } } : {}),
     // The card's own scan on TCGplayer's CDN: nothing is generated here (a drawn share
     // image per card cost ~1.5 GB of ISR writes every 12 hours). No art: the site default.
     openGraph: pageOg(`/card/${c.slug}`, { title: `${t} | ${SITE_NAME}`, ...(art ? { images: [{ url: art, alt: t }] } : {}) }),
