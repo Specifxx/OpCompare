@@ -11,7 +11,7 @@ import { pageOg } from "@/lib/og/meta";
 // Decks filed under one Leader (RiftCompare's /decks/legend/[legend]). ISR an
 // hour with an EMPTY generateStaticParams (no build-time database load);
 // noindex while it holds fewer than two decks.
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 export async function generateStaticParams() {
   return [];

@@ -9,6 +9,8 @@
   ],
   "git": {
     "deploymentEnabled": {
+      "**": false,
+      "main": true,
       "data": false,
       "snapshot": false,
       "claude/*": false,

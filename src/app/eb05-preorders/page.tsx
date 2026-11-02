@@ -3,7 +3,7 @@ import { PreorderPage, preorderMetadata, type PreorderConfig } from "@/component
 
 // /eb05-preorders: the shared pre-order page (components/PreorderPage.tsx) for EB05,
 // which releases before OP18.
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 const CONFIG: PreorderConfig = {
   code: "EB05",

@@ -42,7 +42,7 @@ import { FamilyCluster } from "./FamilyCluster";
 // presale flags, so on release day it switches to a "released" state pointing at
 // live prices, and the "also coming" section lists whatever else is not out yet.
 // A route is a PreorderConfig and two exports (see app/eb05-preorders); the
-// route file keeps `export const revalidate = 3600` itself (Next reads it statically).
+// route file keeps `export const revalidate = 21600` itself (Next reads it statically).
 // Since 2026-11-02 every other upcoming booster, extra or premium set gets the
 // same page automatically at /preorders/<code> (autoPreorderConfig, below).
 

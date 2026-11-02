@@ -5,7 +5,7 @@ import { upcomingSets } from "@/lib/selectors";
 // "Add to calendar" for the next dated One Piece set: the phone and desktop half
 // of taking the countdown elsewhere (a calendar syncs across every device its
 // owner uses). Reads the cached catalogue only.
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 export async function GET() {
   const cat = await getCatalog();

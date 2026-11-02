@@ -33,7 +33,7 @@ const archivo = Archivo({
   display: "swap",
 });
 
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 export function generateMetadata(): Promise<Metadata> {
   return homeMetadata();
