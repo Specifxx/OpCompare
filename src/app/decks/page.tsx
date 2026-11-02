@@ -12,7 +12,7 @@ import { pageOg } from "@/lib/og/meta";
 
 // The public deck library (RiftCompare's /decks). ISR: one render an hour, and
 // publishing revalidates it on demand. Filters and sort run client-side.
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 // One read per render, shared by generateMetadata and the page (React's request
 // cache over the self-cached loader — not a second data cache). A failed read

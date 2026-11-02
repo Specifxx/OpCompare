@@ -3,7 +3,7 @@ import { getCatalog } from "@/lib/data";
 import { newsSitemapXml, recentNewsPosts } from "@/lib/news-sitemap";
 
 // Posts from the last two days, for Google News (listed in robots.txt).
-export const revalidate = 3600;
+export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
 export async function GET() {
   let cat: Awaited<ReturnType<typeof getCatalog>> | null = null;
