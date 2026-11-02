@@ -11,7 +11,7 @@ import { Breadcrumbs, JsonLd } from "@/components/ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SEALED_KINDS } from "@/lib/constants";
 import { ebaySearchUrl, outboundRel } from "@/lib/affiliate";
-import { AMAZON_REL, AMAZON_STATEMENT, amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { AMAZON_REL, AMAZON_STATEMENT, AMAZON_TRADEMARK, amazonFor, amazonSearchUrl } from "@/lib/amazon";
 import { itemListLd } from "@/lib/jsonld";
 import { filterSealed, isSealedFiltered, parseSealedQuery, sortSealed, type SealedCtx } from "@/lib/sealed-query";
 import { COUNTRIES } from "@/lib/country";
@@ -153,7 +153,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
           and eBay and Amazon carry them (Amazon where the market has an Associates
           tag, lib/amazon.ts). A search, never a price or a stock claim. */}
       <section className="card-surface mt-8 p-5">
-        <h2 className="text-lg font-extrabold text-white">More sealed deals on the big marketplaces</h2>
+        <h2 className="text-lg font-extrabold text-white">Search the big marketplaces too</h2>
         <p className="mt-1 max-w-2xl text-sm text-slate-400">Boxes sell out and restock constantly, so it can be worth searching eBay{amazon ? ` and ${amazon.label}` : ""} as well before you buy.</p>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {families.map((x) => (
@@ -171,7 +171,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
           ))}
         </div>
         <AffiliateDisclosure partner="ebay" />
-        {amazon ? <p className="mt-1 text-[11px] text-slate-500">{AMAZON_STATEMENT}</p> : null}
+        {amazon ? <p className="mt-1 text-[11px] text-slate-500">{AMAZON_STATEMENT} {AMAZON_TRADEMARK}</p> : null}
         <EbayChase page="sealed" className="mt-6" heading="Chase singles on eBay" />
       </section>
     </div>
