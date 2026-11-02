@@ -54,6 +54,9 @@ const nextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],
       },
+      // The embeddable widgets (DECISIONS.md, "Free price widgets", 2026-11-02) are framed on other sites: frame-ancestors
+      // overrides the SAMEORIGIN above in every current browser. Only /embed/:path+, never the /embed directory page.
+      { source: "/embed/:path+", headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" }] },
       // Share PNGs are not pages: keep them out of search results.
       { source: "/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
       { source: "/:path*/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },

@@ -3378,3 +3378,13 @@ boxes at a store in each market, in that market's own currency. It reads only `g
 visitor, so it is one cached page (`revalidate = 21600`). One URL kept every year so links and rankings carry over; it
 must be indexed weeks before 27 November 2026, so it ships now. Never a "was" price, a countdown or an invented sale.
 Part of the passive-growth plan (owner, 2026-11-02); RiftCompare and every sister site have the same page.
+
+## 2026-11-02 — Free price widgets
+
+`/embed/card/<slug>` is a live card price badge any blog, deck guide or store can put in an `<iframe>`: the cheapest
+listing we track in `?market=` (US by default) with its store count, else TCGplayer's market price (≈ in the market's
+currency, labelled). It reads only the cached `getCatalog`, is noindex, and caches through its CDN header (six hours,
+a day stale). Only `/embed/:path+` may be framed (`frame-ancestors *`); the rest of the site keeps `SAMEORIGIN`
+(`tests/embed.test.ts`). `/embed` shows the snippet (iframe plus one plain text link, the part search engines credit)
+and a plain-HTML store badge. The daily outreach offers the widget instead of asking for a link (owner, 2026-11-02:
+growth must be passive). RiftCompare has had the same widgets since 2026-09.

@@ -49,6 +49,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/market/records", label: "Price records", keywords: ["records", "all time high", "most expensive ever", "highs", "lows"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"] },
       { href: "/black-friday", label: "Black Friday & Cyber Monday", keywords: ["black friday", "cyber monday", "holiday sale"] },
+      { href: "/embed", label: "Free price widgets", keywords: ["embed", "widget", "iframe", "badge", "for creators"] },
       { href: "/stores", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
     ],
   },
