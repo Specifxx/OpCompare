@@ -10,7 +10,7 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "u
 test("where: Amazon US, AU, UK, CA and DE with the owner's hard-coded tags, never Singapore", () => {
   assert.deepEqual(MARKETS.filter((c) => amazonFor(c)), MARKETS.filter((c) => c !== "SG"));
   assert.equal(amazonFor("US")!.tag, "riftcompare-20");
-  assert.equal(amazonFor("AU")!.tag, "compareempire-22");
+  assert.equal(amazonFor("AU")!.tag, "opcompare-22");
   assert.equal(amazonFor("UK")!.tag, "compareempi03-21");
   assert.equal(amazonFor("CA")!.tag, "compareempire-20");
   assert.equal(amazonFor("EU")!.tag, "compareempire-21");
