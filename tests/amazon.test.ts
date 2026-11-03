@@ -1,4 +1,4 @@
-// Amazon Associates (owner, 2026-10-29): sealed pages link to the visitor's Amazon (US, AU, UK, CA and EU, tags hard-coded; never SG), a tagged search with a per-placement ascsubtag, no price, never a row of the board, the statement beside it.
+// Amazon Associates (owner, 2026-10-29): sealed pages link to the visitor's Amazon (US, AU, UK, CA and EU, tags hard-coded; never SG), a tagged search with a per-placement ascsubtag, no price, the third pinned row of the board (2026-11-03), the statement beside it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -32,16 +32,19 @@ test("the link: a tagged search on the market's Amazon, ascsubtag oc-<market>-<p
   assert.equal(AMAZON_REL, "sponsored nofollow noopener");
 });
 
-test("placed on sealed pages only, above the board (owner, 2026-10-30), beside the statement, never in the board, no Amazon price", () => {
+test("placed on sealed pages only, as the third pinned row after eBay and TCGplayer (owner, 2026-11-03), no Amazon price", () => {
   const sealed = read("src/app/sealed/[slug]/page.tsx");
-  assert.match(sealed, /<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>/);
-  assert.ok(sealed.indexOf("<AmazonCheck") < sealed.indexOf("<PriceBoard"), "Amazon is the first row, above the board");
+  assert.match(sealed, /thirdRow=\{<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>\}/);
+  const view = read("src/components/PriceBoardView.tsx");
+  assert.match(view, /at === pins\.length - 1 \? <Fragment key="third-row">\{thirdRow\}<\/Fragment>/, "right after the pinned pair");
+  assert.match(view, /\{pins\.length \? null : thirdRow\}/, "first of the board when nothing is pinned");
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
+  assert.match(comp, />Ad</, "labelled Ad");
   assert.match(comp, /rel=\{AMAZON_REL\}/);
   assert.match(comp, /data-retailer=/, "counted like every outbound link");
   assert.doesNotMatch(comp, /money\(|priceCents|Prime|rating/, "no Amazon price, rating or Prime");
   assert.match(read("src/app/sealed/page.tsx"), /amazonSearchUrl\(country, x\.q, "sealed-page"\)/);
-  for (const f of ["src/components/PriceBoard.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);
+  for (const f of ["src/components/PriceBoard.tsx", "src/components/PriceBoardView.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);
   assert.ok(read("src/components/Footer.tsx").includes(AMAZON_STATEMENT));
 });

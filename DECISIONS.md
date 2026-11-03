@@ -3639,3 +3639,13 @@ that wants a reply goes to /contact). "What people say" keeps the reviews approv
 `getApprovedReviews`) and adds, in the browser, the shared score and reviews from `/api/site-reviews/op` (CDN six hours). The
 score counts ratings from 2026-11-03 on; older stars stay in /admin/inbox. While no ad script is on the page the card says "We
 don't run banner ads, so if this helped, please leave us a review." Never review markup.
+
+## Amazon is the third pinned row of the sealed board (2026-11-03)
+
+The owner wants Amazon on every site "up there with eBay and TCGplayer", as "the third row out of the three". Since
+2026-10-30 the sealed page drew Amazon as a row-shaped block ABOVE the board, so it came first, before eBay and TCGplayer.
+It is now a row of the board: `PriceBoard` / `PriceBoardView` take a generic `thirdRow` slot (the board itself still names
+no marketplace it does not price, `tests/amazon.test.ts`), drawn right after the pinned eBay and TCGplayer rows, first when
+neither is pinned (after the eBay search and TCGplayer reference rows), and at the foot of those search rows when no store
+has stock. Still sealed pages only, still a tagged search with no Amazon price, never ranked or the cheapest, still never in
+the quick view, still labelled "Ad" with the Associates statement beside it.

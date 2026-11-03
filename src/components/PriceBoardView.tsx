@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
@@ -37,6 +38,7 @@ export function PriceBoardView({
   name,
   preRelease = false,
   tcgRef,
+  thirdRow,
 }: {
   model: BoardModel;
   productId: number;
@@ -56,6 +58,10 @@ export function PriceBoardView({
   /** TCGplayer's market price (USD cents) and tagged link: the pinned TCGplayer
    *  reference row when this market has no TCGplayer listing. */
   tcgRef?: { marketUsd: number | null; href: string };
+  /** One more pinned row, an <li> drawn right after eBay and TCGplayer (first when neither is shown), or at the
+   *  foot of the search rows when no store has stock: the sealed page's marketplace search (owner, 2026-11-03).
+   *  A slot, so the board itself never names a marketplace it does not price. */
+  thirdRow?: React.ReactNode;
 }) {
   const c = COUNTRIES[country];
   const { rows: open, sold, elsewhere, ebaySearch: ebay } = model;
@@ -128,17 +134,19 @@ export function PriceBoardView({
               </a>
             </li>
           ) : null}
+          {open.length ? null : thirdRow}
         </ol>
       ) : null}
       {open.length ? (
         <ol className="divide-y divide-ink-800">
-          {ordered.map((o) => {
+          {pins.length ? null : thirdRow}
+          {ordered.map((o, at) => {
             const i = open.indexOf(o);
             const pinned = o === pinEbay || o === pinTcg;
             const tcg = o.source === "tcgplayer";
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
-            return (
+            return [
               <li key={`${o.source}-${country}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="min-w-0 flex-1">
@@ -182,8 +190,9 @@ export function PriceBoardView({
                 <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`btn-primary shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
                   →
                 </a>
-              </li>
-            );
+              </li>,
+              at === pins.length - 1 ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
+            ];
           })}
         </ol>
       ) : (
