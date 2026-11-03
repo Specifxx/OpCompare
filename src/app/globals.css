@@ -1017,6 +1017,9 @@ body {
    reduced motion it sets `entered` true (and unmounts) immediately rather than
    waiting out a transition that will never visibly run. */
 
+/* The hero's canvas of motes (components/home/HeroSparks.tsx): under the hero's content, over its band. */
+.hero-sparks { position: absolute; inset: 0; pointer-events: none; }
+
 /* xmas-common:start (the same block on every Compare site) */
 /* ---------------------------------------------------------------------------
    Christmas (data-season="christmas", lib/season.ts; 1 November to 26 December).
