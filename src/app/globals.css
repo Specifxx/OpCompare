@@ -1330,6 +1330,19 @@ body {
   --fm-radius: 12px;
 }
 
+/* Rate us card and "What people say" (components/site-reviews): drawn in the site's own theme, dark and light. */
+:root {
+  --srv-bg: rgb(var(--c-ink-900));
+  --srv-fg: rgb(var(--c-slate-100));
+  --srv-muted: rgb(var(--c-slate-400));
+  --srv-line: rgb(var(--c-ink-700));
+  --srv-accent: #d92b33;
+  --srv-accent-fg: #fff;
+  --srv-field: rgb(var(--c-ink-950));
+  --srv-star: rgb(var(--c-gold));
+}
+
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }

@@ -3627,3 +3627,15 @@ of the network (nothing to add: Product/AggregateOffer on card and sealed pages,
 every deep page, ItemList, FAQPage, hreflang, llms.txt). Every card, sealed, eBay, deck, search and list thumbnail now
 carries the card or product name (signed-in avatars "Your profile photo"); the old "empty alt + aria-hidden, the name is
 beside it" rule is dropped because Google Images reads alt, not the neighbouring text. `tests/seo-audit.test.ts`.
+
+## Ratings and reviews move to RiftCompare's shared queue (2026-11-03)
+
+The owner wanted RiftCompare's rating pop-up on every site, each site's reviews public, and every written review approved in
+RiftCompare's admin (riftcompare.com/admin/reviews); star ratings count at once. So the Feedback pill now opens the shared
+rate-us card (`components/site-reviews/RateCard.tsx`, also asking on its own after 4 pages and 3 minutes or on return from a
+store tab, at most three times 14 days apart, always closable), `/feedback` renders the same shared form, and both send to
+`https://riftcompare.com/api/site-reviews`: nothing new is written to the `Feedback` table, and no email is asked for (a message
+that wants a reply goes to /contact). "What people say" keeps the reviews approved here before then (server-rendered from
+`getApprovedReviews`) and adds, in the browser, the shared score and reviews from `/api/site-reviews/op` (CDN six hours). The
+score counts ratings from 2026-11-03 on; older stars stay in /admin/inbox. While no ad script is on the page the card says "We
+don't run banner ads, so if this helped, please leave us a review." Never review markup.

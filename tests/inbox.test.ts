@@ -157,7 +157,11 @@ test("shouldNotifyReporter: only the first move to FIXED", () => {
 });
 
 test("every form's honeypot is display:none, and the issue list is shared", () => {
-  for (const f of ["ReportPriceButton", "SuggestStoreForm", "ContactForm", "FeedbackForm"]) {
+  // FeedbackForm is the shared rating form since 2026-11-03 (its honeypot is .srv-hp, display:none in site-reviews.css).
+  assert.match(read("src/components/FeedbackForm.tsx"), /<RatingForm/);
+  assert.match(read("src/components/site-reviews/RatingForm.tsx"), /name="website"[^\n]*className="srv-hp"/);
+  assert.match(read("src/components/site-reviews/site-reviews.css"), /\.srv-hp \{\s*display: none;/);
+  for (const f of ["ReportPriceButton", "SuggestStoreForm", "ContactForm"]) {
     const src = read(`src/components/${f}.tsx`);
     const inputs = src.match(/<input name="website"[^>]*>/g) ?? [];
     assert.ok(inputs.length >= 1, `${f} has a honeypot`);
