@@ -59,3 +59,15 @@ test("the page is in the sitemap, the tools hub and the menu", () => {
   assert.match(fs.readFileSync("src/app/tools/page.tsx", "utf8"), /href: "\/daily"/);
   assert.match(fs.readFileSync("src/components/nav-groups.ts", "utf8"), /href: "\/daily"/);
 });
+
+test("the daily widget: today's first pair, prices hidden, held until midnight UTC", async () => {
+  const { dailyHtml, dailySnippet, secondsToUtcMidnight } = await import("../src/lib/embed");
+  const html = dailyHtml({ site: "S", game: "G", n: 4, a: { name: "A <b>", image: "a.jpg" }, b: { name: "B", image: null }, href: "https://s/daily?utm_source=embed" });
+  assert.match(html, /G Price Duel #4/);
+  assert.match(html, /A &lt;b&gt;/);
+  assert.match(html, /noindex/);
+  assert.doesNotMatch(html, /<script|\$\d/);
+  assert.match(dailySnippet("https://s", "S", "G"), /src="https:\/\/s\/embed\/daily"[\s\S]*href="https:\/\/s\/daily"/);
+  assert.equal(secondsToUtcMidnight(new Date("2026-11-03T23:00:00Z")), 3600);
+  assert.equal(secondsToUtcMidnight(new Date("2026-11-03T23:59:00Z")), 300);
+});

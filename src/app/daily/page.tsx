@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { getCatalog } from "@/lib/data";
-import { cardImage } from "@/lib/images";
+import { dailyCards } from "@/lib/daily-data";
 import { pageOg } from "@/lib/og/meta";
-import { dayKey, upcomingPuzzles, type DailyCard } from "@/lib/daily";
+import { dayKey, upcomingPuzzles } from "@/lib/daily";
 import { DailyGame } from "./DailyGame";
 
 // The daily Price Duel (lib/daily.ts; DECISIONS.md 2026-11-03). Real ISR like
@@ -23,15 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DailyPage() {
-  const cat = await getCatalog().catch(() => null);
-  const cards: DailyCard[] = [];
-  for (const c of cat?.cards ?? []) {
-    if (!c.hasImage || c.marketUsd == null) continue;
-    const set = cat!.setById.get(c.setId)?.name ?? "";
-    if (/\btokens?\b|\bdon!!/i.test(`${set} ${c.cardType ?? ""}`)) continue;
-    cards.push({ id: c.id, slug: c.slug, name: c.name, set, image: cardImage.tile(c.id), cents: Math.round(c.marketUsd * 100) });
-  }
-  const puzzles = upcomingPuzzles(cards, dayKey(new Date()));
+  const puzzles = upcomingPuzzles(await dailyCards(), dayKey(new Date()));
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">One Piece Price Duel</h1>

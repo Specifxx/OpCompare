@@ -5,7 +5,7 @@ import { getCatalog } from "@/lib/data";
 import { MARKETS } from "@/lib/country";
 import { pageOg } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
-import { embedSnippet, storeBadge } from "@/lib/embed";
+import { dailySnippet, embedSnippet, storeBadge } from "@/lib/embed";
 
 // The free widgets directory (DECISIONS.md, "Free price widgets", 2026-11-02): what outreach points at instead of
 // asking for a link. Code only, never live iframes of our own widgets.
@@ -25,6 +25,7 @@ export default async function EmbedPage() {
   const slug = example?.slug ?? "CARD-SLUG";
   const snippet = embedSnippet(SITE_URL, SITE_NAME, slug, example?.name ?? "CARD NAME", "One Piece card price");
   const badge = storeBadge(SITE_URL, SITE_NAME, "One Piece");
+  const daily = dailySnippet(SITE_URL, SITE_NAME, "One Piece");
   return (
     <div className="flex max-w-3xl flex-col gap-8 py-6">
       <Breadcrumbs trail={[{ name: "Free widgets" }]} />
@@ -46,6 +47,13 @@ export default async function EmbedPage() {
           <li>Add <code>?market=UK</code> to the widget address for another market: {MARKETS.join(", ")}. The US is the default.</li>
           <li>The plain link under the widget is optional; it is the part that tells search engines where the price comes from.</li>
         </ul>
+      </section>
+      <section className="flex flex-col gap-3 rounded-xl border border-ink-800 p-4">
+        <h2 className="text-lg font-bold">Daily price game</h2>
+        <p className="text-sm text-slate-400">
+          For creators, crews and club sites: today&apos;s One Piece Price Duel, two cards and &ldquo;which is worth more?&rdquo;. It changes by itself every day at midnight UTC. <Link className="text-brand-400 hover:underline" href="/embed/daily">See it running →</Link>
+        </p>
+        <pre className="overflow-x-auto rounded bg-ink-950 p-3 text-xs"><code>{daily}</code></pre>
       </section>
       <section className="flex flex-col gap-3 rounded-xl border border-ink-800 p-4">
         <h2 className="text-lg font-bold">For stores we compare</h2>
