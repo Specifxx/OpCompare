@@ -3593,3 +3593,13 @@ Discord, group chats and Reddit every day, and each paste is the invitation for 
   tools and the /tools hub.
 - Measure: share taps and share visits with medium `daily` in the weekly growth report. Drop it if it brings
   nothing in four weeks.
+
+## 2026-11-03 — The Price Duel as a widget
+
+**Why.** The growth plan's fourth loop: a widget on a creator's or club's page shows our name to their audience,
+so it grows with their traffic. Creators want something that changes daily more than a static price badge.
+
+**What.** `/embed/daily` is a script-free HTML widget: today's puzzle number and first pair (art and names,
+prices hidden) and one link to `/daily?utm_source=embed&utm_medium=daily`. A route handler reading the date, so
+its only cache is the CDN header, held until midnight UTC (`secondsToUtcMidnight`). It reads the same pool as
+`/daily` (`src/lib/daily-data.ts`). The snippet is on `/embed` with the iframe and one plain text link.
