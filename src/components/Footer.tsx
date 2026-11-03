@@ -34,6 +34,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
           <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
           <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
           <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
+          <Link href="/creators" className="tap-link text-slate-300 hover:text-brand-400">Creators</Link>
           <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
           <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
           <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>

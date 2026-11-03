@@ -3658,3 +3658,16 @@ do it if they want to." OP Compare ran straight ports of the same two components
 mounts. The annual switch stays on `/premium`. The launch-offer popup (`LaunchPromoPopup`, the first 50 accounts) and the
 rating card are untouched: the owner's word was about RiftCompare's Pro sliders, and the launch offer is his own
 2026-10 decision; it ends itself when the 50 are claimed. Rides the weekly release.
+## 2026-11-03: A Creators page and a homepage bubble, like RiftCompare's
+
+Owner: "having the creators page for all of these sites as well is really, really good. Like just a bubble and then a
+really nice formatted creators page, just like how RiftCompare does it." Word of mouth from creators and visitors is the
+sites' main growth channel, so every site gets one, branded or not.
+
+`/creators` is RiftCompare's page brought over (hero, featured cards, "Buy them a pack", perks, "How to work with us",
+FAQ) with the parts that need a database left out: the list is the static array in `src/lib/content/creators.ts` (empty
+until the first creator agrees; the grid shows "Your channel here" spots, never an invented creator), applying is a
+pre-filled email to `CONTACT_EMAIL`, and there are no creator codes. The "Buy them a pack" button is the creator's own
+Ko-fi, Patreon or tip page: the site never handles the money. `CreatorsCornerBadge` is the bubble in the homepage hero
+(top-right from sm, a centred pill above the headline on a phone); the footer row and the sitemap link the page. Static,
+`revalidate = 86400`, no loader read. Not called "partners" anywhere: that word means the affiliate links.

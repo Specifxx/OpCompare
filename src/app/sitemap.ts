@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
     "", "/browse", "/price-guide", "/graded", "/sealed", "/black-friday", "/boxing-day", "/january-sales", "/lunar-new-year", "/embed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
-    "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/daily", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/preorders", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/how-we-pick-stores", "/stores/partners", "/feedback", "/blog", "/authors", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
+    "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/daily", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/preorders", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/how-we-pick-stores", "/stores/partners", "/feedback", "/blog", "/authors", "/creators", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
     "/tools", "/deck", "/tools/selling-fees", "/singles", "/keywords", "/cards/rarity", "/alerts",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // The five region homes (design track), each a market-locked copy of "/".

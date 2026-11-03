@@ -32,6 +32,7 @@ test("the footer's always-visible row links every page the brief names, in order
     ["/editorial-policy", "Editorial policy"],
     ["/methodology", "Methodology"],
     ["/authors", "Who writes this"],
+    ["/creators", "Creators"],
     ["/contact", "Contact &amp; feedback"],
     ["/privacy", "Privacy policy"],
     ["/terms", "Terms of service"],
