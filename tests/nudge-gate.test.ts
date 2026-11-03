@@ -116,15 +116,12 @@ test("isTextEntry: text fields yes, buttons and checkboxes no", () => {
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
-test("the slide-in is for signed-in non-members with checkout open, and reads its rules from the gate", () => {
-  const src = read("src/components/PremiumSlideIn.tsx");
-  assert.match(src, /!!me\.user && !me\.tier/);
-  assert.match(src, /checkoutOpen/);
-  assert.match(src, /premiumSlideInEligible\(/);
-  assert.match(src, /NUDGE_DELAY_MS/);
-  assert.match(src, /SNOOZE_AFTER_DISMISS_MS/);
-  assert.match(src, /SNOOZE_AFTER_CLICK_MS/);
-  assert.match(src, /armNudge\(/);
+test("the Premium slide-in and the annual corner card are gone (owner, 2026-11-03: no Premium or sign-up sliders)", () => {
+  for (const f of ["src/components/PremiumSlideIn.tsx", "src/components/AnnualSwitchNudge.tsx"]) {
+    assert.ok(!fs.existsSync(path.join(ROOT, f)), `${f} stays gone`);
+  }
+  const layout = read("src/app/layout.tsx");
+  assert.doesNotMatch(layout, /<PremiumSlideIn|<AnnualSwitchNudge/);
 });
 
 test("/api/me tells the browser when the account was made", () => {
