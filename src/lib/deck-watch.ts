@@ -317,13 +317,15 @@ export async function runDeckWatches(deps: DeckWatchRunDeps): Promise<DeckWatchR
 
   for (const w of rows) {
     const user: EntitlementFields = { ...w.user, isAdmin: w.user.isAdmin || isAdminEmail(w.user.email) };
-    if (!isPremium(user, "premium")) {
+    // Entitlement is judged at the run's own clock (deps.now), like every other
+    // date in this loop, not the wall clock.
+    if (!isPremium(user, "premium", now.getTime())) {
       summary.lapsed++;
       continue;
     }
     const n = (perUser.get(w.userId) ?? 0) + 1;
     perUser.set(w.userId, n);
-    if (n > deckWatchLimit(tierOf(user))) continue;
+    if (n > deckWatchLimit(tierOf(user, now.getTime()))) continue;
     if (!isSupportedMarket(w.market)) {
       summary.legacyMarket++;
       continue;

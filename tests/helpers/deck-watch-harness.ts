@@ -7,7 +7,9 @@ import type { EntitlementFields } from "../../src/lib/premium";
 
 export const NOW = new Date("2026-10-03T12:00:00Z");
 export const DAY = 86_400_000;
-const future = new Date(NOW.getTime() + 30 * DAY);
+// Far ahead of both NOW and the wall clock: the route tests run on the real
+// clock, so an entitlement 30 days after NOW expired on 2 November 2026.
+const future = new Date("2099-01-01T00:00:00Z");
 export type User = EntitlementFields;
 export const premium: User = { isAdmin: false, premiumUntil: future, premiumTier: "premium" };
 export const plus: User = { isAdmin: false, premiumUntil: future, premiumTier: "plus" };
