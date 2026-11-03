@@ -11,6 +11,7 @@ import { ChristmasDecor } from "./ChristmasDecor";
 import { HeroSparks } from "./HeroSparks";
 import { ChristmasGifts } from "./ChristmasGifts";
 import { ThrillerBarkComing } from "./ThrillerBarkComing";
+import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import type { MarketStat } from "@/lib/home";
 
@@ -74,6 +75,9 @@ export function CinematicHero({
           w-full because it is the flex row's only in-flow item. */}
       <div className="w-full pl-[var(--sidenav-w)]">
         <div className="container-app relative z-10 w-full py-5 text-center sm:py-10">
+          {/* The creators hub, above the fold: top-right corner from sm, a centred
+              pill above the headline on a phone (owner, 2026-11-03). */}
+          <CreatorsCornerBadge />
           <ThrillerBarkComing />
           <ChristmasGifts />
           <div className="hidden items-center justify-center gap-2 sm:flex">
