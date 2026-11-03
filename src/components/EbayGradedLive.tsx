@@ -31,7 +31,7 @@ export function EbayGradedLive({ listings, country, rawCents, card, page = "card
               <a href={ebayAffiliateUrl(l.url, "graded")} target="_blank" rel={outboundRel()} data-retailer="ebay_graded" data-page={page} data-card={card} data-surface="ebay_graded" className="group flex items-center gap-3 py-3 transition-colors hover:bg-ink-800/60">
                 {l.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={l.imageUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-14 w-11 shrink-0 rounded object-cover" />
+                  <img src={l.imageUrl} alt={panelTitle(l.title, 80)} loading="lazy" decoding="async" className="h-14 w-11 shrink-0 rounded object-cover" />
                 ) : null}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">

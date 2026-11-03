@@ -93,7 +93,7 @@ export default async function LeadersPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={cardImage.thumb(base.id)}
-                          alt=""
+                          alt={base.name}
                           loading="lazy"
                           className="h-16 w-12 shrink-0 rounded bg-ink-800 object-cover"
                         />

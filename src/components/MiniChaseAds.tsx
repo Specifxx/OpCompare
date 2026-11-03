@@ -38,7 +38,7 @@ function Row({ brand, all, accent, tiles, page }: { brand: React.ReactNode; all:
           >
             <span className="relative block aspect-[5/7] overflow-hidden bg-ink-950">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.image} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain p-0.5" />
+              <img src={t.image} alt={t.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-0.5" />
             </span>
             <span className="num truncate px-0.5 py-0.5 text-center text-[10px] font-black text-white" style={{ background: accent }}>
               {t.price ?? "Search"}

@@ -20,7 +20,7 @@ export function MoverList({ title, sub, tone, rows, setById, empty, spark, ebayS
               <CardQuickLink slug={card.slug} className="flex items-center gap-3 px-4 py-2.5 hover:bg-ink-800/50">
                 {card.hasImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cardImage.thumb(card.id)} alt="" loading="lazy" className="h-12 w-9 shrink-0 rounded-sm bg-ink-800 object-cover" />
+                  <img src={cardImage.thumb(card.id)} alt={card.name} loading="lazy" className="h-12 w-9 shrink-0 rounded-sm bg-ink-800 object-cover" />
                 ) : (
                   <span className="h-12 w-9 shrink-0 rounded-sm bg-ink-800" />
                 )}

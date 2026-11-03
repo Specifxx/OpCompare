@@ -25,7 +25,7 @@ export async function FamilyCluster({ kind }: { kind: "deal" | "preorder" }) {
         {tiles.map(({ site, item, more }) => (
           <li key={site.id} className="flex min-w-0 gap-3 rounded-lg border border-ink-800 p-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- the sister site's own hotlinked photo */}
-            {item.image ? <img src={item.image} alt="" aria-hidden="true" className="h-16 w-14 shrink-0 object-contain" loading="lazy" /> : null}
+            {item.image ? <img src={item.image} alt={item.title} className="h-16 w-14 shrink-0 object-contain" loading="lazy" /> : null}
             <div className="min-w-0 text-sm">
               <p className="text-xs uppercase tracking-wide text-slate-400">{site.topic} · {site.name}</p>
               <a href={item.url} rel="noopener" className="line-clamp-2 font-semibold hover:underline">{item.title}</a>

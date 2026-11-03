@@ -467,7 +467,7 @@ export function CardSearch({
                   <>
                     {h.img ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={h.img} alt="" className={`h-12 w-9 shrink-0 rounded-sm bg-ink-800 ${h.kind === "card" ? "object-cover" : "object-contain"}`} loading="lazy" decoding="async" />
+                      <img src={h.img} alt={h.name} className={`h-12 w-9 shrink-0 rounded-sm bg-ink-800 ${h.kind === "card" ? "object-cover" : "object-contain"}`} loading="lazy" decoding="async" />
                     ) : (
                       <span className="h-12 w-9 shrink-0 rounded-sm bg-ink-800" />
                     )}

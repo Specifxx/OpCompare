@@ -212,7 +212,7 @@ export function PreorderProduct({
       <div className="flex items-center gap-4 border-b border-ink-800 px-4 py-4 sm:px-5">
         {s.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={s.imageUrl} alt="" loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-lg bg-white/90 object-contain p-1" />
+          <img src={s.imageUrl} alt={s.name} loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-lg bg-white/90 object-contain p-1" />
         ) : null}
         <div className="min-w-0 flex-1">
           <H className="text-lg font-extrabold leading-tight text-white">

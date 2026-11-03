@@ -67,7 +67,7 @@ export function BlogShopStrip({
               <CardQuickLink slug={card.slug} className="group flex min-w-0 flex-1 basis-56 items-center gap-3">
                 {card.hasImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cardImage.thumb(card.id)} alt="" loading="lazy" className="h-14 w-10 shrink-0 rounded-sm bg-ink-800 object-cover" />
+                  <img src={cardImage.thumb(card.id)} alt={card.name} loading="lazy" className="h-14 w-10 shrink-0 rounded-sm bg-ink-800 object-cover" />
                 ) : (
                   <span className="h-14 w-10 shrink-0 rounded-sm bg-ink-800" />
                 )}
@@ -97,7 +97,7 @@ export function BlogShopStrip({
               <Link href={`/sealed/${s.slug}`} className="group flex min-w-0 flex-1 basis-56 items-center gap-3">
                 {s.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.imageUrl.replace("_in_1000x1000", "_200w")} alt="" loading="lazy" className="h-14 w-10 shrink-0 rounded-sm bg-white object-contain" />
+                  <img src={s.imageUrl.replace("_in_1000x1000", "_200w")} alt={s.name} loading="lazy" className="h-14 w-10 shrink-0 rounded-sm bg-white object-contain" />
                 ) : (
                   <span className="h-14 w-10 shrink-0 rounded-sm bg-ink-800" />
                 )}

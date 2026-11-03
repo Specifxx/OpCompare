@@ -22,7 +22,7 @@ function CardCell({ card }: { card: DealCard }) {
       <CardQuickLink slug={card.slug} className="flex items-center gap-2 sm:gap-2.5" title={card.name}>
         {card.hasImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cardImage.thumb(card.id)} alt="" width={28} height={39} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm bg-ink-800 object-cover sm:h-10 sm:w-7" />
+          <img src={cardImage.thumb(card.id)} alt={card.name} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm bg-ink-800 object-cover sm:h-10 sm:w-7" />
         ) : (
           <span className="h-9 w-[26px] shrink-0 rounded-sm bg-ink-800 sm:h-10 sm:w-7" />
         )}

@@ -47,7 +47,7 @@ export function RecentlyViewed({
             >
               {c.img ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.img} alt="" width={18} height={25} loading="lazy" decoding="async" className="h-[25px] w-[18px] shrink-0 rounded-sm bg-ink-800 object-cover" />
+                <img src={c.img} alt={c.name} width={18} height={25} loading="lazy" decoding="async" className="h-[25px] w-[18px] shrink-0 rounded-sm bg-ink-800 object-cover" />
               ) : (
                 <span className="h-[25px] w-[18px] shrink-0 rounded-sm bg-ink-800" />
               )}
