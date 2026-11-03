@@ -17,6 +17,7 @@ import { Dialog, QUICK_VIEW_SHEET } from "./ui/Dialog";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { useLinkQuickView } from "./useLinkQuickView";
 
+import { closeQuickViewUrl, onQuickViewHistory, openQuickViewUrl } from "@/lib/quick-view-url";
 const SEALED_PATH = /^\/sealed\/([^/?#]+)\/?$/;
 
 // Quick-view popup for sealed products (RiftCompare's SealedQuickView): a plain
@@ -57,24 +58,40 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
   const open = useCallback((slug: string, hint?: { thumb?: string | null; label?: string | null }) => {
     counter.current += 1;
     setShown({ slug, thumb: hint?.thumb ?? null, label: hint?.label ?? null, n: counter.current });
+    // The product's own link in the address bar while it is open (owner, 2026-11-03), like the card quick view: Back closes it.
+    openQuickViewUrl(`/sealed/${slug}`, { slug, thumb: hint?.thumb ?? null, label: hint?.label ?? null });
     void loadSealedQuickView(slug).catch(() => {});
     sendCardView(slug, "view", `sealed-${slug}`);
     (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "quickview_open", { card: slug });
   }, []);
   const prefetch = useCallback((slug: string) => void loadSealedQuickView(slug).catch(() => {}), []);
-  const close = useCallback(() => setShown(null), []);
+  // Closing steps back to the page's own URL (lib/quick-view-url.ts); "Open full page" only hides it, landing on the URL shown.
+  const close = useCallback(() => {
+    setShown(null);
+    closeQuickViewUrl();
+  }, []);
+  const hide = useCallback(() => setShown(null), []);
+  useEffect(
+    () =>
+      onQuickViewHistory<{ slug: string; thumb: string | null; label: string | null }>((e) => {
+        if (!e?.slug) return setShown(null);
+        counter.current += 1;
+        setShown({ slug: e.slug, thumb: e.thumb, label: e.label, n: counter.current });
+      }),
+    [],
+  );
   useLinkQuickView(SEALED_PATH, open, prefetch);
   return (
     <Ctx.Provider value={{ open, prefetch }}>
       {children}
       <Dialog open={!!shown} onClose={close} size="2xl" z="overlay" placement="sheet" className={QUICK_VIEW_SHEET} labelledBy="sealed-quickview-title">
-        {display ? <SealedQuickViewModal key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb} label={display.label} onClose={close} /> : null}
+        {display ? <SealedQuickViewModal key={`${display.slug}-${display.n}`} slug={display.slug} thumb={display.thumb} label={display.label} onClose={close} onLeave={hide} /> : null}
       </Dialog>
     </Ctx.Provider>
   );
 }
 
-function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; thumb: string | null; label: string | null; onClose: () => void }) {
+function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: string; thumb: string | null; label: string | null; onClose: () => void; onLeave: () => void }) {
   const { country } = useCountry();
   const [data, setData] = useState<SealedQvPayload | null>(null);
   const [failed, setFailed] = useState(false);
@@ -120,7 +137,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
               {name}
             </h2>
             {failed ? (
-              <p className="mt-2 text-sm text-slate-400">Could not load this product. <Link href={`/sealed/${slug}`} className="text-brand-400 hover:underline">Open the full page →</Link></p>
+              <p className="mt-2 text-sm text-slate-400">Could not load this product. <Link href={`/sealed/${slug}`} onClick={onLeave} className="text-brand-400 hover:underline">Open the full page →</Link></p>
             ) : data ? (
               <>
                 <div className="mt-2">
@@ -206,7 +223,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose }: { slug: string; t
               </div>
             ) : null}
             <div className="mt-3 flex justify-end">
-              <Link href={`/sealed/${data.slug}`} className="btn-ghost text-xs" onClick={onClose}>
+              <Link href={`/sealed/${data.slug}`} className="btn-ghost text-xs" onClick={onLeave}>
                 Open full page →
               </Link>
             </div>
