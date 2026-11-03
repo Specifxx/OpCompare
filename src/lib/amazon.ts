@@ -3,7 +3,7 @@
 // carry a "Check price on Amazon" link beside eBay. Plain links, server-built:
 //
 // - WHERE: each market's own Amazon with that store's tag, hard-coded (owner, 2026-11-02: no Vercel variable decides a tag): US
-//   riftcompare-20, Australia compareempire-22, UK compareempi03-21, Canada compareempire-20, the eurozone amazon.de
+//   riftcompare-20, Australia opcompare-22, UK compareempi03-21, Canada compareempire-20, the eurozone amazon.de
 //   compareempire-21. Never Singapore (amazon.sg has no Associates programme).
 // - WHAT: a search for the product (https://<host>/s?k=<name>&tag=<tag>&ascsubtag=oc-<market>-<placement>): ascsubtag splits the
 //   Associates reports by placement. No redirect, no shortener (the Associates agreement requires the link to be what it says).
@@ -12,7 +12,7 @@
 import type { Country } from "./country";
 
 export const AMAZON_US_DEFAULT_TAG = "riftcompare-20";
-export const AMAZON_AU_DEFAULT_TAG = "compareempire-22";
+export const AMAZON_AU_DEFAULT_TAG = "opcompare-22";
 // The owner's UK, Canada and Germany Associates accounts (2026-11-02).
 export const AMAZON_UK_DEFAULT_TAG = "compareempi03-21";
 export const AMAZON_CA_DEFAULT_TAG = "compareempire-20";
