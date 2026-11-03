@@ -18,13 +18,30 @@ import { ARTICLE_PROSE } from "@/components/prose";
 import { JsonLd } from "@/components/ui";
 import { collectMentions } from "@/components/blog/mentions";
 import { ShareRow } from "@/components/blog/ShareRow";
-import { AUTHOR, POSTS, postHref } from "@/lib/blog";
+import { AUTHOR, POSTS, postHref, postHrefFor } from "@/lib/blog";
 import { postContext } from "@/lib/blog/context";
 import type { Post } from "@/lib/blog/types";
 import { longDate, shortDate } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { faqLd } from "@/lib/jsonld";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+
+// "One Piece essentials" (2026-11-03, owner's Search Console report, ported from
+// RiftCompare): news and set posts take the traffic spikes while the evergreen
+// guides that answer the standing questions get few clicks. Every blog post links
+// the same small set of evergreen pages, as plain server-rendered links. Guides
+// are left out (they already cross-link). postHrefFor() falls back to /blog for a
+// slug that is not published, so a renamed guide never leaves a dead link.
+const EVERGREEN_LINKS: readonly { href: string; label: string }[] = [
+  { href: "/price-guide", label: "One Piece price guide" },
+  { href: "/sets", label: "Every set" },
+  { href: postHrefFor("one-piece-card-rarities-explained"), label: "Rarities explained" },
+  { href: postHrefFor("one-piece-tcg-keywords-explained"), label: "Keywords explained" },
+  { href: postHrefFor("one-piece-booster-pack-price"), label: "Booster pack prices" },
+  { href: postHrefFor("one-piece-starter-deck-prices"), label: "Starter deck prices" },
+  { href: postHrefFor("where-to-buy-one-piece-cards"), label: "Where to buy" },
+  { href: "/release-dates", label: "Release dates" },
+];
 
 // The shared body of /blog/[slug] and /guides/[slug] (RiftCompare's ArticleView):
 // one renderer, so a guide and a post read the same. Adds the FAQ (visible and
@@ -223,6 +240,21 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
             </Link>
           ))}
         </div>
+
+        {section !== "guide" && (
+          <nav aria-label="One Piece essentials" className="mt-6">
+            <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-400">One Piece essentials</h2>
+            <ul className="flex flex-wrap gap-2 text-sm">
+              {EVERGREEN_LINKS.filter((l) => l.href !== postHref(post) && l.href !== "/blog").map((l) => (
+                <li key={l.label}>
+                  <Link href={l.href} className="rounded-md border border-ink-700 px-3 py-1.5 text-slate-300 hover:border-brand-500 hover:text-white">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         <CompareOtherTcgs className="mt-6" />
 
