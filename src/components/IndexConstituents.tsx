@@ -97,7 +97,7 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
                   <Link href={`/card/${c.slug}`} className="flex min-h-11 items-center gap-2.5">
                     {c.hasImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cardImage.thumb(c.id)} alt="" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                      <img src={cardImage.thumb(c.id)} alt={c.name} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                     ) : null}
                     <span className="min-w-0">
                       <span className="block truncate font-semibold text-white">

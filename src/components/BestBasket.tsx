@@ -432,7 +432,7 @@ export function BestBasket({
                   <li key={p.card.id} className="flex items-center gap-3 p-2.5">
                     {p.card.img ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.card.img} alt="" width={28} height={40} loading="lazy" className="h-10 w-7 shrink-0 rounded object-cover" />
+                      <img src={p.card.img} alt={p.card.name} width={28} height={40} loading="lazy" className="h-10 w-7 shrink-0 rounded object-cover" />
                     ) : (
                       <div className="h-10 w-7 shrink-0 rounded bg-ink-800" />
                     )}

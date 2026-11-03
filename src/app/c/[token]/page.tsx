@@ -88,7 +88,7 @@ export default async function SharedCollectionPage({ params }: { params: { token
                   // Empty alt + aria-hidden: the card name/set/number text right
                   // beside it already describes this thumbnail.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={h.card.img} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <img src={h.card.img} alt={displayName(h.card)} loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
                 )}
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-white">{displayName(h.card)}</span>

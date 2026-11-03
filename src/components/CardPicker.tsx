@@ -127,7 +127,7 @@ export function CardPicker({
             >
               {h.img ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={h.img} alt="" className="h-11 w-8 shrink-0 rounded-sm bg-ink-800 object-cover" loading="lazy" />
+                <img src={h.img} alt={h.name} className="h-11 w-8 shrink-0 rounded-sm bg-ink-800 object-cover" loading="lazy" />
               ) : (
                 <span className="h-11 w-8 shrink-0 rounded-sm bg-ink-800" />
               )}

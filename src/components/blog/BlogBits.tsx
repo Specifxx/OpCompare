@@ -36,7 +36,7 @@ export function CardTable({ cards, setById, country, showMarket = true, caption 
                   <CardQuickLink slug={c.slug} className="group flex items-center gap-3">
                     {c.hasImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cardImage.thumb(c.id)} alt="" loading="lazy" className="h-12 w-9 shrink-0 rounded-sm bg-ink-800 object-cover" />
+                      <img src={cardImage.thumb(c.id)} alt={c.name} loading="lazy" className="h-12 w-9 shrink-0 rounded-sm bg-ink-800 object-cover" />
                     ) : (
                       <span aria-hidden className="h-12 w-9 shrink-0 rounded-sm border border-dashed border-ink-700 bg-ink-800" />
                     )}

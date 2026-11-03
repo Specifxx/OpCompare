@@ -254,7 +254,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={cardImage.thumb(x.id)}
-                            alt=""
+                            alt={x.name}
                             loading="lazy"
                             className="h-10 w-7 shrink-0 rounded-sm bg-ink-800 object-cover"
                           />

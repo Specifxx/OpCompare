@@ -390,7 +390,7 @@ export function DeckBuilder({ initialList, emailOn = false }: { initialList: str
                     <CardQuickLink slug={l.card.slug} className="shrink-0">
                       {l.card.hasImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cardImage.thumb(l.card.id)} alt="" width={36} height={48} loading="lazy" className="h-12 w-9 rounded object-cover ring-1 ring-ink-700" />
+                        <img src={cardImage.thumb(l.card.id)} alt={l.card.name} width={36} height={48} loading="lazy" className="h-12 w-9 rounded object-cover ring-1 ring-ink-700" />
                       ) : (
                         <span className="block h-12 w-9 rounded bg-ink-800" />
                       )}

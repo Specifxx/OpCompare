@@ -55,7 +55,7 @@ function DealRow({ deal, country, kind }: { deal: HomeDeal; country: TopDeals["c
         <span className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-800">
           {deal.hasImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={cardImage.thumb(deal.id)} alt="" width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <img src={cardImage.thumb(deal.id)} alt={deal.title} width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
           ) : null}
         </span>
         <span className="min-w-0 flex-1">

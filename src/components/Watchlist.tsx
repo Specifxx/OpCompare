@@ -292,7 +292,7 @@ function WatchRow({
           className="flex min-w-0 flex-1 gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <div className="relative aspect-[5/7] w-24 shrink-0 overflow-hidden rounded-md bg-ink-900">
-            <CardArt id={card.id} hasImage={card.hasImage} alt="" size="thumb" className="h-full w-full" />
+            <CardArt id={card.id} hasImage={card.hasImage} alt={card.name} size="thumb" className="h-full w-full" />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -558,7 +558,7 @@ export function LocalWatchlist({
           <>
             {r.img ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={r.img} alt="" loading="lazy" className={`aspect-[5/7] w-16 shrink-0 rounded-md bg-ink-900 ${r.kind === "card" ? "object-cover" : "object-contain"}`} />
+              <img src={r.img} alt={r.name} loading="lazy" className={`aspect-[5/7] w-16 shrink-0 rounded-md bg-ink-900 ${r.kind === "card" ? "object-cover" : "object-contain"}`} />
             ) : (
               <span className="aspect-[5/7] w-16 shrink-0 rounded-md bg-ink-900" />
             )}

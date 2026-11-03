@@ -34,7 +34,7 @@ export function CheapestOnEbay({ rows, country, positionOffset = 0 }: { rows: Eb
               <span className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
                 {d.card.hasImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cardImage.thumb(d.card.id)} alt="" width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                  <img src={cardImage.thumb(d.card.id)} alt={d.card.name} width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 ) : null}
               </span>
               <span className="min-w-0 flex-1">

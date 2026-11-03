@@ -70,7 +70,7 @@ export default async function StorePage({ params }: Props) {
       <li className="flex items-center gap-3 py-2">
         {n.kind === "card" && n.slug ? (
           <CardQuickLink slug={n.slug} className="w-10 shrink-0">
-            <CardArt id={l[0]} hasImage={n.hasImage} alt="" size="thumb" />
+            <CardArt id={l[0]} hasImage={n.hasImage} alt={n.label} size="thumb" />
           </CardQuickLink>
         ) : (
           <span className="block w-10 shrink-0" />

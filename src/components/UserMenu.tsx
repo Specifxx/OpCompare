@@ -74,7 +74,7 @@ export function UserMenu({ user }: { user: Me["user"] }) {
           <span className="grid h-full w-full place-items-center overflow-hidden rounded-full border border-ink-600 bg-ink-800 text-xs font-bold text-white hover:border-brand-500">
             {user.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar} alt="" aria-hidden="true" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              <img src={user.avatar} alt="Your profile photo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               initials
             )}

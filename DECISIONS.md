@@ -3603,3 +3603,11 @@ so it grows with their traffic. Creators want something that changes daily more 
 prices hidden) and one link to `/daily?utm_source=embed&utm_medium=daily`. A route handler reading the date, so
 its only cache is the CDN header, held until midnight UTC (`secondsToUtcMidnight`). It reads the same pool as
 `/daily` (`src/lib/daily-data.ts`). The snippet is on `/embed` with the iframe and one plain text link.
+
+## 2026-11-03 SEO audit: alt text on every thumbnail
+
+Bill's network SEO audit read 9 of 83 homepage images without alt text and named OP Compare's structured data the best
+of the network (nothing to add: Product/AggregateOffer on card and sealed pages, BreadcrumbList via `<Breadcrumbs>` on
+every deep page, ItemList, FAQPage, hreflang, llms.txt). Every card, sealed, eBay, deck, search and list thumbnail now
+carries the card or product name (signed-in avatars "Your profile photo"); the old "empty alt + aria-hidden, the name is
+beside it" rule is dropped because Google Images reads alt, not the neighbouring text. `tests/seo-audit.test.ts`.

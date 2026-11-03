@@ -114,7 +114,7 @@ function Grid({ items }: { items: ArticleListItem[] }) {
           <div className="grid h-36 grid-cols-3 gap-1 bg-ink-850 p-2">
             {a.hero.slice(0, 3).map((id) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={id} src={cardImage.tile(id)} alt="" loading="lazy" className="h-full w-full rounded object-cover object-top" />
+              <img key={id} src={cardImage.tile(id)} alt={a.title} loading="lazy" className="h-full w-full rounded object-cover object-top" />
             ))}
           </div>
           <div className="flex flex-1 flex-col p-4">

@@ -46,7 +46,7 @@ function CardCell({ card, cat }: { card: CardLite; cat: Catalog }) {
     <CardQuickLink slug={card.slug} className="flex min-w-0 items-center gap-2 hover:text-brand-400" title={card.name}>
       {card.hasImage ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={cardImage.thumb(card.id)} alt="" width={28} height={40} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded bg-ink-800 object-cover" />
+        <img src={cardImage.thumb(card.id)} alt={card.name} width={28} height={40} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded bg-ink-800 object-cover" />
       ) : (
         <span className="h-10 w-7 shrink-0 rounded bg-ink-800" />
       )}
