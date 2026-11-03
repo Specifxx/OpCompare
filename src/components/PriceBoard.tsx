@@ -20,6 +20,7 @@ export function PriceBoard({
   slug,
   name,
   preRelease = false,
+  thirdRow,
 }: {
   productId: number;
   offers: OfferRow[];
@@ -36,6 +37,8 @@ export function PriceBoard({
   name?: string;
   /** The set has not released: the eBay copy says nothing ships yet. */
   preRelease?: boolean;
+  /** PriceBoardView's `thirdRow`: one more pinned row after eBay and TCGplayer. */
+  thirdRow?: React.ReactNode;
 }) {
   return (
     <PriceBoardView
@@ -50,6 +53,7 @@ export function PriceBoard({
       slug={slug}
       name={name}
       preRelease={preRelease}
+      thirdRow={thirdRow}
     />
   );
 }
