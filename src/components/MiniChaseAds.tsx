@@ -15,7 +15,11 @@ type Mini = { key: string | number; href: string; image: string; name: string; p
 
 function Row({ brand, all, accent, tiles, page }: { brand: React.ReactNode; all: { href: string; retailer: string }; accent: string; tiles: Mini[]; page: string }) {
   return (
-    <div className="flex items-stretch gap-2">
+    // min-w-0: this row is a grid item (the aside is a grid), and a grid item's
+    // min-width is auto, so without it the row grew to the rail's full content
+    // width (688px on a 390px phone) and the rail never scrolled: half the paid
+    // tiles sat past the screen edge, unreachable (2026-11-03 phone audit).
+    <div className="flex min-w-0 items-stretch gap-2">
       <a href={all.href} target="_blank" rel={outboundRel()} data-retailer={all.retailer} data-page={page} data-surface="mini_chase" className="flex w-12 shrink-0 flex-col items-center justify-center gap-1 text-center">
         {brand}
         <span className="text-[10px] font-bold" style={{ color: accent }}>All →</span>

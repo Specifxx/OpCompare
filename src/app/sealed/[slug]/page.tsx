@@ -192,8 +192,11 @@ export default async function SealedDetailPage({ params }: Props) {
                     : ""}
                 </p>
               </div>
-              <div className="flex shrink-0 items-start gap-2">
-                <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="max-w-xs" />
+              {/* min-w-0 on the row and the watch block: at 390px the watch
+                  block's note ran to its max-w-xs and pushed the Share button
+                  past the screen edge (2026-11-03 phone audit). */}
+              <div className="flex min-w-0 items-start gap-2">
+                <SealedWatchButton sealedId={s.id} slug={s.slug} name={s.name} className="min-w-0 max-w-xs" />
                 <ShareButton responsive name={s.name} medium="sealed" text={shareText(s.name, priceGap(marketRows(s.offers, country).map((o) => ({ priceCents: o.priceCents, retailerName: buyRow(o, country, `/sealed/${s.slug}`).label }))), (c) => money(c, country))} />
               </div>
             </div>
