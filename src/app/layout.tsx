@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
+import "@/components/site-reviews/site-reviews.css";
+import { RateCard } from "@/components/site-reviews/RateCard";
 import dynamic from "next/dynamic";
 import { FooterAds } from "@/components/AffiliateAds";
 import { CountryProvider } from "@/components/CountryProvider";
@@ -185,6 +187,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <PremiumSlideIn />
                 <AnnualSwitchNudge />
                 <FeedbackWidget />
+                {/* Rate us (owner, 2026-11-03): the corner card, asking only after real use; RiftCompare keeps the ratings. */}
+                <RateCard />
                 {/* sign_up + "Your free account is ready" on ?welcome=, and a watch
                     stashed before OAuth (client-only; renders a toast at most). */}
                 <SignupWelcome />
