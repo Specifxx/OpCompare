@@ -96,6 +96,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping", "buy list"] },
       { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "most viewed", "most searched", "popular cards", "what players are searching for", "search trends"] },
       { href: "/tools/pack-sim", label: "Pack Simulator", keywords: ["pack simulator", "pack opening", "open packs", "booster box simulator", "rip packs", "pack opener"] },
+      { href: "/daily", label: "Daily Price Duel", keywords: ["daily game", "price game", "guess the price", "higher or lower", "which is worth more", "puzzle", "wordle"] },
       { href: "/tools/pull-tracker", label: "Pull Tracker", keywords: ["pull tracker", "what is my box worth", "box opening value", "my pulls", "log pulls"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev", "box value"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
