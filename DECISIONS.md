@@ -3566,3 +3566,30 @@ as a link network and looks odd to a reader. The owner said do it.
   one owner, not paid, so no `sponsored`/`nofollow`.
 - Kept: the "Other card games" / hobby / tech price blocks on deals, Black Friday and pre-order pages
   (`clusterSisters`). They sit on a few pages, show real prices a reader of that page may want, and are not sitewide.
+
+## 2026-11-03 — The daily Price Duel: a sharing loop, not another push
+
+**Why.** Every growth lever so far (outreach, posts, hubs, widgets, Bluesky) adds a fixed number of
+visitors, so traffic grows in a straight line. The share buttons shipped on 2026-11-02 were tapped 14 times
+in their first week across all sites and brought 0 visits: nobody shares a price comparison. People share a
+score. A daily puzzle that is the same for everyone (the Wordle loop) gives players something to paste into
+Discord, group chats and Reddit every day, and each paste is the invitation for the next player.
+
+**What.**
+- `/daily`: ten pairs of cards, tap the one worth more at TCGplayer's US market price (`refCents`, never
+  converted, never a store price). Puzzle #1 is 2026-11-03 (`DAILY_EPOCH`, never changed: shared results
+  carry the number); a new one at midnight UTC.
+- No function, no database, no extra build: the page is ISR (a day, like every tool page) and carries the
+  next seven days' puzzles; the client picks today's by UTC date. Cards are chosen by a hash of (day, id), so
+  a build that adds or drops a card leaves a day's pairs almost unchanged, and a pair's prices are 1.25 to 8
+  times apart, so a day's price moves don't flip an answer. Cards under US$1 or over US$2,000 and token sets
+  are left out (`src/lib/daily.ts`, `tests/daily.test.ts`).
+- The share text is the number, the score, the emoji grid, the streak and the link with
+  `utm_source=share&utm_medium=daily`; it names no price, so it spoils nothing. Progress and the streak live
+  in localStorage only. Events: `daily_done { score }` and `share { medium: daily }`, read by RiftCompare's
+  growth report like every other share.
+- OP Compare: the same `src/lib/daily.ts` as the engine sites, read through `getCatalog()` (so the page
+  lives six hours, the loader's TTL, never less), DON!! and token cards left out; linked from the menu's
+  tools and the /tools hub.
+- Measure: share taps and share visits with medium `daily` in the weekly growth report. Drop it if it brings
+  nothing in four weeks.

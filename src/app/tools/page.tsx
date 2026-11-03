@@ -126,6 +126,11 @@ const GROUPS: ToolGroup[] = [
         desc: "Open free virtual packs or a whole box from any set, with real cards and live prices on every pull.",
       },
       {
+        href: "/daily",
+        title: "Daily Price Duel",
+        desc: "Ten pairs of cards a day: pick the one worth more. The same puzzle for everyone; keep your streak and share your score.",
+      },
+      {
         href: "/tools/pull-tracker",
         title: "Pull tracker",
         desc: "Opened a real box? Tap what you pulled and see what it is worth against what you paid.",
