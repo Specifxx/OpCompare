@@ -8,6 +8,7 @@ import { TrendingChips, type TrendingCard } from "./TrendingChips";
 import { BrandLogo } from "@/components/BrandLogo";
 import { HalloweenDecor } from "./HalloweenDecor";
 import { ChristmasDecor } from "./ChristmasDecor";
+import { HeroSparks } from "./HeroSparks";
 import { ChristmasGifts } from "./ChristmasGifts";
 import { ThrillerBarkComing } from "./ThrillerBarkComing";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
@@ -63,6 +64,8 @@ export function CinematicHero({
     <ParallaxShell>
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="op-hero-band absolute inset-0 border-b border-ink-800 bg-ink-950" />
+        {/* The living background (owner, 2026-11-03): motes that part around the pointer, sparks on a click. */}
+        <HeroSparks />
         <HalloweenDecor />
         <ChristmasDecor />
       </div>
