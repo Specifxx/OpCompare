@@ -53,8 +53,6 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 // server (it needs /api/me or browser storage first), so ssr:false keeps their
 // JS off the first paint without changing the HTML.
 const LaunchPromoPopup = dynamic(() => import("@/components/LaunchPromoPopup").then((m) => m.LaunchPromoPopup), { ssr: false });
-const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), { ssr: false });
-const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), { ssr: false });
 // The feedback launcher: never auto-opens, works signed out, hides over the
 // hero and the footer ad zone (#op-hero, #op-ad-zone).
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), { ssr: false });
@@ -184,8 +182,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <LaunchPromoPopup providers={enabledProviders()} />
-                <PremiumSlideIn />
-                <AnnualSwitchNudge />
+                {/* No Premium slider (owner, 2026-11-03, on RiftCompare: "get rid of all
+                    the sliders regarding the premium and the signups. People can do it
+                    if they want to"; applied here the same day): PremiumSlideIn and
+                    AnnualSwitchNudge are gone. The annual switch stays on /premium. */}
                 <FeedbackWidget />
                 {/* Rate us (owner, 2026-11-03): the corner card, asking only after real use; RiftCompare keeps the ratings. */}
                 <RateCard />

@@ -3649,3 +3649,12 @@ no marketplace it does not price, `tests/amazon.test.ts`), drawn right after the
 neither is pinned (after the eBay search and TCGplayer reference rows), and at the foot of those search rows when no store
 has stock. Still sealed pages only, still a tagged search with no Amazon price, never ranked or the cheapest, still never in
 the quick view, still labelled "Ad" with the Associates statement beside it.
+
+## No Premium sliders (2026-11-03)
+
+The owner, on RiftCompare the same day: "get rid of all the sliders regarding the premium and the signups. People can
+do it if they want to." OP Compare ran straight ports of the same two components, so they go here too: `PremiumSlideIn`
+(the signed-in corner Premium card) and `AnnualSwitchNudge` (the monthly→annual corner card) are deleted with their
+mounts. The annual switch stays on `/premium`. The launch-offer popup (`LaunchPromoPopup`, the first 50 accounts) and the
+rating card are untouched: the owner's word was about RiftCompare's Pro sliders, and the launch offer is his own
+2026-10 decision; it ends itself when the 50 are claimed. Rides the weekly release.
