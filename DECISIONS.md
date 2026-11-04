@@ -3671,3 +3671,17 @@ pre-filled email to `CONTACT_EMAIL`, and there are no creator codes. The "Buy th
 Ko-fi, Patreon or tip page: the site never handles the money. `CreatorsCornerBadge` is the bubble in the homepage hero
 (top-right from sm, a centred pill above the headline on a phone); the footer row and the sitemap link the page. Static,
 `revalidate = 86400`, no loader read. Not called "partners" anywhere: that word means the affiliate links.
+
+## 2026-11-04 — Big-store gap: 5 stores, and the first WooCommerce stores
+
+The owner asked for every big store captured with no gaps, on every site. Research per region named 21 One Piece
+candidates not in `src/lib/stores.ts`; `scripts/probe-stores.ts` on a runner read each against the public snapshot.
+Added (matched / in stock on the probe day): **Eclipse Games** (AU, 40 / 3; English collections only), **Mind Games**
+(AU, the national chain, 18 / 14), **Eclipse TCG** (Belgium, 39 / 0; the English collection only, its French and Japanese
+collections are left out), **Magic Traders** (Netherlands, 47 / 15) and **Team Board Game** (Singapore, 32 / 2). Mind
+Games and Team Board Game are the registry's first `platform: "woocommerce"` stores: the reader in `lib/woocommerce.ts`
+has been in place since the third pass, and finds their One Piece categories by name (`collections: []`). Read but not
+added: Madatsu TCG (EU, 4 matched), OBO Collectibles (SG, 1), Hobbyco (AU: figures and kits, no cards), Gaming Otaku (SG:
+Japanese singles only), Capybara Cards (SG: no One Piece), Card Giants, Leisure Games, Card Chasers, Cura, Gumnut, Jenes,
+Games Paradise, Card Arena, Games Haven, Jeux Kingdom (no One Piece collection), ILAN TCG (categories unreadable).
+Not addable, and why (the same list every card site hit): the biggest US and UK names run platforms with no public feed or a robots.txt that forbids reading — BigCommerce (Star City Games, Game Nerdz, Game Goblins, ToyWiz, Magic Madhouse), CrystalCommerce stores whose robots.txt disallows everything (Three Kings Loot, Carta Magica, Gamekeeper, The Connection, Card Titan, Collector's Cache, Nerd Rage, Pastimes), bot walls that answer 403 or a Cloudflare challenge (Chaos Cards, Big Orbit, Wayland, Firestorm, Mighty Ape AU and NZ, Gamesmen, EB Games, MTG Mate, Imaginaire, Le Valet, Bazaar of Magic, FantasyWelt, Keepseven, Nedgame, Poromagia, Dave & Adam's, Pro-Play, Pokémon Center, Red Hobby) and custom storefronts (Card Kingdom, CoolStuffInc, ABUGames, CoreTCG, Ideal808, Noble Knight, Miniature Market, Play-in, Parkage, Agora Hobby, Hobby Master NZ). A bot wall is never worked around. A BigCommerce reader would unlock the most (Star City Games, Miniature Market, Game Nerdz, Magic Madhouse, Game Goblins) and is the next adapter worth writing.

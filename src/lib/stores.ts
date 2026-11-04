@@ -561,6 +561,19 @@ const RAW_STORES: StoreInfo[] = [
   // sealed products of 1,716. Its second storefront, ccctcg.ca, is a copy of the
   // same stock at the same prices and is left out (DECISIONS.md).
   { key: "ateliertcg", name: "L'Atelier TCG", base: "https://ateliertcg.com", country: "CA", collections: ["*"], sealedOnly: true },
+  // ── Big-store gap research, 2026-11-04 (DECISIONS.md "Big-store gap: 5 stores"):
+  // each read on a runner by scripts/probe-stores.ts (matched / in stock).
+  // Eclipse Games AU (Perth chain): 40 matched, 3 in stock, English collections only.
+  { key: "eclipsegamesau", name: "Eclipse Games", base: "https://eclipsegames.com.au", country: "AU", collections: ["one-piece", "english-one-piece-tcg", "one-piece-card-game", "one-piece-collectibles-decks"] },
+  // Mind Games (national AU chain, WooCommerce Store API): 18 matched, 14 in stock; its
+  // "One Piece" categories are found by name (lib/woocommerce.ts onePieceCategoryIds).
+  { key: "mindgames", name: "Mind Games", base: "https://m-g.com.au", country: "AU", collections: [], platform: "woocommerce" },
+  // Eclipse TCG (Belgium): 39 matched, 0 in stock on the probe day; English collection only.
+  { key: "eclipsetcg", name: "Eclipse TCG", base: "https://eclipsetcg.be", country: "EU", collections: ["one-piece-english"] },
+  // Magic Traders (Netherlands): 47 matched, 15 in stock.
+  { key: "magictraders", name: "Magic Traders", base: "https://magictraders.nl", country: "EU", collections: ["one-piece-pre-order", "one-piece-1"] },
+  // Team Board Game (Singapore, WooCommerce): 32 matched, 2 in stock.
+  { key: "teamboardgame", name: "Team Board Game", base: "https://teamboardgame.com", country: "SG", collections: [], platform: "woocommerce" },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */
