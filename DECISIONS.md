@@ -3686,6 +3686,16 @@ Japanese singles only), Capybara Cards (SG: no One Piece), Card Giants, Leisure 
 Games Paradise, Card Arena, Games Haven, Jeux Kingdom (no One Piece collection), ILAN TCG (categories unreadable).
 Not addable, and why (the same list every card site hit): the biggest US and UK names run platforms with no public feed or a robots.txt that forbids reading — BigCommerce (Star City Games, Game Nerdz, Game Goblins, ToyWiz, Magic Madhouse), CrystalCommerce stores whose robots.txt disallows everything (Three Kings Loot, Carta Magica, Gamekeeper, The Connection, Card Titan, Collector's Cache, Nerd Rage, Pastimes), bot walls that answer 403 or a Cloudflare challenge (Chaos Cards, Big Orbit, Wayland, Firestorm, Mighty Ape AU and NZ, Gamesmen, EB Games, MTG Mate, Imaginaire, Le Valet, Bazaar of Magic, FantasyWelt, Keepseven, Nedgame, Poromagia, Dave & Adam's, Pro-Play, Pokémon Center, Red Hobby) and custom storefronts (Card Kingdom, CoolStuffInc, ABUGames, CoreTCG, Ideal808, Noble Knight, Miniature Market, Play-in, Parkage, Agora Hobby, Hobby Master NZ). A bot wall is never worked around. A BigCommerce reader would unlock the most (Star City Games, Miniature Market, Game Nerdz, Magic Madhouse, Game Goblins) and is the next adapter worth writing.
 
+## 2026-11-04 — HBT Collectables is removed and banned: they asked not to be linked
+
+HBT Collectables (hbtcollectables.com, AU) answered the store outreach email by sending it to their lawyers as
+"unauthorised linking" under their site's terms. The owner's call: take them off every site, apologise, send them
+no more visitors. Here the store leaves `STORES` and the shipping table; the next import deletes its snapshot
+offers (`importStores` already drops any `store:` source not in the registry), and the release goes out at once
+rather than waiting for Monday, because a link to a store that has asked us not to link is a legal matter. Both
+hosts are on RiftCompare's `data/store-vetting/banned.json`, so the weekly vetting goes red if any site lists
+them again. Not a judgement on the store: it does not want the traffic, so we don't send it.
+
 ## 2026-11-04 — List your store: stores come to us
 
 The owner stopped cold email outreach ("not really doing anything") and set the aim: be popular enough that stores
