@@ -3685,3 +3685,15 @@ added: Madatsu TCG (EU, 4 matched), OBO Collectibles (SG, 1), Hobbyco (AU: figur
 Japanese singles only), Capybara Cards (SG: no One Piece), Card Giants, Leisure Games, Card Chasers, Cura, Gumnut, Jenes,
 Games Paradise, Card Arena, Games Haven, Jeux Kingdom (no One Piece collection), ILAN TCG (categories unreadable).
 Not addable, and why (the same list every card site hit): the biggest US and UK names run platforms with no public feed or a robots.txt that forbids reading — BigCommerce (Star City Games, Game Nerdz, Game Goblins, ToyWiz, Magic Madhouse), CrystalCommerce stores whose robots.txt disallows everything (Three Kings Loot, Carta Magica, Gamekeeper, The Connection, Card Titan, Collector's Cache, Nerd Rage, Pastimes), bot walls that answer 403 or a Cloudflare challenge (Chaos Cards, Big Orbit, Wayland, Firestorm, Mighty Ape AU and NZ, Gamesmen, EB Games, MTG Mate, Imaginaire, Le Valet, Bazaar of Magic, FantasyWelt, Keepseven, Nedgame, Poromagia, Dave & Adam's, Pro-Play, Pokémon Center, Red Hobby) and custom storefronts (Card Kingdom, CoolStuffInc, ABUGames, CoreTCG, Ideal808, Noble Knight, Miniature Market, Play-in, Parkage, Agora Hobby, Hobby Master NZ). A bot wall is never worked around. A BigCommerce reader would unlock the most (Star City Games, Miniature Market, Game Nerdz, Magic Madhouse, Game Goblins) and is the next adapter worth writing.
+
+## 2026-11-04 — List your store: stores come to us
+
+The owner stopped cold email outreach ("not really doing anything") and set the aim: be popular enough that stores
+ask us, and encourage the ones that do. Every Compare Empire site now has `/list-your-store` (shared
+`ListYourStore.tsx` + the `ListStore` form in `ReportForms.tsx`), linked from the footer, `/contact` and the stores
+page: what a store gets (free, no contract, never pays to rank), what we need (a readable shop, own currency,
+established), and what happens next (checked within a few days, reply through the store's own contact details).
+The request is filed as a `suggest-store` report with `issue: "owner"`; RiftCompare's daily reports triage puts
+those first and asks for a reply within two days. No email is asked for (the reports branch is public); no pop-up,
+no cold email. RiftCompare and OP Compare keep their `/stores/suggest` page (now the owner pitch) and redirect
+`/list-your-store` to it.

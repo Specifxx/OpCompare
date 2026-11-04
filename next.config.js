@@ -26,6 +26,9 @@ const nextConfig = {
       // Wave-2 tools (RiftCompare's lineup): the Buy List Planner became Best
       // Basket, the box value page became the Box EV calculator, and the bulk
       // pricer is /deck (RiftCompare folded its Bulk Pricer into /deck).
+      // Every sister site's store-owner page is /list-your-store (2026-11-04);
+      // OP Compare's lives at /stores/suggest.
+      { source: "/list-your-store", destination: "/stores/suggest", permanent: true },
       { source: "/tools/buy-list", destination: "/tools/best-basket?source=watchlist", permanent: true },
       { source: "/tools/box-value", destination: "/tools/box-ev", permanent: true },
       { source: "/bulk-pricer", destination: "/deck", permanent: true },
