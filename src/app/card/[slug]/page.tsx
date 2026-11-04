@@ -395,6 +395,8 @@ export default async function CardPage({ params }: Props) {
                   ).toFixed(2),
                   offerCount: inBaseline.length,
                   availability: "https://schema.org/InStock",
+                  // The import runs daily, so a price is good until tomorrow (schema.org priceValidUntil).
+                  priceValidUntil: new Date(Date.now() + 86400e3).toISOString().slice(0, 10),
                   eligibleRegion: { "@type": "Country", name: isoCountry(BASELINE) },
                   ...(ebayLd.length ? { offers: ebayLd } : {}),
                 },
