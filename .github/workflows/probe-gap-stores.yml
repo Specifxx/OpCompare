@@ -1,0 +1,34 @@
+name: Probe gap stores
+# Research only (temporary, claude/* branches): runs scripts/probe-stores.ts over the candidate stores in
+# probe/shopify.txt and probe/woo.txt and commits the log to the branch. Reads the public snapshot; writes nothing else.
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["probe/shopify.txt", "probe/woo.txt"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npx tsx scripts/probe-stores.ts $(cat probe/shopify.txt) 2>&1 | tee probe/shopify.log
+        continue-on-error: true
+      - run: npx tsx scripts/probe-stores.ts --platform=woocommerce $(cat probe/woo.txt) 2>&1 | tee probe/woo.log
+        continue-on-error: true
+      - if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe/shopify.log probe/woo.log
+          git commit -m "probe: results" || exit 0
+          for i in 1 2 3 4; do git push origin HEAD:${GITHUB_REF_NAME} && exit 0; sleep $((2 ** i)); git pull --rebase origin ${GITHUB_REF_NAME}; done
+          exit 1
