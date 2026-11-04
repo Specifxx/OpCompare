@@ -123,7 +123,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/support", label: "Support", keywords: ["support", "help", "faq", "problem", "issue", "something is broken", "billing"] },
       { href: "/contact", label: "Contact & feedback", keywords: ["contact", "email", "get in touch", "reach us"] },
       { href: "/feedback", label: "Suggest a feature", keywords: ["feedback", "suggest", "idea", "feature request"] },
-      { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
+      { href: "/stores/suggest", label: "List your store", keywords: ["suggest a store", "add a store", "missing store", "list my store", "list your store", "get listed"] },
       { href: "/how-we-pick-stores", label: "How we pick stores", keywords: ["scam", "fake store", "trusted stores", "report a store", "how we pick stores", "vetting"] },
       { href: "/methodology", label: "Methodology", keywords: ["methodology", "how we compare", "condition", "fx", "currency", "ranking"] },
       { href: "/about", label: "About OP Compare", keywords: ["about", "who we are", "op compare", "compare"] },
