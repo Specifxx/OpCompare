@@ -17,6 +17,7 @@ import { setReview } from "./posts/set-review";
 import { SET_VALUE_SPECS, setMostValuable } from "./posts/set-value";
 import { giftGuide } from "./posts/gift-guide";
 import { crews } from "./posts/crews";
+import { fakeCards } from "./posts/fake-cards";
 import { marketNovember2026 } from "./posts/market-november-2026";
 import { whereToBuy } from "./posts/where-to-buy";
 import { whereToBuyEb05 } from "./posts/where-to-buy-eb05";
@@ -25,6 +26,7 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  fakeCards,
   marketNovember2026,
   crews,
   giftGuide,
