@@ -431,3 +431,13 @@ test("family feed: fresh is ok, old only warns (sisters show less), missing is u
   assert.equal(evalFamilyFeedAge(new Date("2026-10-20T00:00:00Z"), now).status, "warn");
   assert.equal(evalFamilyFeedAge(null, now).status, "unknown");
 });
+
+test("evalAmazon: unknown without credentials, warn when refused, ok with or without a match, never a fail", async () => {
+  const { evalAmazon } = await import("../src/lib/health");
+  assert.equal(evalAmazon(null, null).status, "unknown");
+  assert.equal(evalAmazon({ status: "no-credentials" }, "op-13-booster-box").status, "unknown");
+  assert.equal(evalAmazon({ status: "refused" }, "op-13-booster-box").status, "warn");
+  assert.equal(evalAmazon({ status: "ok" }, "op-13-booster-box").status, "ok");
+  assert.equal(evalAmazon({ status: "none" }, "op-13-booster-box").status, "ok");
+  assert.equal(evalAmazon({ status: "http 500" }, "op-13-booster-box").status, "warn");
+});

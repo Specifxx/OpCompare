@@ -32,7 +32,7 @@ test("the link: a tagged search on the market's Amazon, ascsubtag oc-<market>-<p
   assert.equal(AMAZON_REL, "sponsored nofollow noopener");
 });
 
-test("placed on sealed pages only, as the third pinned row after eBay and TCGplayer (owner, 2026-11-03), no Amazon price", () => {
+test("placed on sealed pages only, as the third pinned row after eBay and TCGplayer (owner, 2026-11-03); Amazon's own price only through the live slot", () => {
   const sealed = read("src/app/sealed/[slug]/page.tsx");
   assert.match(sealed, /thirdRow=\{<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>\}/);
   const view = read("src/components/PriceBoardView.tsx");
@@ -41,9 +41,11 @@ test("placed on sealed pages only, as the third pinned row after eBay and TCGpla
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
   assert.match(comp, />Ad</, "labelled Ad");
-  assert.match(comp, /rel=\{AMAZON_REL\}/);
-  assert.match(comp, /data-retailer=/, "counted like every outbound link");
-  assert.doesNotMatch(comp, /money\(|priceCents|Prime|rating/, "no Amazon price, rating or Prime");
+  const slot = read("src/components/AmazonLiveSlot.tsx");
+  assert.match(slot, /rel=\{AMAZON_REL\}/);
+  assert.match(slot, /"data-retailer":/, "counted like every outbound link");
+  assert.doesNotMatch(comp + slot, /money\(|priceCents|Prime|rating/, "no Amazon price computed here (the route answers it formatted), no rating or Prime");
+  assert.match(slot, /\/api\/amazon\/sealed\//, "the price comes from the CDN-cached route (2026-11-05)");
   assert.match(read("src/app/sealed/page.tsx"), /amazonSearchUrl\(country, x\.q, "sealed-page"\)/);
   for (const f of ["src/components/PriceBoard.tsx", "src/components/PriceBoardView.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);
   assert.ok(read("src/components/Footer.tsx").includes(AMAZON_STATEMENT));
