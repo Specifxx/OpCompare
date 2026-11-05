@@ -17,7 +17,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8; method=PUBLISH",
       "Content-Disposition": `attachment; filename="one-piece-${next.code.toLowerCase()}-${next.releasedOn}.ics"`,
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
       "X-Robots-Tag": "noindex",
     },
   });
