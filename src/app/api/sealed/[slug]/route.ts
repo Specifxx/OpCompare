@@ -3,7 +3,8 @@ import { getCatalog, getChaseStrip, getSealedDetail } from "@/lib/data";
 import { sealedQuickViewPayload } from "@/lib/sealed-quick-view";
 
 // The sealed QuickView's data: one product's facts and every market's offers
-// (affiliate-tagged), market-independent so one CDN entry serves every visitor.
+// (affiliate-tagged), market-independent so one CDN entry serves every visitor,
+// six hours and a day stale (cost, 2026-11-05; the offers change once a day).
 // Reads only data.ts loaders (a Data Cache read, never a query).
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,6 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const set = s.setId != null ? cat?.setById.get(s.setId) ?? null : null;
   const chase = await getChaseStrip().catch(() => []);
   return NextResponse.json({ ...sealedQuickViewPayload(s, set ? { code: set.code, name: set.name, slug: set.slug } : null), chase }, {
-    headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" },
+    headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
   });
 }

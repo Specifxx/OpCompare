@@ -8,8 +8,9 @@ import { quickViewPayload } from "@/lib/quick-view";
 // market-independent JSON. Reads only the card page's own loaders: the
 // self-cached getCardDetail (a Data Cache read, never a query) and
 // getProductHistory (the GitHub history file, fetch-cached; no database).
-// The CDN keeps each card for 10 minutes, and the same response serves every
-// market.
+// The CDN keeps each card six hours (a day stale) and the same response serves
+// every market: prices change once a day, with the snapshot (cost, 2026-11-05;
+// it was ten minutes).
 export const dynamic = "force-dynamic";
 
 const SLUG = /^[a-z0-9-]{1,160}$/;
@@ -22,6 +23,6 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const panel = await getEbayPanel(card.id).catch(() => ({ listings: [], graded: [] }));
   const chase = (await getChaseStrip().catch(() => [])).filter((t) => t.id !== card.id);
   return NextResponse.json({ ...quickViewPayload(card, undefined, history, panel.graded), chase }, {
-    headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" },
+    headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
   });
 }

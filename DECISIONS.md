@@ -3707,3 +3707,19 @@ The request is filed as a `suggest-store` report with `issue: "owner"`; RiftComp
 those first and asks for a reply within two days. No email is asked for (the reports branch is public); no pop-up,
 no cold email. RiftCompare and OP Compare keep their `/stores/suggest` page (now the owner pitch) and redirect
 `/list-your-store` to it.
+
+## 2026-11-05 — The quick-view APIs are cached six hours, not ten minutes
+
+The owner asked for Vercel's function spend to come down with longer CDN caches on API and data routes. A live
+check of `x-vercel-cache` found the pages that can be one copy for everyone already at the CDN (`/card/[slug]`,
+the home and the ISR hubs), and two routes still on a ten-minute cache from before the snapshot: `/api/card/[slug]`
+and `/api/sealed/[slug]`, the quick views, which every tile click fetches. Their data changes once a day with the
+snapshot, so they now carry `s-maxage=21600, stale-while-revalidate=86400`, the per-card floor; the release
+calendar (`/release-dates/calendar`) goes from an hour to the same. `/api/promo` keeps its 30 seconds: it is a
+live counter.
+
+What stays uncached, and why: `/sets`, `/sealed`, `/price-guide`, `/browse` and `/sets/[slug]` read the market
+cookie (`getCountry()`), so one CDN copy would serve one visitor's market to everyone; their loaders are
+cached, the render is not. Moving them to the card page's shape (every market computed server-side, the client
+picking one) is the next lever, page by page.
+
