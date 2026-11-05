@@ -3723,3 +3723,28 @@ cookie (`getCountry()`), so one CDN copy would serve one visitor's market to eve
 cached, the render is not. Moving them to the card page's shape (every market computed server-side, the client
 picking one) is the next lever, page by page.
 
+
+## 2026-11-05 — Amazon's own price on the sealed page's Amazon row, fetched at request time
+
+The owner (2026-11-05): "We need all the sites especially compare empire showing the API prices as price rows." The
+owner's Associates accounts (AU approved 2026-11-03, US 2026-11-05) give ONE Creators API credential that serves every
+Amazon store, but each store opens only once its own account has qualifying sales, so the site switches on by itself per
+store and keeps working without it.
+
+The sister sites fetch Amazon's prices at build and show them for 24 hours. OP Compare builds once a week, so that would
+show a price one day in seven. Instead the sealed page's Amazon row asks `/api/amazon/sealed/<slug>?c=<market>` from the
+browser (`AmazonLiveSlot`): the route makes one Creators API search for the product's name on the market's Amazon, keeps
+the first result whose title `matchSealedTitle` reads as THIS product (a case, a pack or another set is passed over) and
+whose new, in-stock price in the market's currency sits within 60–160% of the market's in-stock store median, and
+answers the price, the time and a `/dp/<ASIN>` link with the tag and sub id. The CDN keeps the answer six hours (a day
+stale), so a product costs at most four API calls a day per market and the function runs that often at most; nothing is
+written anywhere (Amazon's licence lets a price be shown 24 hours with its time, never kept), and the browser shows it
+only while under 24 hours old, with the required "accurate as of" disclaimer. Without credentials, with a store Amazon
+refuses (401/403/429: no access yet, or the limit), with no match or on an error, the route answers a status and the row
+keeps its tagged search and "See price"; an error is cached ten minutes, everything else six hours.
+
+The price is Amazon's row's alone: never a board row, the cheapest, a deal, an alert, a basket, history, metadata or the
+quick view. The credentials (`AMAZON_CREATORS_AU_CLIENT_ID` / `_CLIENT_SECRET` / `_VERSION`, a market's own
+`AMAZON_CREATORS_<MARKET>_*` overriding) are Vercel Production variables, never in the repo. The watchdog asks the route
+for the most-stocked US product (`amazon-prices`: unknown without credentials, warn when refused, ok otherwise, never a
+fail). `tests/amazon-api.test.ts` keeps the client behind the route alone.

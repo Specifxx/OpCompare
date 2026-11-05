@@ -1,7 +1,10 @@
 import type { Country } from "@/lib/country";
-import { AMAZON_REL, AMAZON_STATEMENT, amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { AMAZON_STATEMENT, amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { AmazonLiveSlot } from "./AmazonLiveSlot";
 
-// Amazon on a sealed product's page (lib/amazon.ts): a search on the visitor's Amazon, no price, never ranked. Since
+// Amazon on a sealed product's page (lib/amazon.ts): the visitor's Amazon, never ranked. Since 2026-11-05 the row's
+// client slot (AmazonLiveSlot) asks /api/amazon/sealed/<slug> for Amazon's own price (lib/amazon-live.ts) and shows
+// it with its time for 24 hours where the store's account has Creators API access; otherwise it is a search. Since
 // 2026-11-03 (owner: Amazon "up there with eBay and TCGplayer … the third row out of the three") it is a row OF the board,
 // passed in through PriceBoard's `thirdRow` slot and drawn right after the pinned eBay and TCGplayer rows (first when neither
 // is shown); until then it sat above the board, which put it first. Drawn like a store row, labelled "Ad", with no wording
@@ -13,7 +16,7 @@ export function AmazonCheck({ country, name, slug, page = "sealed" }: { country:
   const href = amazonSearchUrl(country, name, `${page}-amazon`);
   if (!a || !href) return null;
   return (
-    <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+    <li className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
       <span className="w-5 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
@@ -21,36 +24,12 @@ export function AmazonCheck({ country, name, slug, page = "sealed" }: { country:
           <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">Ad</span>
         </p>
         <p className="mt-1 text-xs text-slate-400">
-          We don&apos;t read Amazon&apos;s prices, so it isn&apos;t ranked with the stores: compare its checkout total before you buy.{" "}
+          Amazon&apos;s own price and stock, not ranked with the stores: compare its checkout total before you buy.{" "}
           <span className="hidden sm:inline">{AMAZON_STATEMENT}</span>
         </p>
       </div>
-      <span className="shrink-0 text-right text-xs text-slate-400">See price</span>
-      <a
-        href={href}
-        target="_blank"
-        rel={AMAZON_REL}
-        data-retailer={`amazon_${country.toLowerCase()}`}
-        data-page={page}
-        data-card={slug}
-        data-surface="amazon_check"
-        className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48"
-      >
-        Check price →
-      </a>
-      <a
-        href={href}
-        target="_blank"
-        rel={AMAZON_REL}
-        data-retailer={`amazon_${country.toLowerCase()}`}
-        data-page={page}
-        data-card={slug}
-        data-surface="amazon_check"
-        className="btn-primary shrink-0 px-3 sm:hidden"
-        aria-label={`Check price on ${a.label}`}
-      >
-        →
-      </a>
+      {/* Amazon's own price from the Creators API when this store's account has access (owner, 2026-11-05), else the search. */}
+      <AmazonLiveSlot country={country} slug={slug} label={a.label} searchHref={href} page={page} />
     </li>
   );
 }

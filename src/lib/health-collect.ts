@@ -6,6 +6,7 @@
 //
 // It never calls eBay (eBay stays inside lib/ebay*.ts): the eBay checks read the
 // ImportRun summaries the eBay pass itself wrote.
+import { gunzipSync } from "node:zlib";
 import { prisma } from "./db";
 import {
   buildReport,
@@ -16,6 +17,7 @@ import {
   evalInbox,
   evalJobs,
   evalNeon,
+  evalAmazon,
   evalSite,
   evalSnapshotAge, evalFamilyFeedAge,
   evalStoreCodes,
@@ -224,6 +226,26 @@ export async function collectSite(): Promise<Check[]> {
 }
 
 // ── GitHub Actions ───────────────────────────────────────────────────────────
+/** Amazon's Creators API prices: ask the live route for the first sealed product in the snapshot (US market). */
+export async function collectAmazon(): Promise<Check[]> {
+  const out = await guarded(
+    "amazon prices",
+    async () => {
+      const raw = (process.env.SNAPSHOT_RAW_BASE || "https://raw.githubusercontent.com/Specifxx/OpCompare").replace(/\/+$/, "");
+      const res = await withTimeout(`${raw}/snapshot/sealed.json.gz`);
+      if (!res.ok) throw new Error(`sealed snapshot answered ${res.status}`);
+      const list = JSON.parse(gunzipSync(Buffer.from(await res.arrayBuffer())).toString("utf8")) as { slug: string; stores?: Record<string, number> }[];
+      const slug = [...list].sort((a, b) => (b.stores?.US ?? 0) - (a.stores?.US ?? 0))[0]?.slug ?? null;
+      if (!slug) return { slug: null, answer: null };
+      const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+      const r = await withTimeout(`${base}/api/amazon/sealed/${slug}?c=US`, { headers: { "User-Agent": "OPCompareWatchdog/1.0" } }, 20_000);
+      return { slug, answer: r.ok ? ((await r.json()) as { status?: string }) : { status: `http ${r.status}` } };
+    },
+    () => ({ slug: null as string | null, answer: null as { status?: string } | null }),
+  );
+  return [evalAmazon(out.answer, out.slug)];
+}
+
 export async function collectJobs(now: Date): Promise<Check[]> {
   const repo = process.env.GITHUB_REPOSITORY || "Specifxx/OpCompare";
   return guarded(
@@ -246,6 +268,6 @@ export async function collectJobs(now: Date): Promise<Check[]> {
 
 /** Everything, in parallel groups; the report is always produced. */
 export async function collectAll(now: Date = new Date()): Promise<{ report: HealthReport; inbox: InboxCounts | null }> {
-  const [neon, prices, stores, ebay, email, inbox, site, jobs] = await Promise.all([collectNeon(now), collectPrices(now), collectStores(), collectEbay(now), collectEmail(), collectInbox(now), collectSite(), collectJobs(now)]);
-  return { report: buildReport([...neon, ...prices, ...ebay, ...stores, ...site, ...jobs, ...email, ...inbox.checks], now), inbox: inbox.counts };
+  const [neon, prices, stores, ebay, email, inbox, site, amazon, jobs] = await Promise.all([collectNeon(now), collectPrices(now), collectStores(), collectEbay(now), collectEmail(), collectInbox(now), collectSite(), collectAmazon(), collectJobs(now)]);
+  return { report: buildReport([...neon, ...prices, ...ebay, ...stores, ...site, ...amazon, ...jobs, ...email, ...inbox.checks], now), inbox: inbox.counts };
 }

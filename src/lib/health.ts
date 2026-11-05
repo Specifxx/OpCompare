@@ -401,6 +401,25 @@ export function evalSite(probes: Probe[]): Check[] {
   return [{ id: "site-up", area: "site", label: "Live site", status, detail, ...(status === "ok" ? {} : { hint: "Open the Vercel dashboard's latest deployment and its function logs; if only one page fails, the data behind it is the first suspect." }) }];
 }
 
+/**
+ * Amazon's Creators API prices on the sealed pages (DECISIONS.md 2026-11-05): the watchdog asks one product's
+ * `/api/amazon/sealed/<slug>?c=US` and reads the status the route answers. "no-credentials" is unknown (the Vercel
+ * variables are not set yet), "refused" a warn (the store's account has no API access yet, or the limit was hit: the
+ * row keeps its search link), "none"/"ok" ok, anything else a warn. Never a fail: the row works without a price.
+ */
+export function evalAmazon(answer: { status?: string } | null, slug: string | null): Check {
+  const id = "amazon-prices";
+  const label = "Amazon prices (Creators API)";
+  if (!answer || !slug) return unknown(id, "site", label, "The route could not be asked (no sealed product, or no answer).");
+  const st = answer.status ?? "error";
+  const hint = "Set AMAZON_CREATORS_AU_CLIENT_ID / _CLIENT_SECRET / _VERSION in Vercel (Production) once Associates Central shows the credential; a 403 means the US store's account has no qualifying sales yet.";
+  if (st === "no-credentials") return unknown(id, "site", label, "No AMAZON_CREATORS_* variables in Vercel: the Amazon rows are search links.", hint);
+  if (st === "ok") return { id, area: "site", label, status: "ok", detail: `Amazon US priced /sealed/${slug}.` };
+  if (st === "none") return { id, area: "site", label, status: "ok", detail: `Amazon US answered for /sealed/${slug}; no listing matched it (the row keeps its search link).` };
+  if (st === "refused") return { id, area: "site", label, status: "warn", detail: "Amazon refused the request (no API access for this store yet, or the rate limit): the rows keep their search links.", hint };
+  return { id, area: "site", label, status: "warn", detail: `The route answered "${st}" for /sealed/${slug}.`, hint: "Read the route's function log in Vercel." };
+}
+
 // ── Scheduled jobs (GitHub Actions) ──────────────────────────────────────────
 
 export interface WorkflowRun {

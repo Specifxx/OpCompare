@@ -286,6 +286,16 @@ request, whatever `revalidate` says), and calls a loader-and-draw function in
   image in a link-preview tester before any Reddit post (Reddit freezes a
   post's thumbnail).
 
+## Amazon's price on the sealed page's Amazon row (owner, 2026-11-05)
+
+The sealed page's Amazon row (`AmazonCheck` → `AmazonLiveSlot`) asks `/api/amazon/sealed/<slug>?c=<market>` from the
+browser; the route (`lib/amazon-live.ts`, `lib/amazon-creators.ts`) makes ONE Creators API search, keeps the first result
+the sealed matcher reads as this product within 60–160% of the market's store median, and the CDN holds the answer six
+hours: nothing is stored, the row shows the price with its time for 24 hours (Amazon's licence), and a store whose
+account has no API access yet keeps the search link. Never a board row, the cheapest, a deal, an alert, a basket, history
+or the quick view. Credentials `AMAZON_CREATORS_AU_*` are Vercel Production variables only; `tests/amazon-api.test.ts`
+and the watchdog's `amazon-prices` check pin it. Request time, not build time, because OP Compare builds once a week.
+
 ## Matching store listings
 
 `src/lib/match.ts` matches a listing to ONE printing or not at all. Add a real
