@@ -3748,3 +3748,30 @@ quick view. The credentials (`AMAZON_CREATORS_AU_CLIENT_ID` / `_CLIENT_SECRET` /
 `AMAZON_CREATORS_<MARKET>_*` overriding) are Vercel Production variables, never in the repo. The watchdog asks the route
 for the most-stocked US product (`amazon-prices`: unknown without credentials, warn when refused, ok otherwise, never a
 fail). `tests/amazon-api.test.ts` keeps the client behind the route alone.
+
+
+## 2026-11-06 — Black Friday and Cyber Monday price watch pages
+
+The owner's October numbers (2026-11-06): the US made 73% of affiliate earnings at a US$108 average order; one
+US$6.4k order earned as much as about twelve ordinary days; eBay credits only a purchase made within 24 hours of the
+click. His asks: build the Black Friday pages for US buyers, publish them this week so Google has indexed them by
+27 November, make them "price watch" pages (sealed boxes, big price drops, graded cards, each linking to live eBay
+listings), and give the high end its own prominent sections.
+
+- **`/cyber-monday` is a page of its own** (`src/app/cyber-monday/page.tsx`): the Black Friday page under Cyber
+  Monday's URL, title and description, so the Monday query has a page to rank. Both routes render one component,
+  `src/components/HolidaySalePage.tsx` (the old `/black-friday` body, unchanged in URL, h1 and title). In the
+  sitemap; no nav entry (the minimal-nav rule), linked from each other and the seasonal pages.
+- **The price watch** (`src/components/SalePriceWatch.tsx`, rules in `src/lib/price-watch.ts`, loader
+  `getPriceWatch` in `data.ts`, `tests/price-watch.test.ts`) sits under the deals on both pages, three sections each
+  ending in a live eBay listing through the EPN campaign: in-stock booster boxes and cases with the cheapest store
+  beside the cheapest eBay row the daily pass captured, dearest first (the high-end shelf, not a deals list); the
+  steepest seven-day falls in TCGplayer's market price (`change7d`, US$5 and up) with the card's headline eBay
+  listing; and the dearest live slab per card from the same rows the Graded tab and `/graded` read (asking prices
+  over US$5,000 left out). One loader reads the snapshot once and keeps a few dozen rows six hours; the pages still
+  read nothing about the visitor.
+- **US only, on purpose.** The page is cached for every visitor, so the watch is drawn for `DEFAULT_COUNTRY`, the
+  market that earns, and says so in its heading. The deals and cheapest-boxes sections above it still show every
+  market.
+- The rules hold: an eBay row is never a store, a deal or "the cheapest"; no "was" price or countdown; asking
+  prices, not sales. One Piece has no vintage, so the high end is graded, sealed and the chase strip.

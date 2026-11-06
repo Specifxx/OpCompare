@@ -119,6 +119,9 @@ export async function snapEbayPanel(productId: number): Promise<EbayPanelData> {
 }
 
 /** Every product's slabs (the /graded guide). */
+/** The whole eBay file: every product's listings and slabs (the sale pages' price watch reads both once). */
+export const snapEbay = (): Promise<SnapshotEbay> => need<SnapshotEbay>("ebay.json.gz");
+
 export async function snapEbayGraded(): Promise<SnapshotEbay["graded"]> {
   return (await need<SnapshotEbay>("ebay.json.gz")).graded;
 }
