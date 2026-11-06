@@ -175,6 +175,9 @@ through `/api/promo` and `getLaunchPromo()` in `data.ts`, never the table)
 the mail module). Nothing under `src/app` imports `src/lib/email.ts` or a module that sends
 (`tests/no-email-api.test.ts`): every email is sent script-side from GitHub Actions, only once
 both mail secrets exist, and pages decide what to promise from `getEmailStatus()`.
+`src/lib/email-sign-in.ts` (2026-11-06) joins on the same terms: it verifies an emailed sign-in token (RiftCompare
+mails it and signs it; we check its public key) and signs into or creates that account, called only from
+`/api/auth/email-link`.
 Nothing under `src/app` imports `@/lib/db` (`tests/app-no-db-import.test.ts`).
 Admin pages read through uncached `src/lib/admin*.ts`; public forms write
 through `src/lib/inbox.ts`. Share images read only `src/lib/data.ts` loaders

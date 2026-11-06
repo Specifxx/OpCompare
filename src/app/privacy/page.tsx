@@ -19,9 +19,12 @@ export default function Privacy() {
       </p>
       <h2>If you create an account</h2>
       <p>
-        You sign in with Google or Discord. We receive and keep your name, email
-        address, profile picture and that provider&apos;s account id, plus the
-        date you joined and last signed in. We never see your password. We use
+        You sign in with Google, Discord or a one-time link we email you. We
+        receive and keep your name, email address, profile picture and that
+        provider&apos;s account id, plus the date you joined and last signed in.
+        A sign-in link is emailed for us by our sister site RiftCompare
+        (riftcompare.com), which uses your address only to send it. There is no
+        password, and we never see your Google or Discord one. We use
         them to sign you in and to run your plan, and we don&apos;t sell or
         share them.
       </p>

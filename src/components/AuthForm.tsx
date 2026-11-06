@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { OAuthProvider } from "@/lib/oauth";
 import { parseSignupSource } from "@/lib/signup-source-shared";
+import { EmailSignInForm } from "./EmailSignInForm";
 
 // RiftCompare's AuthForm: "Create your free account" with the perks, an error
 // line for a failed OAuth round trip (?error=), and Google / Discord buttons.
@@ -125,13 +126,21 @@ export function AuthForm({
             </a>
           )}
         </div>
+        {/* Any address, no Google or Discord needed (2026-11-06, lib/email-sign-in.ts). */}
+        <div className="mt-2.5">
+          <EmailSignInForm next={next} />
+        </div>
         {providers.length === 0 && (
           <p className="mt-5 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">Sign-in is temporarily unavailable. Please try again shortly.</p>
         )}
-        <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>New here? Either button creates your account on the spot.</p>
+        <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>New here? Any of these creates your account on the spot.</p>
         {!compact && (
           <p className="mt-2 text-center text-xs text-slate-500">
-            We only read your name, email and picture. See our{" "}
+            We only read your name, email and picture. Trouble signing in?{" "}
+            <a href="/contact" className="text-brand-400 hover:underline">
+              Contact us
+            </a>
+            . See our{" "}
             <a href="/privacy" className="text-brand-400 hover:underline">
               privacy policy
             </a>

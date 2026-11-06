@@ -7,9 +7,9 @@ const read = (p: string) => fs.readFileSync(new URL(`../${p}`, import.meta.url),
 
 test("a buy link becomes a small, lower-cased event with the seller kind", () => {
   assert.deepEqual(buyClickProps({ retailer: "store:Cherry", page: "card", card: "Monkey-D-Luffy-OP16-015", surface: "price-board" }, "/card/x"), {
-    retailer: "store:cherry", network: "store", page: "card", card: "monkey-d-luffy-op16-015", surface: "price-board",
+    retailer: "store:cherry", network: "store", page: "card", link_type: "product", card: "monkey-d-luffy-op16-015", surface: "price-board",
   });
-  assert.deepEqual(buyClickProps({ retailer: "ebay_search", page: null, card: null, surface: null }, "/price-guide"), { retailer: "ebay_search", network: "ebay", page: "price-guide" });
+  assert.deepEqual(buyClickProps({ retailer: "ebay_search", page: null, card: null, surface: null }, "/price-guide"), { retailer: "ebay_search", network: "ebay", page: "price-guide", link_type: "product" });
   assert.equal(buyClickProps({ retailer: "tcgplayer", page: "deal-finder", card: "", surface: " " }, "/")?.network, "tcgplayer");
 });
 

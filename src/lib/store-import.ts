@@ -17,6 +17,10 @@ import { platformOf, type StoreInfo } from "./stores";
 import { fetchWooStore } from "./woocommerce";
 
 export interface ShopifyVariant {
+  // Shopify's variant id; other platforms' readers leave it out. It becomes
+  // `?variant=<id>` on an in-stock row's URL, which the buy link turns into the
+  // store's checkout (lib/checkout-link.ts).
+  id?: number;
   title: string;
   price: string;
   available: boolean;
