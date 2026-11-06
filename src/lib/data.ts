@@ -13,7 +13,7 @@ import { SNAPSHOT_FRESH_MS, snapshotFile } from "./price-snapshot";
 import { CLUSTER_FILE, validCluster, type FamilyFeed } from "./family-network";
 import { decodeLastKnownRow, type LastKnown, type LastKnownFile } from "./last-known";
 import {
-  snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbayGraded, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
+  snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbay, snapEbayGraded, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
   snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreListings, snapStorePrices, snapStoreStats,
 } from "./price-snapshot-read";
 
@@ -1232,6 +1232,13 @@ export async function getSetChecklist(setId: number, market: Country): Promise<C
 // wrap one in another unstable_cache and never call one from inside a cache
 // callback. Entries stay small (the largest is under 100 KB).
 import { gradedGuideRows, type GradedGuideRow } from "./graded-guide";
+import { dropsWatch, gradedWatch, sealedWatch, type DropWatchRow, type GradedWatchRow, type SealedWatchRow } from "./price-watch";
+
+export interface PriceWatchData {
+  sealed: SealedWatchRow[];
+  drops: DropWatchRow[];
+  graded: GradedWatchRow[];
+}
 import { PANEL_MAX_AGE_HOURS, PICKS_MAX_AGE_HOURS, isChasePrinting, panelTitle, type ChaseTile, type EbayPanelData, type PickCard } from "./listing-panel";
 
 /**
@@ -1279,6 +1286,29 @@ export const getGradedGuide = unstable_cache(
     return gradedGuideRows(graded, cards, market);
   },
   ["graded-guide-v1"],
+  { tags: [PRICES_TAG], revalidate: TTL },
+);
+
+/**
+ * The Black Friday / Cyber Monday price watch for one market (lib/price-watch.ts;
+ * DECISIONS.md 2026-11-06): the sealed shelf with each product's cheapest eBay
+ * row, the steepest seven-day falls with their eBay listing, and the dearest
+ * live slab per card. The whole snapshot is read once here and reduced to a few
+ * dozen rows: tens of KB, held six hours like every page buyers act on.
+ */
+export const getPriceWatch = unstable_cache(
+  async (market: Country): Promise<PriceWatchData> => {
+    const [sealed, core, pr, ebay, cards] = await Promise.all([snapSealedCatalog(), readCore(), snapPrices(), snapEbay(), snapCardsById()]);
+    const candidates = sealed.filter((s) => !s.presale && s.low[market] != null && s.stores[market] > 0);
+    const offers = await snapOffersOf(candidates.map((s) => s.id));
+    const catalog = catalogOf(core, pr, false);
+    return {
+      sealed: sealedWatch(candidates, offers, market),
+      drops: dropsWatch(catalog.cards, ebay.listings, market),
+      graded: gradedWatch(ebay.graded, cards, market),
+    };
+  },
+  ["price-watch-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
 // ── end wave2:catalogue ──
