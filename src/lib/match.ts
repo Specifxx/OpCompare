@@ -594,13 +594,15 @@ export function conditionLabel(label: string | null | undefined): string | null 
 }
 
 export interface StoreVariant {
+  // Shopify's variant id (products.json carries it): the cart link's key (lib/checkout-link.ts).
+  id?: number;
   title: string;
   price: string;
   available: boolean;
 }
 
 /** Best condition first, then cheapest, among in-stock variants. Null = nothing buyable. */
-export function bestVariant(variants: StoreVariant[]): { priceCents: number; condition: string | null } | null {
+export function bestVariant(variants: StoreVariant[]): { priceCents: number; condition: string | null; variantId?: number } | null {
   const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !/japanese|jp\b|chinese/i.test(v.title));
   if (!ok.length) return null;
   const best = ok.reduce((a, b) => {
@@ -609,7 +611,7 @@ export function bestVariant(variants: StoreVariant[]): { priceCents: number; con
     if (ra !== rb) return ra < rb ? a : b;
     return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
   });
-  return { priceCents: Math.round(parseFloat(best.price) * 100), condition: conditionLabel(best.title) };
+  return { priceCents: Math.round(parseFloat(best.price) * 100), condition: conditionLabel(best.title), ...(best.id != null ? { variantId: best.id } : {}) };
 }
 
 /** Cheapest variant of any condition (for out-of-stock listings we still show greyed). */

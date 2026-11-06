@@ -14,6 +14,7 @@
 // Compare's revenue is separable from RiftCompare's (`rc-…`) in both networks'
 // own reports, on the same accounts.
 import { dealForHost, partnerRefUrl } from "./store-partner-deals";
+import { shopifyCartUrl } from "./checkout-link";
 import { awinProgrammeFor, awinUrl, clickref } from "./awin";
 import { SITE_URL } from "./site";
 import type { Country } from "./country";
@@ -174,6 +175,16 @@ export function affiliateUrl(url: string | null | undefined, subId = "opcompare"
     if (!page?.startsWith("email")) {
       const awin = awinUrl(u.toString(), clickref("op", page));
       if (awin) return awin;
+      // Straight to checkout (lib/checkout-link.ts, owner 2026-11-06): a Shopify row whose
+      // priced variant the import recorded opens the store's checkout with it in the cart.
+      // Only for a store with no programme of its own (partner and Awin returned above:
+      // their tracking runs on the store's own pages), and never in an email.
+      const cart = shopifyCartUrl(u.toString());
+      if (cart) {
+        const c = new URL(cart);
+        c.searchParams.set("utm_content", "checkout");
+        return c.toString();
+      }
     }
     if (/^https?:$/.test(u.protocol)) return u.toString();
   } catch {
