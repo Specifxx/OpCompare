@@ -17,6 +17,7 @@ import { Navbar } from "@/components/Navbar";
 import QuickViewProvider from "@/components/QuickViewProvider";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { SideNav } from "@/components/SideNav";
+import { SideRails } from "@/components/SideRails";
 import { PlanProvider } from "@/components/PlanProvider";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
@@ -172,6 +173,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <MegaMenuProvider>
                 <Navbar />
                 <SideNav />
+                {/* eBay and TCGplayer side rails from 1280px (SideRails.tsx; owner, 2026-11-06): browser-only, fixed beside the
+                    column, nothing in the server HTML; none for ad-free members. */}
+                <SideRails />
                 {/* RiftCompare's shell: the rail reservation on an OUTER wrapper,
                     the content container on <main> (a pl-* and container-app's
                     px-* on one element fight over padding-left). Pages never add

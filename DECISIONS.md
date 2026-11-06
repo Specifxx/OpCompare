@@ -3798,3 +3798,17 @@ sites shares its thumbs; this site stores nothing and fetches the tally in the b
 step). One vote per browser per store, a few per network, marketplaces (eBay, Amazon, TCGplayer…) get none. Votes never
 order prices, hide a store or decide the cheapest. RiftCompare's DECISIONS.md, 2026-11-06, has the rules; change the
 component there first and copy it.
+
+## 2026-11-06 — Side rails: eBay left, TCGplayer right, a thinner column from 1280px
+
+**Decision (owner: DexCompare's and MTG Compare's layout, "the actual site is a little thinner and then you have the two ad
+banners, one for eBay, one for TCGplayer, on the sides … on the home page … and when you go to other pages"):** from
+1280px `container-app` (main, the ad zone, the footer) narrows to `min(1400px, 100% - 320px)`, and
+`components/SideRails.tsx` fixes a 136px rail 12px outside each side of it on every page: MiniChaseAds' chase cards
+(`/api/chase`, the same CDN-held answer), the eBay rail beside the navigation rail (the live listing in the visitor's
+market first, an eBay search for the card for the rest of the ten), TCGplayer's market price on the right.
+
+- Browser only, from 1280px and a window tall enough for one tile: nothing in the server HTML, no SEO change, CLS 0.
+- Ad-free for Plus and Premium (`data-ad-placement`, and no rails while `data-adfree` is set), and members keep the
+  full-width column (`:root:not([data-adfree])`).
+- Labelled "Ad", affiliate links, `data-surface="side_rails"`, retailers `ebay_side`, `ebay_side_search`, `tcgplayer_side`.
