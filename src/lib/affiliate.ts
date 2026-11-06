@@ -14,6 +14,7 @@
 // Compare's revenue is separable from RiftCompare's (`rc-…`) in both networks'
 // own reports, on the same accounts.
 import { dealForHost, partnerRefUrl } from "./store-partner-deals";
+import { awinProgrammeFor, awinUrl, clickref } from "./awin";
 import { SITE_URL } from "./site";
 import type { Country } from "./country";
 
@@ -167,8 +168,14 @@ export function affiliateUrl(url: string | null | undefined, subId = "opcompare"
       u.searchParams.set("utm_source", "opcompare");
       u.searchParams.set("utm_medium", "referral");
       u.searchParams.set("utm_campaign", page ?? "home");
-      return u.toString();
     }
+    // A store that accepted the family on Awin (src/lib/awin.ts): the same page through its tracked deep link.
+    // Never in an email: most Awin advertisers allow email promotion only by separate approval.
+    if (!page?.startsWith("email")) {
+      const awin = awinUrl(u.toString(), clickref("op", page));
+      if (awin) return awin;
+    }
+    if (/^https?:$/.test(u.protocol)) return u.toString();
   } catch {
     /* not an absolute URL — leave it untouched */
   }
@@ -186,6 +193,7 @@ export function isPaidLink(href: string | null | undefined): boolean {
     const u = new URL(href);
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
     if (/(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return Boolean(TCGPLAYER_IMPACT_LINK);
+    if (/(?:^|\.)awin1\.com$/i.test(u.hostname) || awinProgrammeFor(href)) return true;
     return dealForHost(u.hostname)?.ref != null;
   } catch {
     return false;
