@@ -79,6 +79,7 @@ export function CardStickyBuyBar({
   return (
     <div
       ref={bar}
+      data-buybar=""
       aria-hidden={!show}
       className={`fixed inset-x-0 bottom-0 z-header border-t border-ink-700 bg-ink-950/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur transition-transform duration-base lg:hidden ${
         show ? "translate-y-0" : "pointer-events-none translate-y-[120%]"
