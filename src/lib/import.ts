@@ -47,6 +47,7 @@ import {
 } from "./match";
 import { STORES, platformOf, type StorePlatform, type StoreInfo } from "./stores";
 import { fetchStoreListings, productUrl, type StoreRead } from "./store-import";
+import { withShopifyVariant } from "./checkout-link";
 import { SITE_URL } from "./site";
 import { HISTORY_BUCKETS, KEEP_DAYS, addDays, bucketOf, changeOver, dayNum, highOver, nextIndex, withPoint, type DayFile } from "./history";
 import { historyDir, readBucket, readIndex, recentOf, writeBucket, writeDay, writeIndex, writeRecentBucket } from "./history-store";
@@ -367,7 +368,10 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
         res.misses["implausible-price"] = (res.misses["implausible-price"] ?? 0) + 1;
         continue;
       }
-      const d: OfferDraft = { productId: id, priceCents: price, inStock: Boolean(best), condition: isSealed.has(id) ? null : best?.condition ?? null, title: p.title.slice(0, 300), url: productUrl(store, p) };
+      // The priced variant on the URL, in-stock Shopify rows only: the buy link opens
+      // the store's checkout with exactly this copy in the cart (lib/checkout-link.ts).
+      const offerUrl = best && res.platform === "shopify" && !p.url ? withShopifyVariant(productUrl(store, p), best.variantId) : productUrl(store, p);
+      const d: OfferDraft = { productId: id, priceCents: price, inStock: Boolean(best), condition: isSealed.has(id) ? null : best?.condition ?? null, title: p.title.slice(0, 300), url: offerUrl };
       const prev = drafts.get(id);
       drafts.set(id, prev ? better(prev, d) : d);
     }

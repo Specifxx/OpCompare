@@ -23,7 +23,7 @@ function BuyClickEvents() {
       const a = (e.target as Element | null)?.closest?.("a[data-retailer]");
       if (!a || location.pathname.startsWith("/admin")) return;
       const props = buyClickProps(
-        { retailer: a.getAttribute("data-retailer"), page: a.getAttribute("data-page"), card: a.getAttribute("data-card"), surface: a.getAttribute("data-surface") },
+        { retailer: a.getAttribute("data-retailer"), page: a.getAttribute("data-page"), card: a.getAttribute("data-card"), surface: a.getAttribute("data-surface"), href: (a as HTMLAnchorElement).href },
         location.pathname,
       );
       if (!props) return;
