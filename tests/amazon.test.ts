@@ -53,3 +53,10 @@ test("placed on sealed pages only, as the second row right under eBay (owner, 20
   for (const f of ["src/components/PriceBoard.tsx", "src/components/PriceBoardView.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);
   assert.ok(read("src/components/Footer.tsx").includes(AMAZON_STATEMENT));
 });
+
+test("the sealed quick view's Amazon row is the page's tagged search, never Amazon's price (owner, 2026-11-06)", () => {
+  const qv = readFileSync("src/components/SealedQuickView.tsx", "utf8");
+  assert.match(qv, /amazonSearchUrl\(country as Country, data\.name, "sealed-quickview-amazon"\)/);
+  assert.match(qv, /rel=\{AMAZON_REL\}/);
+  assert.doesNotMatch(qv, /AmazonLiveSlot|\/api\/amazon\//, "the price stays on the sealed page");
+});
