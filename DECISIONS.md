@@ -3874,3 +3874,15 @@ a word, so phones show one at a time.
 
 **Measure:** the dock's placements against the strips' in the ~11-10 / ~11-17 checks. If pages per visit drop on phones,
 raise DOCK_ARM or drop the dock from that site first.
+## 2026-11-06 — A cart list on every site
+
+**Decision (owner: "I really like the cart feature … all of our websites"; built on RiftCompare first, TCGEmpire
+#346):** every store row on the card and sealed boards gets an "Add to cart" button, and the header a cart with its
+count on every width. `/cart` (static, noindexed) groups the lines by store with ONE "Check out at <store>" button per
+store: Shopify's cart permalink `/cart/<variant>:<qty>,…`, which fills that store's cart and opens its checkout. The list
+lives in the visitor's browser only (`localStorage` `ce_cart_v1`): no account, no database, no function. The page
+re-checks each line's price and stock from the store's own `/products/<handle>.js` in the browser and leaves a sold-out
+line out. A line is cartable only when the row's own buy link already is a cart permalink ("Buy links open the store's
+checkout"), so Awin and partner stores stay manual lines on their tracked links; eBay, TCGplayer and Amazon are never
+lines. `BoardRow.productUrl` carries the store's product URL for the live check. Shared files (port fixes by hand):
+`src/lib/cart-list.ts`, `src/components/cart/*` (`cart-config.ts` is per site), `tests/cart-list.test.ts`.

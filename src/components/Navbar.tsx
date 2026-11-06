@@ -11,6 +11,7 @@ import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
 import { HeaderWatchButton } from "./HeaderWatchButton";
+import { CartHeaderLink } from "./cart/CartHeaderLink";
 
 // The top bar — RiftCompare's Navbar, a SERVER component with client islands.
 // NavbarShell owns the scroll state; everything in here renders once.
@@ -82,6 +83,8 @@ export function Navbar() {
           <ThemeToggle className="hidden lg:grid" />
           <CountrySwitcher className="hidden min-[360px]:block sm:ml-1" />
           <NavUser />
+          {/* The cart list (components/cart, owner 2026-11-06): every width, with its count. */}
+          <CartHeaderLink className="text-slate-300 hover:text-white" />
           <HeaderWatchButton className="hidden sm:inline-flex" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
