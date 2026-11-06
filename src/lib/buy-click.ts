@@ -6,7 +6,11 @@
 // A link opts in with the attributes every buy link already carries:
 // data-retailer ("store:<key>", "tcgplayer", "ebay_search" …), data-page,
 // data-card (the product's slug) and data-surface (the block on the page).
-export type BuyClickProps = { retailer: string; network: "store" | "tcgplayer" | "ebay" | "other"; page: string; surface?: string; card?: string };
+import { isCheckoutLink } from "./checkout-link";
+
+// link_type: did the click open the store's checkout with the item in the cart, or a
+// product page (lib/checkout-link.ts, 2026-11-06)?
+export type BuyClickProps = { retailer: string; network: "store" | "tcgplayer" | "ebay" | "other"; page: string; link_type: "checkout" | "product"; surface?: string; card?: string };
 
 const clip = (v: string | null | undefined, max = 120): string | undefined => {
   const s = (v ?? "").trim().toLowerCase().slice(0, max);
@@ -26,10 +30,10 @@ export function pageFromPath(pathname: string): string {
 }
 
 /** The event's properties for one clicked link, or null when it carries no retailer. */
-export function buyClickProps(attrs: { retailer: string | null; page: string | null; card: string | null; surface: string | null }, pathname: string): BuyClickProps | null {
+export function buyClickProps(attrs: { retailer: string | null; page: string | null; card: string | null; surface: string | null; href?: string | null }, pathname: string): BuyClickProps | null {
   const retailer = clip(attrs.retailer, 60);
   if (!retailer) return null;
-  const out: BuyClickProps = { retailer, network: networkOf(retailer), page: clip(attrs.page, 40) ?? pageFromPath(pathname) };
+  const out: BuyClickProps = { retailer, network: networkOf(retailer), page: clip(attrs.page, 40) ?? pageFromPath(pathname), link_type: isCheckoutLink(attrs.href) ? "checkout" : "product" };
   const surface = clip(attrs.surface, 60);
   const card = clip(attrs.card, 160);
   if (surface) out.surface = surface;

@@ -3813,6 +3813,21 @@ market first, an eBay search for the card for the rest of the ten), TCGplayer's 
   full-width column (`:root:not([data-adfree])`).
 - Labelled "Ad", affiliate links, `data-surface="side_rails"`, retailers `ebay_side`, `ebay_side_search`, `tcgplayer_side`.
 
+## 2026-11-06 — Buy links open the store's checkout
+
+**Decision (owner: "every time you click a link it goes straight to checkout … live on OP Compare right now"):** a
+Shopify store row that is in stock opens that store's checkout with the priced copy in the cart, through Shopify's own
+cart permalink (`/cart/<variant id>:1`), as RiftCompare has since the same morning (TCGEmpire #340). The import
+(`lib/import.ts`) records the variant `bestVariant` priced as `?variant=<id>` on the offer URL, in-stock Shopify rows
+only, so the stored URL is still the product page (with that variant picked) for the snapshot, emails and everything
+else that reads it; `affiliateUrl` turns it into the cart link at render time, keeping `utm_source=opcompare` and
+adding `utm_content=checkout`. `lib/checkout-link.ts` holds the rules (`tests/checkout-link.test.ts`).
+
+**Never where tracking or freshness would be lost:** a store with a partner code or on Awin keeps its product page
+(their tracking runs on the store's own pages, which checkout skips; both return before the rewrite); emails keep it;
+a sold-out row, another platform's listing or a row from before this import keeps it. eBay, TCGplayer and Amazon keep
+their pages. `buy_click` carries `link_type` (checkout / product) in Vercel Analytics. If checkout loses clicks or a
+store complains, revert by removing the `shopifyCartUrl` block in `affiliateUrl`.
 ## 2026-11-06 — Email sign-in links, mailed by RiftCompare
 
 **Decision (owner, carrying RiftCompare's "code red" fix to every site with accounts; RiftCompare DECISIONS.md "OP
