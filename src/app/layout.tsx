@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
+// The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
+import "@/components/cart/cart.css";
 import "@/components/site-reviews/site-reviews.css";
 import { RateCard } from "@/components/site-reviews/RateCard";
 import dynamic from "next/dynamic";

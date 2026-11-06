@@ -9,6 +9,7 @@ import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { Ago } from "./Ago";
 import { StoreVote } from "./StoreVote";
+import { CartAddButton } from "./cart/CartAddButton";
 import { ReportPriceButton } from "./ReportPriceButton";
 
 // The price comparison (RiftCompare's card-page board): every open offer in one
@@ -40,7 +41,10 @@ export function PriceBoardView({
   preRelease = false,
   tcgRef,
   thirdRow,
+  image = null,
 }: {
+  /** The product's picture, for the cart list's line (components/cart). */
+  image?: string | null;
   model: BoardModel;
   productId: number;
   country: Country;
@@ -186,6 +190,10 @@ export function PriceBoardView({
                     <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
                   ) : null}
                 </span>
+                {/* The cart list (components/cart, owner 2026-11-06): stores only, never eBay or TCGplayer. */}
+                {o.host && !isEbay && !tcg ? (
+                  <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="text-slate-300" />
+                ) : null}
                 <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>

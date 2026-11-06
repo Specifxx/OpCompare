@@ -21,7 +21,9 @@ export function PriceBoard({
   name,
   preRelease = false,
   thirdRow,
+  image,
 }: {
+  image?: string | null;
   productId: number;
   offers: OfferRow[];
   country: Country;
@@ -54,6 +56,7 @@ export function PriceBoard({
       name={name}
       preRelease={preRelease}
       thirdRow={thirdRow}
+      image={image}
     />
   );
 }

@@ -35,6 +35,8 @@ export interface BoardRow {
   played?: string;
   /** A store's host, for the shared thumbs up / down (components/StoreVote.tsx); never on an eBay row. */
   host?: string;
+  /** The store's own product URL, for the cart list's live check (components/cart); never on an eBay row. */
+  productUrl?: string;
 }
 
 /** A store that has stocked it here and is sold out (one row per store, newest observation). */
@@ -84,6 +86,7 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
     if (pd) row.played = playedDiscountText(pd);
     const host = isEbay ? null : hostOf(o.url);
     if (host) row.host = host;
+    if (host) row.productUrl = o.url;
     return row;
   });
   // Sold-out disclosure: one row per distinct store (a store can hold several

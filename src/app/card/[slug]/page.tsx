@@ -538,6 +538,7 @@ export default async function CardPage({ params }: Props) {
             id="price-comparison"
             slug={card.slug}
             name={title}
+            image={card.hasImage ? cardImage.large(card.id) : null}
             preRelease={preRelease}
             tcgRef={{ marketUsd: card.marketUsd, href: tcgHref }}
           />

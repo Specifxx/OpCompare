@@ -250,6 +250,7 @@ export default async function SealedDetailPage({ params }: Props) {
             noun="product"
             slug={s.slug}
             name={s.name}
+            image={s.imageUrl ?? null}
             /* Amazon (lib/amazon.ts): a search on the visitor's Amazon, the third pinned row after eBay and TCGplayer
                (owner, 2026-11-03; above the board 2026-10-30 to 2026-11-03). */
             thirdRow={<AmazonCheck country={country} name={s.name} slug={s.slug} />}
