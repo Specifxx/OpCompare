@@ -84,17 +84,22 @@ export function Navbar() {
           <CountrySwitcher className="hidden min-[360px]:block sm:ml-1" />
           <NavUser />
           {/* The cart list (components/cart, owner 2026-11-06): every width, with its count. */}
-          <CartHeaderLink className="text-slate-300 hover:text-white" />
+          <CartHeaderLink className="hidden text-slate-300 hover:text-white sm:inline-flex" />
           <HeaderWatchButton className="hidden sm:inline-flex" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
        </div>
-        <div className="pb-3 xl:hidden">
+        <div className="flex items-center gap-1 pb-3 xl:hidden">
+          {/* Below sm the cart sits beside the search, not in the top row: the top row has no
+              44px to spare at 320-430px (owner, 2026-11-06: "Pricing" ran under the flag). */}
+          <div className="min-w-0 flex-1">
           <HeaderSearchSlot mobile>
             <Suspense fallback={<div className="input" />}>
               <CardSearch />
             </Suspense>
           </HeaderSearchSlot>
+          </div>
+          <CartHeaderLink className="shrink-0 text-slate-300 hover:text-white sm:hidden" />
         </div>
       </div>
     </NavbarShell>
