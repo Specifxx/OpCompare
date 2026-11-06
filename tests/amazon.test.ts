@@ -32,19 +32,22 @@ test("the link: a tagged search on the market's Amazon, ascsubtag oc-<market>-<p
   assert.equal(AMAZON_REL, "sponsored nofollow noopener");
 });
 
-test("placed on sealed pages only, as the third pinned row after eBay and TCGplayer (owner, 2026-11-03); Amazon's own price only through the live slot", () => {
+test("placed on sealed pages only, as the second row right under eBay (owner, 2026-11-06); Amazon's own price only through the live slot", () => {
   const sealed = read("src/app/sealed/[slug]/page.tsx");
   assert.match(sealed, /thirdRow=\{<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>\}/);
   const view = read("src/components/PriceBoardView.tsx");
-  assert.match(view, /at === pins\.length - 1 \? <Fragment key="third-row">\{thirdRow\}<\/Fragment>/, "right after the pinned pair");
-  assert.match(view, /\{pins\.length \? null : thirdRow\}/, "first of the board when nothing is pinned");
+  assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}<\/Fragment>/, "right after the eBay row");
+  assert.match(view, /\{hasEbayRow \? null : thirdRow\}/, "right after eBay's search row when eBay has no listing");
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
   assert.match(comp, />Ad</, "labelled Ad");
   const slot = read("src/components/AmazonLiveSlot.tsx");
   assert.match(slot, /rel=\{AMAZON_REL\}/);
   assert.match(slot, /"data-retailer":/, "counted like every outbound link");
-  assert.doesNotMatch(comp + slot, /money\(|priceCents|Prime|rating/, "no Amazon price computed here (the route answers it formatted), no rating or Prime");
+  assert.doesNotMatch(comp + slot, /money\(|Prime|rating/, "no Amazon price computed here (the route answers it formatted), no rating or Prime");
+  // The route's own cents go only to the cart list's line (owner, 2026-11-06), which drops them after 24 hours.
+  const relayed = (comp + slot).replace(/priceCents\?: number|live\.priceCents|priceCents=\{live\.priceCents\}/g, "");
+  assert.doesNotMatch(relayed, /priceCents/, "priceCents only relayed to the cart");
   assert.match(slot, /\/api\/amazon\/sealed\//, "the price comes from the CDN-cached route (2026-11-05)");
   assert.match(read("src/app/sealed/page.tsx"), /amazonSearchUrl\(country, x\.q, "sealed-page"\)/);
   for (const f of ["src/components/PriceBoard.tsx", "src/components/PriceBoardView.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);

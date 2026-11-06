@@ -3,7 +3,7 @@ import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
 import { ebayLabel, outboundRel } from "@/lib/affiliate";
-import { pinnedOrder } from "@/lib/pinned-order";
+import { PIN_OUTLINE, pinnedOrder } from "@/lib/pinned-order";
 import { money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
@@ -99,7 +99,7 @@ export function PriceBoardView({
       {!hasEbayRow || showTcgRef ? (
         <ol className="divide-y divide-ink-800 border-b border-ink-800">
           {hasEbayRow ? null : (
-            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+            <li className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.ebay}`}>
               <span className="w-5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
@@ -117,6 +117,8 @@ export function PriceBoardView({
               </a>
             </li>
           )}
+          {/* The slot's row (thirdRow) is the second row, right under eBay (owner, 2026-11-06). */}
+          {hasEbayRow ? null : thirdRow}
           {showTcgRef && tcgRef?.marketUsd != null ? (
             <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
               <span className="w-5 shrink-0" />
@@ -139,12 +141,10 @@ export function PriceBoardView({
               </a>
             </li>
           ) : null}
-          {open.length ? null : thirdRow}
         </ol>
       ) : null}
       {open.length ? (
         <ol className="divide-y divide-ink-800">
-          {pins.length ? null : thirdRow}
           {ordered.map((o, at) => {
             const i = open.indexOf(o);
             const pinned = o === pinEbay || o === pinTcg;
@@ -152,7 +152,7 @@ export function PriceBoardView({
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
             return [
-              <li key={`${o.source}-${country}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <li key={`${o.source}-${country}`} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
@@ -164,7 +164,7 @@ export function PriceBoardView({
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
                     {o.condition ? <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{o.condition}</span> : null}
                     {tcg ? <span>lowest listing</span> : null}
-                    {isEbay ? null : (
+                    {tcg ? null : (
                       <span className="flex items-center gap-1 text-emerald-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                         In stock
@@ -190,8 +190,8 @@ export function PriceBoardView({
                     <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
                   ) : null}
                 </span>
-                {/* The cart list (components/cart, owner 2026-11-06): stores only, never eBay or TCGplayer. */}
-                {o.host && !isEbay && !tcg ? (
+                {/* The cart list (components/cart, owner 2026-11-06): store and eBay rows, never TCGplayer. */}
+                {o.host && !tcg ? (
                   <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="text-slate-300" />
                 ) : null}
                 <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
@@ -201,7 +201,7 @@ export function PriceBoardView({
                   →
                 </a>
               </li>,
-              at === pins.length - 1 ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
+              o === pinEbay ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
             ];
           })}
         </ol>
