@@ -8,6 +8,7 @@ import { money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { Ago } from "./Ago";
+import { StoreVote } from "./StoreVote";
 import { ReportPriceButton } from "./ReportPriceButton";
 
 // The price comparison (RiftCompare's card-page board): every open offer in one
@@ -152,6 +153,7 @@ export function PriceBoardView({
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-[15px] font-semibold text-white">{o.label}</span>
+                    {o.host && <StoreVote url={o.host} name={o.label} className="text-slate-400" />}
                     {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
                   </p>
                   {isEbay ? <p className="mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
@@ -237,7 +239,7 @@ export function PriceBoardView({
           <ul className="divide-y divide-ink-800 border-t border-ink-800">
             {sold.map((o) => (
               <li key={`${o.source}-sold`} className="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-400">
-                <span className="flex-1 truncate">{o.label}</span>
+                <span className="flex min-w-0 flex-1 items-center gap-2"><span className="truncate">{o.label}</span>{o.host && <StoreVote url={o.host} name={o.label} className="shrink-0 text-slate-500" />}</span>
                 <span className="text-xs">
                   last seen <Ago at={o.updatedAt} now={now} /> · {money(o.priceCents, country)}
                 </span>

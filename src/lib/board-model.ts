@@ -33,6 +33,8 @@ export interface BoardRow {
   policyUrl?: string;
   /** "LP · 22% under the cheapest NM here". */
   played?: string;
+  /** A store's host, for the shared thumbs up / down (components/StoreVote.tsx); never on an eBay row. */
+  host?: string;
 }
 
 /** A store that has stocked it here and is sold out (one row per store, newest observation). */
@@ -43,6 +45,7 @@ export interface BoardSoldRow {
   priceCents: number;
   href: string;
   updatedAt: string;
+  host?: string;
 }
 
 export interface BoardModel {
@@ -79,6 +82,8 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
     if (isPaidLink(o.url)) row.paid = true;
     if (store?.policyUrl) row.policyUrl = store.policyUrl;
     if (pd) row.played = playedDiscountText(pd);
+    const host = isEbay ? null : hostOf(o.url);
+    if (host) row.host = host;
     return row;
   });
   // Sold-out disclosure: one row per distinct store (a store can hold several
@@ -97,6 +102,7 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
       priceCents: o.priceCents,
       href: affiliateUrl(o.url, retailerSubId(o.source), page),
       updatedAt: o.updatedAt,
+      ...(hostOf(o.url) ? { host: hostOf(o.url)! } : {}),
     }));
   const elsewhere = MARKETS.filter((m) => m !== country)
     .map((m) => {
@@ -105,4 +111,13 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
     })
     .filter((x): x is { m: Country; cents: number } => x != null);
   return { rows, sold, elsewhere, ebaySearch: ebaySearchUrl(country, opts.ebayQuery, `${page}-board`) };
+}
+
+/** "https://www.store.com/x" → "www.store.com"; null when the URL does not parse. */
+function hostOf(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
 }
