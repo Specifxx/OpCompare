@@ -3775,3 +3775,14 @@ listings), and give the high end its own prominent sections.
   market.
 - The rules hold: an eBay row is never a store, a deal or "the cheapest"; no "was" price or countdown; asking
   prices, not sales. One Piece has no vintage, so the high end is graded, sealed and the chase strip.
+
+## 2026-11-06 — Awin: a store that accepts the family pays from the next build, with no step by hand
+
+**Decision (owner: "check if we are making the most of Awin, and if it's not there, just do it"):** the family's Awin
+account (Compare Empire, publisher 3144410) is read each morning by Compare Empire's `scripts/awin-sync.ts`, which
+publishes the programmes that accepted us, with their tracked domains, in its public `data/awin/programmes.json`. This
+site copies it in its build (`scripts/fetch-awin.ts` → `src/lib/awin-programmes.json`; the committed copy is an empty
+list). `affiliateUrl` turns a link to a joined advertiser's own domain into its Awin deep link (`clickref=op-<page>`)
+after the eBay, TCGplayer and partner-code branches, and `isPaidLink` marks it "Paid link". Never in an email (`loc`
+under `/email…`): most Awin advertisers allow email promotion only by separate approval. Order and prices never change.
+OP builds once a week, so a new approval earns from the next Monday release.
