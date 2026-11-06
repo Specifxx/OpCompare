@@ -33,9 +33,9 @@ export interface BoardRow {
   policyUrl?: string;
   /** "LP · 22% under the cheapest NM here". */
   played?: string;
-  /** A store's host, for the shared thumbs up / down (components/StoreVote.tsx); never on an eBay row. */
+  /** A store's host, for the shared thumbs up / down (components/StoreVote.tsx); an eBay row's too since 2026-11-06. */
   host?: string;
-  /** The store's own product URL, for the cart list's live check (components/cart); never on an eBay row. */
+  /** The store's own product URL, for the cart list (components/cart); an eBay row's listing too since 2026-11-06. */
   productUrl?: string;
 }
 
@@ -84,7 +84,8 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
     if (isPaidLink(o.url)) row.paid = true;
     if (store?.policyUrl) row.policyUrl = store.policyUrl;
     if (pd) row.played = playedDiscountText(pd);
-    const host = isEbay ? null : hostOf(o.url);
+    // eBay rows are full price rows (owner, 2026-11-06): thumbs and the cart list like a store row.
+    const host = hostOf(o.url);
     if (host) row.host = host;
     if (host) row.productUrl = o.url;
     return row;

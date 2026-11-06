@@ -3886,3 +3886,18 @@ line out. A line is cartable only when the row's own buy link already is a cart 
 checkout"), so Awin and partner stores stay manual lines on their tracked links; eBay, TCGplayer and Amazon are never
 lines. `BoardRow.productUrl` carries the store's product URL for the live check. Shared files (port fixes by hand):
 `src/lib/cart-list.ts`, `src/components/cart/*` (`cart-config.ts` is per site), `tests/cart-list.test.ts`.
+
+## 2026-11-06 — eBay and Amazon rows are full price rows, on top, outlined
+
+**Decision (owner: "eBay prices and Amazon prices should function exactly like a normal store price row. So you can also
+add to cart … if it's in stock … it just sits on the very top. And it has a different colored outline"):** the eBay row
+is always the first row, with a green outline, and Amazon the second, with an amber one. Both carry everything a store
+row has: the stock line, the store thumbs (one tally per eBay / Amazon domain, `ebay.com.au`, `amazon.com`…) and the
+cart button. They are "manual" cart lines on their own tagged links (`src/lib/cart-list.ts`), never a Shopify checkout;
+an Amazon line's price is dropped from the visitor's list after 24 hours (Amazon's licence), and the cart then says to
+see today's price on Amazon. With no Amazon price the row reads "Also check on Amazon", a tagged link. Unchanged: neither
+is counted as a store, "Best price", a deal, an alert price or the reference price; TCGplayer and Cardmarket stay
+references (no thumbs, no cart line); no Amazon link in a pop-up.
+OP Compare: `pinnedOrder` puts eBay first always (TCGplayer, when pinned, follows; until now the cheaper of the two led);
+board-model gives eBay rows their host, so they get thumbs and the cart; the sealed page's Amazon row (`AmazonCheck`,
+`AmazonLiveSlot`) moved from after the pinned pair to right under eBay.
