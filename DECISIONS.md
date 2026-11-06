@@ -3828,3 +3828,21 @@ adding `utm_content=checkout`. `lib/checkout-link.ts` holds the rules (`tests/ch
 a sold-out row, another platform's listing or a row from before this import keeps it. eBay, TCGplayer and Amazon keep
 their pages. `buy_click` carries `link_type` (checkout / product) in Vercel Analytics. If checkout loses clicks or a
 store complains, revert by removing the `shopifyCartUrl` block in `affiliateUrl`.
+## 2026-11-06 — Email sign-in links, mailed by RiftCompare
+
+**Decision (owner, carrying RiftCompare's "code red" fix to every site with accounts; RiftCompare DECISIONS.md "OP
+Compare signs in by email link, mailed from here"):** a buyer on RiftCompare paid with Apple Pay on an iCloud address
+and could not sign in, because Google and Discord were the only ways in. OP Compare makes you sign in before paying, so
+it cannot lock a payer out, but anyone whose address is on neither provider still could not make an account. Now
+`/login` also offers "Email me a sign-in link" (passwordless: nothing to store, leak or forget).
+
+- **No mail key here, still.** OP Compare has no mail service, and the owner chose not to add one for this: the form
+  posts to `https://riftcompare.com/api/sister-sign-in`, which mails the link under OP Compare's name from its verified
+  domain. RiftCompare signs an EdDSA JWT (address, audience `https://opcompare.app`, one-time `jti`, 30 minutes); we
+  verify it with RiftCompare's public key (`/api/sister-sign-in/jwks`, cached a day) and record each `jti` in `Meta`
+  (`signin-jti:<id>`) so a link works once. This is the one request-time email, and it is RiftCompare's send, not ours:
+  nothing under `src/app` imports `lib/email.ts` (`tests/no-email-api.test.ts` unchanged).
+- The link opens `/login/email`, whose button POSTs to `/api/auth/email-link`: a mail scanner fetching the link cannot
+  use it up. An optional name replaces only the address-derived placeholder. No new account for an admin address. A new
+  account's `signupSource` is `email_link`; it does not take the launch promotion (that stays OAuth sign-up only).
+- Privacy and terms say a link may be emailed by RiftCompare. `src/lib/email-sign-in.ts`, `tests/email-sign-in.test.ts`.

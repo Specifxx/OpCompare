@@ -13,6 +13,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   "header",
   "home",
   "login",
+  // An account created by an emailed sign-in link (2026-11-06, lib/email-sign-in.ts).
+  "email_link",
   "email",
   "referral",
   // The Plus/Premium funnel's own two surfaces.

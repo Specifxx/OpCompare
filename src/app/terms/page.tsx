@@ -26,8 +26,9 @@ export default function Terms() {
       </p>
       <h2>Accounts</h2>
       <p>
-        You can sign in with Google or Discord. Keep that account secure: anyone
-        who can sign in to it can use your {SITE_NAME} account. We may suspend
+        You can sign in with Google, Discord or a link emailed to you. Keep that
+        account and your inbox secure: anyone who can sign in to them can use
+        your {SITE_NAME} account. We may suspend
         an account used to scrape the site, abuse the service or get around the
         plan limits.
       </p>
