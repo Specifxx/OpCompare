@@ -100,6 +100,19 @@ export function paginate<T>(items: T[], pageParam: string | undefined, per: numb
 }
 
 /** "?page=N" for a page past the first (its canonical and pager links), else "". */
+/**
+ * Page 2+ of a list with NOTHING but ?page= in the URL (SEO audit, 2026-11-07): it shows a different slice, so it is
+ * indexable and self-canonical, and robots.txt lets crawlers follow it. Any other param (a filter, sort, search) makes
+ * the view a permutation of the list: noindex, follow, canonical on the clean list. 0 when the view is not clean page 2+.
+ */
+export function cleanPageNumber(searchParams: Record<string, string | string[] | undefined>): number {
+  const keys = Object.keys(searchParams).filter((k) => searchParams[k] !== undefined);
+  if (keys.length !== 1 || keys[0] !== "page") return 0;
+  const raw = searchParams.page;
+  const n = typeof raw === "string" && /^\d{1,4}$/.test(raw) ? parseInt(raw, 10) : 0;
+  return n > 1 ? n : 0;
+}
+
 export function pageSuffix(pageParam: string | undefined): string {
   const n = parseInt(pageParam ?? "1", 10);
   return Number.isFinite(n) && n > 1 ? `?page=${n}` : "";

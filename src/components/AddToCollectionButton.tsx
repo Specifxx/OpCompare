@@ -61,7 +61,7 @@ export function AddToCollectionButton({ cardId, cardPath, src = "quickview" }: {
     <>
       <div className="mt-3 flex items-center gap-2">
         {coll === "signin" ? (
-          <a href={`/login?next=${encodeURIComponent(cardPath)}&src=${encodeURIComponent(src)}`} className="btn-ghost flex-1 justify-center text-sm">
+          <a rel="nofollow" href={`/login?next=${encodeURIComponent(cardPath)}&src=${encodeURIComponent(src)}`} className="btn-ghost flex-1 justify-center text-sm">
             Sign in to track your collection
           </a>
         ) : coll === "added" ? (

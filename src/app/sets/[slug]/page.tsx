@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cleanPageNumber } from "@/lib/facets";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
@@ -47,15 +48,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const spoilers = upcoming && revealed > 0;
   const t = spoilers ? `${s.code} ${s.name} Spoilers: ${revealed} Cards Revealed` : `${s.code} ${s.name} Card List & Prices`;
   const short = spoilers ? `${s.code} Spoilers: ${revealed} Cards Revealed & Prices` : `${s.code} Card List & Prices`;
+  const n = cleanPageNumber(searchParams);
+  const suffix = n ? `?page=${n}` : "";
   return {
     title: { absolute: t.length <= 60 ? t : short },
     description: spoilers
       ? `Every ${s.code} ${s.name} card revealed so far (${revealed} and counting), with pre-order prices as stores list them. Releases ${s.releasedOn}; updated as new spoilers land.`
       : `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
-    alternates: { canonical: `/sets/${s.slug}` },
-    openGraph: pageOgOwnImage(`/sets/${s.slug}`),
-    // A filtered, sorted or paged grid is a slice of the same list: noindex, follow.
-    ...(Object.keys(searchParams).length ? { robots: { index: false, follow: true } } : {}),
+    // Clean page 2+ (?page=N alone) is its own page, self-canonical; a filtered or sorted grid is a slice of the same
+    // list: noindex, follow (SEO audit, 2026-11-07).
+    alternates: { canonical: `/sets/${s.slug}${suffix}` },
+    openGraph: pageOgOwnImage(`/sets/${s.slug}${suffix}`),
+    ...(Object.keys(searchParams).length && !cleanPageNumber(searchParams) ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
