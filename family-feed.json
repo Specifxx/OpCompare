@@ -1,0 +1,121 @@
+{
+ "v": 1,
+ "site": "op",
+ "generatedAt": "2026-11-07T14:06:43.159Z",
+ "links": {
+  "US": {
+   "deals": "https://opcompare.app/black-friday",
+   "preorders": "https://opcompare.app/preorders"
+  }
+ },
+ "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 29: Egghead",
+   "url": "https://opcompare.app/sealed/starter-deck-29-egghead",
+   "cents": 1999,
+   "currency": "USD",
+   "store": "Triad Cards and Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/671479_in_1000x1000.jpg",
+   "refCents": 3543,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 44
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 4: Animal Kingdom Pirates",
+   "url": "https://opcompare.app/sealed/starter-deck-4-animal-kingdom-pirates",
+   "cents": 1700,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/288224_in_1000x1000.jpg",
+   "refCents": 2696,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 12: Zoro and Sanji",
+   "url": "https://opcompare.app/sealed/starter-deck-12-zoro-and-sanji",
+   "cents": 3000,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/536585_in_1000x1000.jpg",
+   "refCents": 4732,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Learn Together Deck Set",
+   "url": "https://opcompare.app/sealed/learn-together-deck-set",
+   "cents": 4000,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/628478_in_1000x1000.jpg",
+   "refCents": 6308,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Emperors in the New World - Booster Pack",
+   "url": "https://opcompare.app/sealed/emperors-in-the-new-world-booster-pack",
+   "cents": 1200,
+   "currency": "USD",
+   "store": "Dragon Egg Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/563833_in_1000x1000.jpg",
+   "refCents": 1852,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 35
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Double Pack Set Volume 4",
+   "url": "https://opcompare.app/sealed/double-pack-set-volume-4",
+   "cents": 4000,
+   "currency": "USD",
+   "store": "Spokane Valley Sports and Trading Cards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/549493_in_1000x1000.jpg",
+   "refCents": 5770,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 31
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Pack",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-pack",
+   "cents": 1599,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712904_in_1000x1000.jpg",
+   "releaseDate": "2026-11-20"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-box",
+   "cents": 20999,
+   "currency": "USD",
+   "store": "Wulf Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_in_1000x1000.jpg",
+   "releaseDate": "2026-11-20"
+  }
+ ]
+}
