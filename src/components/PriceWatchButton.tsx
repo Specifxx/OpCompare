@@ -99,7 +99,7 @@ export function PriceWatchButton({
             open={toast}
             message="Saved in this browser. Sign in to sync and get alerts."
             action={
-              <Link href="/login?next=/watching&src=watch_toast" className="shrink-0 text-sm font-semibold text-brand-400 hover:underline">
+              <Link rel="nofollow" href="/login?next=/watching&src=watch_toast" className="shrink-0 text-sm font-semibold text-brand-400 hover:underline">
                 Sign in
               </Link>
             }
