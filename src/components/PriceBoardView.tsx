@@ -152,7 +152,7 @@ export function PriceBoardView({
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
             return [
-              <li key={`${o.source}-${country}`} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
+              <li key={`${o.source}-${country}`} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
                 <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">

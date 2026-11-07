@@ -12,4 +12,7 @@ export function pinnedOrder<T extends { priceCents: number }>(ebay: T | null, tc
 export const PIN_OUTLINE = {
   ebay: "outline outline-2 -outline-offset-2 outline-[#16a34a]",
   amazon: "outline outline-2 -outline-offset-2 outline-[#f59e0b]",
+  /** The cheapest row (owner, 2026-11-07: "the cheapest listing should also have an outline too"): sky blue, never read as
+   *  eBay's green or Amazon's amber; it wins over eBay's when eBay is itself the cheapest. */
+  cheapest: "outline outline-2 -outline-offset-2 outline-[#0ea5e9]",
 } as const;

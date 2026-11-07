@@ -1,5 +1,6 @@
 "use client";
 
+import { PIN_OUTLINE } from "@/lib/pinned-order";
 import { MiniChaseAds } from "./MiniChaseAds";
 import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
@@ -201,7 +202,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                   const isOpen = state === "open";
                   const isBest = l === best;
                   return (
-                    <li key={l.source} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
+                    <li key={l.source} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${isBest && listings.length > 1 ? `-mx-1 rounded-md px-1 ${PIN_OUTLINE.cheapest}` : ""}`}>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-semibold text-white">{l.label}</div>
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
