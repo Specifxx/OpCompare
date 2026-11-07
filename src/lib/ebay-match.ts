@@ -286,6 +286,18 @@ export function siblingPrintings(idx: CardIndex, number: string, id: number): In
   return list.filter((c) => c.id !== id && (c.setCode ?? "") !== (self.setCode ?? "") && sameKeys(c, self));
 }
 
+// A One Piece Booster Box Case is TWELVE boxes (every case title on eBay, 2026-11-07). An eBay seller wrote to MTG Compare that
+// a 120-pack sleeved case was a six-box case's best price there; the same shape here is a "Half Case (6 boxes)", a "Case x2",
+// a box sold with an acrylic case or sleeved packs. A case title whose stated box counts are none of twelve is another product.
+// Only stated counts are read ("12x", "x12", "case of 12", "12 Boxes", "12-Box"); a decimal or a set code is never a count.
+const CASE_COUNT = /(?<![\d.-])\b(\d{1,2})\s*x\b(?!\s*\d)|\bx\s*(\d{1,2})\b|\bcase\s+of\s+(\d{1,2})\b|(?<![\d.-])\b(\d{1,2})\s*(?:(?:booster|sealed)\s+){0,2}(?:boxes|displays)\b|(?<![\d.-])\b(\d{1,2})[\s-]box\b/gi;
+export const BOXES_PER_CASE = 12;
+export function wrongCaseQuantity(title: string): boolean {
+  if (/\bacrylic\b|\bprotector\b|\bsleeved\b|\bhalf\s+case\b|\bopen(?:ed)?\s+case\b|\b(?:w\/|with)\s*(?:an?\s+)?case\b/i.test(title)) return true;
+  const stated = [...title.matchAll(CASE_COUNT)].map((m) => Number(m.slice(1).find((g) => g !== undefined))).filter((n) => n > 1);
+  return stated.length > 0 && !stated.includes(BOXES_PER_CASE);
+}
+
 /**
  * Identity only — is this title the target product, as eBay sellers write it?
  * Junk, foreign and fake words, not-raw wording, sealed words on a single,
@@ -324,6 +336,7 @@ export function identityReject(title: string, target: ChooseTarget, opts: { grad
   const m = matchSealedTitle(title, target.refs);
   if (!("id" in m)) return `match:${m.miss}`;
   if (m.id !== target.id) return "other-product";
+  if (/\bbooster\s+(?:box\s+)?case\b/i.test(target.name ?? "") && wrongCaseQuantity(title)) return "case-quantity";
   return null;
 }
 
