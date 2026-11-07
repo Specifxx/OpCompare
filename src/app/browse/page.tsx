@@ -28,14 +28,24 @@ import { getCatalog } from "@/lib/data";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
+import { cleanPageNumber } from "@/lib/facets";
 
-export const metadata: Metadata = {
-  title: "One Piece Card List — Every Card, Live Prices",
-  description:
-    "One Piece card list: every card with live prices compared across stores in six markets. Filter by set, colour, rarity, type and printing.",
-  alternates: { canonical: "/browse" },
-  openGraph: pageOg("/browse"),
-};
+const BROWSE_TITLE = "One Piece Card List — Every Card, Live Prices";
+
+// Clean page 2+ (?page=N alone) is its own indexable page; any filter, sort or search is noindex, follow on /browse.
+export function generateMetadata({ searchParams }: { searchParams: SearchParams }): Metadata {
+  const n = cleanPageNumber(searchParams);
+  const suffix = n ? `?page=${n}` : "";
+  const filtered = !n && Object.keys(searchParams).some((k) => searchParams[k] !== undefined);
+  return {
+    title: n ? `${BROWSE_TITLE} (page ${n})` : BROWSE_TITLE,
+    description:
+      "One Piece card list: every card with live prices compared across stores in six markets. Filter by set, colour, rarity, type and printing.",
+    alternates: { canonical: `/browse${suffix}` },
+    openGraph: pageOg(`/browse${suffix}`),
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 export default async function BrowsePage({
   searchParams,

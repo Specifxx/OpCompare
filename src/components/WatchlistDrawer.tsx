@@ -49,7 +49,7 @@ export function WatchlistDrawer() {
               <p className="text-xs leading-relaxed text-slate-400">
                 Saved in this browser. <strong className="text-slate-200">Sign in to sync and get alerts</strong> — your hearts come with you.
               </p>
-              <Link href="/login?next=/watching&src=watchlist_drawer" onClick={close} className="btn-primary min-h-11">
+              <Link rel="nofollow" href="/login?next=/watching&src=watchlist_drawer" onClick={close} className="btn-primary min-h-11">
                 Sign in
               </Link>
             </div>

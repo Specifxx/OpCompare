@@ -11,20 +11,22 @@ import { getCatalog } from "@/lib/data";
 import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
+import { pageSuffix } from "@/lib/facets";
 
 type Props = { params: { color: string }; searchParams: { page?: string } };
 const keyOf = (slug: string): ColorKey | undefined =>
   COLOR_KEYS.find((k) => COLORS[k].slug === slug.toLowerCase());
 const PER = 48;
 
-export function generateMetadata({ params }: Props): Metadata {
+export function generateMetadata({ params, searchParams }: Props): Metadata {
   const k = keyOf(params.color);
   if (!k) return { title: "Colour not found" };
+  const suffix = pageSuffix(searchParams.page);
   return {
     title: `${k} One Piece Cards — Prices for Every ${k} Card`,
     description: `Every ${k} One Piece Card Game card with live prices compared across stores — Leaders, Characters, Events and Stages.`,
-    alternates: { canonical: `/colors/${COLORS[k].slug}` },
-    openGraph: pageOg(`/colors/${COLORS[k].slug}`),
+    alternates: { canonical: `/colors/${COLORS[k].slug}${suffix}` },
+    openGraph: pageOg(`/colors/${COLORS[k].slug}${suffix}`),
   };
 }
 
