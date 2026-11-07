@@ -172,7 +172,8 @@ test("the layout's main container: skip link, the rail wrapper, container-app on
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /href="#main-content"[\s\S]{0,400}Skip to main content/);
   assert.match(layout, /focus:z-\[200\][^"]*focus:min-h-11[^"]*focus:ring-2 focus:ring-brand-400/);
-  assert.match(layout, /<div className="pl-\[var\(--sidenav-w\)\]">\s*<main id="main-content" className="container-app min-w-0 py-6">/);
+  // The holiday strip (lib/holiday-strip.ts) may sit between the wrapper and <main>, never inside it.
+  assert.match(layout, /<div className="pl-\[var\(--sidenav-w\)\]">\s*(?:\{\/\*[\s\S]*?\*\/\}\s*<HolidayStrip \/>\s*)?<main id="main-content" className="container-app min-w-0 py-6">/);
   assert.match(layout, /viewport: Viewport = \{ themeColor: "#0b0e14" \}/);
   const offenders = walk("src/app")
     .filter((f) => /page\.tsx$/.test(f))

@@ -1,4 +1,5 @@
 import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { HolidayStrip } from "@/components/HolidayStrip";
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
@@ -183,6 +184,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     px-* on one element fight over padding-left). Pages never add
                     their own outer container-app or py-*. */}
                 <div className="pl-[var(--sidenav-w)]">
+                  {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line above the content. */}
+                  <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
                     {children}
                   </main>

@@ -3926,3 +3926,11 @@ one market (or not yet released), and cards in three groups only: the 50 most se
 price. Per-set pack-sim and pull-tracker pages left it too. Nothing was noindexed or removed: every other card stays
 live, indexable and linked from its set, siblings and the lists, so URLs and pages are unchanged. Widen
 `SITEMAP_TOP_CARDS` once Search Console shows the core mostly indexed (recheck ~25 Nov). `tests/sitemap-core.test.ts`.
+## 2026-11-07 — Black Friday strip (owner: "capture all of the Black Friday SEO")
+
+Black Friday is 27 November 2026, Cyber Monday 30 November; both pages exist (`/black-friday`, `/cyber-monday`). One line now
+sits above every page's content (`HolidayStrip`, `lib/holiday-strip.ts`, tested): `/black-friday` from 1 November to the
+Saturday after Black Friday, then `/cyber-monday` to the day after Cyber Monday, then nothing. Server-rendered, so every page
+links the season's page for crawlers as well as visitors; outside `<main>` so the homepage hero's negative margin never covers
+it. Not dismissible and not a pop-up (pop-up policy: nothing uninvited on a visit's first page), never a countdown or "ends
+soon". A cached page can show the day-old link for up to its revalidate window, which is why the switch falls on the Sunday.
