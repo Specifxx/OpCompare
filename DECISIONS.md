@@ -3914,3 +3914,15 @@ the owner accepted the remaining risk. The quick view shows the link only (the i
 else the tagged search), never Amazon's price: that stays on the product page under the 24-hour licence. Uninvited
 overlays (a phone ad dock, a corner card, an exit pop-up) still never carry Amazon, and an Amazon page is never framed
 (item (n)).
+
+## 2026-11-07: The sitemap lists a lean core, not every card
+
+The owner's Search Console and Bing audit (2026-11-07) found 5,901 OP Compare URLs "Discovered – currently not indexed"
+against 2,510 indexed. Google knows the pages and will not spend crawl on them: on a young domain with few links, a
+sitemap of ~7,000 templated card pages reads as a template, so it samples. The sitemap now lists a core
+(`src/lib/sitemap-core.ts`): the hubs, sets, guides and tools pages as before, sealed products with two or more stores in
+one market (or not yet released), and cards in three groups only: the 50 most searched and viewed in 30 days
+(`getTopDemand`), up to 100 revealed cards of unreleased sets, and the 250 most valuable printings by TCGplayer market
+price. Per-set pack-sim and pull-tracker pages left it too. Nothing was noindexed or removed: every other card stays
+live, indexable and linked from its set, siblings and the lists, so URLs and pages are unchanged. Widen
+`SITEMAP_TOP_CARDS` once Search Console shows the core mostly indexed (recheck ~25 Nov). `tests/sitemap-core.test.ts`.

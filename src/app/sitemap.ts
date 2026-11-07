@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getCardText, getCatalog, getLibraryDecks, getSealedCatalog } from "@/lib/data";
+import { getCardText, getCatalog, getLibraryDecks, getSealedCatalog, getTopDemand } from "@/lib/data";
+import { sitemapCards, sitemapSealed } from "@/lib/sitemap-core";
 import { traitHubs } from "@/lib/traits";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { AUTHORS, POSTS, postHref } from "@/lib/blog";
@@ -9,7 +10,6 @@ import { getStoreStats } from "@/lib/data";
 import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/facets";
 import { KEYWORDS } from "@/lib/keywords";
 import { STORES } from "@/lib/stores";
-import { simSets } from "./tools/pack-sim/load";
 import { thinCardIds, upcomingSetIds } from "@/lib/card-index";
 
 // Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
@@ -36,7 +36,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [...fixed, ...posts, ...catalogueEntries(null, now)];
   }
   const [cat, sealed] = data;
-  const packSims = await simSets().then((r) => r.sets).catch(() => []);
+  // The lean core (lib/sitemap-core.ts): the most searched, viewed and valuable cards
+  // and upcoming sets' reveals, not every printing. getTopDemand never throws.
+  const demand = await getTopDemand(30, 25);
+  const demandIds = [...demand.bySearch, ...demand.byView].map((d) => d.card.id);
+  const today = now.toISOString().slice(0, 10);
+  const upcoming = upcomingSetIds(cat.sets, today);
   return [
     ...fixed,
     ...posts,
@@ -44,11 +49,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...cat.sets.map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: now })),
     // Every automatic pre-order page (/preorders/<code>) while its set is unreleased; the dedicated ones are in `fixed`.
     ...upcomingPreorderPages(cat.sets, now.toISOString().slice(0, 10)).filter((l) => !PREORDER_PAGES[l.code]).map((l) => ({ url: `${SITE_URL}${l.href}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 })),
-    ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pack-sim/${s.slug}`, lastModified: now })),
-    ...packSims.map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s.slug}`, lastModified: now })),
-    ...sealed.filter((s) => s.kind !== "Promo Pack").map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
+    // Per-set pack-sim and pull-tracker pages stay live and linked from their tools, but out of the core.
+    ...sitemapSealed(sealed, today).map((s) => ({ url: `${SITE_URL}/sealed/${s.slug}`, lastModified: now })),
     // Thin printings are noindex (lib/card-index.ts), so never listed.
-    ...((thin) => cat.cards.filter((c) => !thin.has(c.id)))(thinCardIds(cat.cards, upcomingSetIds(cat.sets))).map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
+    ...sitemapCards(cat.cards, { thin: thinCardIds(cat.cards, upcoming), upcoming, demandIds }).map((c) => ({ url: `${SITE_URL}/card/${c.slug}`, lastModified: now })),
     ...toolsTrackEntries(cat, await getStoreStats().catch(() => []), now),
     // Trait hubs (lib/traits.ts): the index and every type with enough cards.
     ...(await getCardText().then((t) => ["/cards/trait", ...traitHubs(t).map((h) => `/cards/trait/${h.slug}`)]).catch(() => [] as string[])).map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now })),
