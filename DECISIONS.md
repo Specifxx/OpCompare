@@ -3943,3 +3943,9 @@ wrong here today; `identityReject` now also returns `case-quantity` for a Booste
 none of which is twelve ("Half Case (6 boxes)", "x2"), or is a box with an acrylic case, a half/open case or sleeved packs
 (`wrongCaseQuantity`, `src/lib/ebay-match.ts`, real titles in `tests/ebay-match.test.ts`). `pruneCheapOutliers` already
 holds back a gross low outlier, and eBay is never counted as a store or a deal here.
+
+## Black Friday pages and the gift guide link each other (2026-11-07)
+
+Owner: get the Black Friday pages indexed and ranking. /black-friday and /cyber-monday were already in the sitemap and the
+daily IndexNow run (every sitemap URL). The gift guide already answers the Black Friday question, so no second post was
+written to compete with the hub: its Black Friday tip now links both sale pages, and the sale pages link the guide.

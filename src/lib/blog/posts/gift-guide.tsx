@@ -157,7 +157,7 @@ export const giftGuide: Post = {
           </>
         ) : null,
         <>
-          <strong>On Black Friday (27 November)</strong>, compare with today&apos;s live price, not a crossed-out one.
+          <strong>On Black Friday (27 November)</strong>, compare with today&apos;s live price, not a crossed-out one. Our <Link href="/black-friday">One Piece Black Friday deals</Link> page lists what stores sell under the going price, updated every day, and <Link href="/cyber-monday">Cyber Monday deals</Link> does the same for the Monday.
         </>,
       ].filter(Boolean),
       lede: (
