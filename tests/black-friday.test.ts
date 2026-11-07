@@ -19,3 +19,13 @@ test("underMarket: 5-60% under TCGplayer, $10+, no pre-orders, biggest first", (
   const out = underMarket([r(1, 10000, 9000), r(2, 10000, 8000), r(3, 10000, 3000), r(4, 900, 500), r(5, 10000, 8000, true), r(6, 10000, 9800), r(7, null, 100)]);
   assert.deepEqual(out.map((x) => [x.id, x.saving]), [[2, 20], [1, 10]]);
 });
+
+test("the holiday strip shows Black Friday from 1 November, then Cyber Monday, then nothing", async () => {
+  const { saleStrip } = await import("../src/lib/holiday-strip");
+  assert.equal(saleStrip("2026-10-31"), null);
+  assert.equal(saleStrip("2026-11-07")?.href, "/black-friday");
+  assert.equal(saleStrip("2026-11-28")?.href, "/black-friday");
+  assert.equal(saleStrip("2026-11-29")?.href, "/cyber-monday");
+  assert.equal(saleStrip("2026-12-01")?.href, "/cyber-monday");
+  assert.equal(saleStrip("2026-12-02"), null);
+});
