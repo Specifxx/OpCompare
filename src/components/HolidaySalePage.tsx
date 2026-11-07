@@ -113,7 +113,8 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
         <Link className="text-brand-400 hover:underline" href={event === "black-friday" ? "/cyber-monday" : "/black-friday"}>{event === "black-friday" ? "Cyber Monday deals" : "Black Friday deals"} →</Link> ·{" "}
         <Link className="text-brand-400 hover:underline" href="/graded">Graded prices →</Link> ·{" "}
         <Link className="text-brand-400 hover:underline" href="/sealed">Every sealed product →</Link> · <Link className="text-brand-400 hover:underline" href="/tools/deal-finder">Deal Finder →</Link> ·{" "}
-        <Link className="text-brand-400 hover:underline" href="/market">Market index →</Link>
+        <Link className="text-brand-400 hover:underline" href="/market">Market index →</Link> ·{" "}
+        <Link className="text-brand-400 hover:underline" href="/blog/one-piece-card-game-gift-guide">Gift guide and Black Friday tips →</Link>
       </p>
       <p className="text-sm text-slate-400">
         Later in the season: <Link className="text-brand-400 hover:underline" href="/boxing-day">Boxing Day deals</Link> ·{" "}
