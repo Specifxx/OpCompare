@@ -433,3 +433,22 @@ test("mapItem carries Browse's own https image only", () => {
   assert.equal(mapItem({ ...it, image: { imageUrl: "http://i.ebayimg.com/x.jpg" } })?.imageUrl, null);
   assert.equal(mapItem(it)?.imageUrl, null);
 });
+
+// An eBay seller's feedback on MTG Compare (2026-11-07): a 120-pack sleeved case was shown as a six-box case's best price.
+// Kept: real eBay titles of One Piece Booster Box Cases (2026-11-07). Refused: the same titles with another quantity.
+test("a Booster Box Case listing of another quantity is not the twelve-box case", async () => {
+  const { wrongCaseQuantity } = await import("../src/lib/ebay-match");
+  for (const t of [
+    "One Piece Wings of the Captain Booster Box Case (12 boxes) OP-06 Sealed",
+    "One Piece TCG Legacy of the Master OP-12 Booster 12-Box Case, Sealed",
+    "Sealed Case of 12 Boxes - One Piece OP13 Carrying on His Will English",
+    "One Piece TCG OP-05 Awakening Of The New Era Booster Box Case SEALED",
+    "2026 OP-14 One Piece The Azure Sea's Seven Booster Box Case FACTORY SEALED",
+  ]) assert.equal(wrongCaseQuantity(t), false, t);
+  for (const t of [
+    "One Piece OP-13 Carrying On His Will Booster Box Half Case (6 boxes)",
+    "One Piece OP-13 Carrying On His Will Booster Box Case x2 Sealed",
+    "One Piece OP-14 The Azure Sea's Seven Booster Box with Acrylic Case",
+    "One Piece OP-14 Sleeved Booster Pack Case",
+  ]) assert.equal(wrongCaseQuantity(t), true, t);
+});

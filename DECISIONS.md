@@ -3934,3 +3934,12 @@ Saturday after Black Friday, then `/cyber-monday` to the day after Cyber Monday,
 links the season's page for crawlers as well as visitors; outside `<main>` so the homepage hero's negative margin never covers
 it. Not dismissible and not a pop-up (pop-up policy: nothing uninvited on a visit's first page), never a countdown or "ends
 soon". A cached page can show the day-old link for up to its revalidate window, which is why the switch falls on the Sunday.
+
+## 2026-11-07: A Booster Box Case listing of another quantity is not the case
+
+An eBay seller wrote to MTG Compare that a 120-pack sleeved case was a six-box case's "best price, 26% below the median"
+(mtgcompare #94). OP Compare's 99 Booster Box Case eBay rows on 2026-11-07 all say twelve boxes or say nothing, so nothing is
+wrong here today; `identityReject` now also returns `case-quantity` for a Booster Box Case title that states box counts
+none of which is twelve ("Half Case (6 boxes)", "x2"), or is a box with an acrylic case, a half/open case or sleeved packs
+(`wrongCaseQuantity`, `src/lib/ebay-match.ts`, real titles in `tests/ebay-match.test.ts`). `pruneCheapOutliers` already
+holds back a gross low outlier, and eBay is never counted as a store or a deal here.
