@@ -11,6 +11,7 @@
 //   offers/NN.json.gz        the same offers by id % 64, for the site deployed before
 //                            the migration (SNAPSHOT_LEGACY_SHARDS=0 stops writing it)
 //   ebay-checks.json.gz      when each (product, market) pair was last searched on eBay
+//   check/<host>             one store's listings for "Is this a good price?" (lib/link-check-build.ts)
 //   deal-inputs, store-prices/<market>, store-stats, store-listings/<market>,
 //   sealed-soldout           the answers to the queries that scan every offer, computed
 //                            here in SQL so a request never has to
@@ -26,6 +27,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { pub } from "./pubdb";
+import { buildStoreChecks, type CheckCatalogEntry } from "./link-check-build";
 import { bucketOf, dayNum, type BucketFile } from "./history";
 import { historyDir, readBucket } from "./history-store";
 import { lastKnownTable, needsLastKnown, type LastKnownCandidate, type LastKnownFile } from "./last-known";
@@ -88,6 +90,7 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
   await fs.mkdir(path.join(outDir, "o"), { recursive: true });
   await fs.mkdir(path.join(outDir, "store-prices"), { recursive: true });
   await fs.mkdir(path.join(outDir, "store-listings"), { recursive: true });
+  await fs.mkdir(path.join(outDir, "check"), { recursive: true });
   const write = async (rel: string, value: unknown) => {
     const bytes = pack(value);
     await fs.writeFile(path.join(outDir, rel), bytes);
@@ -216,6 +219,14 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     }
     sizes.offersLegacy = legacyBytes;
   }
+  // "Is this a good price?": one file per store host, the only thing /api/check/<host> reads (lib/link-check-build.ts).
+  const checkCatalog = new Map<number, CheckCatalogEntry>();
+  for (const r of cardRows) checkCatalog.set(r.id, { name: `${r.name} ${r.number}${r.variant ? ` (${r.variant})` : ""}`, href: `/card/${r.slug}`, single: true });
+  for (const r of sealedRows) checkCatalog.set(r.id, { name: r.name, href: `/sealed/${r.slug}`, single: false });
+  const storeChecks = buildStoreChecks(offerRows, checkCatalog, now, new Date(now).toISOString());
+  let checkBytes = 0;
+  for (const [host, check] of storeChecks) checkBytes += await write(`check/${host}.json.gz`, check);
+  sizes.checks = checkBytes;
   log(`snapshot offers: ${offerRows.length} rows read in ${byRange.size} range files${legacyShards() ? ` and ${SNAPSHOT_SHARDS} legacy shards` : ""}`);
 
   // ── Last known prices (prices.json.gz `lastKnown`, additive) ──────────────
@@ -308,6 +319,7 @@ export async function buildSnapshot(outDir: string, opts: BuildOptions): Promise
     lastImportAt: stats.lastImportAt,
     counts: { cards: cardRows.length, sealed: sealed.length, offers: offerRows.length, ebayListings: ebayRows.length },
     ranges: [...byRange.keys()].sort(),
+    checkHosts: [...storeChecks.keys()].sort(),
     ebayChecks: checks.length,
   };
   await fs.writeFile(path.join(outDir, "meta.json"), JSON.stringify(meta));

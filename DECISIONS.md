@@ -3979,3 +3979,18 @@ collection worth"; Scryfall grew on free data credited with a link; price sites 
 - **Free price data.** `/prices.json` (`lib/price-api.ts`): every product's cheapest in-stock price per market, in that
   market's currency, with an absolute link to its comparison; never eBay, never converted. Free for any use with a visible
   link back (the licence and an attribution snippet are in the file and on the widgets page). Built from the pages' own catalogue loaders (`low` only, never the display-only last known price), regenerated at most every six hours and held by the CDN. Open CORS.
+
+## 2026-11-08 — "Is this a good price?": one snapshot file per store host
+
+The competitor scan's gap #7, the same checker every Compare Empire site got that day. `/tools/is-this-a-good-price`
+(`components/LinkChecker.tsx`) takes a pasted store product link and asks `/api/check/<host>` for that store's listings.
+
+- **Written by the import, not at request.** The offers are 700k rows in a hundred range files, too many to group in a
+  function. So the snapshot builder writes `check/<host>.json.gz` per store host (`lib/link-check-build.ts`, pure, tested)
+  and lists the hosts in `meta.json` `checkHosts`, so a missing file is an answer and an unreadable listed one throws
+  (snapshot rule 1). The route reads that one file through `getStoreCheck` in `lib/data.ts`: never Neon, never the pasted
+  page, and no `unstable_cache` (a big store's file must not become a Data Cache entry near 2 MB); the snapshot memo and
+  the route's day-long CDN header hold it. Until the first import after this lands, every host is a 404 and the checker
+  falls back to a search.
+- **What compares.** Fresh store rows only (72 hours), singles at Near Mint only, one key per product and market; eBay and
+  TCGplayer are never a store here. Cheapest and median are in-stock store prices in that market's own currency.

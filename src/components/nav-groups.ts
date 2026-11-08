@@ -101,6 +101,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/pull-tracker", label: "Pull Tracker", keywords: ["pull tracker", "what is my box worth", "box opening value", "my pulls", "log pulls"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev", "box value"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
+      { href: "/tools/is-this-a-good-price", label: "Is This a Good Price?", keywords: ["good price", "price check", "paste link", "is it a good deal", "store link"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission", "payout"] },
       { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
     ],
