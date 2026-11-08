@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixed = [
     "", "/browse", "/price-guide", "/graded", "/sealed", "/black-friday", "/cyber-monday", "/boxing-day", "/january-sales", "/lunar-new-year", "/embed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
     "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/daily", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/preorders", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/how-we-pick-stores", "/stores/partners", "/feedback", "/blog", "/authors", "/creators", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
-    "/tools", "/deck", "/tools/selling-fees", "/singles", "/keywords", "/cards/rarity", "/alerts",
+    "/tools", "/deck", "/tools/selling-fees", "/tools/is-this-a-good-price", "/singles", "/keywords", "/cards/rarity", "/alerts",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // The five region homes (design track), each a market-locked copy of "/".
   const regions = ["/au", "/uk", "/ca", "/sg", "/eu"].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.9 }));

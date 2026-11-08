@@ -82,6 +82,11 @@ const GROUPS: ToolGroup[] = [
     label: "Buying & value",
     tools: [
       {
+        href: "/tools/is-this-a-good-price",
+        title: "Is this a good price?",
+        desc: "Paste any store's link to a card or booster box and see how its price compares with every store we read in that country.",
+      },
+      {
         href: "/tools/deal-finder",
         title: "Deal Finder",
         desc: `Underpriced vs TCGplayer: the cards a real store sells for less, in your currency, biggest saving first — narrowed, with ${LIST_BADGE}, to only the cards you watch.`,

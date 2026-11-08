@@ -53,6 +53,8 @@ export interface SnapshotMeta {
   ranges?: string[];
   /** Pairs in ebay-checks.json.gz (the eBay pass's memory of what it searched and when). */
   ebayChecks?: number;
+  /** The hosts with a `check/<host>.json.gz` ("Is this a good price?"), so a missing file is an answer, not a hiccup. */
+  checkHosts?: string[];
 }
 
 /**

@@ -43,6 +43,7 @@ export async function GET() {
     "",
     "## Tools",
     `- [Deck price calculator](${u("/deck")}): paste a decklist (4xOP01-016) and price every card, free`,
+    `- [Is this a good price?](${u("/tools/is-this-a-good-price")}): paste a store link, see how its price compares with every store we read`,
     `- [Selling fee calculator](${u("/tools/selling-fees")}): TCGplayer, eBay and Cardmarket fees`,
     `- [Pack opening simulator](${u("/tools/pack-sim")}): open free virtual packs or a whole box from any set, priced`,
     `- [Pull tracker](${u("/tools/pull-tracker")}): log what a real box pulled and see its value against what you paid`,

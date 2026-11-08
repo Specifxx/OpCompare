@@ -14,7 +14,7 @@ import { CLUSTER_FILE, validCluster, type FamilyFeed } from "./family-network";
 import { decodeLastKnownRow, type LastKnown, type LastKnownFile } from "./last-known";
 import {
   snapCardDetail, snapCardsById, snapCardTextRows, snapChaseStrip, snapCore, snapDealInputs, snapEbay, snapEbayGraded, snapEbayPanel, snapEbayPicks, snapOffersOf, snapPrices,
-  snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreListings, snapStorePrices, snapStoreStats,
+  snapSealedCatalog, snapSealedDetail, snapSiteStats, snapSoldOut, snapStoreCheck, snapStoreListings, snapStorePrices, snapStoreStats,
 } from "./price-snapshot-read";
 
 export const PRICES_TAG = "prices";
@@ -1363,3 +1363,11 @@ export const getFamilyFeeds = unstable_cache(
   ["family-feeds-v1"],
   { tags: [PRICES_TAG], revalidate: TTL },
 );
+
+// ---- "Is this a good price?" (2026-11-08) ----
+// One store host's listings, from the snapshot's `check/<host>.json.gz` (lib/link-check-build.ts), or null for a host the
+// snapshot has no file for. Not an unstable_cache: the snapshot memo holds the file ten minutes and /api/check/<host>'s CDN
+// header a day, and a big store's file must never become a Data Cache entry near the 2 MB limit.
+export async function getStoreCheck(host: string): Promise<import("./link-check").StoreCheck | null> {
+  return snapStoreCheck(host);
+}

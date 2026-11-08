@@ -21,6 +21,7 @@ import type { DealInputsFile, SnapshotCard, SnapshotEbay, SoldOutFile, StoreList
 import type { Country } from "./country";
 import { MARKETS } from "./country";
 import type { DealInputTuple } from "./deals";
+import type { StoreCheck } from "./link-check";
 
 type OfferShard = Record<string, OfferRow[]>;
 
@@ -130,6 +131,16 @@ export async function snapEbayGraded(): Promise<SnapshotEbay["graded"]> {
 export const snapDealInputs = async (country: Country): Promise<DealInputTuple[]> => (await need<DealInputsFile>("deal-inputs.json.gz"))[country] ?? [];
 
 /** The store picker's data: each store's price per card in a market. */
+/**
+ * One store's listings for "Is this a good price?" (lib/link-check-build.ts), or null when the snapshot has no file for
+ * that host (or predates the files). A host the snapshot lists but GitHub will not serve throws (rule 1).
+ */
+export async function snapStoreCheck(host: string): Promise<StoreCheck | null> {
+  const meta = await need<SnapshotMeta>("meta.json");
+  if (!meta.checkHosts?.includes(host)) return null;
+  return need<StoreCheck>(`check/${host}.json.gz`);
+}
+
 export const snapStorePrices = (country: Country): Promise<StorePricesFile> => need<StorePricesFile>(`store-prices/${country}.json.gz`);
 
 export async function snapStoreStats(): Promise<StoreStat[]> {
