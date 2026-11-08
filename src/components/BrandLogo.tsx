@@ -9,10 +9,8 @@
 // brand ramp, there is no extra request for a second coloured asset, and the
 // element sizes like any other box (`h-9 w-9` by default, `h-8 w-8` in the hero).
 export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
-  // In a host span so the Christmas Santa hat (globals.css .xmas-logo-hat,
-  // hidden outside the season) can sit on the mark, which is a mask.
   return (
-    <span className="xmas-hat-host">
+    <span className="relative inline-flex shrink-0">
       <span
         role="img"
         aria-label="OP Compare logo"
@@ -29,7 +27,6 @@ export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
           maskPosition: "center",
         }}
       />
-      <span aria-hidden="true" className="xmas-logo-hat" />
     </span>
   );
 }

@@ -7,7 +7,6 @@ import { HeroStats } from "./HeroStats";
 import { TrendingChips, type TrendingCard } from "./TrendingChips";
 import { BrandLogo } from "@/components/BrandLogo";
 import { HalloweenDecor } from "./HalloweenDecor";
-import { ChristmasDecor } from "./ChristmasDecor";
 import { HeroSparks } from "./HeroSparks";
 import { ChristmasGifts } from "./ChristmasGifts";
 import { ThrillerBarkComing } from "./ThrillerBarkComing";
@@ -68,7 +67,6 @@ export function CinematicHero({
         {/* The living background (owner, 2026-11-03): motes that part around the pointer, sparks on a click. */}
         <HeroSparks />
         <HalloweenDecor />
-        <ChristmasDecor />
       </div>
       {/* Foreground content: its own rail reservation (the band is full-bleed,
           so container-app would otherwise centre under the fixed rail), and
