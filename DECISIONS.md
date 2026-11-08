@@ -3949,3 +3949,14 @@ holds back a gross low outlier, and eBay is never counted as a store or a deal h
 Owner: get the Black Friday pages indexed and ranking. /black-friday and /cyber-monday were already in the sitemap and the
 daily IndexNow run (every sitemap URL). The gift guide already answers the Black Friday question, so no second post was
 written to compete with the hub: its Black Friday tip now links both sale pages, and the sale pages link the guide.
+
+## 2026-11-08 — One Our sites page instead of footer cross-links
+
+From the owner's Search Console audit of DexCompare: its only links from other sites were ~9,000 site-wide footer
+links from our own sites, all to its home page, with the brand or a keyword as the anchor. They pass no authority,
+and a network of same-owner sites linking each other from every page is the pattern Google's link-spam policy warns
+about. CamCompare indexes well with more of them, so they are not what holds a site back, but they buy nothing.
+DexCompare's footer went first (CompareEmpire #153); every other site now does the same: the footer links one
+internal page, `/our-sites`, and that page links each other family site once, by its plain name, from
+`FAMILY_SITES` (`lib/family-network.ts`, unchanged; `footerSisters` stays for the shared test). Every other footer
+link, page URL and title is unchanged. Cross-traffic still comes from the price blocks on the deals and pre-order pages.
