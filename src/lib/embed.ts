@@ -40,8 +40,8 @@ export function embedSnippet(siteUrl: string, siteName: string, slug: string, na
 }
 
 /** Plain-HTML store badge: no iframe, so the link sits on the store's own page. */
-export function storeBadge(siteUrl: string, siteName: string, game: string): string {
-  return `<a href="${siteUrl}/stores" style="display:inline-block;padding:6px 10px;border:1px solid #d6dae1;border-radius:8px;font:600 12px system-ui,sans-serif;color:#0f172a;text-decoration:none;background:#fff">${game} prices compared on ${siteName}</a>`;
+export function storeBadge(siteUrl: string, siteName: string, game: string, path = "/stores"): string {
+  return `<a href="${siteUrl}${path}" style="display:inline-block;padding:6px 10px;border:1px solid #d6dae1;border-radius:8px;font:600 12px system-ui,sans-serif;color:#0f172a;text-decoration:none;background:#fff">${game} prices compared on ${siteName}</a>`;
 }
 
 /** The daily game's widget (2026-11-03): today's first pair, face up, prices hidden, one link to play. No script. */

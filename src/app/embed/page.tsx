@@ -6,6 +6,7 @@ import { MARKETS } from "@/lib/country";
 import { pageOg } from "@/lib/og/meta";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { dailySnippet, embedSnippet, storeBadge } from "@/lib/embed";
+import { attributionHtml, PRICE_API_PATH } from "@/lib/price-api";
 
 // The free widgets directory (DECISIONS.md, "Free price widgets", 2026-11-02): what outreach points at instead of
 // asking for a link. Code only, never live iframes of our own widgets.
@@ -62,6 +63,20 @@ export default async function EmbedPage() {
         </p>
         <div dangerouslySetInnerHTML={{ __html: badge }} />
         <pre className="overflow-x-auto rounded bg-ink-950 p-3 text-xs"><code>{badge}</code></pre>
+      </section>
+      <section className="flex flex-col gap-3 rounded-xl border border-ink-800 p-4" id="price-data">
+        <h2 className="text-lg font-bold">Free price data</h2>
+        <p className="text-sm text-slate-400">
+          Building a Discord bot, a deck or collection tool, a spreadsheet or a blog? Every priced One Piece card and sealed product, with its cheapest
+          in-stock store price in each market, is in one JSON file: <a className="text-brand-400 hover:underline" href={PRICE_API_PATH}>{SITE_URL}{PRICE_API_PATH}</a>.
+          Free, no key, no signup, open to every origin, refreshed every few hours.
+        </p>
+        <ul className="list-disc pl-5 text-sm text-slate-400">
+          <li>Each product has an <code>id</code>, a <code>name</code> (and a card&apos;s <code>number</code> and <code>printing</code>) and, per market, <code>cents</code> in that market&apos;s <code>currency</code> with a <code>url</code> to its comparison.</li>
+          <li>Store prices only: never eBay, and never converted between currencies.</li>
+          <li>Free for any use, including commercial. The one condition: a visible link back wherever the prices appear, for example:</li>
+        </ul>
+        <pre className="overflow-x-auto rounded bg-ink-950 p-3 text-xs"><code>{attributionHtml()}</code></pre>
       </section>
     </div>
   );
