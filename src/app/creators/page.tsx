@@ -254,6 +254,19 @@ export default function CreatorsPage() {
         </div>
       </section>
 
+      {/* Weekly price-movers video (owner, 2026-11-08): made every Monday by compareempiretake2's weekly-movers.yml. */}
+      <section id="weekly-video" className="mt-10 scroll-mt-header">
+        <h2 className="text-2xl font-extrabold text-white">Free weekly price-movers video</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Every Monday we make a 20-second vertical video of the week&rsquo;s biggest One Piece card price moves: three up, three
+          cheaper, with real prices and original music. Post it on TikTok, Reels or Shorts as it is, or talk over it. It comes
+          with a ready caption; all we ask is that {SITE_NAME} stays named in the video or your caption.
+        </p>
+        <a href="https://github.com/Specifxx/compareempiretake2/tree/reels/movers" target="_blank" rel="noopener" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-white px-5 text-sm font-extrabold text-ink-950 transition-transform hover:scale-[1.02]">
+          Get this week&rsquo;s video
+        </a>
+      </section>
+
       {/* How to work with us */}
       <section id="work-with-us" className="mt-10 scroll-mt-header">
         <h2 className="text-2xl font-extrabold text-white">How to work with us</h2>
