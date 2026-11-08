@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardArt } from "@/components/CardTile";
+import { StoreBadgeBox } from "@/components/StoreBadgeBox";
 import { StoreCodeChip } from "@/components/StoreCodeChip";
+import { storeBadge } from "@/lib/embed";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Breadcrumbs, InShort, JsonLd, SectionHeader, StatTile } from "@/components/ui";
 import { affiliateUrl, outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, type Country } from "@/lib/country";
@@ -151,6 +154,7 @@ export default async function StorePage({ params }: Props) {
           )}
         </section>
       </div>
+      <StoreBadgeBox html={storeBadge(SITE_URL, SITE_NAME, "One Piece", `/stores/${s.key}`)} storeName={s.name} />
       <nav className="mt-10" aria-label={`Other stores in ${place.label}`}>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Other stores in {place.label}</h2>
         <ul className="flex flex-wrap gap-2">
