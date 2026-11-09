@@ -138,7 +138,7 @@ export const NAV_GROUPS: NavGroup[] = [
 
 // THE RAIL AND THE PHONE MENU SHOW ONLY THIS (owner, 2026-10-28: "too much
 // going on the sidebar … make it more minimalistic, so it's literally just
-// price comparison", guides and blog "to the very bottom"). Fourteen links,
+// price comparison", guides and blog "to the very bottom"). Sixteen links (fourteen until the 2026-11-09 nav audit added leaders and colours; the test caps it at 16),
 // every one already in NAV_GROUPS above, which stays the full index: the ⌘K
 // launcher, the phone menu's search, the footer site map and /llms.txt still
 // reach every tool, so nothing was deleted, only taken off the permanent rail.
@@ -150,7 +150,11 @@ export const RAIL_GROUPS: NavGroup[] = [
       { href: "/browse", label: "Card prices" },
       { href: "/sealed", label: "Sealed products" },
       { href: "/price-guide", label: "Price guide" },
-      { href: "/sets", label: "Sets & card lists" },
+      // The three ways a One Piece player looks cards up: set, leader, colour. Each is a
+      // price browse, so they belong on a price-only rail (2026-11-09 nav audit).
+      { href: "/sets", label: "Prices by set" },
+      { href: "/leaders", label: "Prices by leader" },
+      { href: "/colors", label: "Prices by colour" },
       { href: "/graded", label: "Graded card prices" },
       { href: "/deck", label: "Price a decklist" },
     ],
