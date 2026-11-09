@@ -189,6 +189,42 @@ export const RAIL_GROUPS: NavGroup[] = [
 
 // The header's text links (RiftCompare keeps this export; its Navbar hard-codes
 // the same links in its own markup).
+// The header's dropdown menus (HeaderMegaMenu.tsx, from 1440px; owner 2026-11-09). Picked BY HREF from NAV_GROUPS with the
+// link's own label, so header, rail, phone menu and launcher agree; a href that leaves NAV_GROUPS throws at import
+// (tests/header-menus.test.ts). Price browses only (the 2026-10-28 minimal rule). 7 top-level items in the header row.
+export interface HeaderMenu {
+  label: string;
+  columns: { title: string; links: { href: string; label: string }[] }[];
+}
+const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
+function pick(...hrefs: string[]): { href: string; label: string }[] {
+  return hrefs.map((href) => {
+    const l = ALL_NAV_LINKS.find((x) => x.href === href);
+    if (!l) throw new Error(`HEADER_MENUS: ${href} is not in NAV_GROUPS`);
+    return { href: l.href, label: l.label };
+  });
+}
+export const HEADER_MENUS: HeaderMenu[] = [
+  {
+    label: "Singles",
+    columns: [
+      { title: "Browse cards by", links: pick("/sets", "/leaders", "/colors", "/cards") },
+      { title: "Find a card", links: pick("/browse", "/price-guide", "/graded") },
+    ],
+  },
+  {
+    label: "Sealed",
+    columns: [{ title: "Boxes & packs", links: pick("/sealed", "/preorders", "/release-dates") }],
+  },
+  {
+    label: "Market",
+    columns: [
+      { title: "Prices", links: pick("/market", "/market/records", "/movers") },
+      { title: "Deals", links: pick("/tools/deal-finder", "/stores") },
+    ],
+  },
+];
+
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },

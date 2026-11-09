@@ -4004,3 +4004,18 @@ The competitor scan's gap #7, the same checker every Compare Empire site got tha
   leader" and "Prices by colour" in Compare prices, 16 links, the cap `tests/sidenav.test.ts` already set. All three are price
   browses, so the 2026-10-28 minimal, price-only rule holds; guides and blog stay last, no rails or pop-ups added.
 - Not done: a header mega menu (the header row is width-pinned on tablets and the owner kept it to a short list).
+
+## Header dropdown menus: Singles, Sealed, Market — 2026-11-09
+
+- **Owner.** Bill, 2026-11-09: he prefers drop-down menus for navigation and wants state-of-the-art, neat navigation; this
+  supersedes the "not done: a header mega menu" line in the entry above.
+- **Change.** `HeaderMegaMenu.tsx` draws Singles (sets, leaders, colours, type and rarity; database, price guide, graded), Sealed
+  (sealed products, pre-orders, release dates) and Market (index, price records, movers, Deal Finder, stores) from `HEADER_MENUS`
+  (`nav-groups.ts`), each link picked by href from `NAV_GROUPS` so header, rail, phone menu and launcher agree
+  (`tests/header-menus.test.ts`). Price browses only; no deck, game or account links. Top level is 7: Database, Singles, Sealed,
+  Market, Blog, Tools, Pricing.
+- **Behaviour.** Links are plain `<a href>` in the server HTML (closed panels use `hidden`, never unmounted); hover intent,
+  click, Enter/Space/ArrowDown, Left/Right between triggers, Escape closes and refocuses, outside click or focus-out closes;
+  `aria-expanded`/`aria-controls`. No pop-up, no overlay.
+- **Width.** From 1440px; below it the plain Sealed link stays (the row is width-pinned). Rail, phone menu, URLs, titles,
+  canonicals, headings and JSON-LD unchanged; no query, cache or revalidate.
