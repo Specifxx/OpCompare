@@ -316,3 +316,8 @@ test("every rail link is a real NAV_GROUPS link, and the rail stays short", () =
   assert.ok(NAV_GROUPS.length >= 7, `NAV_GROUPS stays the full grouped index, found ${NAV_GROUPS.length} groups`);
   assert.match(rail, /link\.external \?/, "external links must open in a new tab, never through next/link");
 });
+
+test("the rail reaches a collector's three dimensions: set, leader, colour (nav audit 2026-11-09)", () => {
+  const hrefs = RAIL_GROUPS.flatMap((g) => g.links.map((l) => l.href));
+  for (const h of ["/sets", "/leaders", "/colors"]) assert.ok(hrefs.includes(h), `${h} must be on the rail`);
+});

@@ -3994,3 +3994,13 @@ The competitor scan's gap #7, the same checker every Compare Empire site got tha
   falls back to a search.
 - **What compares.** Fresh store rows only (72 hours), singles at Near Mint only, one key per product and market; eBay and
   TCGplayer are never a store here. Cheapest and median are in-stock store prices in that market's own currency.
+
+## Navigation audit: the rail reaches leader and colour — 2026-11-09
+
+**Owner (Bill):** navigation is very important; a collector deep in a space must reach their dimension fast.
+
+- A One Piece player looks cards up by set, leader and colour. The rail had only "Sets & card lists"; Leaders and Colours were
+  in `NAV_GROUPS` (⌘K, footer) but two clicks away. `RAIL_GROUPS` (and so the phone menu) now lists "Prices by set", "Prices by
+  leader" and "Prices by colour" in Compare prices, 16 links, the cap `tests/sidenav.test.ts` already set. All three are price
+  browses, so the 2026-10-28 minimal, price-only rule holds; guides and blog stay last, no rails or pop-ups added.
+- Not done: a header mega menu (the header row is width-pinned on tablets and the owner kept it to a short list).
