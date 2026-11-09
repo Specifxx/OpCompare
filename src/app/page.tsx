@@ -7,6 +7,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomePopularCards, HomeSections } from "@/components/home/HomeSections";
 import { HomeTopDeals } from "@/components/home/HomeTopDeals";
+import { HomeGuides } from "@/components/home/HomeGuides";
 import { HomeSealedShelf } from "@/components/home/HomeSealedShelf";
 import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
 import { loadHomeData } from "@/components/home/home-data";
@@ -58,6 +59,7 @@ export default async function HomePage() {
       <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />
+      <HomeGuides cat={data.cat} />
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">
           One Piece card prices in the US, Australia, the UK, Singapore, Canada and the EU — all in one place
