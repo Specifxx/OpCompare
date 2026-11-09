@@ -12,6 +12,8 @@ import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
 import { HeaderWatchButton } from "./HeaderWatchButton";
 import { CartHeaderLink } from "./cart/CartHeaderLink";
+import { HeaderMegaMenu } from "./HeaderMegaMenu";
+import { HEADER_MENUS } from "./nav-groups";
 
 // The top bar — RiftCompare's Navbar, a SERVER component with client islands.
 // NavbarShell owns the scroll state; everything in here renders once.
@@ -54,7 +56,9 @@ export function Navbar() {
           </div>
         </div>
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
+          {/* Dropdowns from 1440px (owner, 2026-11-09), built from NAV_GROUPS; below it the plain Sealed link (the row has no slack). */}
+          <HeaderMegaMenu menus={HEADER_MENUS} className="hidden min-[1440px]:flex" />
+          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 min-[1440px]:hidden [@media(pointer:coarse)]:py-3.5">
             Sealed
           </Link>
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
