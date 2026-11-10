@@ -1,6 +1,6 @@
 "use client";
 
-import { PIN_OUTLINE } from "@/lib/pinned-order";
+import { PIN_OUTLINE, pinnedOrder } from "@/lib/pinned-order";
 import { MiniChaseAds } from "./MiniChaseAds";
 import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
@@ -105,7 +105,13 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
     };
   }, [slug]);
   const m = data?.markets[country as Country];
-  const listings = m ? rankOffers(m.offers) : [];
+  const ranked = m ? rankOffers(m.offers) : [];
+  // The sealed page's order (2026-11-10, site review OP-2): the cheapest open eBay and TCGplayer rows pinned on top, eBay
+  // first, then the stores by stock and price. "Best price" stays on the cheapest open row wherever it sits.
+  const pinEbay = ranked.find((l) => l.ebay && offerStock(l) === "open") ?? null;
+  const pinTcg = ranked.find((l) => l.source === "tcgplayer" && offerStock(l) === "open") ?? null;
+  const pins = pinnedOrder(pinEbay, pinTcg);
+  const listings = [...pins, ...ranked.filter((l) => !pins.includes(l))];
   const best = headlineOffer(listings);
   const open = listings.filter((l) => offerStock(l) === "open");
   const storeCount = new Set(open.filter((l) => !l.ebay).map((l) => l.source)).size;
@@ -220,7 +226,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                         data-retailer={l.retailer}
                         data-page="sealed"
                         data-card={data.slug}
-                        data-surface="sealed_quickview"
+                        data-surface={pins.includes(l) ? "quickview_pinned" : "sealed_quickview"}
                         className={isOpen ? `px-3 py-1.5 text-xs btn-primary` : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"}
                       >
                         {l.source === "tcgplayer" ? "TCGplayer →" : l.ebay ? "eBay →" : "View →"}

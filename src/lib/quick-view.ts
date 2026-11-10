@@ -15,6 +15,7 @@ import type { CardDetail, HistoryPoint, OfferRow } from "./data";
 import { lastSeen } from "./card-price-state";
 import { decodeLastKnown, lastKnownTupleOf, type LastKnown } from "./last-known";
 import { isEbaySource, sourceLabel } from "./stores";
+import { pinnedOrder } from "./pinned-order";
 
 /** Rows per market in the popup; the full page lists the rest ("See all N"). */
 export const QUICKVIEW_ROWS = 5;
@@ -98,8 +99,11 @@ export interface QuickViewMarket {
   count: number;
   /** An eBay row is among them (then the eBay search is the "more listings" strip, not the fallback). */
   ebayRow: boolean;
-  /** The first QUICKVIEW_ROWS of them, cheapest first. */
+  /** The card page board's order (2026-11-10, site review OP-2): its cheapest eBay row, then its cheapest TCGplayer
+   *  row, pinned first, then the cheapest others, QUICKVIEW_ROWS in all (more only when the pins alone exceed it). */
   rows: BuyRow[];
+  /** How many of `rows` are the pinned marketplace rows (0 to 2). The cheapest row is the lowest `priceCents`. */
+  pinned?: number;
   /** Affiliate-tagged eBay search for the card on this market's eBay. */
   ebaySearch: string;
   /** Up to 3 graded slabs captured on this market's eBay (best grade first); display only, never a price row. */
@@ -157,6 +161,20 @@ export function isPreRelease(releasedOn: string | null, today: string): boolean 
   return releasedOn != null && releasedOn > today;
 }
 
+/**
+ * The popup's rows, in the card page board's order (PriceBoardView): eBay's and TCGplayer's cheapest rows pinned on top
+ * (lib/pinned-order.ts), then the rest by price. Until 2026-11-10 the popup sent the five cheapest rows, so the paid rows
+ * the board pins were missing from it whenever five stores were cheaper (site review OP-2: Lorcana's pinned quick-view
+ * row earns; OP's earned A$0.57 from 839 visitors).
+ */
+export function quickRows(open: OfferRow[], m: Country, loc: string): { rows: BuyRow[]; pinned: number } {
+  const pinEbay = open.find((o) => isEbaySource(o.source)) ?? null;
+  const pinTcg = open.find((o) => o.source === "tcgplayer") ?? null;
+  const pins = pinnedOrder(pinEbay, pinTcg);
+  const rest = open.filter((o) => o !== pinEbay && o !== pinTcg).slice(0, Math.max(0, QUICKVIEW_ROWS - pins.length));
+  return { rows: [...pins, ...rest].map((o) => buyRow(o, m, loc)), pinned: pins.length };
+}
+
 /** Shape a card's detail into the popup's small, market-independent JSON. */
 export function quickViewPayload(
   c: CardDetail,
@@ -177,7 +195,7 @@ export function quickViewPayload(
     markets[m] = {
       count: open.length,
       ebayRow: open.some((o) => isEbaySource(o.source)),
-      rows: open.slice(0, QUICKVIEW_ROWS).map((o) => buyRow(o, m, loc)),
+      ...quickRows(open, m, loc),
       ebaySearch: ebaySearchUrl(m, query, "quickview"),
       graded: graded
         .filter((g) => g.market === m)
