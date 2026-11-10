@@ -8,6 +8,7 @@ import { clearRecent, pushRecentSearch, RECENT_SEARCHES_KEY, useRecentCards, use
 import CardQuickLink from "./CardQuickLink";
 import { sendCardView } from "@/lib/card-views";
 import { useCountry } from "./CountryProvider";
+import { compareSearchHref } from "@/lib/compare-search";
 import { Icon } from "./Icon";
 import { RecentlyViewed } from "./RecentlyViewed";
 
@@ -457,6 +458,12 @@ export function CardSearch({
                   </a>
                   <p className="text-[11px] leading-snug text-slate-500">Paid link: we may earn a commission from eBay at no cost to you.</p>
                 </div>
+              ) : null}
+              {/* Compare search test (2026-11-10): only here, where this site found nothing. */}
+              {!loading && trimmed.length > 1 ? (
+                <a href={compareSearchHref(trimmed, "op", country)} rel="nofollow" className="block border-t border-ink-800 px-4 py-3 text-sm font-semibold text-brand-400 [overflow-wrap:anywhere] hover:underline">
+                  Search every Compare Empire site for “{trimmed}” →
+                </a>
               ) : null}
             </div>
           ) : (
