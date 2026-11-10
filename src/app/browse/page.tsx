@@ -1,6 +1,5 @@
 import { EbayPicks } from "@/components/EbayPicks";
 import { FamilySearch } from "@/components/FamilySearch";
-import { compareSearchHref } from "@/lib/compare-search";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SortSelect } from "@/components/SortSelect";
@@ -202,13 +201,6 @@ export default async function BrowsePage({
                 source="browse-no-results"
                 page="browse"
               />
-              {q.q && q.q.trim().length > 1 && (
-                <p className="mt-4 text-sm">
-                  <a href={compareSearchHref(q.q, "op")} rel="nofollow" className="font-semibold text-brand-400 hover:underline">
-                    Search every Compare Empire site for “{q.q.trim()}” →
-                  </a>
-                </p>
-              )}
             </div>
           )}
           <Pagination page={page} totalPages={pages} params={searchParams} basePath="/browse" />
