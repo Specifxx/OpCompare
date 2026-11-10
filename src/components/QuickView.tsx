@@ -30,6 +30,9 @@ import { LastKnownPrice } from "./LastKnownPrice";
 // TCGplayer market price as a reference block (never a row). Everything comes
 // from one cached GET /api/card/[slug]; the visitor's market only picks which
 // slice of it to show, so switching market needs no second request.
+/** The cheapest of the popup's rows: the pinned eBay and TCGplayer rows come first, so it is not always the first. */
+const cheapestIndex = (rows: { priceCents: number }[]) => rows.reduce((b, r, i) => (r.priceCents < rows[b].priceCents ? i : b), 0);
+
 const PAGE = "quickview";
 
 // One request per card while it is fresh: a hover prefetches, the click reuses
@@ -242,12 +245,12 @@ export function QuickView({
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Price comparison</p>
                 {m.rows.length ? (
                   <ol className="divide-y divide-ink-800">
-                    {m.rows.map((r, i) => (
+                    {m.rows.map((r, i) => { const low = i === cheapestIndex(m.rows); const pin = i < (m.pinned ?? 0); return (
                       <li key={`${r.source}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 sm:flex-nowrap">
                         <div className="min-w-0 flex-1">
                           <p className="flex min-w-0 flex-wrap items-center gap-1.5">
                             <span className="truncate text-sm font-semibold text-white">{r.label}</span>
-                            {i === 0 && m.count > 1 ? (
+                            {low && m.count > 1 ? (
                               <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span>
                             ) : null}
                           </p>
@@ -260,7 +263,7 @@ export function QuickView({
                             <StoreCodeChip href={r.href} />
                           </p>
                         </div>
-                        <span className={`num shrink-0 text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>
+                        <span className={`num shrink-0 text-sm font-bold ${low ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>
                         <a
                           href={r.href}
                           target="_blank"
@@ -268,13 +271,13 @@ export function QuickView({
                           data-retailer={r.retailer}
                           data-page={PAGE}
                           data-card={data.slug}
-                          data-surface="quickview_row"
+                          data-surface={pin ? "quickview_pinned" : "quickview_row"}
                           className={`btn-primary order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
                         >
                           {r.source === "tcgplayer" ? "Buy on TCGplayer →" : r.ebay ? "Buy on eBay →" : "View deal →"}
                         </a>
                       </li>
-                    ))}
+                    ); })}
                   </ol>
                 ) : (
                   <p className="py-3 text-sm text-slate-400">No {co.adjective} store we track has this in stock right now.</p>

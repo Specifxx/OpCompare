@@ -4019,3 +4019,20 @@ The competitor scan's gap #7, the same checker every Compare Empire site got tha
   `aria-expanded`/`aria-controls`. No pop-up, no overlay.
 - **Width.** From 1440px; below it the plain Sealed link stays (the row is width-pinned). Rail, phone menu, URLs, titles,
   canonicals, headings and JSON-LD unchanged; no query, cache or revalidate.
+
+## 2026-11-10: The quick views pin eBay and TCGplayer like the card page (site review OP-2)
+
+**Why OP visitors did not buy.** 839 visitors earned A$0.57 in the week to 8 November; Lorcana's 318 earned A$16.07, most
+of it from its quick view's pinned TCGplayer row (`quickview_pinned`) and the card page's top buy block. OP's card page
+board, top buy block and sticky bar already match Lorcana's (eBay then TCGplayer pinned above the stores, a paid
+alternative under the cheapest store, every link tagged `oc-`: TCGplayer `sharedid=oc-tcgplayer-<page>`, eBay
+`customid=oc-<market>-…`). The difference was the quick view, where most card clicks on lists happen: it sent the five
+cheapest rows, so TCGplayer and eBay were missing whenever five stores were cheaper, and the sealed quick view sorted
+them in among the stores.
+
+**What.** `quickRows` (`lib/quick-view.ts`) sends the board's order: the cheapest eBay row, then the cheapest TCGplayer
+row, then the cheapest others, five in all; `pinned` says how many lead. The popup marks "Cheapest" on the lowest price
+wherever it sits and tags the pinned links `data-surface="quickview_pinned"`. `SealedQuickView` pins its open eBay and
+TCGplayer rows the same way. Item price order of the store rows and the "Best price" row are unchanged.
+`tests/quick-view.test.ts`. Buy clicks per visitor per week are now in the Monday report (TCGEmpire, same day), which
+is how the change is judged.

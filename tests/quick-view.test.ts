@@ -83,6 +83,7 @@ test("the payload covers all six markets, top rows only, with tagged links and p
   assert.equal(us.rows[0].label, "TCGplayer");
   assert.match(us.rows[0].href, /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=oc-tcgplayer-card/);
   assert.equal(us.rows[1].href, "https://shop.example/store:s0?utm_source=opcompare&utm_medium=referral&utm_campaign=card", "a store's own URL, with only our utm_source");
+  assert.equal(us.pinned, 1);
   assert.equal(us.ebayRow, false);
   const uk = p.markets.UK;
   assert.equal(uk.ebayRow, true);
@@ -252,4 +253,17 @@ test("card search opens a card hit in the QuickView; the TCGplayer banner is an 
   // The ISR card page draws it in its market island, with the link tagged on the server.
   assert.match(read("src/app/card/[slug]/page.tsx"), /<MarketReference [^>]*tcgBanner=\{tcgplayerBannerHref\("card"\)\}/);
   assert.match(read("src/components/card/CardMarket.tsx"), /<TcgplayerBanner /);
+});
+
+test("the popup pins the board's eBay and TCGplayer rows above cheaper stores (site review OP-2, 2026-11-10)", () => {
+  const offers = [
+    ...Array.from({ length: 6 }, (_, i) => offer({ source: `store:s${i}`, market: "US", priceCents: 500 + i * 10 })),
+    offer({ source: "tcgplayer", market: "US", priceCents: 950, url: "https://www.tcgplayer.com/product/453506" }),
+    offer({ source: "ebay", market: "US", priceCents: 1200, url: "https://www.ebay.com/itm/123" }),
+  ];
+  const us = quickViewPayload(card(offers), "2026-10-03").markets.US;
+  assert.deepEqual(us.rows.map((r) => r.source), ["ebay", "tcgplayer", "store:s0", "store:s1", "store:s2"]);
+  assert.equal(us.pinned, 2);
+  assert.equal(us.rows.length, QUICKVIEW_ROWS);
+  assert.equal(us.count, 8);
 });
