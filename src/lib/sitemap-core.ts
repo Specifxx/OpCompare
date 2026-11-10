@@ -39,3 +39,9 @@ type Sealed = Pick<SealedLite, "kind" | "stores" | "presale" | "releasedOn">;
 export function sitemapSealed<S extends Sealed>(sealed: readonly S[], today: string): S[] {
   return sealed.filter((s) => s.kind !== "Promo Pack" && (Object.values(s.stores).some((n) => n >= 2) || s.presale || (!!s.releasedOn && s.releasedOn > today)));
 }
+
+/**
+ * Whether each store's own /stores/<store> page is listed (off since 2026-11-10, SEO-4): 400 of the sitemap's 1,350 URLs,
+ * and nobody searches a shop's page on a comparison site. The pages stay live and indexable, linked from /stores (listed).
+ */
+export const SITEMAP_STORE_PAGES = false;
