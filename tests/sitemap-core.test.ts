@@ -22,3 +22,12 @@ test("sealed: two stores in one market or still to release; promo packs never", 
   const list = [s("Booster Box", { US: 2 }), s("Booster Box", { US: 1, AU: 1 }), s("Booster Box", {}, true), s("Booster Box", {}, false, "2026-12-01"), s("Promo Pack", { US: 9 })];
   assert.deepEqual(sitemapSealed(list as never, "2026-11-07").map((x) => list.indexOf(x as never)), [0, 2, 3]);
 });
+
+test("store pages are out of the sitemap, the stores index stays (SEO-4, 2026-11-10)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { SITEMAP_STORE_PAGES } = await import("../src/lib/sitemap-core");
+  assert.equal(SITEMAP_STORE_PAGES, false);
+  const src = readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8");
+  assert.match(src, /SITEMAP_STORE_PAGES \? STORES\.filter/, "individual store pages sit behind the switch");
+  assert.match(src, /"\/stores",/, "the stores index stays listed");
+});

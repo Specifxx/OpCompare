@@ -4053,3 +4053,12 @@ catalogue's type and name data, filtered exactly by the effect: one printing per
 market), and gives "what the core costs": one copy and four copies of each priced card, labelled as the cards the effect
 names, never as a decklist. ST29's Leader also shows its starter deck's live price. No decklist, strategy claim or price
 is typed. `tests/leader-guides.test.ts`.
+
+## 2026-11-10: Store pages out of the sitemap (SEO indexing plan, SEO-4)
+
+- 400 of the sitemap's 1,350 URLs were `/stores/<store>` pages. Nobody searches a shop's page on a comparison site (DexCompare
+  took its own out on 2026-11-07, MTG Compare on 2026-11-10). `SITEMAP_STORE_PAGES = false` (`lib/sitemap-core.ts`) drops them;
+  the sitemap is about 950 URLs.
+- The pages stay live and indexable, linked from `/stores`, which stays listed, as do `/stores/suggest` and
+  `/stores/partners`. This repo holds no Search Console demand file, so no store page is kept on a click: if one earns a
+  click it comes back by flipping the switch for that store. Pinned in `tests/sitemap-core.test.ts`.

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCardText, getCatalog, getLibraryDecks, getSealedCatalog, getTopDemand } from "@/lib/data";
-import { sitemapCards, sitemapSealed } from "@/lib/sitemap-core";
+import { SITEMAP_STORE_PAGES, sitemapCards, sitemapSealed } from "@/lib/sitemap-core";
 import { traitHubs } from "@/lib/traits";
 import { COLORS, COLOR_KEYS } from "@/lib/constants";
 import { AUTHORS, POSTS, postHref } from "@/lib/blog";
@@ -77,7 +77,7 @@ async function deckEntries(now: Date): Promise<MetadataRoute.Sitemap> {
 }
 
 // The tools track's landing pages: card facets, keywords, one page per Leader
-// number and per store with stock (thin store pages are noindex, so not listed).
+// number and per store with stock only while SITEMAP_STORE_PAGES is on (it is off: store pages stay live, out of the sitemap).
 function toolsTrackEntries(cat: Awaited<ReturnType<typeof getCatalog>>, stats: Awaited<ReturnType<typeof getStoreStats>>, now: Date): MetadataRoute.Sitemap {
   const leaders = new Set(cat.cards.filter((c) => c.cardType === "Leader" && c.number).map((c) => leaderSlug(c.name, c.number)));
   const stocked = new Set(stats.filter((s) => s.inStock >= 10).map((s) => s.source));
@@ -87,7 +87,7 @@ function toolsTrackEntries(cat: Awaited<ReturnType<typeof getCatalog>>, stats: A
     ...TYPE_FACETS.map((f) => `/cards/type/${f.slug}`),
     ...KEYWORDS.map((k) => `/keywords/${k.slug}`),
     ...[...leaders].map((s) => `/leaders/${s}`),
-    ...STORES.filter((s) => stocked.has(`store:${s.key}`)).map((s) => `/stores/${s.key}`),
+    ...(SITEMAP_STORE_PAGES ? STORES.filter((s) => stocked.has(`store:${s.key}`)).map((s) => `/stores/${s.key}`) : []),
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now }));
 }
 
