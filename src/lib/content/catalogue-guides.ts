@@ -61,6 +61,12 @@ export const LEADER_GUIDES: Record<string, Ref> = {
   "OP18-001": { slug: "karoo-leader-guide-op18", reason: "What Karoo's effect does, the Animal and Alabasta Characters it wants, and where to buy OP18" },
   "OP18-022": { slug: "op18-green-luffy-leader-deck-guide", reason: "What the attack-twice effect does, the green cards that untap it, and how the deck plays" },
   "OP18-060": { slug: "saint-gunko-leader-guide-op18", reason: "How the trash and DON!! halves of her effect work, and the OP18 cards to watch" },
+  // 2026-11-10 (site review OP-1): the next Leaders by Search Console impressions without a guide.
+  "OP12-041": { slug: "sanji-leader-guide-op12", reason: "What the Event and DON!! halves of the effect do, and every Straw Hat Crew Event it can use, priced" },
+  "OP12-061": { slug: "rosinante-leader-guide-op12", reason: "How it protects and discounts Trafalgar Law, and every Law it can use, priced" },
+  "ST29-001": { slug: "egghead-luffy-leader-guide-st29", reason: "What the low-Life draw does, the yellow Egghead cards, and the starter deck's price" },
+  "OP16-079": { slug: "yamato-leader-guide-op16", reason: "Rush for Land of Wano Characters played from the trash, and every Black Wano Character, priced" },
+  "OP06-080": { slug: "gecko-moria-leader-guide-op06", reason: "How the mill-and-replay effect works, and every Thriller Bark Pirates Character it can bring back, priced" },
 };
 
 function resolve(refs: readonly Ref[], limit: number): RelatedGuide[] {
