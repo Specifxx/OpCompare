@@ -4036,3 +4036,20 @@ wherever it sits and tags the pinned links `data-surface="quickview_pinned"`. `S
 TCGplayer rows the same way. Item price order of the store rows and the "Best price" row are unchanged.
 `tests/quick-view.test.ts`. Buy clicks per visitor per week are now in the Monday report (TCGEmpire, same day), which
 is how the change is judged.
+
+## 2026-11-10: Five guides for released Leaders people search (site review OP-1)
+
+**Why.** The two OP18 leader guides brought 48 of the site's 244 Google clicks in 56 days (about 7% of their impressions);
+card pages brought 11 clicks from 2,211. The `demand` branch's `gsc-pages.json` ranks the Leader pages without a guide:
+Sanji OP12-041, Donquixote Rosinante OP12-061, Monkey.D.Luffy ST29-001, Luffy OP17-079, Yamato OP16-079, then Gecko
+Moria OP06-080 and others.
+
+**What.** `src/lib/blog/posts/leader-guides.tsx` builds one guide per Leader from one spec, at `/guides/<slug>`, each
+linked from its Leader page (`LEADER_GUIDES`): Sanji, Rosinante, Egghead Luffy (ST29), Yamato (OP16) and Gecko Moria
+(OP06). OP17-079 Luffy was skipped: its effect names Characters of cost 12 or more, and no printed card has that cost, so
+a guide would have nothing true to list. Each guide quotes the Leader's effect as TCGplayer's text in the catalogue on
+10 November (labelled with the date), explains only what that text says, lists every card the effect names (the
+catalogue's type and name data, filtered exactly by the effect: one printing per card number, live cheapest price per
+market), and gives "what the core costs": one copy and four copies of each priced card, labelled as the cards the effect
+names, never as a decklist. ST29's Leader also shows its starter deck's live price. No decklist, strategy claim or price
+is typed. `tests/leader-guides.test.ts`.
