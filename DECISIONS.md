@@ -2087,7 +2087,7 @@ are: the chase cards first, the floor lowered.
   dispatch plus the schedule cannot pass 2,500.
 - Floors: singles US$20+ (US$40 in the EU), sealed US$30+. Tiers: US$100+ every
   48h (S1: all the chase printings, first in line), the rest every 72h.
-- Shares: US 50%, UK 18%, AU 17%, EU 11%, CA 4% (sealed only). Modelled demand
+- Shares: US 50%, UK 18%, AU 17%, EU 11%, CA 4% (sealed only); re-split 2026-11-10 to US 55, AU 25, UK 8, CA 7, EU 5 (below). Modelled demand
   is about 2,200–2,400 calls a day for the whole catalogue, just above one
   2,000-call run, so the plan stays budget-bound at the edge: the dearest cards
   first, then most overdue, and the cheapest eligible waits a day.
@@ -4062,3 +4062,16 @@ is typed. `tests/leader-guides.test.ts`.
 - The pages stay live and indexable, linked from `/stores`, which stays listed, as do `/stores/suggest` and
   `/stores/partners`. This repo holds no Search Console demand file, so no store page is kept on a click: if one earns a
   click it comes back by flipping the switch for that store. Pinned in `tests/sitemap-core.test.ts`.
+
+## 2026-11-10: eBay shares follow visitors and sales: US 55, AU 25, UK 8, CA 7, EU 5
+
+**Why.** The owner approved the site-by-region eBay review (`strategy/ebay-site-region-split-2026-11-10.html` in the
+project files). Over 11 October to 10 November the UK took 382 of OP Compare's ~2,170 daily searches and Europe 278 (30%
+between them) for 97 and 201 visitors and no eBay sale. Australia had 914 visitors and A$9.13 on 371 searches, the only
+eBay money outside the US (A$66.67 on 1,076). Canada had 488 visitors on 66 searches, sealed only.
+
+**What.** `MARKET_SHARES` (`src/lib/ebay-plan.ts`) goes from US 50 / UK 18 / AU 17 / EU 11 / CA 4 to US 55 / AU 25 /
+UK 8 / CA 7 / EU 5; SG stays 0. The daily cap (2,500), floors, tiers, intervals and US-first order are unchanged; a
+market short of due pairs still spills to the US first. Canada's share is still spent on sealed only: its singles stay
+derived from the US search. Recheck about 24 November against eBay's earnings by tag (oc-au, oc-us).
+

@@ -29,8 +29,12 @@
 export type EbayMarket = "US" | "UK" | "AU" | "EU" | "CA" | "SG";
 export const EBAY_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU", "CA", "SG"];
 
-/** Share of each run's budget. Modelled in DECISIONS (2026-10-03, eBay Browse API). */
-export const MARKET_SHARES: Record<EbayMarket, number> = { US: 0.5, UK: 0.18, AU: 0.17, EU: 0.11, CA: 0.04, SG: 0 };
+/**
+ * Share of each run's budget. Modelled in DECISIONS (2026-10-03, eBay Browse API); re-split 2026-11-10 (owner approved
+ * the site-by-region review): the UK and EU took 30% of the calls for under 300 visitors a month and no eBay sale,
+ * Australia had 914 visitors and the only non-US sales. US 55 / AU 25 / UK 8 / CA 7 / EU 5.
+ */
+export const MARKET_SHARES: Record<EbayMarket, number> = { US: 0.55, UK: 0.08, AU: 0.25, EU: 0.05, CA: 0.07, SG: 0 };
 
 /** Markets searched for singles. CA singles are DERIVED from the US search (0 calls); SG is search-link only. */
 export const SINGLES_MARKETS: EbayMarket[] = ["US", "UK", "AU", "EU"];
