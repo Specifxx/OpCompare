@@ -36,7 +36,7 @@ test("placed on sealed pages only, as the second row right under eBay (owner, 20
   const sealed = read("src/app/sealed/[slug]/page.tsx");
   assert.match(sealed, /thirdRow=\{<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>\}/);
   const view = read("src/components/PriceBoardView.tsx");
-  assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}<\/Fragment>/, "right after the eBay row");
+  assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}\{fetchLis\}<\/Fragment>/, "right after the eBay row");
   assert.match(view, /\{hasEbayRow \? null : thirdRow\}/, "right after eBay's search row when eBay has no listing");
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
