@@ -58,6 +58,7 @@ import { traitHref, traitHubs } from "@/lib/traits";
 import { MiniChaseAds } from "@/components/MiniChaseAds";
 import type { EbayPanelData } from "@/lib/listing-panel";
 import { boardModel } from "@/lib/board-model";
+import { fetchRowsFor } from "@/lib/fetchtcg";
 import { perMarket, perMarketList } from "@/lib/per-market";
 import { priceGap, shareText } from "@/lib/share-link";
 import { longDate, money } from "@/lib/format";
@@ -257,7 +258,9 @@ export default async function CardPage({ params }: Props) {
     const st = stateIn(m);
     return !st.hasListings || (st.noRetailChannel && !st.inMarket) ? st : null;
   });
-  const boards = perMarket((m) => boardModel(card.offers, m, { page: "card", ebayQuery }));
+  // Fetch TCG's own listing of this card (Australia only, lib/fetchtcg.ts): null without the build-time file.
+  const fetchRows = fetchRowsFor(card);
+  const boards = perMarket((m) => boardModel(card.offers, m, { page: "card", ebayQuery, ...(m === "AU" ? { fetch: fetchRows } : {}) }));
   const tables = perMarket((m) => marketsTableData(card.offers, card.name, m));
   const ebayBanner = perMarket((m) => ebayBannerHref(m, ebayQuery, "card"));
   const historyTuples = history.map((p): HistoryTuple => [p.day, p.marketUsd, p.lows ?? [p.lowUsd]]);

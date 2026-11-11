@@ -18,6 +18,7 @@ import {
   evalJobs,
   evalNeon,
   evalAmazon,
+  evalFetchRow,
   evalSite,
   evalSnapshotAge, evalFamilyFeedAge,
   evalStoreCodes,
@@ -246,6 +247,21 @@ export async function collectAmazon(): Promise<Check[]> {
   return [evalAmazon(out.answer, out.slug)];
 }
 
+/** Fetch TCG's row: one base card's page, read for Fetch's own link. */
+export async function collectFetchRow(): Promise<Check[]> {
+  const slug = "roronoa-zoro-op01-001";
+  const html = await guarded(
+    "fetch tcg row",
+    async () => {
+      const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
+      const r = await withTimeout(`${base}/card/${slug}`, { headers: { "User-Agent": "OPCompareWatchdog/1.0" } }, 20_000);
+      return r.ok ? await r.text() : null;
+    },
+    () => null as string | null,
+  );
+  return [evalFetchRow(html, slug)];
+}
+
 export async function collectJobs(now: Date): Promise<Check[]> {
   const repo = process.env.GITHUB_REPOSITORY || "Specifxx/OpCompare";
   return guarded(
@@ -268,6 +284,6 @@ export async function collectJobs(now: Date): Promise<Check[]> {
 
 /** Everything, in parallel groups; the report is always produced. */
 export async function collectAll(now: Date = new Date()): Promise<{ report: HealthReport; inbox: InboxCounts | null }> {
-  const [neon, prices, stores, ebay, email, inbox, site, amazon, jobs] = await Promise.all([collectNeon(now), collectPrices(now), collectStores(), collectEbay(now), collectEmail(), collectInbox(now), collectSite(), collectAmazon(), collectJobs(now)]);
-  return { report: buildReport([...neon, ...prices, ...ebay, ...stores, ...site, ...amazon, ...jobs, ...email, ...inbox.checks], now), inbox: inbox.counts };
+  const [neon, prices, stores, ebay, email, inbox, site, amazon, fetchRow, jobs] = await Promise.all([collectNeon(now), collectPrices(now), collectStores(), collectEbay(now), collectEmail(), collectInbox(now), collectSite(), collectAmazon(), collectFetchRow(), collectJobs(now)]);
+  return { report: buildReport([...neon, ...prices, ...ebay, ...stores, ...site, ...amazon, ...fetchRow, ...jobs, ...email, ...inbox.checks], now), inbox: inbox.counts };
 }

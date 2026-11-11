@@ -441,3 +441,10 @@ test("evalAmazon: unknown without credentials, warn when refused, ok with or wit
   assert.equal(evalAmazon({ status: "none" }, "op-13-booster-box").status, "ok");
   assert.equal(evalAmazon({ status: "http 500" }, "op-13-booster-box").status, "warn");
 });
+
+test("evalFetchRow: ok with Fetch's link in the page, warn without it, unknown when the page cannot be read, never a fail", async () => {
+  const { evalFetchRow } = await import("../src/lib/health");
+  assert.equal(evalFetchRow(null, "roronoa-zoro-op01-001").status, "unknown");
+  assert.equal(evalFetchRow("<p>nothing</p>", "roronoa-zoro-op01-001").status, "warn");
+  assert.equal(evalFetchRow('{"url":"https://www.fetchtcg.com/cards/ope_x"}', "roronoa-zoro-op01-001").status, "ok");
+});
