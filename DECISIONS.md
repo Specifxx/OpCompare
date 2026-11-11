@@ -4075,3 +4075,24 @@ UK 8 / CA 7 / EU 5; SG stays 0. The daily cap (2,500), floors, tiers, intervals 
 market short of due pairs still spills to the US first. Canada's share is still spent on sealed only: its singles stay
 derived from the US search. Recheck about 24 November against eBay's earnings by tag (oc-au, oc-us).
 
+
+## 2026-11-11: Fetch TCG's price on Australian card pages (partner feed, never published)
+
+**Why.** Fetch TCG (fetchtcg.com, an Australia and New Zealand card marketplace) agreed to be listed on every site and sent
+a partner feed on 2026-11-11 (`https://api.fetchtcg.com/partner-feed/au.json`, `Authorization: Bearer <key>`, once a day).
+Its terms: show Fetch's prices with a link back; no reselling or passing the feed on; no building a marketplace or
+pricing model from it. Built first on RiftCompare (TCGEmpire #412, DECISIONS 2026-11-11), then here.
+
+**What.**
+- `scripts/fetch-fetchtcg.ts` runs in every build (after `fetch-awin`, never fatal) and keeps only One Piece (English,
+  `gameId: "ope"`) in `data/fetch-live/au.json`, **git-ignored** (the feed is 95 MB and publishing it is passing it on),
+  bundled into `/card/[slug]` only. `FETCH_TCG_API_KEY` is a Vercel Production variable and a GitHub secret.
+- `src/lib/fetchtcg.ts`: a card gets a row only for its BASE printing: the card number in the set the number belongs to
+  (OP01-035 in [OP01], not a later reprint or promo), the same name (Fetch writes a base as "Roronoa Zoro (001)"; any
+  other bracket, "(Parallel)", "(SP)", "(Alternate Art)", is a printing and gets no row yet) and the finish TCGplayer
+  lists it in. Two Fetch listings of one card is no row.
+- `BoardModel.fetch` (Australia only) is drawn by `PriceBoardView` right after eBay's row and the sealed page's third row:
+  "Fetch TCG · Marketplace", Near Mint else the best raw condition, in stock, "price on <date>", a paid-link tag and
+  Fetch's own URL as sent. Never ranked, never "Cheapest", never in a deal, alert, basket, history or JSON-LD.
+- A file older than three days is ignored. Watchdog check `fetchtcg-row` (warn, never fail).
+- Recheck about 18 November with the first Fetch clicks and Fetch's commission rate.
