@@ -33,3 +33,6 @@ next-env.d.ts
 
 # generated public-data Prisma client (prisma generate --schema prisma/public/schema.prisma)
 /src/generated/
+
+# Fetch TCG's feed, kept out of the public source (its terms): scripts/fetch-fetchtcg.ts
+/data/fetch-live/

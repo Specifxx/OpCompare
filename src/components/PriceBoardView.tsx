@@ -71,6 +71,7 @@ export function PriceBoardView({
   const c = COUNTRIES[country];
   const { rows: open, sold, elsewhere, ebaySearch: ebay } = model;
   const hasEbayRow = open.some((o) => o.ebay);
+  const fetchLis = fetchRowLis(model.fetch, { country, page, slug, now });
   // eBay and TCGplayer first (owner, 2026-10-27), each its cheapest row here,
   // the cheaper of the two on top and TCGplayer on a tie (2026-10-27, DECISIONS:
   // "The cheaper marketplace leads the pinned pair"); the rest by price. `rank`
@@ -119,6 +120,7 @@ export function PriceBoardView({
           )}
           {/* The slot's row (thirdRow) is the second row, right under eBay (owner, 2026-11-06). */}
           {hasEbayRow ? null : thirdRow}
+          {hasEbayRow ? null : fetchLis}
           {showTcgRef && tcgRef?.marketUsd != null ? (
             <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
               <span className="w-5 shrink-0" />
@@ -201,7 +203,7 @@ export function PriceBoardView({
                   →
                 </a>
               </li>,
-              o === pinEbay ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
+              o === pinEbay ? <Fragment key="third-row">{thirdRow}{fetchLis}</Fragment> : null,
             ];
           })}
         </ol>
@@ -273,4 +275,38 @@ export function PriceBoardView({
 
     </>
   );
+}
+
+/** Fetch TCG's marketplace row (Australia only): drawn like a store row but never ranked, never "Cheapest". Fetch's own
+ *  tracked URL is used as sent; the price carries its date. */
+function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string; slug?: string; now?: number }) {
+  if (!f || o.country !== "AU") return null;
+  return f.rows.map((r) => (
+    <li key="fetchtcg" className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.fetch}`}>
+      <span className="w-5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-[15px] font-semibold text-white">Fetch TCG</span>
+          <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Marketplace</span>
+        </p>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+          <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{r.condition}</span>
+          <span className="flex items-center gap-1 text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            In stock
+          </span>
+          <span>postage at checkout</span>
+          <span>price on {new Date(f.at).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</span>
+          <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+        </p>
+      </div>
+      <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">{money(r.priceCents, o.country)}</span>
+      <a href={r.url} target="_blank" rel={outboundRel()} data-retailer="fetchtcg" data-page={o.page} data-card={o.slug} data-surface="board_pinned" className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
+        View on Fetch TCG →
+      </a>
+      <a href={r.url} target="_blank" rel={outboundRel()} data-retailer="fetchtcg" data-page={o.page} data-card={o.slug} data-surface="board_pinned" className="btn-primary shrink-0 px-3 sm:hidden" aria-label="View on Fetch TCG">
+        →
+      </a>
+    </li>
+  ));
 }

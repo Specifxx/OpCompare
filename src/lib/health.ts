@@ -420,6 +420,19 @@ export function evalAmazon(answer: { status?: string } | null, slug: string | nu
   return { id, area: "site", label, status: "warn", detail: `The route answered "${st}" for /sealed/${slug}.`, hint: "Read the route's function log in Vercel." };
 }
 
+/**
+ * Fetch TCG's row on the card page (DECISIONS.md 2026-11-11): the watchdog reads a base One Piece card's page and looks
+ * for Fetch's own link in it (the Australian board model is in the page). No link is a warn, never a fail: the page works
+ * without the row. A page that could not be read is unknown.
+ */
+export function evalFetchRow(html: string | null, slug: string): Check {
+  const id = "fetchtcg-row";
+  const label = "Fetch TCG row (card pages)";
+  if (html == null) return unknown(id, "site", label, `/card/${slug} could not be read.`);
+  if (html.includes("www.fetchtcg.com/cards")) return { id, area: "site", label, status: "ok", detail: `The Fetch TCG row is on /card/${slug}.` };
+  return { id, area: "site", label, status: "warn", detail: `/card/${slug} has no Fetch TCG row: FETCH_TCG_API_KEY is missing in Vercel, the feed was not read at the last build, or Fetch has no stock of it today.`, hint: 'Check FETCH_TCG_API_KEY in Vercel (Production) and the last build log for "Fetch TCG:".' };
+}
+
 // ── Scheduled jobs (GitHub Actions) ──────────────────────────────────────────
 
 export interface WorkflowRun {

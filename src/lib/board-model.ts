@@ -6,6 +6,7 @@
 // registry or the affiliate environment reaching the browser, and the sealed
 // page draws one market's on the server. The rules are the board's own, moved
 // here unchanged from components/PriceBoard.tsx (tests/ebay-board.test.ts).
+import type { FetchRows } from "./fetchtcg";
 import { affiliateUrl, ebaySearchUrl, isPaidLink } from "./affiliate";
 import { ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
@@ -57,9 +58,11 @@ export interface BoardModel {
   elsewhere: { m: Country; cents: number }[];
   /** Affiliate-tagged eBay search on this market's eBay. */
   ebaySearch: string;
+  /** Fetch TCG's own price of this card (Australia only, lib/fetchtcg.ts): a marketplace row after eBay's, never ranked. */
+  fetch?: FetchRows;
 }
 
-export function boardModel(offers: OfferRow[], country: Country, opts: { page: string; ebayQuery: string }): BoardModel {
+export function boardModel(offers: OfferRow[], country: Country, opts: { page: string; ebayQuery: string; fetch?: FetchRows | null }): BoardModel {
   const { page } = opts;
   const c = COUNTRIES[country];
   const here = offers.filter((o) => o.market === country && o.currency === c.currency);
@@ -114,7 +117,7 @@ export function boardModel(offers: OfferRow[], country: Country, opts: { page: s
       return best ? { m, cents: best.priceCents } : null;
     })
     .filter((x): x is { m: Country; cents: number } => x != null);
-  return { rows, sold, elsewhere, ebaySearch: ebaySearchUrl(country, opts.ebayQuery, `${page}-board`) };
+  return { rows, sold, elsewhere, ebaySearch: ebaySearchUrl(country, opts.ebayQuery, `${page}-board`), ...(opts.fetch ? { fetch: opts.fetch } : {}) };
 }
 
 /** "https://www.store.com/x" → "www.store.com"; null when the URL does not parse. */
