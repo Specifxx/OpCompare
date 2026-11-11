@@ -23,18 +23,19 @@ test("only the base printing, in its own set, by number and name, matches; a sta
     path.join(dir, "data", "fetch-live", "au.json"),
     JSON.stringify({
       fetchedAt: new Date().toISOString(),
-      cards: [c({}), c({ f: "Foil", p: 500 }), c({ n: "Okiku (SP)", s: "[OP07] 500 Years in the Future", p: 900 }), c({ no: "OP01-036", n: "Twin" }), c({ no: "OP01-036", n: "Twin", p: 99 })],
+      cards: [c({ n: "Okiku (035)" }), c({ f: "Foil", p: 500, n: "Okiku (Parallel)" }), c({ n: "Okiku (SP)", s: "[OP07] 500 Years in the Future", p: 900 }), c({ no: "OP01-036", n: "Twin" }), c({ no: "OP01-036", n: "Twin", p: 99 })],
     }),
   );
   const cwd = process.cwd();
   process.chdir(dir);
   try {
     const { fetchRowsFor } = await import("../src/lib/fetchtcg");
-    assert.equal(fetchRowsFor({ name: "Okiku", number: "OP01-035", variant: null })?.rows[0].priceCents, 120);
-    assert.equal(fetchRowsFor({ name: "Okiku", number: "OP01-035", variant: "Parallel" }), null);
-    assert.equal(fetchRowsFor({ name: "Someone", number: "OP01-035", variant: null }), null);
-    assert.equal(fetchRowsFor({ name: "Twin", number: "OP01-036", variant: null }), null, "two Fetch listings of one card is ambiguous");
-    assert.equal(fetchRowsFor({ name: "Okiku", number: null, variant: null }), null);
+    assert.equal(fetchRowsFor({ name: "Okiku", number: "OP01-035", variant: null, finish: "Normal" })?.rows[0].priceCents, 120);
+    assert.equal(fetchRowsFor({ name: "Okiku", number: "OP01-035", variant: "Parallel", finish: null }), null);
+    assert.equal(fetchRowsFor({ name: "Someone", number: "OP01-035", variant: null, finish: null }), null);
+    assert.equal(fetchRowsFor({ name: "Okiku", number: "OP01-035", variant: null, finish: "Foil" }), null, "a base card in the other finish is not this card");
+    assert.equal(fetchRowsFor({ name: "Twin", number: "OP01-036", variant: null, finish: null }), null, "two Fetch listings of one card is ambiguous");
+    assert.equal(fetchRowsFor({ name: "Okiku", number: null, variant: null, finish: null }), null);
   } finally {
     process.chdir(cwd);
   }

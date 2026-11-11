@@ -1,5 +1,4 @@
 // temporary
-import { readFileSync } from "node:fs";
-const f = JSON.parse(readFileSync("data/fetch-live/au.json", "utf8")) as { cards: { s: string; no: string; n: string; f: string; c: string; p: number }[] };
-for (const no of ["OP01-001", "OP01-016", "OP01-035"]) console.log(no, JSON.stringify(f.cards.filter((c) => c.no === no).map((c) => `${c.s}|${c.n}|${c.f}|${c.p}`)));
-const sets = new Set(f.cards.map((c) => c.s)); console.log("sets", [...sets].slice(0, 8).join(" ;; "));
+import { fetchRowsFor } from "../src/lib/fetchtcg";
+const probes: [string, string, string][] = [["Roronoa Zoro", "OP01-001", "Normal"], ["Nami", "OP01-016", "Foil"], ["Okiku", "OP01-035", "Foil"], ["Monkey.D.Luffy", "OP01-003", "Foil"], ["Portgas.D.Ace", "OP02-013", "Foil"]];
+for (const [name, number, finish] of probes) { const r = fetchRowsFor({ name, number, variant: null, finish }); console.log(number, name, r ? `${r.rows[0].condition} ${r.rows[0].priceCents}c` : "no row"); }

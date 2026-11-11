@@ -45,9 +45,11 @@ export const FETCH_LIVE_FILE = path.join("data", "fetch-live", "au.json");
 export const FETCH_MAX_AGE_MS = 3 * 86400e3;
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
-/** Fetch adds the printing in brackets ("Okiku (SP)"); a plain name is the base printing. */
-const hasPrinting = (s: string) => /\([^)]*\)/.test(s);
-const bareName = (s: string) => norm(s.replace(/\s*\([^)]*\)/g, ""));
+/** Fetch adds the card's number to a base name ("Roronoa Zoro (001)") and any other bracket names a printing
+ *  ("(Parallel)", "(SP)", "(Alternate Art)", a promo's event): the first is the base printing, the second never. */
+const stripNumberTag = (s: string) => s.replace(/\s*\(\d{3}\)\s*$/, "");
+const hasPrinting = (s: string) => /\([^)]*\)/.test(stripNumberTag(s));
+const bareName = (s: string) => norm(stripNumberTag(s));
 /** "[OP01] Romance Dawn" → "OP01"; null for a set with no code (promos). */
 const setCodeOf = (s: string) => /^\[([A-Z0-9]+)\]/.exec(s)?.[1] ?? null;
 /** "OP01-035" → "OP01" (also ST01, EB01, PRB01). */
@@ -79,18 +81,19 @@ function load(): typeof cache {
 }
 
 /**
- * Fetch's non-foil listing of this card's BASE printing: the same card number in the set the number belongs to (OP01-035
+ * Fetch's listing of this card's BASE printing (the finish TCGplayer lists it in): the same card number in the set the number belongs to (OP01-035
  * in [OP01], not a later reprint), the same name and no bracketed printing. Alternate arts, parallels and reprints get
  * no row yet (their names do not map one to one), and anything ambiguous is no row: a wrong price is worse than none.
  */
-export function fetchRowsFor(card: { name: string; number: string | null; variant: string | null }): FetchRows | null {
+export function fetchRowsFor(card: { name: string; number: string | null; variant: string | null; finish: string | null }): FetchRows | null {
   const l = load();
   if (!l || !card.number || card.variant) return null;
   const hits = l.index.get(card.number.toUpperCase());
   const prefix = prefixOf(card.number.toUpperCase());
   if (!hits || !prefix) return null;
   const want = norm(card.name);
-  const named = hits.filter((h) => !hasPrinting(h.n) && h.f === "Normal" && setCodeOf(h.s) === prefix && bareName(h.n) === want);
+  const finish = card.finish?.toLowerCase() ?? null;
+  const named = hits.filter((h) => !hasPrinting(h.n) && setCodeOf(h.s) === prefix && bareName(h.n) === want && (!finish || h.f.toLowerCase() === finish));
   if (named.length !== 1) return null;
   const h = named[0];
   return h.p > 0 ? { rows: [{ condition: h.c, priceCents: h.p, url: h.u }], at: l.at } : null;
