@@ -182,7 +182,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
             {data.chase?.length ? <MiniChaseAds tiles={data.chase} page="sealed-quickview" className="mb-3" /> : null}
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
             {amazon && amazonHref ? (
-              <div data-amazon-row className="mb-2 flex items-center gap-3 rounded-md px-1 py-2.5 outline outline-2 -outline-offset-2 outline-[#f59e0b]">
+              <div data-amazon-row className="mb-2 flex items-center gap-3 rounded-md px-1 py-2.5">
                 <div className="min-w-0 flex-1 pl-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-white">
                     {amazon.label} <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">Ad</span>

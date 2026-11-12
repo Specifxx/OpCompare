@@ -4144,3 +4144,16 @@ The owner said to deploy the festive layer urgently once every site had it, so t
 The owner: no Amazon links where Amazon doesn't sell the item (RiftCompare first). `amazonCarriesSealed` (lib/amazon.ts) gates the sealed page's Amazon row and the
 quick view's link to boosters, starter decks, collections and tins; cases, event and promo kits and displays get none. /sealed's category-search rows lose
 their Amazon button (not a product, Associates rule 4).
+
+
+## 2026-11-12 — a calmer price table (owner)
+
+The owner opened DexCompare and its quick view and said there was too much going on: too many colours, a colour per row. DexCompare's
+rule now applies here too: the accent is for the one thing to press, green is for money (the best price), everything else is neutral.
+This replaces the coloured outlines of 2026-11-06 and 2026-11-07.
+
+`PIN_OUTLINE` (`lib/pinned-order.ts`): the pinned eBay, Fetch and Amazon rows lose their green, violet and amber outlines, on the price board, the Amazon row and the sealed quick view; the cheapest row trades its sky-blue outline for a green edge.
+
+Order, labels, links, tags, URLs, titles, metadata and headings are unchanged; what we earn still never decides order. Measure outbound
+clicks per placement on 19 November against the week before: if the pinned eBay row's clicks fall, strengthen its button before
+bringing any outline back.
