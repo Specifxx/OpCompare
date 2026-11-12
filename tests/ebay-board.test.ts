@@ -80,7 +80,7 @@ test("the board pins eBay and TCGplayer (the cheaper on top), keeps price ranks,
   assert.match(src, /const i = open\.indexOf\(o\);/);
   assert.doesNotMatch(src, /Shown ?first/i, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /% vs cheapest/);
-  assert.match(src, /TCGplayer may not ship to your country/);
+  assert.doesNotMatch(src, /TCGplayer may not ship|approximate rate|Check on TCGplayer/, "no reference wording (owner, 2026-11-12)");
 });
 
 test("JSON-LD: eBay offers carry seller eBay, shipping only when known", () => {

@@ -134,18 +134,16 @@ export function PriceBoardView({
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="truncate text-[15px] font-semibold text-white">TCGplayer</span>
-                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">market price</span>
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
-                  TCGplayer&apos;s US market price, converted at an approximate rate. TCGplayer may not ship to your country.{" "}
                   <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
                 </p>
               </div>
               <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">
-                ≈ {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
+                {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
               </span>
-              <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-primary shrink-0 whitespace-nowrap px-3 sm:w-48">
-                <span className="hidden sm:inline">Check on TCGplayer →</span>
+              <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
+                <span className="hidden sm:inline">Buy on TCGplayer →</span>
                 <span className="sm:hidden">→</span>
               </a>
             </li>
@@ -204,10 +202,10 @@ export function PriceBoardView({
                 {o.host && !tcg ? (
                   <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="text-slate-300" />
                 ) : null}
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${pinned || i === 0 ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${pinned || i === 0 ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
                   →
                 </a>
               </li>,

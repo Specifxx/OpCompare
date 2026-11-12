@@ -4165,3 +4165,7 @@ ordinary store row ranked by price (no pin, no Marketplace or Paid link tag); th
 Creators API has returned a price (the unpriced "Also check on Amazon" row and the quick view's Amazon link are gone); the
 pinned eBay and TCGplayer buttons stay filled while store rows are outlined, so the two marketplaces stand out.
 `tests/paid-rows.test.ts` pins it.
+
+## 2026-11-12: TCGplayer's row is a plain price with a blue button
+
+Owner: "reference", "approximate" and "Check on TCGplayer" cost clicks. The TCGplayer row and block now read "TCGplayer", show the market price as a normal price (no "≈", no caveat) and carry "Buy on TCGplayer →" in a blue `.btn-tcg`. Where TCGplayer has a real listing (US) that listing row is shown as before.
