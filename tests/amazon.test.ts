@@ -36,7 +36,7 @@ test("placed on sealed pages only, as the second row right under eBay (owner, 20
   const sealed = read("src/app/sealed/[slug]/page.tsx");
   assert.match(sealed, /thirdRow=\{amazonCarriesSealed\(s\.kind\) \? <AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/> : undefined\}/, "only kinds Amazon carries (2026-11-12)");
   const view = read("src/components/PriceBoardView.tsx");
-  assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}\{fetchLis\}<\/Fragment>/, "right after the eBay row");
+  assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}<\/Fragment>/, "right after the eBay row");
   assert.match(view, /\{hasEbayRow \? null : thirdRow\}/, "right after eBay's search row when eBay has no listing");
   const comp = read("src/components/AmazonCheck.tsx");
   assert.match(comp, /\{AMAZON_STATEMENT\}/);
@@ -53,11 +53,9 @@ test("placed on sealed pages only, as the second row right under eBay (owner, 20
   assert.ok(read("src/components/Footer.tsx").includes(AMAZON_STATEMENT));
 });
 
-test("the sealed quick view's Amazon row is the page's tagged search, never Amazon's price (owner, 2026-11-06)", () => {
+test("the sealed quick view carries no Amazon row: Amazon shows only with a price, and the price stays on the sealed page (owner, 2026-11-12)", () => {
   const qv = readFileSync("src/components/SealedQuickView.tsx", "utf8");
-  assert.match(qv, /amazonSearchUrl\(country as Country, data\.name, "sealed-quickview-amazon"\)/);
-  assert.match(qv, /rel=\{AMAZON_REL\}/);
-  assert.doesNotMatch(qv, /AmazonLiveSlot|\/api\/amazon\//, "the price stays on the sealed page");
+  assert.doesNotMatch(qv, /amazon/i);
 });
 
 test("Amazon's row only for sealed kinds Amazon carries (owner, 2026-11-12)", async () => {

@@ -13,15 +13,16 @@ import { PIN_OUTLINE } from "@/lib/pinned-order";
 // about the order. Never in Amazon's own colours (2026-11-02: Amazon Associates' rules forbid styling that could pass for
 // Amazon's site). Since 2026-11-06 (owner: eBay and Amazon rows "function exactly like a normal store price row … it just
 // sits on the very top. And it has a different colored outline") it is the second row, right under eBay, with an amber
-// outline, the store row's thumbs and, with a live price, its stock line and cart button; without one it reads "Also check
-// on Amazon". Server component (the sealed page already knows the market); nothing renders where the market has no
+// outline, the store row's thumbs and, with a live price, its stock line and cart button; without one the row is not drawn (2026-11-12; it read "Also check
+// on Amazon"). Server component (the sealed page already knows the market); nothing renders where the market has no
 // Amazon tag. The click is counted like every outbound link (a[data-retailer]: ConsentGatedAnalytics, GoogleAnalytics).
 export function AmazonCheck({ country, name, slug, page = "sealed", image = null }: { country: Country; name: string; slug: string; page?: string; image?: string | null }) {
   const a = amazonFor(country);
   const href = amazonSearchUrl(country, name, `${page}-amazon`);
   if (!a || !href) return null;
+  // Amazon only with a real price (owner, 2026-11-12): the slot marks the row priced, else the row stays hidden.
   return (
-    <li className={`flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.amazon}`}>
+    <li className={`flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5 [&:not(:has([data-amazon-priced]))]:hidden ${PIN_OUTLINE.amazon}`}>
       <span className="w-5 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
@@ -30,7 +31,7 @@ export function AmazonCheck({ country, name, slug, page = "sealed", image = null
           <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">Ad</span>
         </p>
         <p className="mt-1 text-xs text-slate-400">
-          Also check the price on Amazon: its own price and stock, not ranked with the stores.{" "}
+          Amazon's own price and stock, not ranked with the stores.{" "}
           <span className="hidden sm:inline">{AMAZON_STATEMENT}</span>
         </p>
       </div>
