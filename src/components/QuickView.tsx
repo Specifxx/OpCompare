@@ -272,7 +272,7 @@ export function QuickView({
                           data-page={PAGE}
                           data-card={data.slug}
                           data-surface={pin ? "quickview_pinned" : "quickview_row"}
-                          className={`btn-primary order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
+                          className={`${r.source === "tcgplayer" ? "btn-tcg" : "btn-primary"} order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
                         >
                           {r.source === "tcgplayer" ? "Buy on TCGplayer →" : r.ebay ? "Buy on eBay →" : "View deal →"}
                         </a>
