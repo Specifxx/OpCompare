@@ -11,7 +11,6 @@ import { Breadcrumbs, JsonLd } from "@/components/ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SEALED_KINDS } from "@/lib/constants";
 import { ebaySearchUrl, outboundRel } from "@/lib/affiliate";
-import { AMAZON_REL, AMAZON_STATEMENT, AMAZON_TRADEMARK, amazonFor, amazonSearchUrl } from "@/lib/amazon";
 import { itemListLd } from "@/lib/jsonld";
 import { filterSealed, isSealedFiltered, parseSealedQuery, sortSealed, type SealedCtx } from "@/lib/sealed-query";
 import { COUNTRIES } from "@/lib/country";
@@ -42,7 +41,6 @@ export function generateMetadata({ searchParams }: { searchParams: Record<string
 
 export default async function SealedPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const country = getCountry();
-  const amazon = amazonFor(country);
   const c = COUNTRIES[country];
   const [cat, sealed, soldOutIds] = await Promise.all([getCatalog(), getSealedCatalog(), getSealedSoldOut().catch(() => null)]);
   const query = parseSealedQuery(searchParams);
@@ -150,11 +148,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
       </div>
 
       {/* Marketplace searches: sealed boxes are the biggest baskets on the site,
-          and eBay and Amazon carry them (Amazon where the market has an Associates
-          tag, lib/amazon.ts). A search, never a price or a stock claim. */}
+          and eBay carries them (no Amazon here since 2026-11-12: a category search is not a product; each
+          product page carries its own). A search, never a price or a stock claim. */}
       <section className="card-surface mt-8 p-5">
         <h2 className="text-lg font-extrabold text-white">Search the big marketplaces too</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate-400">Boxes sell out and restock constantly, so it can be worth searching eBay{amazon ? ` and ${amazon.label}` : ""} as well before you buy.</p>
+        <p className="mt-1 max-w-2xl text-sm text-slate-400">Boxes sell out and restock constantly, so it can be worth searching eBay as well before you buy.</p>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {families.map((x) => (
             <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
@@ -162,16 +160,10 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
               <a href={ebaySearchUrl(country, x.q, "sealed-page")} target="_blank" rel={outboundRel()} data-retailer="ebay_sealed_search" data-page="sealed" data-surface="ebay_family" className="btn-ebay-ghost px-2.5 py-1 text-xs">
                 eBay →
               </a>
-              {amazon ? (
-                <a href={amazonSearchUrl(country, x.q, "sealed-page") ?? undefined} target="_blank" rel={AMAZON_REL} data-retailer={`amazon_${country.toLowerCase()}`} data-page="sealed" data-surface="amazon_family" className="btn-ghost px-2.5 py-1 text-xs">
-                  Amazon →
-                </a>
-              ) : null}
             </div>
           ))}
         </div>
         <AffiliateDisclosure partner="ebay" />
-        {amazon ? <p className="mt-1 text-[11px] text-slate-500">{AMAZON_STATEMENT} {AMAZON_TRADEMARK}</p> : null}
         <EbayChase page="sealed" className="mt-6" heading="Chase singles on eBay" />
       </section>
     </div>

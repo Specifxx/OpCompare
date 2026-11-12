@@ -6,7 +6,7 @@ import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { outboundRel } from "@/lib/affiliate";
-import { AMAZON_REL, amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { AMAZON_REL, amazonFor, amazonSearchUrl, amazonCarriesSealed } from "@/lib/amazon";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { ago, money } from "@/lib/format";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
@@ -120,7 +120,7 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
   // The sealed page's Amazon row, as a link (owner, 2026-11-06: a visitor-opened view of this one product is the Associates
   // policy's "pop-up windows in conjunction with your Site promoting Products closely associated with the materials on your Site").
   // The same tagged search as the page's AmazonCheck, never Amazon's price: that stays on the sealed page (24-hour licence).
-  const amazon = amazonFor(country as Country);
+  const amazon = data && amazonCarriesSealed(data.kind) ? amazonFor(country as Country) : null;
   const amazonHref = data ? amazonSearchUrl(country as Country, data.name, "sealed-quickview-amazon") : null;
   const reportable = [...new Map(listings.filter((l) => !l.ebay).map((l) => [l.source, { source: l.source, label: l.label }])).values()];
 

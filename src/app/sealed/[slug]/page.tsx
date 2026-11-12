@@ -29,6 +29,7 @@ import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { MiniChaseAds } from "@/components/MiniChaseAds";
 import { AmazonCheck } from "@/components/AmazonCheck";
+import { amazonCarriesSealed } from "@/lib/amazon";
 import { headline } from "@/lib/price";
 import { SealedViewBeacon } from "@/components/SealedViewBeacon";
 import { pageOg } from "@/lib/og/meta";
@@ -253,7 +254,7 @@ export default async function SealedDetailPage({ params }: Props) {
             image={s.imageUrl ?? null}
             /* Amazon (lib/amazon.ts): a search on the visitor's Amazon, the third pinned row after eBay and TCGplayer
                (owner, 2026-11-03; above the board 2026-10-30 to 2026-11-03). */
-            thirdRow={<AmazonCheck country={country} name={s.name} slug={s.slug} />}
+            thirdRow={amazonCarriesSealed(s.kind) ? <AmazonCheck country={country} name={s.name} slug={s.slug} /> : undefined}
             preRelease={
               s.presale ||
               isPreRelease(
