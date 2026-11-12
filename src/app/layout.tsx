@@ -35,7 +35,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
-import { SEASON_BOOT_SCRIPT } from "@/lib/season";
+import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
@@ -134,7 +134,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // market on the client (cookie, then /api/geo). Pages that price
   // server-side call getCountry() themselves.
   return (
-    <html lang="en" data-theme="dark" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} data-xmas-layer={CHRISTMAS_FESTIVE_LAYER ? "" : undefined} suppressHydrationWarning>
       <head>
         {/* Impact (TCGplayer affiliate programme) site verification. Impact's own snippet
             uses a `value` attribute rather than `content`, so it is rendered exactly as given. */}
