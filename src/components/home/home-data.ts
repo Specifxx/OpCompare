@@ -6,6 +6,7 @@ import { getCatalog, getHomeStats, getPopular, getRecentlyUpdated, getSealedCata
 import { SEALED_KINDS } from "@/lib/constants";
 import type { SealedShelfItem } from "./HomeSealedShelf";
 import type { HomeStats, PopularKind } from "@/lib/home";
+import { dearFirst, FEATURE_CARD_MIN_CENTS, FEATURE_SEALED_MIN_CENTS } from "@/lib/featured-floor";
 import { movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import type { TileItem } from "./PopularCardsCarousel";
@@ -29,18 +30,26 @@ export interface HomeData {
   sealedKinds: string[];
 }
 
-// The homepage's sealed shelf: booster boxes of the newest released sets, then
-// other headline sealed to fill the row. Never pre-orders (their own pages),
-// cases or tournament promo packs, and only products with a price somewhere.
+// The homepage's sealed shelf (dearer first since 2026-11-12, owner: feature the high-ticket
+// product): released, priced products at or above US$50 (TCGplayer market), dearest first,
+// boxes, cases and the premium kinds; never pre-orders (their own pages) or tournament promo
+// packs. Fewer than four clear the floor: the old newest-boxes-then-fill order.
 const SHELF_FILL = ["Premium Collection", "Double Pack Set", "Illustration Box", "Gift Collection", "Starter Deck"];
+const SHELF_DEAR = ["Booster Box", "Booster Case", "Display", "Display Case", ...SHELF_FILL];
 export function sealedShelf(cat: Catalog, sealed: SealedLite[], today: string, limit = 8): SealedShelfItem[] {
   const priced = (s: SealedLite) => s.marketUsd != null || Object.values(s.low).some((v) => v != null);
   const released = (s: SealedLite) => !s.presale && (s.releasedOn == null || s.releasedOn <= today);
   const pool = sealed.filter((s) => released(s) && priced(s));
   const newest = (a: SealedLite, b: SealedLite) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "") || (b.marketUsd ?? 0) - (a.marketUsd ?? 0);
-  const boxes = pool.filter((s) => s.kind === "Booster Box").sort(newest);
-  const fill = pool.filter((s) => SHELF_FILL.includes(s.kind)).sort(newest);
-  return [...boxes, ...fill].slice(0, limit).map((s) => ({ s, setCode: s.setId != null ? cat.setById.get(s.setId)?.code ?? null : null }));
+  const dear = pool.filter((s) => SHELF_DEAR.includes(s.kind) && (s.marketUsd ?? 0) >= FEATURE_SEALED_MIN_CENTS).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0));
+  let chosen: SealedLite[];
+  if (dear.length >= 4) chosen = dear;
+  else {
+    const boxes = pool.filter((s) => s.kind === "Booster Box").sort(newest);
+    const fill = pool.filter((s) => SHELF_FILL.includes(s.kind)).sort(newest);
+    chosen = [...boxes, ...fill];
+  }
+  return chosen.slice(0, limit).map((s) => ({ s, setCode: s.setId != null ? cat.setById.get(s.setId)?.code ?? null : null }));
 }
 
 /** A tile's payload: only the fields CardTile reads, so the client props stay small. */
@@ -59,14 +68,14 @@ export async function loadHomeData(): Promise<HomeData> {
     getCatalog(),
     getHomeStats(),
     getPopular(12),
-    getRecentlyUpdated(24),
+    getRecentlyUpdated(72),
     Promise.all(MARKETS.map((m) => getTopDeals(m))),
     getSealedCatalog().catch(() => [] as SealedLite[]),
   ]);
   const newest = newestBoosterSet(cat.sets);
   // Biggest movers: TCGplayer's 7-day market change is one worldwide figure,
   // so the list is the same for every market (prices still localise).
-  const moved = [...movers(cat.cards, "up", 12), ...movers(cat.cards, "down", 12)]
+  const moved = [...movers(cat.cards, "up", 12, FEATURE_CARD_MIN_CENTS), ...movers(cat.cards, "down", 12, FEATURE_CARD_MIN_CENTS)]
     .sort((a, b) => Math.abs(b.change7d ?? 0) - Math.abs(a.change7d ?? 0))
     .slice(0, 12);
   const next = upcomingSets(cat.sets).find((s) => s.kind === "booster" || s.kind === "extra") ?? null;
@@ -79,7 +88,7 @@ export async function loadHomeData(): Promise<HomeData> {
     chaseSetName: popular.kind === "chase" ? newest?.name : undefined,
     trending: popular.cards.slice(0, 6).map((c) => ({ id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant })),
     biggestMovers: moved.map((c) => ({ ...tileOf(cat, c), pct: Math.round((c.change7d ?? 0) * 10) / 10 })),
-    recentlyUpdated: recent.map((r) => ({ ...tileOf(cat, r.card), pct: r.pct })),
+    recentlyUpdated: dearFirst(recent, (r) => r.card.marketUsd, FEATURE_CARD_MIN_CENTS, 6).slice(0, 24).map((r) => ({ ...tileOf(cat, r.card), pct: r.pct })),
     dealsByCountry: Object.fromEntries(MARKETS.map((m, i) => [m, deals[i]])) as Record<Country, TopDeals>,
     nextSet: next ? { name: next.name, code: next.code, slug: next.slug, releasedOn: next.releasedOn } : null,
     newestSetName: newest?.name,

@@ -2,6 +2,7 @@
 // Each is an unstable_cache tagged "prices" (purged by the import's POST
 // /api/revalidate), with a 6h TTL as the backstop. Never wrap these in another
 // unstable_cache and never call one inside an unstable_cache callback.
+import { dearFirst, FEATURE_CARD_MIN_CENTS } from "./featured-floor";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { unstable_cache } from "next/cache";
@@ -671,7 +672,9 @@ export async function getPopular(n = 12): Promise<{ kind: PopularKind; cards: Ca
     /* the counter is a nicety: fall back to the chase row */
   }
   if (popularKind(searched) === "popular") {
-    return { kind: "popular", cards: searched.map((id) => cat.byId.get(id)).filter((c): c is CardLite => !!c).slice(0, n) };
+    // Dearer cards lead (owner, 2026-11-12): the searched list, cut to US$5+ when enough clear it.
+    const found = searched.map((id) => cat.byId.get(id)).filter((c): c is CardLite => !!c);
+    return { kind: "popular", cards: dearFirst(found, (c) => c.marketUsd, FEATURE_CARD_MIN_CENTS, Math.min(n, 6)).slice(0, n) };
   }
   const newest = newestBoosterSet(cat.sets);
   return { kind: "chase", cards: newest ? mostValuable(cat.cards, n, (x) => x.setId === newest.id) : mostValuable(cat.cards, n) };
