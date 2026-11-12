@@ -6,7 +6,6 @@ import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { outboundRel } from "@/lib/affiliate";
-import { AMAZON_REL, amazonFor, amazonSearchUrl, amazonCarriesSealed } from "@/lib/amazon";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { ago, money } from "@/lib/format";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
@@ -117,11 +116,6 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
   const storeCount = new Set(open.filter((l) => !l.ebay).map((l) => l.source)).size;
   const name = data?.name ?? label ?? "Sealed product";
   const cur = COUNTRIES[country as Country];
-  // The sealed page's Amazon row, as a link (owner, 2026-11-06: a visitor-opened view of this one product is the Associates
-  // policy's "pop-up windows in conjunction with your Site promoting Products closely associated with the materials on your Site").
-  // The same tagged search as the page's AmazonCheck, never Amazon's price: that stays on the sealed page (24-hour licence).
-  const amazon = data && amazonCarriesSealed(data.kind) ? amazonFor(country as Country) : null;
-  const amazonHref = data ? amazonSearchUrl(country as Country, data.name, "sealed-quickview-amazon") : null;
   const reportable = [...new Map(listings.filter((l) => !l.ebay).map((l) => [l.source, { source: l.source, label: l.label }])).values()];
 
   return (
@@ -181,19 +175,6 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
             {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
             {data.chase?.length ? <MiniChaseAds tiles={data.chase} page="sealed-quickview" className="mb-3" /> : null}
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
-            {amazon && amazonHref ? (
-              <div data-amazon-row className="mb-2 flex items-center gap-3 rounded-md px-1 py-2.5">
-                <div className="min-w-0 flex-1 pl-2">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                    {amazon.label} <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">Ad</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400">Also check the price on Amazon: its own price and stock</div>
-                </div>
-                <a href={amazonHref} target="_blank" rel={AMAZON_REL} data-retailer={`amazon_${String(country).toLowerCase()}`} data-page="sealed" data-card={data.slug} data-surface="amazon_quickview" className="btn-primary mr-1 shrink-0 px-3 py-1.5 text-xs">
-                  Check Amazon →
-                </a>
-              </div>
-            ) : null}
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this in {cur.place} right now.</p>

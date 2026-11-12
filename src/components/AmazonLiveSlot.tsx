@@ -31,22 +31,22 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, page = "seale
   const href = live?.url ?? searchHref;
   const when = live?.at ? new Date(live.at).toLocaleString("en-GB", { timeZone: live.timeZone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
   const data = { "data-retailer": `amazon_${country.toLowerCase()}`, "data-page": page, "data-card": slug, "data-surface": live ? "amazon_live" : "amazon_check" };
+  if (!live) return null;
   return (
     <>
+      <span data-amazon-priced className="hidden" />
       {live ? (
         <span className="shrink-0 text-right" title={AMAZON_PRICE_DISCLAIMER}>
           <span className="num block text-base font-bold text-white sm:text-lg">{live.price}</span>
           <span className="block text-[10px] text-slate-500"><span className="text-emerald-400">In stock</span> · as of {when} {live.zoneLabel}*</span>
         </span>
-      ) : (
-        <span className="shrink-0 text-right text-xs text-slate-400">Also check on Amazon</span>
-      )}
+      ) : null}
       {/* Like a store row (owner, 2026-11-06): a live price is in stock and goes in the cart list (a manual line). */}
       {live?.url && live.priceCents && live.currency && cart ? (
         <CartAddButton href={live.url} productUrl={live.url} storeName={label} title={cart.title} priceCents={live.priceCents} currency={live.currency} image={cart.image ?? null} className="text-slate-300" />
       ) : null}
       <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
-        {live ? "View on Amazon →" : "Check Amazon →"}
+        View on Amazon →
       </a>
       <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-primary shrink-0 px-3 sm:hidden" aria-label={`${live ? "View on" : "Check price on"} ${label}`}>
         →

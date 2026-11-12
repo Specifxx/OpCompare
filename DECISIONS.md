@@ -4157,3 +4157,11 @@ This replaces the coloured outlines of 2026-11-06 and 2026-11-07.
 Order, labels, links, tags, URLs, titles, metadata and headings are unchanged; what we earn still never decides order. Measure outbound
 clicks per placement on 19 November against the week before: if the pinned eBay row's clicks fall, strengthen its button before
 bringing any outline back.
+
+## 2026-11-12: Only eBay and TCGplayer are paid rows
+
+Owner: "we just want eBay and TCGplayer as the paid links at the top. That is why our revenue is declining." Fetch TCG (AU) is an
+ordinary store row ranked by price (no pin, no Marketplace or Paid link tag); the sealed page's Amazon row draws only once the
+Creators API has returned a price (the unpriced "Also check on Amazon" row and the quick view's Amazon link are gone); the
+pinned eBay and TCGplayer buttons stay filled while store rows are outlined, so the two marketplaces stand out.
+`tests/paid-rows.test.ts` pins it.
