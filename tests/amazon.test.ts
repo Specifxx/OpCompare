@@ -34,7 +34,7 @@ test("the link: a tagged search on the market's Amazon, ascsubtag oc-<market>-<p
 
 test("placed on sealed pages only, as the second row right under eBay (owner, 2026-11-06); Amazon's own price only through the live slot", () => {
   const sealed = read("src/app/sealed/[slug]/page.tsx");
-  assert.match(sealed, /thirdRow=\{<AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/>\}/);
+  assert.match(sealed, /thirdRow=\{amazonCarriesSealed\(s\.kind\) \? <AmazonCheck country=\{country\} name=\{s\.name\} slug=\{s\.slug\} \/> : undefined\}/, "only kinds Amazon carries (2026-11-12)");
   const view = read("src/components/PriceBoardView.tsx");
   assert.match(view, /o === pinEbay \? <Fragment key="third-row">\{thirdRow\}\{fetchLis\}<\/Fragment>/, "right after the eBay row");
   assert.match(view, /\{hasEbayRow \? null : thirdRow\}/, "right after eBay's search row when eBay has no listing");
@@ -49,7 +49,6 @@ test("placed on sealed pages only, as the second row right under eBay (owner, 20
   const relayed = (comp + slot).replace(/priceCents\?: number|live\.priceCents|priceCents=\{live\.priceCents\}/g, "");
   assert.doesNotMatch(relayed, /priceCents/, "priceCents only relayed to the cart");
   assert.match(slot, /\/api\/amazon\/sealed\//, "the price comes from the CDN-cached route (2026-11-05)");
-  assert.match(read("src/app/sealed/page.tsx"), /amazonSearchUrl\(country, x\.q, "sealed-page"\)/);
   for (const f of ["src/components/PriceBoard.tsx", "src/components/PriceBoardView.tsx", "src/lib/board-model.ts", "src/lib/alerts.ts", "src/lib/basket.ts"]) assert.doesNotMatch(read(f), /amazon/i, f);
   assert.ok(read("src/components/Footer.tsx").includes(AMAZON_STATEMENT));
 });
@@ -59,4 +58,11 @@ test("the sealed quick view's Amazon row is the page's tagged search, never Amaz
   assert.match(qv, /amazonSearchUrl\(country as Country, data\.name, "sealed-quickview-amazon"\)/);
   assert.match(qv, /rel=\{AMAZON_REL\}/);
   assert.doesNotMatch(qv, /AmazonLiveSlot|\/api\/amazon\//, "the price stays on the sealed page");
+});
+
+test("Amazon's row only for sealed kinds Amazon carries (owner, 2026-11-12)", async () => {
+  const { amazonCarriesSealed } = await import("../src/lib/amazon");
+  for (const k of ["Booster Box", "Booster Pack", "Starter Deck"]) assert.equal(amazonCarriesSealed(k), true, k);
+  for (const k of ["Booster Case", "Promo Pack", "Event Kit", "", null]) assert.equal(amazonCarriesSealed(k), false, String(k));
+  assert.doesNotMatch(read("src/app/sealed/page.tsx"), /amazonSearchUrl|Amazon →/, "no Amazon on the hub's category searches");
 });

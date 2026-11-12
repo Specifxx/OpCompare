@@ -4138,3 +4138,9 @@ domain". So this is accents only, the same on every Compare site, in OP Compare'
 ## 2026-11-12: the festive layer is released urgently (owner)
 
 The owner said to deploy the festive layer urgently once every site had it, so this merge carries `[deploy] [urgent]` in its subject: one production build now, instead of waiting for the next release. No other change.
+
+## 2026-11-12 — Amazon only where Amazon carries the product (owner)
+
+The owner: no Amazon links where Amazon doesn't sell the item (RiftCompare first). `amazonCarriesSealed` (lib/amazon.ts) gates the sealed page's Amazon row and the
+quick view's link to boosters, starter decks, collections and tins; cases, event and promo kits and displays get none. /sealed's category-search rows lose
+their Amazon button (not a product, Associates rule 4).

@@ -65,3 +65,10 @@ export function amazonSearchUrl(country: Country, name: string, placement: strin
 
 /** Exactly what the Associates programme expects of a link: sponsored and nofollow, a new tab, no noreferrer (Amazon sees our site). */
 export const AMAZON_REL = "sponsored nofollow noopener";
+
+/**
+ * Sealed kinds Amazon carries (owner, 2026-11-12: no Amazon link where Amazon does not sell the item). Never a case, a promo or
+ * event kit, a display or anything not listed.
+ */
+export const AMAZON_SEALED_KINDS: ReadonlySet<string> = new Set(["Booster Box", "Booster Pack", "Starter Deck", "Deck", "Collection", "Tin", "Premium Set"]);
+export const amazonCarriesSealed = (kind: string | null | undefined): boolean => !!kind && AMAZON_SEALED_KINDS.has(kind);
