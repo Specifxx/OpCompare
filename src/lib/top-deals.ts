@@ -22,6 +22,7 @@ import type { TcgRanked } from "./deals";
 import type { CardLite, Catalog } from "./data";
 import { headline } from "./price";
 import { movers } from "./selectors";
+import { dearFirst, FEATURE_CARD_MIN_CENTS } from "./featured-floor";
 
 export interface HomeDeal {
   id: number;
@@ -60,7 +61,8 @@ export const TOP_DEALS_ROWS = 4;
 export const FREE_SAVINGS_ROWS = 1;
 
 function savingsRows(cat: Catalog, ranked: TcgRanked[], n: number): HomeDeal[] {
-  return ranked.slice(0, n).flatMap((r): HomeDeal[] => {
+  // Dearer buys first (owner, 2026-11-12); the ranking itself is unchanged.
+  return dearFirst(ranked, (r) => r.buy, FEATURE_CARD_MIN_CENTS, n).slice(0, n).flatMap((r): HomeDeal[] => {
     const c = cat.byId.get(r.id);
     return c
       ? [{ id: c.id, slug: c.slug, title: c.name, variant: c.variant, subtitle: subtitle(cat, c), hasImage: c.hasImage, priceCents: r.buy, approx: false, badge: `Save ${r.pct}%` }]
@@ -73,7 +75,7 @@ export async function getTopDeals(country: Country): Promise<TopDeals> {
   try {
     const { cat, ranked } = await rankDefaultVsTcg(country, "pct");
     const pick = (dir: "up" | "down") =>
-      movers(cat.cards, dir, TOP_DEALS_ROWS)
+      movers(cat.cards, dir, TOP_DEALS_ROWS, FEATURE_CARD_MIN_CENTS)
         .map((c) => moverDeal(cat, c, country))
         .filter((d): d is HomeDeal => d != null);
     return { country, savings: savingsRows(cat, ranked, FREE_SAVINGS_ROWS), savingsTotal: ranked.length, drops: pick("down"), rising: pick("up") };

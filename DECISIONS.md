@@ -4096,3 +4096,20 @@ pricing model from it. Built first on RiftCompare (TCGEmpire #412, DECISIONS 202
   Fetch's own URL as sent. Never ranked, never "Cheapest", never in a deal, alert, basket, history or JSON-LD.
 - A file older than three days is ignored. Watchdog check `fetchtcg-row` (warn, never fail).
 - Recheck about 18 November with the first Fetch clicks and Fetch's commission rate.
+
+## 2026-11-12: The front page features the dearer items
+
+Owner: "promote the more expensive items … the cheap ones we shouldn't advertise on the front page", because a click on a
+high-ticket card or box earns far more commission than one on a common. Card quick view is where OP's money comes from, so
+cards stay featured; the floor only drops the cheap ones.
+
+- `lib/featured-floor.ts`: US$5 for a card (TCGplayer market; a deal's buy price is cut at the same number in the visitor's
+  currency, a featuring cut and not a price claim) and US$50 for sealed. The movers' own floor was US$1.
+- Selection only: the home "Most popular" row (the most-searched cards at US$5+, original order), the biggest-movers and
+  recently-updated rows, Today's Top Deals (savings, drops, climbs) and the sealed shelf, which is now dearest first over
+  boxes, cases, displays and the premium kinds (newest-boxes-then-fill when fewer than four products clear US$50).
+  Each list falls back to its old contents when too few clear the floor, so no row goes empty.
+- Unchanged: URLs, titles, meta, JSON-LD, sitemaps; cheap cards and sealed stay searchable and on their pages; store rows
+  inside a product in price order; reference price TCGplayer market; eBay never a deal; no commission ranking.
+- Not checked against the live snapshot (it lives on the `snapshot` branch, not in the checkout): confirm US$5/US$50
+  against the first release's home page.
