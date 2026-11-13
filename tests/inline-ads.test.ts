@@ -70,3 +70,11 @@ test("one block per page, in the right place, never on an article", async () => 
   for (const p of ["/", "/au", "/card/x", "/sealed/x", "/sets/x", "/browse", "/blog/x", "/guides/x", "/account"]) assert.equal(footerMiniAllowed(p), false, p);
   for (const p of ["/trade", "/tools/best-basket"]) assert.equal(footerMiniAllowed(p), true, p);
 });
+
+test("the old footer leaderboards are gone: the footer zone holds only the one InlineAds block", () => {
+  const src = code("src/components/AffiliateAds.tsx");
+  assert.doesNotMatch(src, /AdBox|ebay_search|tcgplayer_footer|ebaySearchUrl|affiliateUrl/, "no eBay or TCGplayer leaderboard box in the footer zone");
+  assert.match(src, /<FooterMiniChase\b/, "the zone still places the block on pages that do not mount it");
+  assert.match(src, /BANNER_FREE/, "the policy and trust pages stay ad-free");
+  assert.match(src, /data-ad-placement="footer"/, "ad-free members still hide the zone");
+});

@@ -49,14 +49,14 @@ export function FeedbackWidget() {
   const [overHero, setOverHero] = useState(false);
 
   // ── Never float over an ad ────────────────────────────────────────────────
-  // FooterAds renders a real AdSense-adjacent affiliate unit directly above the
-  // footer (layout.tsx), and Google's program policies prohibit ads being
+  // FooterAds places the one InlineAds block (on pages that do not mount it
+  // themselves) directly above the footer (layout.tsx), and Google's program policies prohibit ads being
   // obscured by floating page furniture. This repo has an active AdSense
   // remediation history (docs/adsense-remediation.md), so the launcher yields:
   // while the ad zone is anywhere in the viewport, it hides entirely. Costs one
   // observer and removes the whole class of violation.
-  // A route with no zone (FooterAds renders none on the policy and trust pages)
-  // must clear the flag: arriving from a footer link while the banners were on
+  // A route with no zone (FooterAds renders none on the policy and trust pages, and the block on a page that mounts it itself sits outside it)
+  // must clear the flag: arriving from a footer link while the block was on
   // screen would otherwise leave the launcher hidden for the whole page.
   useEffect(() => {
     const zone = document.getElementById("op-ad-zone");
