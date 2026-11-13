@@ -315,7 +315,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
                   <MorePremium more={vsEbay.total - vsEbay.rows.length} />
                 )}
                 <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-                  Best store price is the cheapest in-stock copy at a store we track, item price only. Cheapest on eBay is the cheapest in-stock
+                  Store price is the cheapest in-stock copy at a store we track, item price only. Cheapest on eBay is the cheapest in-stock
                   listing&apos;s asking price — &ldquo;delivered&rdquo; includes the seller&apos;s stated postage, &ldquo;+ postage&rdquo; means none
                   was stated. % below is a share of the eBay price.
                 </p>
