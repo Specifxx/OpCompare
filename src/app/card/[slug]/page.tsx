@@ -6,9 +6,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { cardIsThin, movedCardSlug, upcomingSetIds } from "@/lib/card-index";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
-import { ebayBannerHref } from "@/components/EbayCardBanner";
 import { EbayTopButton, type EbayTopListing } from "@/components/EbayTopButton";
-import { tcgplayerBannerHref } from "@/components/TcgplayerBanner";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { DecksUsingCard } from "@/components/decks/DecksUsingCard";
@@ -260,7 +258,6 @@ export default async function CardPage({ params }: Props) {
   const fetchRows = fetchRowsFor(card);
   const boards = perMarket((m) => boardModel(card.offers, m, { page: "card", ebayQuery, ...(m === "AU" ? { fetch: fetchRows } : {}) }));
   const tables = perMarket((m) => marketsTableData(card.offers, card.name, m));
-  const ebayBanner = perMarket((m) => ebayBannerHref(m, ebayQuery, "card"));
   const historyTuples = history.map((p): HistoryTuple => [p.day, p.marketUsd, p.lows ?? [p.lowUsd]]);
   // The chart's summary line says "Now" only in a market with a live price (a listing or TCGplayer's market price).
   const liveIn = perMarket((m) => headlineIn(m).kind !== "none");
@@ -545,7 +542,7 @@ export default async function CardPage({ params }: Props) {
           {/* Under the comparison, never in it: TCGplayer's market price as a
               reference with its affiliate button, then the card's eBay banner
               and TCGplayer's (ads: hidden for Plus and Premium members). */}
-          <MarketReference marketUsd={card.marketUsd} tcgHref={tcgHref} ebayBanner={ebayBanner} tcgBanner={tcgplayerBannerHref("card")} query={ebayQuery} name={title} page="card" card={card.slug} />
+          <MarketReference marketUsd={card.marketUsd} tcgHref={tcgHref} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
           <MarketHistory history={historyTuples} live={liveIn} />

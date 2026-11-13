@@ -81,6 +81,8 @@ test("every market-dependent part is drawn by an island from all markets' data",
     assert.ok(!src.includes(`${gone} `) && !src.includes(`${gone}\n`), `${gone} renders one market on the server`);
   }
   assert.doesNotMatch(src, /country=\{country\}/);
+  // One ad block per page (2026-11-13): the card-page banners stay gone, InlineAds stays.
+  assert.doesNotMatch(src, /EbayCardBanner|TcgplayerBanner|ebayBanner|tcgBanner/);
   // Tiles take the visitor's market from CountryProvider.
   assert.doesNotMatch(src, /<CardTile[^>]*country=/);
 });

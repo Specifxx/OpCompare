@@ -198,7 +198,7 @@ test("wiring: every card surface this track owns links through CardQuickLink", (
 test("outbound links on the card page carry affiliate tagging and the click attributes", () => {
   const page = read("src/app/card/[slug]/page.tsx");
   assert.doesNotMatch(page, /href=\{card\.tcgplayerUrl\}/, "the card-details TCGplayer link goes through affiliateUrl");
-  for (const f of ["src/components/TcgMarketPrice.tsx", "src/components/EbayCardBanner.tsx", "src/components/CardTopBuy.tsx", "src/components/CardStickyBuyBar.tsx", "src/components/QuickView.tsx", "src/components/EbayBuyCta.tsx", "src/app/price-guide/GuideBuyLinks.tsx", "src/components/TcgplayerBanner.tsx"]) {
+  for (const f of ["src/components/TcgMarketPrice.tsx", "src/components/CardTopBuy.tsx", "src/components/CardStickyBuyBar.tsx", "src/components/QuickView.tsx", "src/components/EbayBuyCta.tsx", "src/app/price-guide/GuideBuyLinks.tsx"] ) {
     const src = read(f);
     const anchors = src.match(/<a\s[^>]*target="_blank"[^>]*>/gs) ?? [];
     assert.ok(anchors.length > 0, f);
@@ -208,8 +208,9 @@ test("outbound links on the card page carry affiliate tagging and the click attr
       assert.match(a, /data-page=/, f);
     }
   }
-  assert.match(read("src/components/EbayCardBanner.tsx"), /data-ad-placement/);
-  assert.match(read("src/components/EbayCardBanner.tsx"), />Ad</);
+  // The card page's two ad banners are gone (2026-11-13): one InlineAds block per page.
+  assert.ok(!fs.existsSync(path.join(process.cwd(), "src/components/EbayCardBanner.tsx")));
+  assert.ok(!fs.existsSync(path.join(process.cwd(), "src/components/TcgplayerBanner.tsx")));
 });
 
 test("quickViewHistory: the last 90 days, no-data days dropped", () => {
@@ -235,7 +236,7 @@ test("the payload carries the trimmed history, and none when the loader gave non
   assert.match(read("src/app/api/card/[slug]/route.ts"), /getProductHistory/);
 });
 
-test("card search opens a card hit in the QuickView; the TCGplayer banner is an ad members never see", () => {
+test("card search opens a card hit in the QuickView; the card page's banners are gone", () => {
   const search = read("src/components/CardSearch.tsx");
   // Each card row is a CardQuickLink; Enter clicks the row's own anchor, so a
   // card hit opens QuickView whenever the provider is mounted.
@@ -246,13 +247,9 @@ test("card search opens a card hit in the QuickView; the TCGplayer banner is an 
   for (const f of ["src/components/CardSearch.tsx", "src/components/RecentlyViewed.tsx", "src/components/Watchlist.tsx"]) {
     assert.doesNotMatch(read(f), /onClickCapture/, `${f} closes in the capture phase`);
   }
-  const banner = read("src/components/TcgplayerBanner.tsx");
-  assert.match(banner, /data-ad-placement/);
-  assert.match(banner, />Ad</);
-  assert.match(banner, /affiliateUrl\(/);
-  // The ISR card page draws it in its market island, with the link tagged on the server.
-  assert.match(read("src/app/card/[slug]/page.tsx"), /<MarketReference [^>]*tcgBanner=\{tcgplayerBannerHref\("card"\)\}/);
-  assert.match(read("src/components/card/CardMarket.tsx"), /<TcgplayerBanner /);
+  // The ISR card page no longer draws the house TCGplayer or eBay banners (2026-11-13).
+  assert.doesNotMatch(read("src/app/card/[slug]/page.tsx"), /tcgBanner|ebayBanner|BannerHref/);
+  assert.doesNotMatch(read("src/components/card/CardMarket.tsx"), /TcgplayerBanner|EbayCardBanner/);
 });
 
 test("the popup pins the board's eBay and TCGplayer rows above cheaper stores (site review OP-2, 2026-11-10)", () => {
