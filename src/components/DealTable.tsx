@@ -113,7 +113,7 @@ export function VsEbayTable({ rows, country }: { rows: VsEbayDealRow[]; country:
       <thead>
         <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
           <th className="px-2 py-2.5 font-semibold sm:px-4">Card</th>
-          <th className="px-2 py-2.5 text-right font-semibold">Best store price</th>
+          <th className="px-2 py-2.5 text-right font-semibold">Store price</th>
           <th className="hidden px-2 py-2.5 text-right font-semibold sm:table-cell">Cheapest on eBay</th>
           <th className="px-2 py-2.5 text-right font-semibold">Below eBay</th>
           <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">% below</th>
