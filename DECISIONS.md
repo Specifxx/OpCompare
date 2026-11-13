@@ -4169,3 +4169,7 @@ pinned eBay and TCGplayer buttons stay filled while store rows are outlined, so 
 ## 2026-11-12: TCGplayer's row is a plain price with a blue button
 
 Owner: "reference", "approximate" and "Check on TCGplayer" cost clicks. The TCGplayer row and block now read "TCGplayer", show the market price as a normal price (no "≈", no caveat) and carry "Buy on TCGplayer →" in a blue `.btn-tcg`. Where TCGplayer has a real listing (US) that listing row is shown as before.
+
+## 2026-11-13: urgent release
+
+Owner asked for every site to be released now: the unpriced-Amazon fix, Fetch as an ordinary store row and the blue TCGplayer button had been merged without a deploy marker. One build, via this commit's subject.
