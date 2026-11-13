@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Archivo } from "next/font/google";
 import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
-import { EbayChase } from "@/components/EbayChase";
+import { InlineAds } from "@/components/InlineAds";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomePopularCards, HomeSections } from "@/components/home/HomeSections";
@@ -56,7 +56,7 @@ export default async function HomePage() {
       <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} />
       <HomePopularCards data={data} storeCount={storeCount} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
-      <EbayChase page="home" heading="Chase cards on eBay right now" variant="banner" />
+      <InlineAds page="home" />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />
       <HomeGuides cat={data.cat} />

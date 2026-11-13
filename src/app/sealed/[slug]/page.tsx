@@ -20,14 +20,13 @@ import { priceGap, shareText } from "@/lib/share-link";
 import { buyRow, marketRows } from "@/lib/quick-view";
 import {
   getCatalog,
-  getChaseStrip,
   getProductHistory,
   getSealedCatalog,
   getSealedDetail,
 } from "@/lib/data";
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { MiniChaseAds } from "@/components/MiniChaseAds";
+import { InlineAds } from "@/components/InlineAds";
 import { AmazonCheck } from "@/components/AmazonCheck";
 import { amazonCarriesSealed } from "@/lib/amazon";
 import { headline } from "@/lib/price";
@@ -68,7 +67,6 @@ export default async function SealedDetailPage({ params }: Props) {
   ]);
   if (!s) notFound();
   const history = await getProductHistory(s.id);
-  const chase = await getChaseStrip().catch(() => []);
   const vh = visitorHistory(history, country);
   const lite = all.find((x) => x.id === s.id);
   const h = lite
@@ -240,8 +238,6 @@ export default async function SealedDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
-          {/* The small eBay + TCGplayer pair near the top (owner, 2026-10-29). */}
-          <MiniChaseAds tiles={chase} page="sealed" />
           <PriceBoard
             productId={s.id}
             offers={s.offers}
@@ -292,6 +288,8 @@ export default async function SealedDetailPage({ params }: Props) {
           <EbayCardPanel productId={s.id} country={country} query={ebayQ} name={s.name} card={s.slug} page="sealed" sealed preRelease={s.presale || isPreRelease(s.releasedOn ?? set?.releasedOn ?? null, new Date().toISOString().slice(0, 10))} />
         </div>
       </div>
+      {/* The one in-page ad block (owner, 2026-11-13): below the price board, the charts and the eBay panel, never beside the price. */}
+      <InlineAds page="sealed" className="mt-8" />
       {sameSet.length ? (
         <section className="mt-10">
           <SectionHeader title={`More ${set?.code ?? ""} sealed`} />

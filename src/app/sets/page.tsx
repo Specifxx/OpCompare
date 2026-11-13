@@ -1,4 +1,4 @@
-import { EbayChase } from "@/components/EbayChase";
+import { InlineAds } from "@/components/InlineAds";
 import { HubIntro } from "@/components/HubIntro";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -163,7 +163,7 @@ export default async function SetsPage() {
           </div>
         </section>
       ))}
-      <EbayChase page="sets" className="mt-2" />
+      <InlineAds page="sets" className="mt-2" />
     </div>
   );
 }

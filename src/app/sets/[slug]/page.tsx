@@ -22,7 +22,7 @@ import { median } from "@/lib/selectors";
 import { preorderPageFor } from "@/lib/preorders";
 import { pageOgOwnImage } from "@/lib/og/meta";
 import { BrowseFilters } from "@/components/BrowseFilters";
-import { EbayPicks } from "@/components/EbayPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { FilterChips } from "@/components/FilterChips";
 import { Pagination } from "@/components/Pagination";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -237,7 +237,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         <SetPriceGuide setName={set.name} rows={guideRows} country={country} adjective={c.adjective} currency={c.currency} />
       </div>
 
-      <EbayPicks country={country} setId={set.id} className="mt-10" page="set" fallbackQuery={onePieceEbayQuery(`${set.name} ${set.code}`)} />
+      <InlineAds page="set" className="mt-10" />
 
       <section id="cards" className="mt-10 scroll-mt-20">
         <SectionHeader

@@ -5,8 +5,8 @@ import path from "node:path";
 
 const read = (p: string) => fs.readFileSync(path.resolve(__dirname, "..", p), "utf8");
 
-test("the chase strip is on the homepage and never calls eBay or the database", () => {
-  assert.match(read("src/app/page.tsx"), /<EbayChase page="home"/);
+test("the chase strip is on the articles (the homepage has the in-page block since 2026-11-13) and never calls eBay or the database", () => {
+  assert.match(read("src/components/blog/ArticleView.tsx"), /<EbayChase page="article"/);
   for (const f of ["src/components/EbayChase.tsx", "src/components/EbayChaseStrip.tsx"]) {
     const src = read(f);
     assert.doesNotMatch(src, /@\/lib\/db|ebay-api|api\.ebay\.com/);

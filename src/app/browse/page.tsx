@@ -1,4 +1,4 @@
-import { EbayPicks } from "@/components/EbayPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { FamilySearch } from "@/components/FamilySearch";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -207,7 +207,7 @@ export default async function BrowsePage({
           {/* The same search on the other card-game sites (2026-10-28): a
               Pokémon or Riftbound name typed here finds its own site. */}
           {q.q && <FamilySearch q={q.q} className="mt-6" />}
-          <EbayPicks country={country} className="mt-8" page="browse" />
+          <InlineAds page="browse" className="mt-8" />
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>

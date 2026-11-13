@@ -38,7 +38,7 @@ test("the homepage leads with price comparison: sealed, popular cards, then deal
   const page = codeOnly(read("src/app/page.tsx"));
   assert.match(page, /variable: "--font-riftbound"/);
   assert.match(page, /\$\{archivo\.variable\} rb-display-sans flex flex-col gap-10/);
-  const order = ["<CinematicHero", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<EbayChase", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
+  const order = ["<CinematicHero", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<InlineAds", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
   let at = -1;
   for (const t of order) {
     const i = page.indexOf(t);
