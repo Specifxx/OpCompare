@@ -111,8 +111,6 @@ export interface QuickViewMarket {
 }
 
 export interface QuickViewPayload {
-  /** The small eBay + TCGplayer pair (MiniChaseAds), added by the API route. */
-  chase?: import("./listing-panel").ChaseTile[];
   id: number;
   slug: string;
   name: string;

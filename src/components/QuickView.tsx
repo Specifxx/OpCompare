@@ -1,6 +1,5 @@
 "use client";
 
-import { MiniChaseAds } from "./MiniChaseAds";
 import { useEffect, useState } from "react";
 import { sendCardView } from "@/lib/card-views";
 import { COUNTRIES, MARKETS } from "@/lib/country";
@@ -349,8 +348,6 @@ export function QuickView({
               />
               {/* Add to collection — track & value your whole binder (collection-alerts, wave 2). */}
               <AddToCollectionButton cardId={data.id} cardPath={`/card/${data.slug}`} />
-              {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
-              {data.chase?.length ? <MiniChaseAds tiles={data.chase} page="quickview" className="mt-3" /> : null}
               {m.graded.length ? (
                 <div className="mt-3">
                   <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">Graded on {ebay}</p>

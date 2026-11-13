@@ -26,7 +26,7 @@ test("the phone dock: narrow screens only, never on the first screen, never besi
   assert.match(d, /yieldTo = "\[data-ad\]"/, "every [data-ad] unit by default");
   assert.match(d, /sessionStorage\.setItem\(DISMISS_KEY, "1"\)/, "✕ hides it for the visit");
   assert.match(d, />Ad<\/span>/, "labelled Ad");
-  const s = src("components/SideRails.tsx");
+  const s = src("components/PhoneDockAds.tsx");
   assert.match(s, /railTiles\(tiles, country, "dock"\)/, "its own tags (dock-rail, tcgplayer_dock)");
   assert.match(s, /data-surface="ad_dock"/);
   assert.match(s, /yieldTo="\[data-ad-placement\]"/, "yields to every ad unit");
@@ -36,11 +36,11 @@ test("the phone dock: narrow screens only, never on the first screen, never besi
   assert.doesNotMatch(d + s, /amazon/i, "no Amazon in the dock");
 });
 
-test("the phone dock's tiles carry their own tags, never the rails'", async () => {
-  const { railTiles } = await import("../src/components/SideRails");
+test("the phone dock's tiles carry their own tags, never the in-page block's", async () => {
+  const { railTiles } = await import("../src/components/PhoneDockAds");
   const t = { id: 1, slug: "x", name: "X", imageUrl: "https://i/x.jpg", marketUsd: 10, listings: { US: { url: "https://www.ebay.com/itm/1", imageUrl: "https://i/1.jpg", priceCents: 999, currency: "USD" } } };
   const { ebay, tcg } = railTiles([t, { ...t, id: 2, slug: "y" }] as never, "US", "dock");
   assert.equal(ebay[0].retailer, "ebay_dock");
   assert.equal(tcg[0].retailer, "tcgplayer_dock");
-  assert.equal(railTiles([t] as never, "US").ebay[0].retailer, "ebay_side", "the rails keep theirs");
+  assert.equal(railTiles([t] as never, "US").ebay[0].retailer, "ebay_inline", "the in-page block keeps its own");
 });

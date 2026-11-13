@@ -7,7 +7,6 @@ import { cardIsThin, movedCardSlug, upcomingSetIds } from "@/lib/card-index";
 import { CardArt, CardTile } from "@/components/CardTile";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { ebayBannerHref } from "@/components/EbayCardBanner";
-import { EbayChase } from "@/components/EbayChase";
 import { EbayTopButton, type EbayTopListing } from "@/components/EbayTopButton";
 import { tcgplayerBannerHref } from "@/components/TcgplayerBanner";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -53,9 +52,9 @@ import {
 import { affiliateUrl, cardEbayQuery, outboundRel } from "@/lib/affiliate";
 import { rarityLabel, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, type Country } from "@/lib/country";
-import { getCardDetail, getCardText, getCatalog, getChaseStrip, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
+import { getCardDetail, getCardText, getCatalog, getEbayPanel, getEmailStatus, getProductHistory } from "@/lib/data";
 import { traitHref, traitHubs } from "@/lib/traits";
-import { MiniChaseAds } from "@/components/MiniChaseAds";
+import { InlineAds } from "@/components/InlineAds";
 import type { EbayPanelData } from "@/lib/listing-panel";
 import { boardModel } from "@/lib/board-model";
 import { fetchRowsFor } from "@/lib/fetchtcg";
@@ -211,7 +210,6 @@ export default async function CardPage({ params }: Props) {
   const preRelease = isPreRelease(card.set.releasedOn, today);
   // Alert copy promises an email only once a mailer is configured (cached Meta flag).
   const emailOn = (await getEmailStatus()) === "on";
-  const chase = await getChaseStrip().catch(() => []);
   const noListingAnywhere = !card.offers.some((o) => o.inStock);
   const ebayQuery = cardEbayQuery(card);
   const cardText = card.effect ? (
@@ -490,8 +488,6 @@ export default async function CardPage({ params }: Props) {
               preorder={preRelease}
               emailOn={emailOn}
             />
-            {/* The small eBay + TCGplayer pair near the top (owner, 2026-10-29). */}
-            <MiniChaseAds tiles={chase.filter((t) => t.slug !== card.slug)} page="card" className="mt-4" />
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <MarketTiles tiles={tiles} now={now} />
               {stats.slice(0, 2).map((s) => (
@@ -759,9 +755,9 @@ export default async function CardPage({ params }: Props) {
         </section>
       ) : null}
 
-      {/* Real chase cards on eBay and TCGplayer (2026-10-28): below every
-          price, chart and related card, never between a buyer and the board. */}
-      <EbayChase page="card" className="mt-10" />
+      {/* The one in-page ad block (owner, 2026-11-13): chase cards on eBay and TCGplayer, below every price, chart and related card,
+          never between a buyer and the board. */}
+      <InlineAds page="card" className="mt-10" />
 
       <DecksUsingCard cardId={card.id} />
 
