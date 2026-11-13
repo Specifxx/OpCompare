@@ -33,7 +33,6 @@ import { CardNoListings } from "../CardNoListings";
 import { CardStickyBuyBar } from "../CardStickyBuyBar";
 import { CardTopBuy } from "../CardTopBuy";
 import { useCountry } from "../CountryProvider";
-import { EbayCardBanner } from "../EbayCardBanner";
 import { EbayCardPanelLive } from "../EbayCardPanelLive";
 import { LastKnownPrice } from "../LastKnownPrice";
 import { buildChartData, ChartEmpty } from "../LineChart";
@@ -41,7 +40,6 @@ import { LineChartInteractive } from "../LineChartInteractive";
 import { PriceBoardView } from "../PriceBoardView";
 import { PriceDropAlertCta } from "../PriceDropAlertCta";
 import { TcgMarketPrice } from "../TcgMarketPrice";
-import { TcgplayerBanner } from "../TcgplayerBanner";
 
 const useMarket = (): Country => useCountry().country;
 
@@ -146,23 +144,15 @@ export function MarketBoard({ boards, ...rest }: Omit<React.ComponentProps<typeo
   return <PriceBoardView {...rest} model={pickMarket(boards, country)} country={country} />;
 }
 
-/** Under the board: TCGplayer's market price as a reference, the card's eBay banner and TCGplayer's. */
+/** Under the board: TCGplayer's market price as a reference (the card page's ad banners are gone, 2026-11-13). */
 export function MarketReference({
   marketUsd,
   tcgHref,
-  ebayBanner,
-  tcgBanner,
-  query,
-  name,
   page,
   card,
 }: {
   marketUsd: number | null;
   tcgHref: string;
-  ebayBanner: PerMarket<string>;
-  tcgBanner: string;
-  query: string;
-  name: string;
   page: string;
   card: string;
 }) {
@@ -171,8 +161,6 @@ export function MarketReference({
     <>
       {/* Outside the US the board's pinned TCGplayer row carries this figure (2026-10-27). */}
       {country === "US" ? <TcgMarketPrice marketUsd={marketUsd} country={country} href={tcgHref} page={page} card={card} /> : null}
-      <EbayCardBanner country={country} query={query} name={name} page={page} card={card} href={pickMarket(ebayBanner, country)} />
-      <TcgplayerBanner country={country} page={page} card={card} href={tcgBanner} />
     </>
   );
 }
