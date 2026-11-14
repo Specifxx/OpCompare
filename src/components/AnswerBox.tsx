@@ -9,8 +9,8 @@ import { withLinks } from "./HubIntro";
  */
 export function AnswerBox({ children, points, heading = "In short", className }: { children?: React.ReactNode; points?: string[]; heading?: string; className?: string }) {
   return (
-    <section className={`answer-box card-surface border-l-2 border-l-brand-500 p-4 sm:p-5 ${className ?? "my-5"}`} aria-label={heading}>
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-brand-400">{heading}</h2>
+    <section className={`answer-box rounded-xl border border-ink-800 bg-ink-850 p-4 sm:p-5 ${className ?? "my-5"}`} aria-label={heading}>
+      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">{heading}</h2>
       {children ? <div className="max-w-2xl text-[15px] leading-relaxed text-slate-300">{children}</div> : null}
       {points && points.length > 0 ? (
         <ul className="mt-2 max-w-2xl list-disc space-y-1 pl-5 text-sm text-slate-300">

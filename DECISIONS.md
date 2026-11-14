@@ -4217,3 +4217,39 @@ The owner, the same day: the quick view pop-ups need the add to cart button as w
 all (only the card page did); its store and eBay rows now carry the same `CartAddButton` the card page uses, beside the buy
 button, sharing its full-width line on a phone. TCGplayer rows never get one (a marketplace, as on the page). The row order,
 links, tags and buy button are unchanged.
+## 2026-11-14: every page in the home page's design language
+
+Owner: "I like how all our compare websites are more aesthetic on the homepage now but can we make all the other pages more
+aesthetic as well". The home page is the spec; the rest of the site now reads as the same site. Calm-palette rules held
+(brand colour for the one action, green for money, the rest neutral); nothing added.
+
+- **One heading voice.** Headings everywhere are Archivo, the heavy grotesque the home page already used, instead of the
+  Fraunces serif on every other page (RiftCompare left Fraunces on 2026-10-16). The root layout loads Archivo in Fraunces'
+  place, so the font count does not grow, and the home page no longer loads its own copy. `tests/design-system.test.ts`
+  and `tests/home.test.ts` pin it.
+- **Product pages (card and sealed).** On a phone a store row in the price comparison is a grid: the store name beside
+  its price on the first line, the condition, stock, postage and "updated" details under the name, and the "Add" and buy
+  buttons right under the price. Store names wrap instead of being cut ("Cash Cards ...", "Hobbiesv ille" once the cart
+  button gained its words today). Same elements, same order, same words, same buttons, the buy button still beside the
+  price. The card's set and number line is in the body face, not the mono price face. "Watch this price" and the
+  sealed watch's Plus link are outlined, so Buy is the one filled button in the buy block. "Cheapest" is the darker green
+  (4.4:1 in the light theme before).
+- **List pages.** `/sealed` and `/sets` lose the red-bordered box around their header: breadcrumb, h1, intro, as on the
+  card database. The two strips on `/sealed` (OP18 pre-orders, newest set) are neutral with outlined buttons. On a set page
+  the long price narrative folds into a native "More about OPxx prices" `<details>` under the first two paragraphs, and
+  `/browse` (search) puts its h1 and intro above the filters, its second paragraph folded the same way (`ReadMore`).
+  `HubIntro` reads at 15px, slate-300, on a 65-character measure.
+- **Guides and posts.** Article typography: 16-17px on a 1.7 line height, a 65-character measure, a two-step heading scale,
+  quiet list markers, underlined links with an offset. The prose rules now skip `.not-prose` blocks, which fixes "Create a
+  free account" inside posts drawing red words on its red button (1.5:1). The "short version", "In short" (`AnswerBox`,
+  `InShort`) and `Callout` boxes are one neutral card instead of red or gold edges. The guides index's section headings
+  lose their coloured dots.
+- **Search with no results** says what to try and offers "See every card" and "Sealed products" (both already linked
+  from the page). The 404's search placeholder fits a phone.
+- **Home.** The creators pill's "Buy them a pack" read 1.3:1 in the light theme; it is slate now.
+
+Unchanged, and checked on 13 URLs with scripts off against `main`: every title, meta description, canonical, robots, Open
+Graph and JSON-LD; every h1 and h2; the set of internal links; the paid rows and ad blocks (same order, `data-retailer`,
+`data-surface`, hrefs and words); no indexed text removed (folded text stays in the server HTML). No URL, placement name,
+affiliate tag, revalidate or data read changed, so the 19 November clicks-per-placement recheck is unaffected. No horizontal
+scroll at 390px and no new layout shift on any sampled page; no console or hydration errors.

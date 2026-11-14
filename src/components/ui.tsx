@@ -63,7 +63,7 @@ export function SectionHeader({ title, sub, action }: { title: string; sub?: Rea
 
 export function InShort({ children }: { children: React.ReactNode }) {
   return (
-    <div className="card-surface border-l-2 border-l-brand-500 p-5">
+    <div className="rounded-xl border border-ink-800 bg-ink-850 p-5">
       <p className="rb-eyebrow text-slate-500 mb-2">In short</p>
       <div className="max-w-3xl text-[15px] leading-relaxed text-slate-200">{children}</div>
     </div>

@@ -145,7 +145,7 @@ export function PriceDropAlertCta({
     return (
       <>
         <div className="mt-3 flex flex-wrap items-center gap-2" data-alert-cta="full">
-          <button type="button" disabled={busy || watching} onClick={enable} className={watching ? "btn border border-gold/50 bg-gold/15 text-gold" : "btn-primary"}>
+          <button type="button" disabled={busy || watching} onClick={enable} className={watching ? "btn-ghost text-slate-300" : "btn-ghost"}>
             {watching ? copy.on : copy.get}
           </button>
           <span className="text-xs text-slate-400">
@@ -172,7 +172,7 @@ export function PriceDropAlertCta({
   }
 
   return (
-    <div className="mt-3 rounded-xl border border-brand-500/30 bg-brand-500/5 p-3" data-alert-cta="signed-out">
+    <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-3" data-alert-cta="signed-out">
       <p className="text-sm font-bold text-white">{copy.get}</p>
       <p className="mt-0.5 text-xs text-slate-400">
         {mail

@@ -151,21 +151,23 @@ test("OP Compare's retired design vocabulary is gone: no straw, no sea, no comic
   assert.ok(!existsSync(join(ROOT, "src/lib/theme.ts")));
 });
 
-test("fonts: RiftCompare's next/font block on <html>, Fraunces headings, mono numerals", () => {
+test("fonts: RiftCompare's next/font block on <html>, one Archivo heading voice site-wide, mono numerals", () => {
   const layout = read("src/app/layout.tsx");
-  assert.match(layout, /import \{ Inter, JetBrains_Mono, Fraunces \} from "next\/font\/google";/);
+  assert.match(layout, /import \{ Inter, JetBrains_Mono, Archivo \} from "next\/font\/google";/);
   assert.match(layout, /const inter = Inter\(\{ subsets: \["latin"\], variable: "--font-sans", display: "swap" \}\);/);
   assert.match(layout, /JetBrains_Mono\(\{ subsets: \["latin"\], variable: "--font-mono", display: "swap", preload: false \}\)/);
-  assert.match(layout, /weight: \["600", "700", "900"\],\s*style: \["normal"\],\s*variable: "--font-display",\s*display: "swap",/);
-  assert.match(layout, /<html lang="en" data-theme="dark" className=\{`\$\{inter\.variable\} \$\{jetbrainsMono\.variable\} \$\{fraunces\.variable\}`\}/);
+  assert.match(layout, /weight: \["600", "700", "800", "900"\],\s*style: \["normal"\],\s*variable: "--font-display",\s*display: "swap",/);
+  assert.match(layout, /<html lang="en" data-theme="dark" className=\{`\$\{inter\.variable\} \$\{jetbrainsMono\.variable\} \$\{archivo\.variable\}`\}/);
   assert.match(layout, /<body className="min-h-screen bg-ink-950">/);
-  assert.doesNotMatch(readCode("src/app/layout.tsx"), /Luckiest_Guy|Archivo/, "Archivo is the homepage's own import");
+  // One heading face (2026-11-14): no second display font, and the homepage loads none of its own.
+  assert.doesNotMatch(readCode("src/app/layout.tsx"), /Luckiest_Guy|Fraunces/);
+  assert.doesNotMatch(readCode("src/app/page.tsx"), /next\/font/);
   const css = read("src/app/globals.css");
-  assert.match(css, /h1, h2, h3 \{\s*font-family: var\(--font-display\), Georgia, serif;\s*font-weight: 700;\s*letter-spacing: -0\.01em;/);
-  assert.match(css, /\.rb-eyebrow \{\s*font-family: var\(--font-display\), Georgia, serif;\s*font-weight: 700;\s*text-transform: uppercase;\s*letter-spacing: 0\.08em;\s*font-size: 0\.75rem;/);
-  assert.match(css, /\.rb-display-sans h1,[\s\S]*?font-family: var\(--font-riftbound\)/);
+  assert.match(css, /h1, h2, h3 \{\s*font-family: var\(--font-display\), var\(--font-sans\), system-ui, sans-serif;\s*font-weight: 700;\s*letter-spacing: -0\.02em;/);
+  assert.match(css, /\.rb-eyebrow \{\s*font-family: var\(--font-display\), var\(--font-sans\), system-ui, sans-serif;\s*font-weight: 700;\s*text-transform: uppercase;\s*letter-spacing: 0\.08em;\s*font-size: 0\.75rem;/);
+  assert.doesNotMatch(css, /Georgia/, "no serif heading fallback left");
   const cfg = read("tailwind.config.ts");
-  assert.match(cfg, /display: \["var\(--font-display\)", "Georgia", "Cambria", "Times New Roman", "serif"\]/);
+  assert.match(cfg, /display: \["var\(--font-display\)", "var\(--font-sans\)", "ui-sans-serif", "system-ui", "sans-serif"\]/);
 });
 
 test("the layout's main container: skip link, the rail wrapper, container-app on <main>; pages add no outer container", () => {

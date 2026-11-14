@@ -1,7 +1,7 @@
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { HolidayStrip } from "@/components/HolidayStrip";
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Inter, JetBrains_Mono, Archivo } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 // The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
@@ -40,18 +40,17 @@ import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 
 // RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
-// everything needs to be the same"). Headings — Fraunces: a sharp,
-// high-contrast, slightly flared serif at a heavy weight. Body/UI — Inter.
+// everything needs to be the same"). Headings — Archivo (since 2026-11-14,
+// was Fraunces), see below. Body/UI — Inter.
 // Prices — JetBrains Mono. Exposed as CSS vars on <html>, wired into Tailwind.
 // display: "swap" — the brand fonts ALWAYS render rather than "optional", which
 // silently keeps the system fallback whenever the font misses the ~100ms
 // first-paint window; adjustFontFallback size-matches the fallback so the
-// swap-in causes negligible layout shift. The homepage alone adds Archivo as
-// --font-riftbound (its `.rb-display-sans` wrapper, globals.css).
+// swap-in causes negligible layout shift.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 // preload: false — the mono face only dresses numbers, never the H1 that is the
 // LCP, so it arrives with the stylesheet and swaps in. Inter (body) and
-// Fraunces (the H1) stay preloaded.
+// Archivo (the H1) stay preloaded.
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
 // Client-only corner widgets, as on RiftCompare: each renders nothing on the
 // server (it needs /api/me or browser storage first), so ssr:false keeps their
@@ -61,9 +60,13 @@ const LaunchPromoPopup = dynamic(() => import("@/components/LaunchPromoPopup").t
 // hero and the footer ad zone (#op-hero, #op-ad-zone).
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), { ssr: false });
 
-const fraunces = Fraunces({
+// Headings: Archivo, the heavy neutral grotesque the homepage introduced
+// (2026-11-14: one heading voice site-wide, replacing Fraunces, as RiftCompare
+// did on 2026-10-16). One family under both variables: --font-display for every
+// h1-h3 and `font-display`, --font-riftbound for the homepage's own wrapper.
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["600", "700", "900"],
+  weight: ["600", "700", "800", "900"],
   style: ["normal"],
   variable: "--font-display",
   display: "swap",
@@ -134,7 +137,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // market on the client (cookie, then /api/geo). Pages that price
   // server-side call getCountry() themselves.
   return (
-    <html lang="en" data-theme="dark" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`} data-xmas-layer={CHRISTMAS_FESTIVE_LAYER ? "" : undefined} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={`${inter.variable} ${jetbrainsMono.variable} ${archivo.variable}`} data-xmas-layer={CHRISTMAS_FESTIVE_LAYER ? "" : undefined} suppressHydrationWarning>
       <head>
         {/* Impact (TCGplayer affiliate programme) site verification. Impact's own snippet
             uses a `value` attribute rather than `content`, so it is rendered exactly as given. */}

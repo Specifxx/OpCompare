@@ -2,6 +2,7 @@ import { InlineAds } from "@/components/InlineAds";
 import { FamilySearch } from "@/components/FamilySearch";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ReadMore } from "@/components/ReadMore";
 import { SortSelect } from "@/components/SortSelect";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { BrowseFilters } from "@/components/BrowseFilters";
@@ -82,6 +83,33 @@ export default async function BrowsePage({
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Card database" }]} />
+      <header className="mb-6">
+        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+          {q.q ? `“${q.q}” — One Piece cards` : "One Piece Card List"}
+        </h1>
+        <div className="mt-2 max-w-[65ch] space-y-3 text-[15px] leading-relaxed text-slate-300">
+          <p>
+            Browse the full list of One Piece Card Game cards and buy for less
+            — every printing, with live prices compared across stores in the
+            US, Australia, the UK, Singapore, Canada and the EU to find the
+            cheapest place to buy.
+          </p>
+          <ReadMore label="How these prices work">
+            <p>
+              A tile&apos;s “from” price is the cheapest in-stock listing we
+              have for that printing in {c.place}, in {c.currency} — the item
+              price, before postage. “≈” marks TCGplayer&apos;s market price
+              converted to {c.currency} where no {c.adjective} store has it.
+              Prices are read twice a day. Open a card for every store&apos;s
+              price, cheapest first. For every card in one table, see the{" "}
+              <Link href="/price-guide" className="text-brand-400 hover:underline">
+                One Piece price guide
+              </Link>
+              .
+            </p>
+          </ReadMore>
+        </div>
+      </header>
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-w-0">
           {/* One copy of the filters: a CSS-only toggle on phones, always open from lg. */}
@@ -101,36 +129,12 @@ export default async function BrowsePage({
           </div>
         </aside>
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-extrabold text-white">
-            {q.q ? `“${q.q}” — One Piece cards` : "One Piece Card List"}
-          </h1>
-          <div className="mt-2 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
-            <p>
-              Browse the full list of One Piece Card Game cards and buy for less
-              — every printing, with live prices compared across stores in the
-              US, Australia, the UK, Singapore, Canada and the EU to find the
-              cheapest place to buy.
-            </p>
-            <p>
-              A tile&apos;s “from” price is the cheapest in-stock listing we
-              have for that printing in {c.place}, in {c.currency} — the item
-              price, before postage. “≈” marks TCGplayer&apos;s market price
-              converted to {c.currency} where no {c.adjective} store has it.
-              Prices are read twice a day. Open a card for every store&apos;s
-              price, cheapest first. For every card in one table, see the{" "}
-              <Link href="/price-guide" className="text-brand-400 hover:underline">
-                One Piece price guide
-              </Link>
-              .
-            </p>
-          </div>
-
           <FilterChips
             sets={Object.fromEntries(cat.sets.flatMap((s) => [[s.slug, `${s.name} (${s.code})`], [s.code.toLowerCase(), `${s.name} (${s.code})`]]))}
             symbol={c.symbol}
             adjective={c.adjective}
           />
-          <div id="results" className="mt-6 flex scroll-mt-24 flex-wrap items-center justify-between gap-3">
+          <div id="results" className="mt-3 flex scroll-mt-24 flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
               <span className="num font-semibold text-white">{int(total)}</span>{" "}
               cards · page {page} of {pages}
@@ -192,7 +196,17 @@ export default async function BrowsePage({
             </div>
           ) : (
             <div className="mt-6">
-              <EmptyState icon="browse" title="No cards match those filters" body="Try fewer filters, or start over." primary={{ href: "/browse", label: "Start over" }} />
+              {q.q ? (
+                <EmptyState
+                  icon="browse"
+                  title={`Nothing matches “${q.q}” yet`}
+                  body="Check the spelling, or try a card name or number such as Luffy or OP01-001. Sealed boxes and decks have their own page."
+                  primary={{ href: "/browse", label: "See every card" }}
+                  secondary={{ href: "/sealed", label: "Sealed products" }}
+                />
+              ) : (
+                <EmptyState icon="browse" title="No cards match those filters" body="Try fewer filters, or start over." primary={{ href: "/browse", label: "Start over" }} />
+              )}
               {/* A search we have no card for (a typo, a set not loaded yet, a
                   product that is not a single) can still be on eBay. */}
               <EbayBuyCta

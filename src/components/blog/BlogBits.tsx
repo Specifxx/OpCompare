@@ -160,7 +160,7 @@ export function SimpleTable({ head, rows, align }: { head: string[]; rows: React
 
 export function Callout({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="not-prose my-6 rounded-lg border border-gold/30 bg-gold/[0.05] p-4">
+    <div className="not-prose my-6 max-w-[65ch] rounded-xl border border-ink-800 bg-ink-850 p-4 sm:p-5">
       <p className="rb-eyebrow text-slate-500 mb-1">{title}</p>
       <div className="text-[15px] leading-relaxed text-slate-200">{children}</div>
     </div>

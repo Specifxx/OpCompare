@@ -92,34 +92,34 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
         />
       ) : null}
       <Breadcrumbs trail={[{ name: "Sealed" }]} />
-      <div className="card-surface border-brand-500/40 p-6 sm:p-8">
-        <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
+      <header className="max-w-[65ch]">
+        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Sealed Products</h1>
         <HubIntro path="/sealed" />
-      </div>
+      </header>
 
       <DiscoveryTip id="sealed-watch" surface="tip:sealed" tier="plus" className="mt-4">
         Plus can watch a booster box and tell you when it restocks or drops to the price you set.
       </DiscoveryTip>
 
       {preorderLinks.map((l) => (
-        <div key={l.code} className="card-surface mt-4 flex flex-wrap items-center gap-3 border-amber-500/40 p-4">
-          <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300">Pre-order</span>
-          <p className="flex-1 text-[15px] text-slate-200">
+        <div key={l.code} className="card-surface mt-4 flex flex-wrap items-center gap-3 p-4">
+          <span className="rounded bg-ink-800 px-2 py-0.5 text-xs font-bold text-slate-300">Pre-order</span>
+          <p className="min-w-0 basis-full text-[15px] text-slate-200 sm:basis-0 sm:flex-1">
             <span className="font-semibold text-white">{l.code} pre-order prices</span> — out {longDateOf(l.releasedOn)}. Every store&apos;s pre-order price beside TCGplayer and eBay, cheapest first.
           </p>
-          <Link href={l.href} className="btn-primary min-h-10">
+          <Link href={l.href} className="btn-ghost min-h-10">
             Compare {l.code} pre-orders →
           </Link>
         </div>
       ))}
 
       {newest ? (
-        <div className="card-surface mt-4 flex flex-wrap items-center gap-3 border-brand-500/40 p-4">
-          <span className="rounded bg-brand-500/15 px-2 py-0.5 text-xs font-bold text-brand-400">Newest set</span>
-          <p className="flex-1 text-[15px] text-slate-200">
+        <div className="card-surface mt-4 flex flex-wrap items-center gap-3 p-4">
+          <span className="rounded bg-ink-800 px-2 py-0.5 text-xs font-bold text-slate-300">Newest set</span>
+          <p className="min-w-0 basis-full text-[15px] text-slate-200 sm:basis-0 sm:flex-1">
             <span className="font-semibold text-white">{newest.name} sealed</span> — product from the newest released set, priced across stores.
           </p>
-          <Link href={`/sealed?set=${newest.slug}`} className="btn-primary min-h-10">
+          <Link href={`/sealed?set=${newest.slug}`} className="btn-ghost min-h-10">
             Shop {newest.code} →
           </Link>
         </div>

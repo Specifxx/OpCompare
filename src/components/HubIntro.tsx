@@ -18,7 +18,7 @@ export function HubIntro({ path, className }: { path: string; className?: string
   const paragraphs = hubIntro(path);
   if (!paragraphs.length) return null;
   return (
-    <div className={className ?? "mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400"}>
+    <div className={className ?? "mt-3 max-w-[65ch] space-y-3 text-[15px] leading-relaxed text-slate-300"}>
       {paragraphs.map((p, i) => (
         <p key={i}>{withLinks(p)}</p>
       ))}
