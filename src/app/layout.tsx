@@ -190,6 +190,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line above the content. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
+                    <FooterAds />
                     {children}
                   </main>
                 </div>
@@ -211,11 +212,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </SealedQuickViewProvider>
             </WatchlistDrawerProvider>
           </QuickViewProvider>
-          {/* The ad zone needs the same rail reservation as <main>. It reads the
-              market from CountryProvider, so it sits inside it. */}
-          <div id="op-ad-zone" className="pl-[var(--sidenav-w)]">
-            <FooterAds />
-          </div>
           {/* Email-only price alerts: renders nothing unless email is on AND
               NEXT_PUBLIC_ANON_ALERTS=1 (reads one cached Meta row, never the session). */}
           <PriceAlertModalGate />

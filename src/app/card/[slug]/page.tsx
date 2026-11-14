@@ -410,6 +410,7 @@ export default async function CardPage({ params }: Props) {
           { name: card.name },
         ]}
       />
+      <InlineAds page="card" className="mt-4" />
 
       {/* Phones: the eBay button first, above the art (the header copy is lg only). */}
       <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mb-4 lg:hidden" />
@@ -754,7 +755,6 @@ export default async function CardPage({ params }: Props) {
 
       {/* The one in-page ad block (owner, 2026-11-13): chase cards on eBay and TCGplayer, below every price, chart and related card,
           never between a buyer and the board. */}
-      <InlineAds page="card" className="mt-10" />
 
       <DecksUsingCard cardId={card.id} />
 

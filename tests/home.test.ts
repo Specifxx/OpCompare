@@ -38,7 +38,7 @@ test("the homepage leads with price comparison: sealed, popular cards, then deal
   const page = codeOnly(read("src/app/page.tsx"));
   // The heading face is the root layout's since 2026-11-14 (one voice site-wide); the wrapper keeps its tracking.
   assert.match(page, /className="rb-display-sans flex flex-col gap-10"/);
-  const order = ["<CinematicHero", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<InlineAds", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
+  const order = ["<CinematicHero", "<InlineAds", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
   let at = -1;
   for (const t of order) {
     const i = page.indexOf(t);

@@ -96,6 +96,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Sealed Products</h1>
         <HubIntro path="/sealed" />
       </header>
+      <InlineAds page="sealed-list" className="mt-4" />
 
       <DiscoveryTip id="sealed-watch" surface="tip:sealed" tier="plus" className="mt-4">
         Plus can watch a booster box and tell you when it restocks or drops to the price you set.
@@ -164,7 +165,6 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
           ))}
         </div>
         <AffiliateDisclosure partner="ebay" />
-        <InlineAds page="sealed-list" className="mt-6" />
       </section>
     </div>
   );

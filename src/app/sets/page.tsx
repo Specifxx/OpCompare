@@ -117,6 +117,7 @@ export default async function SetsPage() {
           </InShort>
         </div>
       </header>
+      <InlineAds page="sets" className="mt-4" />
 
       {upcoming.length ? (
         <section className="mt-10">
@@ -163,7 +164,6 @@ export default async function SetsPage() {
           </div>
         </section>
       ))}
-      <InlineAds page="sets" className="mt-2" />
     </div>
   );
 }

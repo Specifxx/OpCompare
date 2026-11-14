@@ -105,6 +105,7 @@ export default async function SetPage({ params, searchParams }: Props) {
       <Breadcrumbs
         trail={[{ href: "/sets", name: "Sets" }, { name: set.name }]}
       />
+      <InlineAds page="set" className="mt-4" />
       <p className="rb-eyebrow text-slate-500">
         {set.code} · {kind}
       </p>
@@ -242,7 +243,6 @@ export default async function SetPage({ params, searchParams }: Props) {
         <SetPriceGuide setName={set.name} rows={guideRows} country={country} adjective={c.adjective} currency={c.currency} />
       </div>
 
-      <InlineAds page="set" className="mt-10" />
 
       <section id="cards" className="mt-10 scroll-mt-20">
         <SectionHeader
