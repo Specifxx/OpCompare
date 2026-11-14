@@ -1,0 +1,139 @@
+{
+ "v": 1,
+ "site": "opcompare.app",
+ "at": "2026-11-14T16:09:10.308Z",
+ "overall": "warn",
+ "checks": [
+  {
+   "name": "Neon network transfer",
+   "status": "unknown",
+   "detail": "Not connected: Neon's counters have not been read."
+  },
+  {
+   "name": "Neon compute hours",
+   "status": "unknown",
+   "detail": "Not connected: Neon's counters have not been read."
+  },
+  {
+   "name": "Database size",
+   "status": "ok",
+   "detail": "13 MB of 512 MB (3%)"
+  },
+  {
+   "name": "Price import",
+   "status": "ok",
+   "detail": "Last successful import 2 h ago."
+  },
+  {
+   "name": "GitHub price snapshot",
+   "status": "ok",
+   "detail": "Last snapshot 2 h ago."
+  },
+  {
+   "name": "Family feed (sister sites)",
+   "status": "ok",
+   "detail": "Last family feed 2 h ago."
+  },
+  {
+   "name": "eBay pass",
+   "status": "ok",
+   "detail": "Last run 20 h ago."
+  },
+  {
+   "name": "eBay run health",
+   "status": "ok",
+   "detail": "Last run spent 2220 of a 2220-call budget; 1114 of 2182 searches found a listing."
+  },
+  {
+   "name": "eBay quota use",
+   "status": "ok",
+   "detail": "Spent 0 calls so far this quota day and 2220 the day before (ceiling 2500; eBay showed 2520 of 5000 left at the start of the last run)."
+  },
+  {
+   "name": "Store scrapers",
+   "status": "warn",
+   "detail": "7 of 421 stores failed their last read."
+  },
+  {
+   "name": "Store partner codes",
+   "status": "ok",
+   "detail": "No store partner codes yet."
+  },
+  {
+   "name": "Live site",
+   "status": "ok",
+   "detail": "4 pages answered normally (slowest 0.6 s)."
+  },
+  {
+   "name": "Amazon prices (Creators API)",
+   "status": "ok",
+   "detail": "Amazon US priced /sealed/set-sail-deck-set."
+  },
+  {
+   "name": "Fetch TCG row (card pages)",
+   "status": "ok",
+   "detail": "The Fetch TCG row is on /card/roronoa-zoro-op01-001."
+  },
+  {
+   "name": "Price import",
+   "status": "ok",
+   "detail": "Last run 2 h ago: success."
+  },
+  {
+   "name": "eBay pass",
+   "status": "ok",
+   "detail": "Last run 20 h ago: success."
+  },
+  {
+   "name": "Email outbox",
+   "status": "ok",
+   "detail": "Last run 5 h ago: success."
+  },
+  {
+   "name": "Weekly newsletter",
+   "status": "ok",
+   "detail": "Last run 15 h ago: success."
+  },
+  {
+   "name": "Weekly deploy",
+   "status": "ok",
+   "detail": "Last run 5 days ago: success."
+  },
+  {
+   "name": "Shipping rates",
+   "status": "unknown",
+   "detail": "No finished run in GitHub's recent history."
+  },
+  {
+   "name": "IndexNow",
+   "status": "ok",
+   "detail": "Last run 1 h ago: success."
+  },
+  {
+   "name": "Search Console report",
+   "status": "ok",
+   "detail": "Last run 2 h ago: success."
+  },
+  {
+   "name": "Inbox audit",
+   "status": "unknown",
+   "detail": "No finished run in GitHub's recent history."
+  },
+  {
+   "name": "Tests (CI)",
+   "status": "ok",
+   "detail": "Last run 2 h ago: success."
+  },
+  {
+   "name": "Email delivery",
+   "status": "warn",
+   "detail": "Email is OFF: nothing is being sent, including inbox and health emails to you."
+  },
+  {
+   "name": "Inbox",
+   "status": "warn",
+   "detail": "1 waiting (1 store suggestion); the oldest has waited 5 days."
+  }
+ ],
+ "inbox": 1
+}
