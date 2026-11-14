@@ -4199,3 +4199,14 @@ Owner: one subtle ad block per page, like RiftCompare. The card page still carri
 ## 2026-11-13: an OP18 booster box price page before release day
 
 OP18 The Dominance of God is out on 20 November, and the week a set releases is when "<set> booster box price" is searched. The OP17 page for that query (`/guides/op17-booster-box-price`) was one hand-written post; it is now a small factory (`boxPost` in `src/lib/blog/posts/op17-booster-box.tsx`) and OP18 gets the same page at `/guides/op18-booster-box-price`, built from the snapshot like the first: a sentence prints only when its fact exists, and until release day it points to the OP18 pre-order board. It rides Monday's weekly release (16 Nov), four days before the set. The next main set is one more `boxPost` call.
+
+## 2026-11-14: The price rows' cart button says "Add to cart"
+
+The owner, opening the price rows: "there needs to be an add to cart button ... right now, it just sends it to the site". The
+cart button was already on every store row, but as a bare grey cart icon on a computer (lost on the tinted best-price row) and
+as small coloured text on a phone, so it read as decoration. `CartAddButton` now carries its words by default ("Add to cart",
+"In cart" once added; "Add" beside the icon below 640px where a row has no room), with a firmer neutral border, and the phone's
+text button (`inline`) is drawn as a bordered button (`cart.css`). Neutral, never a new colour: the buy button stays the one
+filled action and the calm three-colour rule holds. Nothing else moved: which rows can be added (open store rows, eBay and
+Amazon with a live price; never a marketplace or a search row), the line's buy link and its affiliate tag, the row order, the
+buy button and every placement are unchanged. A caller can still ask for the bare icon (`label={false}`).
