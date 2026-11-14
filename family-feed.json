@@ -1,0 +1,133 @@
+{
+ "v": 1,
+ "site": "op",
+ "generatedAt": "2026-11-14T14:17:17.495Z",
+ "links": {
+  "US": {
+   "deals": "https://opcompare.app/black-friday",
+   "preorders": "https://opcompare.app/preorders"
+  }
+ },
+ "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Legacy of the Master Booster Box",
+   "url": "https://opcompare.app/sealed/legacy-of-the-master-booster-box",
+   "cents": 14999,
+   "currency": "USD",
+   "store": "Impact Gaming Center",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/628346_in_1000x1000.jpg",
+   "refCents": 29208,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 49
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 4: Animal Kingdom Pirates",
+   "url": "https://opcompare.app/sealed/starter-deck-4-animal-kingdom-pirates",
+   "cents": 1700,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/288224_in_1000x1000.jpg",
+   "refCents": 2704,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 12: Zoro and Sanji",
+   "url": "https://opcompare.app/sealed/starter-deck-12-zoro-and-sanji",
+   "cents": 3000,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/536585_in_1000x1000.jpg",
+   "refCents": 4741,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Learn Together Deck Set",
+   "url": "https://opcompare.app/sealed/learn-together-deck-set",
+   "cents": 4000,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/628478_in_1000x1000.jpg",
+   "refCents": 6160,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 35
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Double Pack Set Volume 4",
+   "url": "https://opcompare.app/sealed/double-pack-set-volume-4",
+   "cents": 4000,
+   "currency": "USD",
+   "store": "Spokane Valley Sports and Trading Cards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/549493_in_1000x1000.jpg",
+   "refCents": 5770,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 31
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 18: PURPLE Monkey.D.Luffy",
+   "url": "https://opcompare.app/sealed/starter-deck-18-purple-monkey-d-luffy",
+   "cents": 11999,
+   "currency": "USD",
+   "store": "CARDPOPUSA",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/545042_in_1000x1000.jpg",
+   "refCents": 16604,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 28
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Pack",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-pack",
+   "cents": 1599,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712904_in_1000x1000.jpg",
+   "releaseDate": "2026-11-20"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-box",
+   "cents": 22000,
+   "currency": "USD",
+   "store": "Triad Cards and Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_in_1000x1000.jpg",
+   "releaseDate": "2026-11-20"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box Case",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-box-case",
+   "cents": 239988,
+   "currency": "USD",
+   "store": "Wulf Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_in_1000x1000.jpg",
+   "releaseDate": "2026-11-20"
+  }
+ ]
+}
