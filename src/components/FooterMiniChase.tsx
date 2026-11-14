@@ -14,5 +14,5 @@ export function footerMiniAllowed(pathname: string): boolean {
 
 export function FooterMiniChase({ pathname }: { pathname: string }) {
   if (!footerMiniAllowed(pathname)) return null;
-  return <InlineAds page={`footer${pathname.split("/").slice(0, 2).join("-") || ""}`} className="w-full" />;
+  return <InlineAds page={`footer${pathname.split("/").slice(0, 2).join("-") || ""}`} className="mb-6 w-full" />;
 }

@@ -18,19 +18,19 @@ const tile = (i: number, withListing = true) => ({
   listings: withListing ? { US: { url: `https://www.ebay.com/itm/${i}`, imageUrl: `https://i.ebayimg.com/${i}.jpg`, priceCents: 1000 + i, shippingCents: 0, currency: "USD" } } : {},
 });
 
-test("the block takes up to three live eBay listings, then TCGplayer's to fill six, and drops a side with fewer than two", async () => {
+test("each banner takes up to four tiles of its own, and a side with fewer than two is empty", async () => {
   const { inlineTiles } = await import("../src/components/InlineAds");
   const many = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => tile(i));
   const r = inlineTiles(many as never, "US");
-  assert.equal(r.ebay.length, 3);
-  assert.equal(r.tcg.length, 3);
+  assert.equal(r.ebay.length, 4);
+  assert.equal(r.tcg.length, 4);
   assert.equal(r.ebay[0].retailer, "ebay_inline");
   assert.equal(r.tcg[0].retailer, "tcgplayer_inline");
-  // No live eBay listing in this market: eBay searches are not tiles, TCGplayer fills the row.
+  // No live eBay listing in this market: eBay searches are not tiles, TCGplayer's banner keeps its own.
   const none = inlineTiles(many as never, "UK");
   assert.equal(none.ebay.length, 0);
-  assert.equal(none.tcg.length, 6);
-  assert.deepEqual(inlineTiles([tile(1), tile(2)] as never, "UK"), { ebay: [], tcg: [] }, "fewer than three tiles show nothing");
+  assert.equal(none.tcg.length, 4);
+  assert.deepEqual(inlineTiles([tile(1)] as never, "UK"), { ebay: [], tcg: [] }, "fewer than two tiles show none");
 });
 
 test("the block is eBay and TCGplayer only, labelled, sponsored, ad-free aware, browser only", () => {
@@ -42,8 +42,8 @@ test("the block is eBay and TCGplayer only, labelled, sponsored, ad-free aware, 
   assert.match(s, /data-surface="inline_ads"/);
   assert.match(s, /outboundRel\(\)/);
   assert.doesNotMatch(s, /amazon|fetch ?tcg|\bfixed\b|sticky/i, "no Amazon, no Fetch, nothing floating");
-  assert.ok(s.indexOf('brand: "eBay"') < s.indexOf('brand: "TCGplayer"'), "eBay first");
-  assert.match(s, /minHeight: BLOCK_MIN_H/, "height reserved (CLS 0)");
+  assert.ok(s.indexOf('brand="eBay"') < s.indexOf('brand="TCGplayer"'), "two separate banners, eBay first");
+  assert.match(s, /height: BANNER_H/, "height reserved (CLS 0)");
   assert.match(s, /fetch\("\/api\/chase"\)/);
 });
 
@@ -63,9 +63,9 @@ test("one block per page, in the right place, never on an article", async () => 
   }
   assert.doesNotMatch(code("src/components/blog/ArticleView.tsx"), /<InlineAds\b/, "no new block on articles");
   const card = read("src/app/card/[slug]/page.tsx");
-  assert.ok(card.indexOf("<InlineAds") > card.indexOf("<MarketTiles"), "below the price tiles on the card page");
+  assert.ok(card.indexOf("<InlineAds") < card.indexOf("<MarketTiles"), "the banners are at the top of the card page (owner, 2026-11-14)");
   const sealed = read("src/app/sealed/[slug]/page.tsx");
-  assert.ok(sealed.indexOf("<InlineAds") > sealed.indexOf("<PriceBoard"), "below the price board on the sealed page");
+  assert.ok(sealed.indexOf("<InlineAds") < sealed.indexOf("<PriceBoard"), "the banners are at the top of the sealed page");
   const { footerMiniAllowed } = await import("../src/components/FooterMiniChase");
   for (const p of ["/", "/au", "/card/x", "/sealed/x", "/sets/x", "/browse", "/blog/x", "/guides/x", "/account"]) assert.equal(footerMiniAllowed(p), false, p);
   for (const p of ["/trade", "/tools/best-basket"]) assert.equal(footerMiniAllowed(p), true, p);

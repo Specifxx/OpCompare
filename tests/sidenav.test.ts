@@ -121,7 +121,7 @@ test("layout.tsx mounts SideNav and reserves its width for main, the footer ad z
   // is counted there.
   const footer = read("src/components/Footer.tsx");
   const plMatches = [...layout.matchAll(/^.*pl-\[var\(--sidenav-w\)\].*$/gm), ...footer.matchAll(/^.*pl-\[var\(--sidenav-w\)\].*$/gm)];
-  assert.ok(plMatches.length >= 3, "expected at least 3 reservations (main wrapper, ad zone, footer)");
+  assert.ok(plMatches.length >= 2, "expected at least 2 reservations (main wrapper, footer): the ad banners sit at the top of main since 2026-11-14");
   for (const [line] of plMatches) {
     assert.doesNotMatch(line, /\bpx-|container-app/, `pl-[var(--sidenav-w)] must not share a line/element with a px-* utility or with container-app, whose px-* it silently overrides: ${line}`);
   }
@@ -131,8 +131,8 @@ test("layout.tsx mounts SideNav and reserves its width for main, the footer ad z
 test("FooterAds reserves the same width — SideNav is fixed and spans the full page height", () => {
   const layout = read("src/app/layout.tsx");
   const idx = layout.indexOf("<FooterAds");
-  const before = layout.slice(Math.max(0, idx - 200), idx);
-  assert.match(before, /pl-\[var\(--sidenav-w\)\]/, "the wrapper immediately around <FooterAds /> must reserve SideNav's width");
+  const before = layout.slice(Math.max(0, idx - 700), idx);
+  assert.match(before, /pl-\[var\(--sidenav-w\)\]/, "the main wrapper around <FooterAds /> (the banners at the top of main) must reserve SideNav's width");
 });
 
 test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bare -translate-x-1/2", () => {

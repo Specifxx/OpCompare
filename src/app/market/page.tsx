@@ -85,6 +85,7 @@ export default async function MarketPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Market index" }]} />
+      <InlineAds page="market" className="mt-4" />
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">The OP Compare Index</h1>
       <HubIntro path="/market" />
       {sentence ? <p className="mt-4 max-w-3xl text-[15px] font-semibold text-white">{sentence}</p> : null}
@@ -211,7 +212,6 @@ export default async function MarketPage() {
           </table>
         </div>
       </section>
-      <InlineAds page="market" className="mt-8" />
       <AdSlot slot="market" className="mt-10" thin={!series.length} />
       <section id="cite" className="card-surface mt-10 scroll-mt-40 p-5 xl:scroll-mt-36">
         <h2 className="text-lg text-white">Cite the OP Compare Index</h2>

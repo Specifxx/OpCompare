@@ -3,7 +3,7 @@
 import { FooterMiniChase } from "./FooterMiniChase";
 import { usePathname } from "next/navigation";
 
-// The footer ad zone: only the one InlineAds block, where a page does not carry it itself.
+// The top-of-page ad zone (owner, 2026-11-14: the banners sit at the top): the two InlineAds banners, where a page does not carry them itself.
 // Not shown on the policy pages, nor to Plus and Premium members (data-ad-placement, lib/ad-free.ts).
 const BANNER_FREE = ["/about", "/authors", "/contact", "/editorial-policy", "/methodology", "/privacy", "/terms"];
 
@@ -26,7 +26,7 @@ export function FooterAds() {
   const pathname = usePathname() ?? "/";
   if (BANNER_FREE.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
   return (
-    <div className="container-app flex flex-col items-center gap-3 pb-6 pt-10" data-ad-placement="footer">
+    <div id="op-ad-zone" data-ad-placement="footer">
       <FooterMiniChase pathname={pathname} />
     </div>
   );

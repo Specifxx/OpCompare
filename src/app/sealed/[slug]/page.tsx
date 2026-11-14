@@ -138,6 +138,7 @@ export default async function SealedDetailPage({ params }: Props) {
           { name: s.name },
         ]}
       />
+      <InlineAds page="sealed" className="mt-4" />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="card-surface h-fit bg-white/95 p-4">
           {s.imageUrl ? (
@@ -288,8 +289,6 @@ export default async function SealedDetailPage({ params }: Props) {
           <EbayCardPanel productId={s.id} country={country} query={ebayQ} name={s.name} card={s.slug} page="sealed" sealed preRelease={s.presale || isPreRelease(s.releasedOn ?? set?.releasedOn ?? null, new Date().toISOString().slice(0, 10))} />
         </div>
       </div>
-      {/* The one in-page ad block (owner, 2026-11-13): below the price board, the charts and the eBay panel, never beside the price. */}
-      <InlineAds page="sealed" className="mt-8" />
       {sameSet.length ? (
         <section className="mt-10">
           <SectionHeader title={`More ${set?.code ?? ""} sealed`} />

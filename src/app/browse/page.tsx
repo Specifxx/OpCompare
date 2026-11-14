@@ -110,6 +110,7 @@ export default async function BrowsePage({
           </ReadMore>
         </div>
       </header>
+      <InlineAds page="browse" className="mt-4" />
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-w-0">
           {/* One copy of the filters: a CSS-only toggle on phones, always open from lg. */}
@@ -221,7 +222,6 @@ export default async function BrowsePage({
           {/* The same search on the other card-game sites (2026-10-28): a
               Pokémon or Riftbound name typed here finds its own site. */}
           {q.q && <FamilySearch q={q.q} className="mt-6" />}
-          <InlineAds page="browse" className="mt-8" />
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>

@@ -84,6 +84,7 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
       />
       <JsonLd data={faqLd(faqs)} />
       <Breadcrumbs trail={[{ name: "Price guide" }]} />
+      <InlineAds page="price-guide" className="mt-4" />
       <h1 className="font-display text-2xl font-extrabold text-white">One Piece Price Guide</h1>
       <HubIntro path="/price-guide" />
 
@@ -367,7 +368,6 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: S
 
       <HubFaq faqs={faqs} />
 
-      <InlineAds page="price-guide" className="mt-8" />
       <AdSlot slot="price-guide" className="mt-8" noindex={!isGuideDefault(gq)} />
       <InlineSignupPrompt className="mt-8" surface="price-guide" title="Track the cards you want, free" body="Heart cards to keep them on your watchlist, and a free account adds Deal Finder's three biggest savings in your market right now." />
     </div>

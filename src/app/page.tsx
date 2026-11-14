@@ -46,10 +46,10 @@ export default async function HomePage() {
         updatedAt={data.stats.updatedAt}
         renderedAt={data.renderedAt}
       />
+      <InlineAds page="home" />
       <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} />
       <HomePopularCards data={data} storeCount={storeCount} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
-      <InlineAds page="home" />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />
       <HomeGuides cat={data.cat} />

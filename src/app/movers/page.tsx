@@ -51,6 +51,7 @@ export default async function MoversPage() {
     <div>
       <JsonLd data={faqLd(MOVERS_FAQ)} />
       <Breadcrumbs trail={[{ name: "Price movers" }]} />
+      <InlineAds page="movers" className="mt-4" />
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece price movers — this week
       </h1>
@@ -147,7 +148,6 @@ export default async function MoversPage() {
           <NewsletterSignup siteName="OP Compare" source="movers" variant="card" heading="Get the week's biggest movers in your inbox" cta="Email me the movers" done="Done. You'll get the movers digest each week." />
         </EmailOnly>
       </div>
-      <InlineAds page="movers" className="mt-8" />
       <AdSlot slot="movers" className="mt-8" thin={noHistory} />
       <HubFaq faqs={MOVERS_FAQ} />
       <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
