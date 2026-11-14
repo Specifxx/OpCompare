@@ -20,6 +20,8 @@ export interface SealedQvOffer {
   /** ISO of the importer's last successful read (offerStock's staleness rule). */
   lastSeen: string;
   href: string;
+  /** The listing's own page, untagged: the cart list's store and line (components/cart). */
+  url: string;
   ebay: boolean;
 }
 
@@ -66,6 +68,7 @@ export function sealedQuickViewPayload(
           inStock: o.inStock,
           lastSeen: o.updatedAt,
           href: affiliateUrl(o.url, retailerSubId(o.source), loc),
+          url: o.url,
           ebay: isEbaySource(o.source),
         })),
       ebaySearch: ebaySearchUrl(m, onePieceEbayQuery(s.name), "sealed-quickview"),
