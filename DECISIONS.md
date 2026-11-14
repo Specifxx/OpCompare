@@ -4253,3 +4253,26 @@ Graph and JSON-LD; every h1 and h2; the set of internal links; the paid rows and
 `data-surface`, hrefs and words); no indexed text removed (folded text stays in the server HTML). No URL, placement name,
 affiliate tag, revalidate or data read changed, so the 19 November clicks-per-placement recheck is unaffected. No horizontal
 scroll at 390px and no new layout shift on any sampled page; no console or hydration errors.
+
+## 2026-11-14: second look at the design pass (review)
+
+An independent check of the day's design pass (#148) found no regression: base `29e45a8` against `main`, built from the
+same snapshot, 16 URLs (home, card many and few stores, sealed product, sealed list, sets, a set, search with and without
+results, guides index and a guide, blog index and a post, stores, about, 404) at 390x844 and 1440x900 in both themes. No
+horizontal scroll, no new layout shift (highest 0.054 on a desktop sealed page, 0.053 before), no console or hydration
+errors, no new contrast failure or invisible focus, reduced motion respected. With scripts off, 20 URLs kept every title,
+meta, canonical, robots, Open Graph, JSON-LD, h1, h2 and internal link, the paid links in order with the same hrefs and
+words, and every `data-surface` / `data-retailer` in order. 40 sampled sitemap URLs answer 200, indexable, self-canonical;
+robots.txt blocks only `/api/`, `/admin`, `/login`, `/premium/welcome` and query strings; an unknown URL answers 404.
+
+Two leftovers fixed:
+
+- **Set page pre-order callout** (`PreorderCallout`, the OP18 set page until release day) still had the amber edge, the
+  amber chip and a filled red button, and on a phone squeezed its words into a column beside the chip: the exact strip
+  `/sealed` lost today. It now matches that strip (neutral card and chip, words full width on a phone, outlined button).
+  Same words, same link.
+- **Sealed tiles** broke "17 stores" over two lines beside a long price on a phone; the count no longer wraps.
+
+No paid link, ad block, pinned row, affiliate tag, placement name, URL or metadata changed, so the 19 November
+clicks-per-placement recheck is unaffected. The `[deploy] [urgent]` release commit after #148 (`2f3dbe9`) says the owner
+asked for it; this change rides the next weekly release.
