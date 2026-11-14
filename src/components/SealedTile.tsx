@@ -38,7 +38,7 @@ export function SealedTile({ s, country, setCode, soldOut = false }: { s: Sealed
                 {perPack ? <p className="num text-[11px] text-slate-400">{money(perPack, country)} / pack</p> : null}
               </div>
               {h.stores > 0 ? (
-                <p className="pb-1 text-[11px] font-semibold text-emerald-400">
+                <p className="shrink-0 whitespace-nowrap pb-1 text-[11px] font-semibold text-emerald-400">
                   {h.stores} {h.stores === 1 ? "store" : "stores"}
                 </p>
               ) : null}
