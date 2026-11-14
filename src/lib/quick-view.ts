@@ -41,6 +41,8 @@ export interface BuyRow {
   shippingCents: number | null;
   condition: string | null;
   href: string;
+  /** The listing's own page, untagged: the cart list's store and line (components/cart). */
+  url: string;
   ebay: boolean;
   postage: string;
   updatedAt: string;
@@ -57,6 +59,7 @@ export function buyRow(o: OfferRow, country: Country, loc: string): BuyRow {
     shippingCents: o.shippingCents,
     condition: o.condition,
     href: affiliateUrl(o.url, retailerSubId(o.source), loc),
+    url: o.url,
     ebay,
     postage: postageLine(o, country),
     updatedAt: o.updatedAt,

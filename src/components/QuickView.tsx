@@ -8,7 +8,8 @@ import { StoreCodeChip } from "./StoreCodeChip";
 import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
-import type { QuickViewPayload } from "@/lib/quick-view";
+import { cardDisplayName, type QuickViewPayload } from "@/lib/quick-view";
+import { CartAddButton } from "./cart/CartAddButton";
 import { pushRecentCard } from "@/lib/recently-viewed";
 import { ColorDots, Delta, PrintingBadge, RarityBadge } from "./ui";
 import { useCountry } from "./CountryProvider";
@@ -263,6 +264,11 @@ export function QuickView({
                           </p>
                         </div>
                         <span className={`num shrink-0 text-sm font-bold ${low ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>
+                        {/* "Add to cart" beside the buy button (owner, 2026-11-14), as on the card page: stores and eBay, never TCGplayer. */}
+                        <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                        {r.source !== "tcgplayer" ? (
+                          <CartAddButton href={r.href} productUrl={r.url} storeName={r.label} title={cardDisplayName(data)} detail={r.condition} priceCents={r.priceCents} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
+                        ) : null}
                         <a
                           href={r.href}
                           target="_blank"
@@ -271,10 +277,11 @@ export function QuickView({
                           data-page={PAGE}
                           data-card={data.slug}
                           data-surface={pin ? "quickview_pinned" : "quickview_row"}
-                          className={`${r.source === "tcgplayer" ? "btn-tcg" : "btn-primary"} order-last min-h-10 w-full basis-full px-3 py-1.5 text-xs sm:order-none sm:w-auto sm:basis-auto`}
+                          className={`${r.source === "tcgplayer" ? "btn-tcg" : "btn-primary"} min-h-10 flex-1 px-3 py-1.5 text-xs sm:flex-none`}
                         >
                           {r.source === "tcgplayer" ? "Buy on TCGplayer →" : r.ebay ? "Buy on eBay →" : "View deal →"}
                         </a>
+                        </div>
                       </li>
                     ); })}
                   </ol>

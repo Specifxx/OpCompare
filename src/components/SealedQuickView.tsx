@@ -10,6 +10,7 @@ import { ago, money } from "@/lib/format";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
 import type { SealedQvPayload } from "@/lib/sealed-quick-view";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { CartAddButton } from "./cart/CartAddButton";
 import { useCountry } from "./CountryProvider";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { SealedWatchButton } from "./SealedWatchButton";
@@ -198,6 +199,10 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                       </div>
                       {isBest ? <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span> : null}
                       <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>{money(l.priceCents, country as Country)}</div>
+                      {/* "Add to cart" beside the buy button (owner, 2026-11-14): open store and eBay rows, never TCGplayer. */}
+                      {isOpen && l.source !== "tcgplayer" ? (
+                        <CartAddButton href={l.href} productUrl={l.url} storeName={l.label} title={data.name} priceCents={l.priceCents} currency={COUNTRIES[country as Country].currency} image={data.imageUrl} className="text-slate-300" />
+                      ) : null}
                       <a
                         href={l.href}
                         target="_blank"

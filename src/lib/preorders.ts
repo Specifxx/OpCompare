@@ -160,6 +160,7 @@ function panelRow(l: PanelListing, country: Country): BuyRow {
     shippingCents: l.shippingCents,
     condition: null,
     href: ebayAffiliateUrl(l.url, "preorders"),
+    url: l.url,
     ebay: true,
     // The postage eBay states, as every eBay row shows it ("delivered" only when it is known).
     postage: postageLine({ source: "ebay", priceCents: l.priceCents, shippingCents: l.shippingCents }, country),
