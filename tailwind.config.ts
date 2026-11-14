@@ -103,11 +103,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        // Headings: Fraunces, a sharp flared serif — the Beaufort-style look-alike
-        // (see the note in layout.tsx). Applied via the `h1`-`h3` base-style rule in
-        // globals.css, not per-component, so it lands sitewide in one place. Body
-        // copy stays Inter — the Spiegel-style look-alike.
-        display: ["var(--font-display)", "Georgia", "Cambria", "Times New Roman", "serif"],
+        // Headings: Archivo, a heavy grotesque (Fraunces until 2026-11-14; see
+        // layout.tsx). Applied via the `h1`-`h3` base-style rule in globals.css,
+        // not per-component, so it lands sitewide in one place. Body copy is Inter.
+        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },

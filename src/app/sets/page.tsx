@@ -99,7 +99,7 @@ export default async function SetsPage() {
 
   return (
     <div>
-      <div className="card-surface border-brand-500/40 p-6 sm:p-8">
+      <header>
         <Breadcrumbs trail={[{ name: "Sets" }]} />
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           One Piece sets — card lists &amp; prices
@@ -116,7 +116,7 @@ export default async function SetsPage() {
             price for each card.
           </InShort>
         </div>
-      </div>
+      </header>
 
       {upcoming.length ? (
         <section className="mt-10">

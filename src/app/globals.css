@@ -208,50 +208,28 @@ body {
   font-feature-settings: "lnum" 1;
 }
 
-/* Headings: Fraunces — a sharp, high-contrast, slightly flared serif chosen as a
-   free look-alike for Beaufort for LoL's bold titling character (the genuine
-   Beaufort file is Riot's proprietary, licensed font — there is no legitimate
-   third-party source for it). Heavy weight + tight tracking for a bold, sharp
-   display voice; h1 goes to the heaviest cut for maximum presence. */
+/* Headings: Archivo, a heavy neutral grotesque — the bold square sans of the One
+   Piece Card Game's own product typography. Until 2026-11-14 only the homepage
+   used it (inside `.rb-display-sans`) and every other page set its headings in
+   Fraunces, a flared serif, so a visitor moved between two type voices. One
+   voice now, site-wide (RiftCompare left Fraunces the same way). The face is the
+   root layout's next/font import, exposed as --font-display. */
 h1, h2, h3 {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 h1 {
   font-weight: 900;
 }
 
-/* HOMEPAGE ONLY — swaps the flared serif above for a heavy neutral grotesque,
-   the bold square sans of the One Piece Card Game's own product typography
-   (RiftCompare matches the Riftbound wordmark lockup the same way). Scoped to the `.rb-display-sans` wrapper applied in
-   src/app/page.tsx, so the rest of the site keeps the Fraunces titling voice.
-   The face itself (--font-riftbound / Archivo, RiftCompare's variable name kept
-   so the two sites' CSS stays one diff) is imported by that same file.
-
-   Deliberately does NOT force text-transform: uppercase. The reference lockup is
-   a single short word; this page's h1 is a full sentence ("One Piece Card
-   Game Card Prices"), and setting a string that long in
-   tracked-out caps hurts legibility badly — the same reason .rb-eyebrow below is
-   opt-in for short labels rather than applied to headings wholesale. Use
-   .rb-eyebrow where you want the tracked all-caps treatment. */
+/* The homepage's wrapper keeps its slightly tighter display tracking: a heavy
+   grotesque at hero sizes reads as one solid mass rather than loose letters. */
 .rb-display-sans h1,
 .rb-display-sans h2,
 .rb-display-sans h3 {
-  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
-  /* Tighter than the serif's -0.01em: a heavy grotesque at display sizes needs
-     more negative tracking to read as one solid mass rather than loose letters. */
   letter-spacing: -0.025em;
-}
-
-/* The homepage's tracked eyebrows ('Trending', 'Recently viewed') follow its sans
-   titling voice too. Everywhere else .rb-eyebrow keeps the Fraunces serif.
-   (2026-09-23: 'TRENDING' was the one serif label in the sans hero, beside the
-   sans 'SHOPPING FROM'.) Specificity (0,2,0) beats .rb-eyebrow below, and only
-   the face changes: tracking, caps, size and colour stay. */
-.rb-display-sans .rb-eyebrow {
-  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
 }
 
 /* "Eyebrow" micro-heading — the tracked, uppercase treatment the official site
@@ -260,7 +238,7 @@ h1 {
    long, and forcing long strings into tracked-out all-caps hurts legibility —
    this is for short labels only ("NEW SET", "PRICE MOVERS", etc). */
 .rb-eyebrow {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -858,7 +836,7 @@ body {
   transform: translateY(-1px);
 }
 .op-thriller b {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), var(--font-sans), sans-serif;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: #f5f3ff;
@@ -1206,6 +1184,29 @@ html[data-ad-dock] .above-bottombar {
   position: relative;
 }
 
+
+/* The price board's store rows on a phone (PriceBoardView, 2026-11-14). Below 640px the row was one flex line: the
+   number, a narrow column for the name and its details, then the price and the row's buttons, so store names were cut
+   ("Cash Cards ...") and every row ran 150-170px tall. Here the row is a grid: the name beside the price on the first
+   line (wrapping, never cut), the details under the name, and the cart and buy buttons right under the price. The
+   elements, their order, words and buttons are unchanged; only where they sit. */
+@media (max-width: 639.98px) {
+  .pb-row {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr) auto auto;
+    column-gap: 0.5rem;
+    row-gap: 0.25rem;
+    align-items: start;
+  }
+  .pb-row > .pb-info { display: contents; }
+  .pb-row > .pb-n { grid-column: 1; grid-row: 1; align-self: baseline; }
+  .pb-row .pb-name { grid-column: 2; grid-row: 1; align-self: baseline; }
+  .pb-row > .pb-price { grid-column: 3 / 5; grid-row: 1; align-self: baseline; }
+  .pb-row .pb-sub,
+  .pb-row .pb-meta { grid-column: 2; margin-top: 0; }
+  .pb-row > .pb-cart { grid-column: 3; grid-row: 2 / span 2; justify-self: end; }
+  .pb-row > .pb-go { grid-column: 4; grid-row: 2 / span 2; }
+}
 
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {

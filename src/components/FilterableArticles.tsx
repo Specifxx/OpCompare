@@ -87,8 +87,7 @@ export function FilterableArticles({ articles, sections, featured, featuredLabel
           ) : null}
           {grouped.map(({ s, items }) => (
             <section key={s.title} className="mt-8">
-              <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
-                <span className="h-2 w-2 rounded-full" style={{ background: s.accent }} aria-hidden />
+              <h2 className="mb-3 text-xl font-extrabold text-white">
                 {s.title}
               </h2>
               <Grid items={items} />

@@ -66,7 +66,7 @@ export function SealedWatchButton({
           Plus {tell} when this is back in stock or at your price, checked {SEALED_CHECK_CADENCE}.
         </p>
         <div className="mt-1.5">
-          <PlanButton tier="plus" surface="gate:sealed-watch" />
+          <PlanButton tier="plus" surface="gate:sealed-watch" className="btn-ghost min-h-10 text-sm" />
         </div>
       </div>
     );
@@ -83,7 +83,7 @@ export function SealedWatchButton({
               Saved in this browser. Plus {tell} when this is back in stock or at your price, checked {SEALED_CHECK_CADENCE}.
             </p>
             <div className="mt-1.5">
-              <PlanButton tier="plus" surface="gate:sealed-watch" />
+              <PlanButton tier="plus" surface="gate:sealed-watch" className="btn-ghost min-h-10 text-sm" />
             </div>
           </>
         ) : null}

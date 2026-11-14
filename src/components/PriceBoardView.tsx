@@ -112,7 +112,7 @@ export function PriceBoardView({
               <span className="w-5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-[15px] font-semibold text-white">{ebayLabel(country)}</span>
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{ebayLabel(country)}</span>
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   {preRelease
@@ -133,7 +133,7 @@ export function PriceBoardView({
               <span className="w-5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-[15px] font-semibold text-white">TCGplayer</span>
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
@@ -160,16 +160,16 @@ export function PriceBoardView({
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
             return [
-              <li key={`${o.source}-${country}`} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
-                <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-[15px] font-semibold text-white">{o.label}</span>
+              <li key={`${o.source}-${country}`} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
+                <span className="pb-n num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
+                <div className="pb-info min-w-0 flex-1">
+                  <p className="pb-name flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{o.label}</span>
                     {o.host && <StoreVote url={o.host} name={o.label} className="text-slate-400" />}
-                    {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span> : null}
+                    {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">Cheapest</span> : null}
                   </p>
-                  {isEbay ? <p className="mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
-                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+                  {isEbay ? <p className="pb-sub mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
+                  <p className="pb-meta mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
                     {o.condition ? <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{o.condition}</span> : null}
                     {tcg ? <span>lowest listing</span> : null}
                     {tcg ? null : (
@@ -192,7 +192,7 @@ export function PriceBoardView({
                     {o.ebay ? null : <StoreCodeChip href={o.href} />}
                   </p>
                 </div>
-                <span className="shrink-0 text-right">
+                <span className="pb-price shrink-0 text-right">
                   <span className={`num block text-base font-bold sm:text-lg ${i === 0 ? "text-accent" : "text-white"}`}>{money(o.priceCents, country)}</span>
                   {pinned && i > 0 && open[0].priceCents > 0 ? (
                     <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
@@ -200,12 +200,12 @@ export function PriceBoardView({
                 </span>
                 {/* The cart list (components/cart, owner 2026-11-06): store and eBay rows, never TCGplayer. */}
                 {o.host && !tcg ? (
-                  <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="text-slate-300" />
+                  <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="pb-cart text-slate-300" />
                 ) : null}
                 <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`pb-go ${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
                   →
                 </a>
               </li>,
@@ -293,7 +293,7 @@ function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string
       <span className="w-5 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-[15px] font-semibold text-white">Fetch TCG</span>
+          <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">Fetch TCG</span>
         </p>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
           <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{r.condition}</span>

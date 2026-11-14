@@ -17,7 +17,7 @@ export function CreatorsCornerBadge() {
       </span>
       <span>
         One Piece creators
-        <span className="ml-1.5 font-semibold text-fuchsia-200 group-hover:text-white">Buy them a pack →</span>
+        <span className="ml-1.5 font-semibold text-slate-300 group-hover:text-white">Buy them a pack →</span>
       </span>
     </Link>
   );

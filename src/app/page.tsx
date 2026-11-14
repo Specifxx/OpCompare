@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Archivo } from "next/font/google";
 import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { InlineAds } from "@/components/InlineAds";
 import { CinematicHero } from "@/components/home/CinematicHero";
@@ -25,14 +24,8 @@ import { faqPage, ldJson, webApplication, webPage } from "@/lib/jsonld";
 //
 // STATIC: no cookie or header read. One cached HTML (ISR, hourly) carries every
 // market's figures and the client localises to the visitor's market
-// (CountryProvider). Archivo is loaded here only, for the homepage's display
-// face (`.rb-display-sans`, globals.css).
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-riftbound",
-  display: "swap",
-});
+// (CountryProvider). The heading face (Archivo) is the root layout's since
+// 2026-11-14; `.rb-display-sans` keeps the homepage's tighter tracking.
 
 export const revalidate = 21600; // six hours: Vercel cost ceiling (owner, 2026-11-02)
 
@@ -45,7 +38,7 @@ export default async function HomePage() {
   const faqs = homeFaqs({ ebayLive: site?.ebayLive ?? false });
   const storeCount = data.stats.statsByCountry[DEFAULT_COUNTRY].stores;
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
+    <div className="rb-display-sans flex flex-col gap-10">
       <CinematicHero
         totalCards={data.stats.totalCards}
         statsByCountry={data.stats.statsByCountry}

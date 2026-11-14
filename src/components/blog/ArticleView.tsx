@@ -125,17 +125,17 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
           {post.tags.map((t) => (
             <span
               key={t}
-              className="rounded bg-ink-800 px-2 py-0.5 text-xs text-slate-300"
+              className="rounded-full border border-ink-700 px-2.5 py-0.5 text-xs text-slate-400"
             >
               {t}
             </span>
           ))}
         </div>
-        <h1 className="mt-3 text-3xl font-extrabold leading-tight text-white">
+        <h1 className="mt-4 text-[28px] font-extrabold leading-[1.12] text-white sm:text-[40px]">
           {title}
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          <Link href={AUTHOR.url} className="underline hover:text-white">
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <Link href={AUTHOR.url} className="underline decoration-slate-600 underline-offset-2 hover:text-white">
             {AUTHOR.name}
           </Link>{" "}
           · {longDate(post.date)} · {post.minutes} min read · Prices updated{" "}
@@ -167,9 +167,9 @@ export async function ArticleView({ post, section }: { post: Post; section: "blo
         ) : null}
 
         {body.summary.length ? (
-          <div className="card-surface mt-6 border-l-2 border-l-brand-500 p-5">
+          <div className="mt-8 rounded-xl border border-ink-800 bg-ink-850 p-5">
             <p className="rb-eyebrow text-slate-500 mb-2">The short version</p>
-            <ul className="list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-200 marker:text-brand-400">
+            <ul className="list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-200 marker:text-slate-500">
               {body.summary.map((s, i) => (
                 <li key={i}>{s}</li>
               ))}

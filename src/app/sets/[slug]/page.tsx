@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cleanPageNumber } from "@/lib/facets";
 import Link from "next/link";
+import { ReadMore } from "@/components/ReadMore";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardTile } from "@/components/CardTile";
@@ -125,9 +126,13 @@ export default async function SetPage({ params, searchParams }: Props) {
           where no {c.adjective} store has the card. Open a card for every
           store&apos;s price.
         </p>
-        {narrative.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
+        {narrative.length ? (
+          <ReadMore label={`More about ${set.code} prices`}>
+            {narrative.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </ReadMore>
+        ) : null}
       </div>
 
       {preorderHref && set.releasedOn ? <PreorderCallout code={set.code} href={preorderHref} releasedOn={set.releasedOn} className="mt-6" /> : null}

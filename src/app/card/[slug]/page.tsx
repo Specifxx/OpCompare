@@ -452,7 +452,7 @@ export default async function CardPage({ params }: Props) {
                     </span>
                   ) : null}
                 </h1>
-                <p className="num mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm tabular-nums text-slate-400">
                   <Link
                     href={`/sets/${card.set.slug}`}
                     className="hover:text-white"

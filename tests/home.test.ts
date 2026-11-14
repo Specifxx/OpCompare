@@ -36,8 +36,8 @@ test("the homepage and the region homes are static: no cookie, header or session
 
 test("the homepage leads with price comparison: sealed, popular cards, then deals; guides and blog last (owner, 2026-10-28)", () => {
   const page = codeOnly(read("src/app/page.tsx"));
-  assert.match(page, /variable: "--font-riftbound"/);
-  assert.match(page, /\$\{archivo\.variable\} rb-display-sans flex flex-col gap-10/);
+  // The heading face is the root layout's since 2026-11-14 (one voice site-wide); the wrapper keeps its tracking.
+  assert.match(page, /className="rb-display-sans flex flex-col gap-10"/);
   const order = ["<CinematicHero", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<InlineAds", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
   let at = -1;
   for (const t of order) {
