@@ -866,20 +866,33 @@ export const getPublishedDeck = unstable_cache(
   { tags: [DECKS_TAG], revalidate: 86400 },
 );
 
-/** Up to six live decks that play a card (the card page's "Decks using this card"). */
-export const getDecksUsingCard = unstable_cache(
-  async (cardId: number): Promise<{ slug: string; title: string; leaderName: string }[]> =>
+// One cached list of every live deck's cards, under ONE key (COMPUTE, 2026-11-16:
+// op3 used 94 of Neon's 100 free compute hours). Keyed per card, as it was, every
+// crawled card page that missed the cache asked Neon, so the database never slept.
+const getLiveDeckCardIndex = unstable_cache(
+  async (): Promise<{ slug: string; title: string; leaderName: string; cardIds: number[] }[]> =>
     prisma.publishedDeck.findMany({
-      where: { status: "live", cardIds: { has: cardId } },
+      where: { status: "live" },
       orderBy: { createdAt: "desc" },
-      take: 6,
-      select: { slug: true, title: true, leaderName: true },
+      take: 300,
+      select: { slug: true, title: true, leaderName: true, cardIds: true },
     }),
-  ["decks-using-card-v1"],
-  // DB_TTL, not an hour: the card page is ISR for six hours and would be cut to
+  ["live-deck-card-index-v1"],
+  // DB_TTL, not an hour: the card page is cached for six hours and would be cut to
   // this TTL if it were shorter; a publish or a hide revalidates DECKS_TAG at once.
   { tags: [DECKS_TAG], revalidate: DB_TTL },
 );
+
+/** Up to six live decks that play a card (the card page's "Decks using this card"). */
+export async function getDecksUsingCard(cardId: number): Promise<{ slug: string; title: string; leaderName: string }[]> {
+  const out: { slug: string; title: string; leaderName: string }[] = [];
+  for (const d of await getLiveDeckCardIndex()) {
+    if (!d.cardIds.includes(cardId)) continue;
+    out.push({ slug: d.slug, title: d.title, leaderName: d.leaderName });
+    if (out.length === 6) break;
+  }
+  return out;
+}
 // ── Demand Finder, the /movers strip and Rising Cards ──
 // Both read the demand snapshot FILES and the Rising Cards feed the import
 // writes to the `data` branch (lib/demand-snapshot.ts, lib/rise-predictor.ts,

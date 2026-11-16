@@ -4292,3 +4292,11 @@ count; it ran once before the flip and once after the flip commit was on the bra
 
 The burn is not fixed by this: at the same rate OP2 reaches ~90 hours by 1 Dec. What keeps the compute awake is the
 next thing to find (the scheduled jobs alone wake it ~15 times a day; pages and `/api/*` traffic do the rest).
+
+## 2026-11-16: "Decks using this card" reads one cached deck list, not one query per card
+
+op3 used 94 of Neon's 100 free compute hours by the 16th because the database was awake about 23 hours a day.
+The card page's "Decks using this card" was cached per card id, so every crawled card page that missed the cache
+(about 8,500 card renders a day) asked Neon, and the database never reached its five-minute sleep. It now reads one
+cached list of every live deck's card ids (`live-deck-card-index-v1`, 12 hours, `DECKS_TAG`) and filters it in memory:
+one query per refresh for the whole site. Never key a database read under a public page by slug or id again.
