@@ -10,9 +10,10 @@ import { COPY_ORDER, SKIPPED } from "../scripts/migrate-db";
 const ROOT = path.resolve(__dirname, "..");
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
-test("OP3 wins over OP2, which wins over DATABASE_URL", () => {
-  assert.deepEqual(resolveDatabaseUrl({ OP3: "postgres://three", OP2: "postgres://two", DATABASE_URL: "postgres://old" }), { url: "postgres://three", name: "OP3" });
-  assert.equal(resolveDatabaseUrl({ OP3: "  ", OP2: "postgres://two" })?.name, "OP2", "a blank OP3 is unset");
+test("OP2 wins over OP3 (2026-11-16), which wins over DATABASE_URL", () => {
+  assert.deepEqual(resolveDatabaseUrl({ OP3: "postgres://three", OP2: "postgres://two", DATABASE_URL: "postgres://old" }), { url: "postgres://two", name: "OP2" });
+  assert.deepEqual(resolveDatabaseUrl({ op3: "postgres://three", op2: "postgres://two" }), { url: "postgres://two", name: "op2" }, "Vercel's lower-case names too");
+  assert.equal(resolveDatabaseUrl({ OP2: "  ", OP3: "postgres://three" })?.name, "OP3", "a blank OP2 falls back to OP3");
   assert.match(read("scripts/db-push-safe.sh"), /if \[ -n "\$\{OP3:-\}" \]; then export DATABASE_URL="\$OP3"; fi/);
 });
 
@@ -74,9 +75,9 @@ test("the migration workflow is manual, read-only for the repo, in the import's 
 });
 
 test("every workflow that touches the database prefers OP2 (a secret or a variable), then the old DATABASE_URL", () => {
-  const expr = "${{ secrets.OP3 || vars.OP3 || secrets.OP2 || vars.OP2 || secrets.DATABASE_URL }}";
+  const expr = "${{ secrets.OP2 || vars.OP2 || secrets.OP3 || vars.OP3 || secrets.DATABASE_URL }}";
   for (const f of fs.readdirSync(path.join(ROOT, ".github/workflows"))) {
-    if (f === "migrate-database.yml") continue; // it names both databases on purpose
+    if (f === "migrate-database.yml" || f === "rotate-database.yml") continue; // they name both databases on purpose
     const wf = read(`.github/workflows/${f}`);
     const uses = wf.match(/secrets\.DATABASE_URL/g) ?? [];
     const withExpr = wf.split(expr).length - 1;

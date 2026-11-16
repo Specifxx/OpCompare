@@ -381,7 +381,7 @@ test("the watchdog workflow: scheduled, read-only but for its issue, never on a 
   const y = read(".github/workflows/watchdog.yml");
   assert.doesNotMatch(y, /^\s*push:/m);
   assert.match(y, /permissions:\s*\n\s*contents: read\s*\n\s*actions: read\s*\n\s*issues: write/);
-  assert.match(y, /DATABASE_URL: \$\{\{ secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.DATABASE_URL \}\}/);
+  assert.match(y, /DATABASE_URL: \$\{\{ secrets\.OP2 \|\| vars\.OP2 \|\| secrets\.OP3 \|\| vars\.OP3 \|\| secrets\.DATABASE_URL \}\}/);
   assert.match(y, /NEON_API_KEY: \$\{\{ secrets\.NEON_API_KEY \}\}/);
   assert.match(y, /group: watchdog/);
   // Empire HQ's status file is pushed by a separate job: the one holding the database never gets write access.

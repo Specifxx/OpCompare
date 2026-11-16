@@ -4276,3 +4276,19 @@ Two leftovers fixed:
 No paid link, ad block, pinned row, affiliate tag, placement name, URL or metadata changed, so the 19 November
 clicks-per-placement recheck is unaffected. The `[deploy] [urgent]` release commit after #148 (`2f3dbe9`) says the owner
 asked for it; this change rides the next weekly release.
+
+## 2026-11-16: Back to OP2 (op3 at its compute limit)
+
+Neon's API (16 Nov, 09:42 UTC) read op3 at **94.4 of the free plan's 100 compute hours** for November, with 369 hours
+awake out of 376: the compute almost never scales to zero (Free suspends after 5 idle minutes and that cannot be
+changed). At ~6 hours a day it would be suspended within a day, and the site with it, until 1 Dec. Transfer was
+only 0.06 GB. OP2, retired on 2026-10-19 for the same reason, had used nothing this month, so it is the target: no new
+project, no secret to add, no spend.
+
+`rotate-database.yml` (new) copies the whole database with pg_dump / pg_restore --clean and checks every table's row
+count; it ran once before the flip and once after the flip commit was on the branch. The flip puts OP2 first in
+`src/lib/db-url.ts` and in every workflow's expression; op3 is the fallback and rollback. Shipped with `[deploy]
+[urgent]` because the workflows switch at merge and the site must follow before op3 is suspended.
+
+The burn is not fixed by this: at the same rate OP2 reaches ~90 hours by 1 Dec. What keeps the compute awake is the
+next thing to find (the scheduled jobs alone wake it ~15 times a day; pages and `/api/*` traffic do the rest).
