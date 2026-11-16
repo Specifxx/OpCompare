@@ -10,6 +10,7 @@
 // stores<M>, which counts every store plus TCGplayer, and never eBay).
 import fs from "node:fs";
 import path from "node:path";
+import { deniedKeys, loadDenylist } from "./denylist";
 import { pub } from "./pubdb";
 import {
   TCGCSV_BASE,
@@ -310,7 +311,14 @@ export async function importStores(log: Log, opts: { only?: string[]; market?: C
   const market = new Map<number, number | null>([...cards.map((c) => [c.id, c.marketUsd] as const), ...sealedRows.map((s) => [s.id, s.marketUsd] as const)]);
   const isSealed = new Set(sealedRows.map((s) => s.id));
 
-  let stores: StoreInfo[] = STORES;
+  // The shared scam denylist (TCGEmpire scam sweep, owner 2026-11-16): denied stores are skipped and their offers removed.
+  const deny = await loadDenylist();
+  const denied = deniedKeys(STORES, deny);
+  if (denied.length) {
+    const gone = await pub.offer.deleteMany({ where: { source: { in: denied.map((k) => `store:${k}`) } } });
+    log(`Shared scam denylist: skipped ${denied.join(", ")}, removed ${gone.count} offers`);
+  }
+  let stores: StoreInfo[] = STORES.filter((s) => !denied.includes(s.key));
   if (opts.only?.length) stores = stores.filter((s) => opts.only!.includes(s.key));
   if (opts.market) stores = stores.filter((s) => s.country === opts.market);
 
