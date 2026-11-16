@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCardDetail, getEbayPanel, getProductHistory } from "@/lib/data";
 import { quickViewPayload } from "@/lib/quick-view";
+import { fetchRowsFor } from "@/lib/fetchtcg";
 
 // The card QuickView's data (components/QuickView.tsx): one card's facts, every
 // market's cheapest open rows (affiliate-tagged), its eBay searches and the
@@ -21,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   if (!card) return NextResponse.json({ error: "not found" }, { status: 404, headers: { "Cache-Control": "public, s-maxage=300" } });
   const history = await getProductHistory(card.id).catch(() => []);
   const panel = await getEbayPanel(card.id).catch(() => ({ listings: [], graded: [] }));
-  return NextResponse.json(quickViewPayload(card, undefined, history, panel.graded), {
+  return NextResponse.json(quickViewPayload(card, undefined, history, panel.graded, fetchRowsFor(card)), {
     headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
   });
 }

@@ -105,6 +105,10 @@ export function QuickView({
 
   const href = `/card/${slug}`;
   const m = data?.markets[country];
+  // Fetch TCG (AU only) and TCGplayer's converted market price outside the US are rows on the card page's board
+  // (PriceBoardView), so the popup draws them too: it said "no store has this" beside a page that listed both (owner, 2026-11-16).
+  const fetchHere = country === "AU" ? data?.fetch?.rows ?? [] : [];
+  const tcgExtra = country !== "US" && data?.marketUsd != null && !m?.rows.some((r) => r.source === "tcgplayer");
   const best = m?.rows[0] ?? null;
   // Only where the price line would say "—" (no open row here, no TCGplayer market price).
   const lastKnown = !best && data?.marketUsd == null ? (data?.lastKnown?.[country] ?? null) : null;
@@ -243,7 +247,7 @@ export function QuickView({
 
               <div className="mt-4">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Price comparison</p>
-                {m.rows.length ? (
+                {m.rows.length || fetchHere.length || tcgExtra ? (
                   <ol className="divide-y divide-ink-800">
                     {m.rows.map((r, i) => { const low = i === cheapestIndex(m.rows); const pin = i < (m.pinned ?? 0); return (
                       <li key={`${r.source}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 sm:flex-nowrap">
@@ -264,9 +268,9 @@ export function QuickView({
                           </p>
                         </div>
                         <span className={`num shrink-0 text-sm font-bold ${low ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>
-                        {/* "Add to cart" beside the buy button (owner, 2026-11-14), as on the card page: stores and eBay, never TCGplayer. */}
+                        {/* "Add to cart" beside the buy button (owner, 2026-11-14), as on the card page: every row, TCGplayer included (2026-11-16). */}
                         <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
-                        {r.source !== "tcgplayer" ? (
+                        {r.url ? (
                           <CartAddButton href={r.href} productUrl={r.url} storeName={r.label} title={cardDisplayName(data)} detail={r.condition} priceCents={r.priceCents} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
                         ) : null}
                         <a
@@ -284,6 +288,39 @@ export function QuickView({
                         </div>
                       </li>
                     ); })}
+                    {fetchHere.map((r) => (
+                      <li key={`fetchtcg-${r.condition}-${r.priceCents}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 sm:flex-nowrap">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-white">Fetch TCG</p>
+                          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
+                            <span className="font-semibold text-slate-300">{r.condition}</span>
+                            <span>postage at checkout</span>
+                          </p>
+                        </div>
+                        <span className="num shrink-0 text-sm font-bold text-white">{money(r.priceCents, country)}</span>
+                        <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                          <CartAddButton href={r.url} productUrl={r.url} storeName="Fetch TCG" title={cardDisplayName(data)} detail={r.condition} priceCents={r.priceCents} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
+                          <a href={r.url} target="_blank" rel={outboundRel()} data-retailer="fetchtcg" data-page={PAGE} data-card={data.slug} data-surface="quickview_row" className="btn-ghost min-h-10 flex-1 px-3 py-1.5 text-xs sm:flex-none">
+                            View on Fetch TCG →
+                          </a>
+                        </div>
+                      </li>
+                    ))}
+                    {tcgExtra && data.marketUsd != null ? (
+                      <li className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 sm:flex-nowrap">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-white">TCGplayer</p>
+                          <p className="text-[11px] text-slate-500">{isPaidLink(data.tcgHref) ? <span className="rounded bg-ink-800 px-1 text-[10px] text-slate-400">Paid link</span> : null}</p>
+                        </div>
+                        <span className="num shrink-0 text-sm font-bold text-white">{money(usdCentsToCountry(data.marketUsd, country), country)}</span>
+                        <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                          <CartAddButton href={data.tcgHref} productUrl={data.tcgUrl} storeName="TCGplayer" title={cardDisplayName(data)} priceCents={usdCentsToCountry(data.marketUsd, country)} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
+                          <a href={data.tcgHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={PAGE} data-card={data.slug} data-surface="quickview_pinned" className="btn-tcg min-h-10 flex-1 px-3 py-1.5 text-xs sm:flex-none">
+                            Buy on TCGplayer →
+                          </a>
+                        </div>
+                      </li>
+                    ) : null}
                   </ol>
                 ) : (
                   <p className="py-3 text-sm text-slate-400">No {co.adjective} store we track has this in stock right now.</p>

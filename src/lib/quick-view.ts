@@ -16,6 +16,7 @@ import { lastSeen } from "./card-price-state";
 import { decodeLastKnown, lastKnownTupleOf, type LastKnown } from "./last-known";
 import { isEbaySource, sourceLabel } from "./stores";
 import { pinnedOrder } from "./pinned-order";
+import type { FetchRows } from "./fetchtcg";
 
 /** Rows per market in the popup; the full page lists the rest ("See all N"). */
 export const QUICKVIEW_ROWS = 5;
@@ -131,7 +132,11 @@ export interface QuickViewPayload {
   change7d: number | null;
   /** Affiliate-tagged TCGplayer product page. */
   tcgHref: string;
+  /** The same page, untagged: the cart list's store and line. */
+  tcgUrl: string;
   markets: Record<Country, QuickViewMarket>;
+  /** Fetch TCG's own AU listing of this card (lib/fetchtcg.ts), an ordinary store row drawn in AU only, as on the card page. */
+  fetch?: FetchRows;
   /** The last QUICKVIEW_HISTORY_DAYS of the card's US price history (the card page's chart series). */
   history: HistoryPoint[];
   /**
@@ -182,6 +187,7 @@ export function quickViewPayload(
   today: string = new Date().toISOString().slice(0, 10),
   history: HistoryPoint[] = [],
   graded: { market: string; grader: string; grade: string; priceCents: number; currency: string; url: string }[] = [],
+  fetchRows: FetchRows | null = null,
 ): QuickViewPayload {
   const loc = `/card/${c.slug}`;
   const query = cardEbayQuery(c);
@@ -219,8 +225,10 @@ export function quickViewPayload(
     preRelease: isPreRelease(c.set.releasedOn, today),
     marketUsd: c.marketUsd,
     change7d: c.change7d,
+    tcgUrl: c.tcgplayerUrl,
     tcgHref: affiliateUrl(c.tcgplayerUrl, "tcgplayer", loc),
     markets,
+    ...(fetchRows ? { fetch: fetchRows } : {}),
     history: quickViewHistory(history, today),
     ...(Object.keys(lastKnown).length ? { lastKnown } : {}),
   };

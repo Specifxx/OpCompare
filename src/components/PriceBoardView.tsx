@@ -62,7 +62,7 @@ export function PriceBoardView({
   preRelease?: boolean;
   /** TCGplayer's market price (USD cents) and tagged link: the pinned TCGplayer
    *  reference row when this market has no TCGplayer listing. */
-  tcgRef?: { marketUsd: number | null; href: string };
+  tcgRef?: { marketUsd: number | null; href: string; url?: string };
   /** One more pinned row, an <li> drawn right after eBay and TCGplayer (first when neither is shown), or at the
    *  foot of the search rows when no store has stock: the sealed page's marketplace search (owner, 2026-11-03).
    *  A slot, so the board itself never names a marketplace it does not price. */
@@ -71,7 +71,7 @@ export function PriceBoardView({
   const c = COUNTRIES[country];
   const { rows: open, sold, elsewhere, ebaySearch: ebay } = model;
   const hasEbayRow = open.some((o) => o.ebay);
-  const fetchItems = fetchRowLis(model.fetch, { country, page, slug, now });
+  const fetchItems = fetchRowLis(model.fetch, { country, page, slug, now, title: name, image });
   // eBay and TCGplayer first (owner, 2026-10-27), each its cheapest row here,
   // the cheaper of the two on top and TCGplayer on a tie (2026-10-27, DECISIONS:
   // "The cheaper marketplace leads the pinned pair"); the rest by price. `rank`
@@ -142,6 +142,9 @@ export function PriceBoardView({
               <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">
                 {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
               </span>
+              {tcgRef.url ? (
+                <CartAddButton href={tcgRef.href} productUrl={tcgRef.url} storeName="TCGplayer" title={name ?? slug ?? "Item"} priceCents={usdCentsToCountry(tcgRef.marketUsd, country)} currency={c.currency} image={image} className="pb-cart text-slate-300" />
+              ) : null}
               <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
                 <span className="hidden sm:inline">Buy on TCGplayer →</span>
                 <span className="sm:hidden">→</span>
@@ -198,8 +201,8 @@ export function PriceBoardView({
                     <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
                   ) : null}
                 </span>
-                {/* The cart list (components/cart, owner 2026-11-06): store and eBay rows, never TCGplayer. */}
-                {o.host && !tcg ? (
+                {/* The cart list (components/cart, owner 2026-11-06): every row; TCGplayer too since 2026-11-16. */}
+                {o.host ? (
                   <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="pb-cart text-slate-300" />
                 ) : null}
                 <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
@@ -286,7 +289,7 @@ export function PriceBoardView({
 
 /** Fetch TCG's marketplace row (Australia only): drawn like a store row but never ranked, never "Cheapest". Fetch's own
  *  tracked URL is used as sent; the price carries its date. */
-function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string; slug?: string; now?: number }) {
+function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string; slug?: string; now?: number; title?: string; image?: string | null }) {
   if (!f || o.country !== "AU") return [];
   return f.rows.map((r) => ({ price: r.priceCents, li: (
     <li key={`fetchtcg-${r.condition}-${r.priceCents}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
@@ -306,6 +309,7 @@ function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string
         </p>
       </div>
       <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">{money(r.priceCents, o.country)}</span>
+      <CartAddButton href={r.url} productUrl={r.url} storeName="Fetch TCG" title={o.title ?? o.slug ?? "Item"} detail={r.condition} priceCents={r.priceCents} currency={COUNTRIES[o.country].currency} image={o.image ?? null} className="pb-cart text-slate-300" />
       <a href={r.url} target="_blank" rel={outboundRel()} data-retailer="fetchtcg" data-page={o.page} data-card={o.slug} data-surface="board_row" className="btn-ghost hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
         View on Fetch TCG →
       </a>
