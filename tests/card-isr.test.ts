@@ -51,7 +51,7 @@ test("every cached read under the page is held at least six hours (a shorter one
     return /^\d+$/.test(m[1]) ? Number(m[1]) : consts[m[1]];
   };
   // getCardDetail, getCatalog (core + prices), getProductHistory (the ref), getEmailStatus, getEbayPanel, DecksUsingCard.
-  for (const key of ["card-detail-v4", "catalog-core-v2", "catalog-prices-v2", "history-ref-v1", "email-status-v1", "ebay-panel-v2", "decks-using-card-v1"]) {
+  for (const key of ["card-detail-v4", "catalog-core-v2", "catalog-prices-v2", "history-ref-v1", "email-status-v1", "ebay-panel-v2", "live-deck-card-index-v1"]) {
     assert.ok(ttlOf(key) >= 21600, `${key}: ${ttlOf(key)} s`);
   }
   // A pinned history file is held a month; only the unpinned fallback (no database) is an hour.
