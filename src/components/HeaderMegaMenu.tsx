@@ -55,7 +55,8 @@ export function HeaderMegaMenu({ menus, className = "" }: { menus: HeaderMenu[];
         }
       }}
       onBlur={(e) => {
-        if (!root.current?.contains(e.relatedTarget as Node | null)) setOpen(null);
+        const next = e.relatedTarget as Node | null;
+        if (next && !root.current?.contains(next)) setOpen(null);
       }}
     >
       {menus.map((m, i) => {
@@ -87,6 +88,9 @@ export function HeaderMegaMenu({ menus, className = "" }: { menus: HeaderMenu[];
             <div
               id={panel}
               data-open={isOpen}
+              // Safari/Firefox on macOS do not focus a link on mousedown, so onBlur closed the panel before the click
+              // landed (owner, 2026-11-16). Keep focus where it is; the click still navigates.
+              onMouseDown={(e) => e.preventDefault()}
               className={`absolute left-1/2 top-full z-header -translate-x-1/2 pt-2 ${isOpen ? "block" : "hidden"}`}
               style={{ minWidth: `${Math.max(16, m.columns.length * 13)}rem` }}
             >
