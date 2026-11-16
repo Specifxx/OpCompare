@@ -1,0 +1,105 @@
+name: Rotate database (full copy)
+
+# Copies OP Compare's whole private Neon database from one project to another with
+# pg_dump / pg_restore --clean, then checks every public table's row count matches and
+# re-pushes the schema. Unlike migrate-database.yml (additive, OP2 -> OP3 only), this is
+# a full replacement of the TARGET, for moving back onto a rested project when the live
+# one nears a monthly limit (DECISIONS.md, 2026-11-16).
+#
+#  - The source is only READ. The target is WIPED and replaced.
+#  - Refuses when source and target are the same database.
+#  - Refuses to overwrite the database src/lib/db-url.ts resolves first (the live one)
+#    unless overwrite_live is set (used for the final pass after the flip commit is on
+#    the branch, while production still reads the old database).
+#  - Never prints a connection string.
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Copy FROM"
+        type: choice
+        options: [OP3, OP2]
+        default: OP3
+      target:
+        description: "Copy INTO (wiped first)"
+        type: choice
+        options: [OP2, OP3]
+        default: OP2
+      overwrite_live:
+        description: "Allow overwriting the database the code on this ref reads first"
+        type: boolean
+        default: false
+
+concurrency:
+  group: import-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rotate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Copy, verify, re-push schema
+        env:
+          SRC_OP3: ${{ secrets.OP3 || vars.OP3 }}
+          SRC_OP2: ${{ secrets.OP2 || vars.OP2 }}
+          SOURCE: ${{ inputs.source }}
+          TARGET: ${{ inputs.target }}
+          OVERWRITE_LIVE: ${{ inputs.overwrite_live }}
+        run: |
+          set -uo pipefail
+          url_of() { case "$1" in OP3) printf '%s' "$SRC_OP3";; OP2) printf '%s' "$SRC_OP2";; esac; }
+          S="$(url_of "$SOURCE")"; T="$(url_of "$TARGET")"
+          if [ -z "$S" ] || [ -z "$T" ]; then echo "::error::$SOURCE or $TARGET is not set in Actions."; exit 1; fi
+          if [ "$SOURCE" = "$TARGET" ] || [ "$S" = "$T" ]; then echo "::error::Source and target are the same database."; exit 1; fi
+          LIVE=$(grep -oE '"[A-Za-z0-9_]+"' src/lib/db-url.ts | head -1 | tr -d '"' | tr a-z A-Z)
+          echo "This ref reads first: $LIVE"
+          if [ "$LIVE" = "$TARGET" ] && [ "$OVERWRITE_LIVE" != "true" ]; then
+            echo "::error::$TARGET is the database this ref reads first. Refusing without overwrite_live."; exit 1
+          fi
+
+          echo "== PostgreSQL 18 client =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-18 >/dev/null
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+
+          if ! psql "$S" -tAc "SELECT 1" >/dev/null 2>&1; then echo "::error::$SOURCE does not answer. $TARGET untouched."; exit 1; fi
+          echo "== $TARGET before (should be older and smaller) =="
+          for X in User Watch Counter CardDemand; do
+            echo "  $X: source=$(psql "$S" -tAc "SELECT count(*) FROM public.\"$X\"" 2>/dev/null | tr -d ' ') target=$(psql "$T" -tAc "SELECT count(*) FROM public.\"$X\"" 2>/dev/null | tr -d ' ')"
+          done
+
+          echo "== Drop target-only tables =="
+          ST=$(psql "$S" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'")
+          for X in $(psql "$T" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'" 2>/dev/null || true); do
+            grep -qxF "$X" <<<"$ST" || { echo "  drop $X"; psql "$T" -qc "DROP TABLE IF EXISTS public.\"$X\" CASCADE;"; }
+          done
+
+          echo "== Dump =="
+          pg_dump "$S" --no-owner --no-acl --format=custom -f op.dump || { echo "::error::pg_dump failed. $TARGET untouched."; exit 1; }
+          echo "Dump size: $(du -h op.dump | cut -f1)"
+          echo "== Restore into $TARGET =="
+          pg_restore --no-owner --no-acl --clean --if-exists -d "$T" op.dump > restore.log 2>&1; echo "pg_restore exit $?"; tail -15 restore.log
+
+          echo "== Verify every table =="
+          MISMATCH=0
+          for X in $ST; do
+            A=$(psql "$S" -tAc "SELECT count(*) FROM public.\"$X\"" 2>&1); B=$(psql "$T" -tAc "SELECT count(*) FROM public.\"$X\"" 2>&1)
+            if [ "$A" = "$B" ]; then echo "$X: $A = $B ✓"; else echo "$X: source=$A target=$B ✗"; MISMATCH=1; fi
+          done
+          [ "$MISMATCH" = 0 ] || { echo "::error::Row counts differ. Do not flip."; exit 1; }
+
+          echo "== Schema re-push =="
+          DATABASE_URL="${T/-pooler/}" npx prisma db push --skip-generate || { echo "::error::schema push failed"; exit 1; }
+          echo "All tables match; $TARGET is a full copy of $SOURCE."
