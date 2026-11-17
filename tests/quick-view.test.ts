@@ -81,7 +81,7 @@ test("the payload covers all six markets, top rows only, with tagged links and p
   assert.equal(us.rows.length, QUICKVIEW_ROWS);
   assert.equal(us.rows[0].source, "tcgplayer");
   assert.equal(us.rows[0].label, "TCGplayer");
-  assert.match(us.rows[0].href, /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=oc-tcgplayer-card/);
+  assert.match(us.rows[0].href, /\/out\/tcgplayer\?.*sharedid=oc-tcgplayer-card/);
   assert.equal(us.rows[1].href, "https://shop.example/store:s0?utm_source=opcompare&utm_medium=referral&utm_campaign=card", "a store's own URL, with only our utm_source");
   assert.equal(us.pinned, 1);
   assert.equal(us.ebayRow, false);
@@ -95,7 +95,7 @@ test("the payload covers all six markets, top rows only, with tagged links and p
   assert.match(new URL(p.markets.AU.ebaySearch).searchParams.get("customid") ?? "", /^oc-au-quickview-search$/);
   assert.equal(new URL(p.markets.AU.ebaySearch).searchParams.get("_nkw"), "One Piece Shanks OP01-120 Parallel");
   assert.equal(p.markets.AU.count, 0);
-  assert.match(p.tcgHref, /^https:\/\/partner\.tcgplayer\.com\//);
+  assert.match(p.tcgHref, /\/out\/tcgplayer\?u=/);
   assert.equal(p.preRelease, false);
 });
 
@@ -133,7 +133,7 @@ test("paidAlternativeRow: the cheapest paid row within 20% when a non-paying sto
   const alt = paidAlternativeRow([store(1000), tcg(1080)], "US", "/card/x");
   assert.equal(alt?.row.source, "tcgplayer");
   assert.equal(alt?.pctMore, 8);
-  assert.match(alt?.row.href ?? "", /^https:\/\/partner\.tcgplayer\.com\//);
+  assert.match(alt?.row.href ?? "", /\/out\/tcgplayer\?u=/);
   assert.equal(paidAlternativeRow([store(1000), tcg(1201)], "US", "/card/x"), null, "past the band");
   assert.equal(paidAlternativeRow([tcg(900), store(1000)], "US", "/card/x"), null, "the cheapest already pays");
   assert.equal(paidAlternativeRow([store(1000)], "US", "/card/x"), null, "nothing paid in the market");
@@ -159,7 +159,7 @@ test("Best Basket links: TCGplayer through Impact, stores with only our utm_sour
     { loc: "/tools/best-basket" },
   );
   const urls = plan.stores.flatMap((s) => s.lines.map((l) => l.url));
-  assert.ok(urls.some((u) => /^https:\/\/partner\.tcgplayer\.com\//.test(u)), urls.join(" "));
+  assert.ok(urls.some((u) => /\/out\/tcgplayer\?u=/.test(u)), urls.join(" "));
   assert.ok(urls.some((u) => u.startsWith("https://x.example/p/b?utm_source=opcompare&")), urls.join(" "));
 });
 
