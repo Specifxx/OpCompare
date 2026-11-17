@@ -64,7 +64,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
         <p className="mt-2">
           {SITE_NAME} is an independent fan-made price comparison site. It is not affiliated with, endorsed or sponsored by
           Bandai, Eiichiro Oda, Shueisha or Toei Animation. ONE PIECE and the One Piece Card Game are trademarks of their
-          respective owners.
+          respective owners. This product uses TCGplayer data but is not endorsed or certified by TCGplayer.
         </p>
         <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
       </div>
