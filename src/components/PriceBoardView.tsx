@@ -123,6 +123,8 @@ export function PriceBoardView({
                   <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
                 </p>
               </div>
+              {/* Every price row has an Add to cart (owner, 2026-11-17), a search row too: its line opens this tagged search and says "See today's price". */}
+              <CartAddButton href={ebay} productUrl={ebay} storeName={ebayLabel(country)} title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
               <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-primary shrink-0 whitespace-nowrap px-3 sm:w-48">
                 Search eBay →
               </a>

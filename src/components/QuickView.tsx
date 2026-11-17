@@ -376,6 +376,11 @@ export function QuickView({
                   <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebay} →</span>
                 </a>
               )}
+              {!m.ebayRow ? (
+                <div className="mt-2 flex justify-start">
+                  <CartAddButton href={m.ebaySearch} productUrl={m.ebaySearch} storeName={ebay} title={cardDisplayName(data)} detail="Search results" priceCents={0} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
+                </div>
+              ) : null}
 
               {/* The one-click price-drop alert, compact (RiftCompare's QuickView
                   row; wave 2): after the buy path, ghost buttons only. */}
