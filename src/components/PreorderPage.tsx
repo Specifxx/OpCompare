@@ -106,10 +106,24 @@ const EXPLAINERS = {
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export async function preorderMetadata(cfg: PreorderConfig): Promise<Metadata> {
-  const cat = await getCatalog().catch(() => null);
+  const [cat, sealed] = await Promise.all([getCatalog().catch(() => null), getSealedCatalog().catch(() => null)]);
   const set = cat?.sets.find((s) => s.code === cfg.code);
   const when = set?.releasedOn ? ` Out ${longDateOf(set.releasedOn)}.` : "";
   const name = set?.name ?? cfg.fallbackName;
+  // Same test as the page body: out when the date has passed and no pre-order group is left for the set.
+  const today = todayIso();
+  const stillPreorder = cat && sealed ? Boolean(groupForSet(preorderGroups(sealed, cat.sets, today), cfg.code)) : true;
+  const released = Boolean(set?.releasedOn && set.releasedOn <= today && !stillPreorder);
+  if (released) {
+    // After release the searches are "OP18 booster box price", not "pre-order": same URL, honest title.
+    return {
+      title: { absolute: cfg.title.replace(/ Pre-Order Prices Compared$/, " Booster Box Prices Compared: Now Out") },
+      description: `One Piece ${cfg.label} ${name} is out. Booster box, case and pack prices from every tracked store, TCGplayer and eBay, in your currency, refreshed daily.${when}`,
+      keywords: cfg.keywords,
+      alternates: { canonical: cfg.path },
+      openGraph: pageOgOwnImage(cfg.path, { title: cfg.ogTitle.replace(/ Pre-Order Prices/, " Prices"), description: cfg.ogDescription }),
+    };
+  }
   return {
     title: { absolute: cfg.title },
     description: `One Piece ${cfg.label} ${name} booster box, case and pack pre-order prices from every tracked store, TCGplayer and eBay, in your currency, refreshed daily.${when}`,
