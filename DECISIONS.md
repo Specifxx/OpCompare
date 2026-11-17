@@ -4345,3 +4345,7 @@ that is not same-origin or same-site) to TCGplayer's own page, untagged, so Impa
 `X-Robots-Tag: noindex, nofollow`, disallowed in robots.txt; anchors keep `rel="nofollow sponsored"`. A bot and a person read the same HTML. An email keeps the direct
 Impact link (a mail client's click is cross-site). `isPaidLink` treats the `/out/tcgplayer` path as a paid link. A bot that clicks a link in a real browser on our page is
 same-origin and still passes; that needs a Vercel Firewall rate limit on `/out/*`.
+
+## 2026-11-17: AI assistants: count their visits
+
+Crawl access, llms.txt and JSON-LD were already in place; nothing showed whether AI answers send visitors. `AiReferralTracker` (client, once per session) reads `document.referrer` and `utm_source` (ChatGPT adds `utm_source=chatgpt.com`) through `lib/ai-referral.ts` and sends the custom event `ai_referral` (assistant, landing path) through `trackEvent`. Low volume by design, so it does not threaten the event quota. No spend, no change to ranking or links.
