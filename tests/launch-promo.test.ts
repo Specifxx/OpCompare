@@ -77,12 +77,12 @@ test("only upsertOAuthUser claims a slot, and only for the row it just created",
   assert.equal((accounts.match(/claimLaunchPromo\(/g) ?? []).length, 1);
 });
 
-test("the popup is client-only, mounted once in the layout, and reads the counter through /api/promo", () => {
+test("the popup is client-only, reads the counter through /api/promo, and is NOT mounted (owner, 2026-11-17: no pop-ups for new visitors)", () => {
   const popup = read("src/components/LaunchPromoPopup.tsx");
   assert.match(popup, /fetch\("\/api\/promo"\)/);
   assert.doesNotMatch(popup, /from "@\/lib\/db"|from "@\/lib\/launch-promo"/);
   const layout = read("src/app/layout.tsx");
-  assert.equal((layout.match(/<LaunchPromoPopup/g) ?? []).length, 1);
+  assert.equal((layout.match(/<LaunchPromoPopup/g) ?? []).length, 0, "no pop-up for new visitors");
   assert.match(read("src/app/api/promo/route.ts"), /getLaunchPromo/);
 });
 

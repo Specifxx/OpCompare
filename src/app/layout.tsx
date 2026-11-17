@@ -56,7 +56,6 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 // Client-only corner widgets, as on RiftCompare: each renders nothing on the
 // server (it needs /api/me or browser storage first), so ssr:false keeps their
 // JS off the first paint without changing the HTML.
-const LaunchPromoPopup = dynamic(() => import("@/components/LaunchPromoPopup").then((m) => m.LaunchPromoPopup), { ssr: false });
 // The feedback launcher: never auto-opens, works signed out, hides over the
 // hero and the footer ad zone (#op-hero, #op-ad-zone).
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), { ssr: false });
@@ -195,7 +194,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     {children}
                   </main>
                 </div>
-                <LaunchPromoPopup providers={enabledProviders()} />
                 {/* No Premium slider (owner, 2026-11-03, on RiftCompare: "get rid of all
                     the sliders regarding the premium and the signups. People can do it
                     if they want to"; applied here the same day): PremiumSlideIn and
