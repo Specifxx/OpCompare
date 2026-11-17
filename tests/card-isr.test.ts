@@ -145,7 +145,7 @@ test("boardModel: open rows cheapest first with labels, tagged hrefs, eBay and p
   assert.equal(ebay.paid, true);
   assert.match(ebay.href, /campid=/);
   assert.equal(ebay.retailer, "ebay_us");
-  assert.match(tcg.href, /partner\.tcgplayer\.com/);
+  assert.match(tcg.href, /\/out\/tcgplayer\?/);
   assert.equal(m.rows[1].href, "https://shop.example/store:a?utm_source=opcompare&utm_medium=referral&utm_campaign=card", "a store's own URL, with only our utm_source");
   assert.equal(m.rows[1].ebay, undefined, "empty flags are left out of the payload");
   assert.match(m.rows[1].played ?? "", /under the cheapest NM here/);

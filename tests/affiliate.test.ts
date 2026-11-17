@@ -24,8 +24,10 @@ test("One Piece appears in an eBay query exactly once", () => {
 
 test("TCGplayer links go through Impact with an oc- shared id; store links carry only our utm_source", () => {
   const t = affiliateUrl("https://www.tcgplayer.com/product/453506", "tcgplayer", "/card/x");
-  assert.match(t, /^https:\/\/partner\.tcgplayer\.com\//);
+  assert.match(t, /\/out\/tcgplayer\?u=/);
   assert.match(t, /sharedid=oc-tcgplayer-card/);
+  assert.equal(isPaidLink(t), true);
+  assert.match(affiliateUrl("https://www.tcgplayer.com/product/453506", "tcgplayer", "/email-alert"), /^https:\/\/partner\.tcgplayer\.com\//, "an email keeps the direct Impact link");
   assert.equal(affiliateUrl("https://store.example/products/x", "store"), "https://store.example/products/x?utm_source=opcompare&utm_medium=referral&utm_campaign=home");
   assert.equal(isPaidLink("https://store.example/products/x"), false);
   assert.equal(isPaidLink("https://www.ebay.com/sch/i.html?_nkw=x"), true);

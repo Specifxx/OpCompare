@@ -26,7 +26,7 @@ const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon"
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: "*", allow: ["/", ...QUERY_ALLOWS], disallow: ["/api/", "/admin", "/login", "/premium/welcome", "/*?"] },
+      { userAgent: "*", allow: ["/", ...QUERY_ALLOWS], disallow: ["/api/", "/out/", "/admin", "/login", "/premium/welcome", "/*?"] },
       { userAgent: BLOCKED_BOTS, disallow: "/" },
     ],
     sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/news-sitemap.xml`],
