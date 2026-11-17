@@ -196,9 +196,12 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
                 <p>No store is listing this in {cur.place} right now.</p>
-                <a href={m.ebaySearch} target="_blank" rel={outboundRel()} data-retailer="ebay_sealed_search" data-page="sealed" data-card={data.slug} data-surface="ebay_search" className="btn-primary mt-3 inline-flex text-xs">
-                  Search eBay →
-                </a>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <CartAddButton href={m.ebaySearch} productUrl={m.ebaySearch} storeName="eBay" title={data.name} detail="Search results" priceCents={0} currency={cur.currency} image={data.imageUrl} className="text-slate-300" />
+                  <a href={m.ebaySearch} target="_blank" rel={outboundRel()} data-retailer="ebay_sealed_search" data-page="sealed" data-card={data.slug} data-surface="ebay_search" className="btn-primary inline-flex text-xs">
+                    Search eBay →
+                  </a>
+                </div>
               </div>
             ) : (
               <ul className="divide-y divide-ink-800">
@@ -218,8 +221,8 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                       </div>
                       {isBest ? <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span> : null}
                       <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>{money(l.priceCents, country as Country)}</div>
-                      {/* "Add to cart" beside the buy button (owner, 2026-11-14): open store and eBay rows, never TCGplayer. */}
-                      {isOpen && l.source !== "tcgplayer" ? (
+                      {/* "Add to cart" beside the buy button (owner, 2026-11-14): every open row, TCGplayer's too (2026-11-17). */}
+                      {isOpen ? (
                         <CartAddButton href={l.href} productUrl={l.url} storeName={l.label} title={data.name} priceCents={l.priceCents} currency={COUNTRIES[country as Country].currency} image={data.imageUrl} className="text-slate-300" />
                       ) : null}
                       <a
