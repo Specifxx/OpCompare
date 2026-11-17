@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { track } from "@vercel/analytics";
-import { buyClickProps } from "@/lib/buy-click";
+import { buyClickProps, clickContext, networkOf, type ClickEl } from "@/lib/buy-click";
 import { useConsent } from "@/lib/use-consent";
 
 // RiftCompare's ConsentGatedAnalytics: Vercel Analytics mounts only once
@@ -22,9 +22,12 @@ function BuyClickEvents() {
       if (e.type === "auxclick" && e.button !== 1) return; // a middle-click opens a tab: it counts too
       const a = (e.target as Element | null)?.closest?.("a[data-retailer]");
       if (!a || location.pathname.startsWith("/admin")) return;
+      const retailer = (a.getAttribute("data-retailer") ?? "").trim().toLowerCase();
+      const cookie = document.cookie.match(/(?:^|;\s*)country=([^;]*)/)?.[1] ?? null;
       const props = buyClickProps(
         { retailer: a.getAttribute("data-retailer"), page: a.getAttribute("data-page"), card: a.getAttribute("data-card"), surface: a.getAttribute("data-surface"), href: (a as HTMLAnchorElement).href },
         location.pathname,
+        clickContext(a as unknown as ClickEl, location.pathname, cookie, networkOf(retailer), retailer),
       );
       if (!props) return;
       try {

@@ -44,6 +44,10 @@ export function CardTopBuy({
           data-page={page}
           data-card={slug}
           data-surface="card_top_buy"
+          data-pos={1}
+          data-rank={1}
+          data-gap={0}
+          data-paid={best.ebay || best.source.startsWith("tcgplayer") ? 1 : 0}
           className={`${best.ebay ? "btn-ebay" : "btn-primary"} shrink-0`}
         >
           Buy →
@@ -59,6 +63,8 @@ export function CardTopBuy({
             data-page={page}
             data-card={slug}
             data-surface="card_top_alt"
+            data-gap={alt.pctMore}
+            data-paid={1}
             className="block min-w-0 flex-1 truncate py-2 font-semibold text-brand-300 hover:underline"
           >
             or <span className="num">{money(alt.row.priceCents, country)}</span> on {altName(alt.row)}

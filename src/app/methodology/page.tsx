@@ -93,6 +93,22 @@ export default async function Methodology() {
         and the product&apos;s headline price is the cheapest open offer from
         anyone.
       </p>
+      <h2>What we do not track</h2>
+      <ul>
+        <li>Graded slabs, playsets, lots, live breaks, proxies and non-English cards.</li>
+        <li>Prices in a currency other than the market&apos;s own: a market compares only stores that charge in its currency, and nothing is converted for ranking.</li>
+        <li>Postage inside a price: item prices are compared, and postage is shown beside each row where the store or eBay states it.</li>
+        <li>Individual eBay sellers. We show listings, not sellers, so check a seller&apos;s feedback before you buy.</li>
+        <li>Stores that have not been read recently: a listing older than the import window is shown as sold out, never as a price.</li>
+      </ul>
+      <h2>How the site earns</h2>
+      <p>
+        Links to eBay and TCGplayer (and some partner stores and Amazon) are affiliate links, marked as paid links:
+        if you buy through one we may earn a commission at no extra cost to you. Stores do not pay to be listed or to rank, and a
+        commission never changes the order of the stores. The people behind the site are on{" "}
+        <Link href="/authors">Who writes OP Compare</Link>, and the rules for guides are in the{" "}
+        <Link href="/editorial-policy">editorial policy</Link>.
+      </p>
       <h2>Markets and currency</h2>
       <p>
         Each market shows its own stores in its own currency: US$, A$, £, S$, C$

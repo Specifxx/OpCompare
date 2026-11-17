@@ -82,6 +82,8 @@ export function cheapestBuyRow(offers: OfferRow[], country: Country, loc: string
  * never called cheaper, never reordered.
  */
 export const PAID_ALTERNATIVE_BAND = 1.2;
+/** An eBay listing this close to (or under) the unpaid cheapest is the line's pick over any other paid row. */
+export const EBAY_ALTERNATIVE_BAND = 1.08;
 
 export function paidAlternativeRow(
   offers: OfferRow[],
@@ -92,7 +94,11 @@ export function paidAlternativeRow(
   const rows = marketRows(offers, country).map((o) => buyRow(o, country, loc));
   const best = rows[0];
   if (!best || isPaid(best.href)) return null;
-  const row = rows.find((r) => isPaid(r.href));
+  // Growth report item 2 (2026-11-17): when the same product has an eBay listing within EBAY_ALTERNATIVE_BAND of the unpaid cheapest, the
+  // line names eBay rather than the cheapest paid row (which may be TCGplayer or a partner store). Same ranking, same real price,
+  // never reordered, never called cheaper.
+  const ebayRow = rows.find((r) => r.ebay && isPaid(r.href) && r.priceCents <= best.priceCents * EBAY_ALTERNATIVE_BAND);
+  const row = ebayRow ?? rows.find((r) => isPaid(r.href));
   if (!row || row.priceCents > best.priceCents * PAID_ALTERNATIVE_BAND) return null;
   const pctMore = best.priceCents > 0 ? Math.round(((row.priceCents - best.priceCents) / best.priceCents) * 100) : 0;
   return { row, pctMore };
