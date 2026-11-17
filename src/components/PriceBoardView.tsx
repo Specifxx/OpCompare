@@ -91,6 +91,7 @@ export function PriceBoardView({
   const fetchAfter = (o: (typeof ordered)[number] | null) => fetchItems.filter((f) => fetchAnchor(f.price) === o).map((f) => f.li);
   const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
+  const newest = open.length ? open.reduce((a, b) => (a.updatedAt > b.updatedAt ? a : b)).updatedAt : null;
 
   return (
     <>
@@ -99,9 +100,10 @@ export function PriceBoardView({
         <h2 className="text-lg text-white">
           {title} <span className="font-sans text-sm font-normal text-slate-400">({open.length}) · {c.place}</span>
         </h2>
-        {oldest ? (
-          <span className="text-xs text-slate-500">
-            oldest listing <Ago at={oldest} now={now} />
+        {oldest && newest ? (
+          // "Prices checked" (growth report item 7, 2026-11-17): when the newest listing here was read, then the oldest, so an old row is never hidden.
+          <span className="text-xs text-slate-500" data-prices-checked="">
+            prices checked <Ago at={newest} now={now} /> · oldest listing <Ago at={oldest} now={now} />
           </span>
         ) : null}
       </div>
@@ -163,7 +165,7 @@ export function PriceBoardView({
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
             return [
-              <li key={`${o.source}-${country}`} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
+              <li key={`${o.source}-${country}`} data-price-row="" data-cents={o.priceCents > 0 ? o.priceCents : undefined} data-paid={o.paid || o.ebay || tcg ? 1 : 0} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
                 <span className="pb-n num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="pb-info min-w-0 flex-1">
                   <p className="pb-name flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -292,7 +294,7 @@ export function PriceBoardView({
 function fetchRowLis(f: BoardModel["fetch"], o: { country: Country; page: string; slug?: string; now?: number; title?: string; image?: string | null }) {
   if (!f || o.country !== "AU") return [];
   return f.rows.map((r) => ({ price: r.priceCents, li: (
-    <li key={`fetchtcg-${r.condition}-${r.priceCents}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+    <li key={`fetchtcg-${r.condition}-${r.priceCents}`} data-price-row="" data-cents={r.priceCents > 0 ? r.priceCents : undefined} data-paid={0} className="flex items-center gap-3 px-4 py-3 sm:px-5">
       <span className="w-5 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
