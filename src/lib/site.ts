@@ -33,7 +33,7 @@ export interface SisterSite {
 }
 export const SISTER_SITES: readonly SisterSite[] = [
   { key: "rift", name: "RiftCompare", url: "https://riftcompare.com", game: "Riftbound", compares: "Riftbound card prices", search: "https://riftcompare.com/browse?q={q}" },
-  { key: "dex", name: "DexCompare", url: "https://dexcompare.app", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles", search: "https://dexcompare.app/us/sealed?q={q}" },
+  { key: "dex", name: "DexCompare", url: "https://dexcompare.io", game: "Pokémon TCG", compares: "Pokémon TCG booster boxes, ETBs and bundles", search: "https://dexcompare.io/us/sealed?q={q}" },
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", compares: "Magic: The Gathering sealed prices", search: "https://mtgcompare.app/us/sealed?q={q}" },
   // The whole family (2026-10-26, DECISIONS.md "One family of sites").
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam Card Game", compares: "Gundam Card Game prices", search: "https://gundamcompare.com/cards?q={q}" },
@@ -49,6 +49,9 @@ export const SISTER_SITES: readonly SisterSite[] = [
 ];
 /** The card-game sites only, for "Compare other TCGs" and the one-per-game line on About. */
 export const TCG_SISTER_SITES = SISTER_SITES.filter((s) => !s.notTcg);
+/** The sites this one may name anywhere (owner, 2026-11-17): the card sites and WargameCompare. Never the perfume,
+ *  camera, figure or tech sites: the two sides of the network are not linked (lib/family-network.ts sameSide). */
+export const SAME_SIDE_SITES = SISTER_SITES.filter((s) => !s.notTcg || s.key === "wargame");
 /** Each card-game sister site's search for `q`, for the "Searching another
  *  game?" line. A plain link per site: nothing is fetched from them. */
 export function familySearchLinks(q: string): { key: SisterSite["key"]; name: string; game: string; href: string }[] {

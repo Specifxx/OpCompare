@@ -40,7 +40,7 @@ export default async function About() {
           </span>
         ))}
         ; outside card games, the same team runs{" "}
-        {SISTER_SITES.filter((s) => s.notTcg).map((s, i) => (
+        {SISTER_SITES.filter((s) => s.key === "wargame").map((s, i) => (
           <span key={s.key}>
             {i ? " and " : ""}
             <a href={s.url}>{s.name}</a> for {s.compares}
