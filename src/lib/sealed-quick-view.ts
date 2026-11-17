@@ -5,7 +5,7 @@
 import { affiliateUrl, ebaySearchUrl, onePieceEbayQuery } from "./affiliate";
 import { retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
-import type { SealedDetail } from "./data";
+import type { HistoryPoint, SealedDetail } from "./data";
 import { isPreRelease } from "./quick-view";
 import { isEbaySource, sourceLabel } from "./stores";
 
@@ -44,6 +44,8 @@ export interface SealedQvPayload {
   marketUsd: number | null;
   tcgHref: string;
   markets: Record<Country, SealedQvMarket>;
+  /** The last 90 days of the product's price history (the sealed page's chart series); added by the route, absent in a response the CDN kept from before. */
+  history?: HistoryPoint[];
 }
 
 export function sealedQuickViewPayload(
