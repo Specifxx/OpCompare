@@ -15,6 +15,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
+import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
@@ -228,6 +229,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Vercel Analytics behind the consent signal (RiftCompare's
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />
+        <AiReferralTracker />
         <ShareArrival />
         <GAPageViewTracker />
       </body>
