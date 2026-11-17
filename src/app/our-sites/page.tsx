@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { StaticPage } from "@/components/StaticPage";
-import { FAMILY_SITES, NETWORK_PAGE } from "@/lib/family-network";
+import { FAMILY_SITES, sameSide } from "@/lib/family-network";
 import { SITE_NAME } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default function OurSites() {
-  const sites = FAMILY_SITES.filter((s) => s.id !== "op");
+  const sites = FAMILY_SITES.filter((s) => s.id !== "op" && sameSide("op", s.id));
   return (
     <StaticPage title="Our other sites" crumb="Our other sites">
       <p>
@@ -35,11 +35,6 @@ export default function OurSites() {
           </li>
         ))}
       </ul>
-      <p>
-        <a href={NETWORK_PAGE} rel="noopener">
-          Every Compare Empire site →
-        </a>
-      </p>
     </StaticPage>
   );
 }

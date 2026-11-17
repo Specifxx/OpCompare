@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
 import { AUTHOR, AUTHORS, POSTS, postHref } from "@/lib/blog";
-import { SISTER_SITES } from "@/lib/site";
+import { SAME_SIDE_SITES, SISTER_SITES } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 // RiftCompare first (OP Compare is built on it), then the other sister sites.
 const rift = SISTER_SITES.find((s) => s.key === "rift");
-const others = SISTER_SITES.filter((s) => s.key !== "rift");
+const others = SAME_SIDE_SITES.filter((s) => s.key !== "rift");
 
 export default function Authors() {
   return (

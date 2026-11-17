@@ -4309,6 +4309,20 @@ A slim line of sealed links (`HomeSealedLinks`: "Sealed prices:" and the kind ch
 and `/sealed?kind=`. The sealed pages, URLs, titles, metadata, sitemap and nav are untouched, as are the OP-18 pre-order links. The
 homepage payload lost the eight sealed tiles. Chosen because sealed pays more per sale but singles carry the traffic (OP analysis).
 
+## 2026-11-17: URL freeze, and two sides of the network, one footer link
+
+Owner, from the Grok growth report (items 5 and 9): stop the sitewide cross-links between the sites, and freeze URLs.
+The network now has two sides (`TCG_SIDE`, `sameSide`, `isTcgSide` in `src/lib/family-network.ts`, the same file in every repo): the
+card-game and wargame sites on one, perfume, K-beauty, car parts, cameras, figures, sports cards and tech on the other. `clusterSisters`
+and `footerSisters` return same-side sites only, so deal and pre-order tiles, the data jobs' copied feeds and the `/our-sites` (or
+`/network`) list never cross. The footer keeps its single link to `/our-sites`; the "Every Compare Empire site" link to
+compareempire.com is gone from the card sites. SportsCardCompare is on the other side from the card sites (its search results no
+longer offer their searches). Where this repo had a repeated block of sister links (a blog "Also from us" aside, "Compare other TCGs"
+on every card page, non-card sisters in `SITE.sisterSites`) it is removed. A contextual link from a guide to another game stays.
+DexCompare's links read dexcompare.io (the old host is still accepted in a feed until Dex republishes). Not changed: price alerts,
+`alert-feed.json`, the family feeds and the sister data reads: they are data, not links. Also a "URL freeze" rule in CLAUDE.md:
+no mass path change without a redirect map, agents never flip hosts, no pop-unders or surprise navigation (this repo had none).
+
 ## 2026-11-17: Click log fields, "Prices checked", an eBay-first paid alternative, sealed noindex when empty (Grok growth report items 1, 2, 7, 8)
 
 - **Click log (item 1).** Vercel's `buy_click` (the one document listener in `ConsentGatedAnalytics`, never our server or database) already carried retailer, network, page, link_type, surface and card. It now also carries `country` (the region in the path, else the `country` cookie, else US), `paid` (the row's `data-paid`, else eBay / TCGplayer / Amazon by seller kind), `pos` (the row's place among its list's rows), `rank` (ITEM-price rank among the list's priced rows, ties share) and `gap_pct` (item price above the cheapest, one decimal). Rows say their price with `data-price-row` + `data-cents` (open and priced rows in the market's own currency only: the board, Fetch TCG's row, the sealed quick view); the card page's top buy block carries `data-pos/rank/gap` itself. This makes the AU / US / EU paid-click share a Vercel breakdown on `country` x `paid`. Item price only, never converted, never postage. `clickContext` in `lib/buy-click.ts`, `tests/buy-click.test.ts`. No stored click rows came back (outbound clicks stopped being written to Postgres on 2026-10-05, owner).
