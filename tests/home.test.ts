@@ -34,11 +34,11 @@ test("the homepage and the region homes are static: no cookie, header or session
   }
 });
 
-test("the homepage leads with price comparison: sealed, popular cards, then deals; guides and blog last (owner, 2026-10-28)", () => {
+test("the homepage leads with price comparison: popular and chase cards, a slim sealed link line, then deals; guides and blog last (owner, 2026-10-28)", () => {
   const page = codeOnly(read("src/app/page.tsx"));
   // The heading face is the root layout's since 2026-11-14 (one voice site-wide); the wrapper keeps its tracking.
   assert.match(page, /className="rb-display-sans flex flex-col gap-10"/);
-  const order = ["<CinematicHero", "<InlineAds", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
+  const order = ["<CinematicHero", "<InlineAds", "<HomePopularCards", "<HomeSealedLinks", "<HomeTopDeals", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
   let at = -1;
   for (const t of order) {
     const i = page.indexOf(t);
@@ -47,13 +47,13 @@ test("the homepage leads with price comparison: sealed, popular cards, then deal
   }
   const region = codeOnly(read("src/components/home/RegionHome.tsx"));
   at = -1;
-  for (const t of ["<CinematicHero", "<HomeSealedShelf", "<HomePopularCards", "<HomeTopDeals", "<HomeSections", "<EditorialHub"]) {
+  for (const t of ["<CinematicHero", "<HomePopularCards", "<HomeSealedLinks", "<HomeTopDeals", "<HomeSections", "<EditorialHub"]) {
     const i = region.indexOf(t);
     assert.ok(i > at, `region home: ${t} out of order`);
     at = i;
   }
   // The sea hero, the bob animation and the old SectionHeader sections are gone.
-  assert.doesNotMatch(page, /SectionHeader|animate-bob|sea-grid|MarketPills/);
+  assert.doesNotMatch(page, /HomeSealedShelf|SectionHeader|animate-bob|sea-grid|MarketPills/);
 });
 
 // ── Stats ────────────────────────────────────────────────────────────────────

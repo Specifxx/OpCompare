@@ -7,7 +7,7 @@ import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomePopularCards, HomeSections } from "@/components/home/HomeSections";
 import { HomeTopDeals } from "@/components/home/HomeTopDeals";
 import { HomeGuides } from "@/components/home/HomeGuides";
-import { HomeSealedShelf } from "@/components/home/HomeSealedShelf";
+import { HomeSealedLinks } from "@/components/home/HomeSealedLinks";
 import { PriceGuideCallout } from "@/components/home/PriceGuideCallout";
 import { loadHomeData } from "@/components/home/home-data";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -17,7 +17,7 @@ import { homeMetadata } from "@/lib/home-metadata";
 import { faqPage, ldJson, webApplication, webPage } from "@/lib/jsonld";
 
 // The homepage, price comparison first (owner, 2026-10-28): the hero and its
-// search, the sealed shelf, the most popular cards, then Today's Top Deals,
+// search, the most popular cards (chase cards while a set is new), a slim line of sealed links, then Today's Top Deals,
 // the eBay chase banner, the price-guide callout, HomeSections and the About +
 // FAQ card. The guides and blog band (EditorialHub) sits at the very bottom.
 // WebPage / WebApplication / FAQPage JSON-LD.
@@ -47,8 +47,8 @@ export default async function HomePage() {
         renderedAt={data.renderedAt}
       />
       <InlineAds page="home" />
-      <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} />
       <HomePopularCards data={data} storeCount={storeCount} />
+      <HomeSealedLinks kinds={data.sealedKinds} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />

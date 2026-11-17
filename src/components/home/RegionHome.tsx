@@ -8,7 +8,7 @@ import { CinematicHero } from "./CinematicHero";
 import { EditorialHub } from "./EditorialHub";
 import { HomePopularCards, HomeSections } from "./HomeSections";
 import { HomeTopDeals } from "./HomeTopDeals";
-import { HomeSealedShelf } from "./HomeSealedShelf";
+import { HomeSealedLinks } from "./HomeSealedLinks";
 import { PriceGuideCallout } from "./PriceGuideCallout";
 import { loadHomeData } from "./home-data";
 
@@ -49,8 +49,8 @@ export async function RegionHome({ region }: { region: Exclude<Country, "US"> })
         renderedAt={data.renderedAt}
         region={{ code: region, adjective: info.adjective }}
       />
-      <HomeSealedShelf items={data.sealedShelf} kinds={data.sealedKinds} lockCountry={region} />
       <HomePopularCards data={data} storeCount={stat.stores} />
+      <HomeSealedLinks kinds={data.sealedKinds} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} lockCountry={region} />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />

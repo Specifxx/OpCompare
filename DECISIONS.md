@@ -4300,3 +4300,11 @@ The card page's "Decks using this card" was cached per card id, so every crawled
 (about 8,500 card renders a day) asked Neon, and the database never reached its five-minute sleep. It now reads one
 cached list of every live deck's card ids (`live-deck-card-index-v1`, 12 hours, `DECKS_TAG`) and filters it in memory:
 one query per refresh for the whole site. Never key a database read under a public page by slug or id again.
+
+## 2026-11-17: no sealed shelf on the front pages
+
+Owner: "there's no point having the sealed section on the front page." `HomeSealedShelf` (eight sealed tiles, and `sealedShelf()` in
+`home-data.ts`) is gone from `/` and the five region homes; the popular and chase cards carousel now comes straight after the banners.
+A slim line of sealed links (`HomeSealedLinks`: "Sealed prices:" and the kind chips) keeps the front page's internal links to `/sealed`
+and `/sealed?kind=`. The sealed pages, URLs, titles, metadata, sitemap and nav are untouched, as are the OP-18 pre-order links. The
+homepage payload lost the eight sealed tiles. Chosen because sealed pays more per sale but singles carry the traffic (OP analysis).

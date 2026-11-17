@@ -4,9 +4,8 @@
 import { MARKETS, type Country } from "@/lib/country";
 import { getCatalog, getHomeStats, getPopular, getRecentlyUpdated, getSealedCatalog, type CardLite, type Catalog, type SealedLite } from "@/lib/data";
 import { SEALED_KINDS } from "@/lib/constants";
-import type { SealedShelfItem } from "./HomeSealedShelf";
 import type { HomeStats, PopularKind } from "@/lib/home";
-import { dearFirst, FEATURE_CARD_MIN_CENTS, FEATURE_SEALED_MIN_CENTS } from "@/lib/featured-floor";
+import { dearFirst, FEATURE_CARD_MIN_CENTS } from "@/lib/featured-floor";
 import { movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import type { TileItem } from "./PopularCardsCarousel";
@@ -26,30 +25,7 @@ export interface HomeData {
   nextSet: { name: string; code: string; slug: string; releasedOn: string | null } | null;
   newestSetName?: string;
   newestSetCode?: string;
-  sealedShelf: SealedShelfItem[];
   sealedKinds: string[];
-}
-
-// The homepage's sealed shelf (dearer first since 2026-11-12, owner: feature the high-ticket
-// product): released, priced products at or above US$50 (TCGplayer market), dearest first,
-// boxes, cases and the premium kinds; never pre-orders (their own pages) or tournament promo
-// packs. Fewer than four clear the floor: the old newest-boxes-then-fill order.
-const SHELF_FILL = ["Premium Collection", "Double Pack Set", "Illustration Box", "Gift Collection", "Starter Deck"];
-const SHELF_DEAR = ["Booster Box", "Booster Case", "Display", "Display Case", ...SHELF_FILL];
-export function sealedShelf(cat: Catalog, sealed: SealedLite[], today: string, limit = 8): SealedShelfItem[] {
-  const priced = (s: SealedLite) => s.marketUsd != null || Object.values(s.low).some((v) => v != null);
-  const released = (s: SealedLite) => !s.presale && (s.releasedOn == null || s.releasedOn <= today);
-  const pool = sealed.filter((s) => released(s) && priced(s));
-  const newest = (a: SealedLite, b: SealedLite) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "") || (b.marketUsd ?? 0) - (a.marketUsd ?? 0);
-  const dear = pool.filter((s) => SHELF_DEAR.includes(s.kind) && (s.marketUsd ?? 0) >= FEATURE_SEALED_MIN_CENTS).sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0));
-  let chosen: SealedLite[];
-  if (dear.length >= 4) chosen = dear;
-  else {
-    const boxes = pool.filter((s) => s.kind === "Booster Box").sort(newest);
-    const fill = pool.filter((s) => SHELF_FILL.includes(s.kind)).sort(newest);
-    chosen = [...boxes, ...fill];
-  }
-  return chosen.slice(0, limit).map((s) => ({ s, setCode: s.setId != null ? cat.setById.get(s.setId)?.code ?? null : null }));
 }
 
 /** A tile's payload: only the fields CardTile reads, so the client props stay small. */
@@ -93,7 +69,6 @@ export async function loadHomeData(): Promise<HomeData> {
     nextSet: next ? { name: next.name, code: next.code, slug: next.slug, releasedOn: next.releasedOn } : null,
     newestSetName: newest?.name,
     newestSetCode: newest?.code,
-    sealedShelf: sealedShelf(cat, sealed, new Date().toISOString().slice(0, 10)),
     sealedKinds: SEALED_KINDS.filter((k) => k !== "Promo Pack" && sealed.some((s) => s.kind === k)).slice(0, 8),
   };
 }
