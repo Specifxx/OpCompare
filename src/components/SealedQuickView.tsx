@@ -12,6 +12,8 @@ import type { SealedQvPayload } from "@/lib/sealed-quick-view";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { CartAddButton } from "./cart/CartAddButton";
 import { useCountry } from "./CountryProvider";
+import { LineChart } from "./LineChart";
+import { visitorHistory } from "@/lib/price-history-view";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { Dialog, QUICK_VIEW_SHEET } from "./ui/Dialog";
@@ -172,6 +174,23 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
 
         {data && m ? (
           <div className="p-4">
+            {/* The price history leads the panel (owner, 2026-11-17: "visible without scrolling past dozens of stores"), in the visitor's
+                market, from the sealed page's own series. */}
+            {data.history && data.history.length >= 2 ? (
+              <div className="mb-4 rounded-lg border border-ink-800 p-3">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{visitorHistory(data.history, country as Country).title} · 90 days</p>
+                <LineChart
+                  height={200}
+                  width={520}
+                  series={[
+                    { label: `Cheapest ${cur.adjective} listing`, color: "#ff6b6b", points: visitorHistory(data.history, country as Country).low.points },
+                    { label: "TCGplayer market (converted)", color: "#e9b73a", points: visitorHistory(data.history, country as Country).market.points, dashed: true },
+                  ]}
+                  format={(v) => money(Math.round(v), country as Country)}
+                  empty="Not enough price history yet."
+                />
+              </div>
+            ) : null}
             {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
             {listings.length === 0 ? (
