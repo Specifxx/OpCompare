@@ -1,8 +1,7 @@
 // No imports on purpose: PriceBoardView is client code (tests/card-isr.test.ts).
 /**
- * The two pinned marketplace rows in display order: eBay always first (owner,
- * 2026-11-06: eBay and Amazon "sit on the very top", eBay first, Amazon second),
- * then TCGplayer. From 2026-10-27 to 2026-11-06 the cheaper of the two led.
+ * The pinned marketplace rows in display order (owner, 2026-11-17, final): eBay first, then TCGplayer, then Amazon's "Check" row
+ * (`thirdRow`), which follows the last of them.
  */
 export function pinnedOrder<T extends { priceCents: number }>(ebay: T | null, tcgplayer: T | null): T[] {
   return [ebay, tcgplayer].filter((o): o is T => o != null);

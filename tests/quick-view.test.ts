@@ -258,7 +258,7 @@ test("card search opens a card hit in the QuickView; the card page's banners are
   assert.doesNotMatch(read("src/components/card/CardMarket.tsx"), /TcgplayerBanner|EbayCardBanner/);
 });
 
-test("the popup pins the board's eBay and TCGplayer rows above cheaper stores (site review OP-2, 2026-11-10)", () => {
+test("the popup pins the board's eBay and TCGplayer rows above cheaper stores, the cheaper of the two first (OP-2, 2026-11-10; owner 2026-11-17)", () => {
   const offers = [
     ...Array.from({ length: 6 }, (_, i) => offer({ source: `store:s${i}`, market: "US", priceCents: 500 + i * 10 })),
     offer({ source: "tcgplayer", market: "US", priceCents: 950, url: "https://www.tcgplayer.com/product/453506" }),

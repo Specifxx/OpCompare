@@ -216,7 +216,7 @@ export function PriceBoardView({
                   →
                 </a>
               </li>,
-              o === pinEbay ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
+              o === pins[pins.length - 1] ? <Fragment key="third-row">{thirdRow}</Fragment> : null,
               ...fetchAfter(o),
             ];
           })}
