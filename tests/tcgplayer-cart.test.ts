@@ -15,7 +15,7 @@ test("a deck becomes one TCGplayer Mass Entry cart, names only", () => {
 });
 
 test("the cart link is affiliate-wrapped on the deck page and in the deck builder", () => {
-  assert.match(affiliateUrl(tcgplayerCartUrl([{ qty: 1, name: "Nami" }]), "tcgplayer_cart", "/deck"), /^https:\/\/partner\.tcgplayer\.com\//);
+  assert.match(affiliateUrl(tcgplayerCartUrl([{ qty: 1, name: "Nami" }]), "tcgplayer_cart", "/deck"), /\/out\/tcgplayer\?u=/);
   assert.match(read("src/app/decks/[slug]/page.tsx"), /tcgplayerCartHref=\{affiliateUrl\(tcgplayerCartUrl\(/);
   for (const f of ["src/components/decks/PublishedDeckView.tsx", "src/components/DeckBuilder.tsx"]) {
     assert.match(read(f), /Buy all on TCGplayer/, f);

@@ -135,6 +135,14 @@ export function ebaySearchUrl(country: Country, query: string, source?: string):
   return ebayAffiliateUrl(url, source);
 }
 
+/** Our own redirect to TCGplayer through Impact (src/app/out/tcgplayer/route.ts). */
+export const OUT_TCGPLAYER_PATH = "/out/tcgplayer";
+
+/** The Impact deep link to a tcgplayer.com URL: what /out/tcgplayer sends a person to. */
+export function impactUrl(plainTcgplayerUrl: string, sharedId: string): string {
+  return `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(plainTcgplayerUrl)}&sharedid=${encodeURIComponent(sharedId)}`;
+}
+
 /**
  * Tag an outbound product link. eBay EPN → TCGplayer (Impact) → a store partner's
  * commission parameter → the store link with our utm_source.
@@ -153,10 +161,12 @@ export function affiliateUrl(url: string | null | undefined, subId = "opcompare"
     const u = new URL(url);
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return ebayAffiliateUrl(url, affiliateSubId(subId, page));
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) {
-      return (
-        `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(url)}` +
-        `&sharedid=${encodeURIComponent(affiliateSubId("oc", subId, page))}`
-      );
+      const sid = affiliateSubId("oc", subId, page);
+      // Pages link to OUR /out/tcgplayer, never straight to Impact: a crawler that follows a link would otherwise reach the
+      // network as our click (2026-11-17, "Bot clicks on TCGplayer" in DECISIONS.md). The route sends a person on to Impact
+      // and a bot to TCGplayer, untagged. An email keeps the direct link: a mail client's click arrives cross-site.
+      if (page?.startsWith("email")) return impactUrl(url, sid);
+      return `${SITE_URL}${OUT_TCGPLAYER_PATH}?u=${encodeURIComponent(url)}&sharedid=${encodeURIComponent(sid)}`;
     }
     // A store partner's commission parameter (lib/store-partner-deals.ts).
     const partner = partnerRefUrl(u);
@@ -201,7 +211,8 @@ export function outboundRel(): string {
 export function isPaidLink(href: string | null | undefined): boolean {
   if (!href) return false;
   try {
-    const u = new URL(href);
+    const u = new URL(href, SITE_URL);
+    if (u.pathname === OUT_TCGPLAYER_PATH) return Boolean(TCGPLAYER_IMPACT_LINK);
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
     if (/(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return Boolean(TCGPLAYER_IMPACT_LINK);
     if (/(?:^|\.)awin1\.com$/i.test(u.hostname) || awinProgrammeFor(href)) return true;

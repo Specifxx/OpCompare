@@ -4334,3 +4334,14 @@ no mass path change without a redirect map, agents never flip hosts, no pop-unde
 ## 2026-11-17: the launch-promo pop-up is no longer mounted
 
 Owner's standing rule, applied after the Grok growth report audit: no pop-ups for new visitors. `LaunchPromoPopup` (a modal for signed-out visitors on the second page view after 8 seconds) was the one pop-up left on the site. It is removed from `src/app/layout.tsx`. The component, `/api/promo`, and the sign-up claim in `launch-promo.ts` stay, so the first-50 promotion still grants Premium to a new account that signs up on its own; only the nudge is gone. To bring it back is the owner's call, not an agent's. `tests/launch-promo.test.ts` now pins that the layout mounts it zero times.
+
+## 2026-11-17: Bot clicks on TCGplayer (every TCGplayer link goes through /out/tcgplayer)
+
+Owner (2026-11-17): Impact showed 700 to 800 TCGplayer clicks a day, largely bots. Vercel's browser-side `buy_click` events for 10 to 17 November counted about 1,150
+TCGplayer clicks across all the TCG sites (about 165 a day). OP Compare put the Impact URL straight in the page HTML, so a crawler that follows links reached Impact as
+our click and we could neither see nor stop it. `affiliateUrl()` now returns `/out/tcgplayer?u=<tcgplayer url>&sharedid=<sub id>` on this site, and
+`src/app/out/tcgplayer/route.ts` sends a person on to Impact and a bot (`lib/bot-click.ts`: bot User-Agent, no Accept-Language, no Sec-Fetch-Mode, or a Sec-Fetch-Site
+that is not same-origin or same-site) to TCGplayer's own page, untagged, so Impact never counts it. https on tcgplayer.com only (no open redirect); `no-store`,
+`X-Robots-Tag: noindex, nofollow`, disallowed in robots.txt; anchors keep `rel="nofollow sponsored"`. A bot and a person read the same HTML. An email keeps the direct
+Impact link (a mail client's click is cross-site). `isPaidLink` treats the `/out/tcgplayer` path as a paid link. A bot that clicks a link in a real browser on our page is
+same-origin and still passes; that needs a Vercel Firewall rate limit on `/out/*`.
