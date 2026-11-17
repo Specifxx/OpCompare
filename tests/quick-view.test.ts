@@ -265,7 +265,7 @@ test("the popup pins the board's eBay and TCGplayer rows above cheaper stores, t
     offer({ source: "ebay", market: "US", priceCents: 1200, url: "https://www.ebay.com/itm/123" }),
   ];
   const us = quickViewPayload(card(offers), "2026-10-03").markets.US;
-  assert.deepEqual(us.rows.map((r) => r.source), ["tcgplayer", "ebay", "store:s0", "store:s1", "store:s2"]);
+  assert.deepEqual(us.rows.map((r) => r.source), ["ebay", "tcgplayer", "store:s0", "store:s1", "store:s2"]);
   assert.equal(us.pinned, 2);
   assert.equal(us.rows.length, QUICKVIEW_ROWS);
   assert.equal(us.count, 8);
