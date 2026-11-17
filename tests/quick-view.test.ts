@@ -137,6 +137,12 @@ test("paidAlternativeRow: the cheapest paid row within 20% when a non-paying sto
   assert.equal(paidAlternativeRow([store(1000), tcg(1201)], "US", "/card/x"), null, "past the band");
   assert.equal(paidAlternativeRow([tcg(900), store(1000)], "US", "/card/x"), null, "the cheapest already pays");
   assert.equal(paidAlternativeRow([store(1000)], "US", "/card/x"), null, "nothing paid in the market");
+  // item 2 (2026-11-17): an eBay listing within 8% of the unpaid cheapest is the one named, even beside a cheaper TCGplayer row
+  const ebay = (priceCents: number) => offer({ source: "ebay", market: "US", priceCents, url: "https://www.ebay.com/itm/1" });
+  const named = paidAlternativeRow([store(1000), tcg(1020), ebay(1070)], "US", "/card/x");
+  assert.equal(named?.row.ebay, true);
+  assert.equal(named?.pctMore, 7);
+  assert.equal(paidAlternativeRow([store(1000), tcg(1020), ebay(1090)], "US", "/card/x")?.row.source, "tcgplayer", "eBay past 8%: the cheapest paid row, as before");
   const top = read("src/components/CardTopBuy.tsx");
   assert.match(top, /data-surface="card_top_alt"/);
   assert.match(top, />Paid link</);

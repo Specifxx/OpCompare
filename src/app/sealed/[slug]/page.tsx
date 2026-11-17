@@ -47,6 +47,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: t.length <= 60 ? t : `${s.name.slice(0, 50)} Price` },
     description: `${s.name}: live One Piece Card Game sealed prices compared across stores in the US, Australia, the UK, Singapore, Canada and the EU${s.marketUsd ? `. TCGplayer market price ${usd(s.marketUsd)}` : ""}.`,
     alternates: { canonical: `/sealed/${s.slug}` },
+    // A product with no offer in any market (and no pre-sale) is an empty page: noindex, still linked (growth report item 7, 2026-11-17).
+    ...(s.offers.length === 0 && !s.presale ? { robots: { index: false, follow: true } } : {}),
     // The product shot on TCGplayer's CDN: nothing is generated here. No art: the site default.
     openGraph: pageOg(`/sealed/${s.slug}`, {
       title: `${s.name} | ${SITE_NAME}`,
