@@ -16,6 +16,7 @@
 import fs from "node:fs";
 import { prisma } from "../src/lib/db";
 import { pruneBeacons } from "../src/lib/beacons";
+import { closeTrackedSuggestions } from "../src/lib/inbox";
 import { aggregate, importCatalog, importStores, recordHistory, revalidateSite } from "../src/lib/import";
 import { normalizeCountry } from "../src/lib/country";
 import { recordToolsHistory } from "../src/lib/tools-history";
@@ -59,6 +60,15 @@ async function main() {
       log("Beacons: pruned", summary.pruned);
     } catch (e) {
       log("Beacons: prune failed", String(e));
+    }
+    // Store suggestions for a store now in the registry leave the inbox (never fails the import).
+    if (withStores) {
+      try {
+        summary.suggestionsClosed = await closeTrackedSuggestions();
+        log("Inbox: store suggestions closed as added", summary.suggestionsClosed);
+      } catch (e) {
+        log("Inbox: closing suggestions failed", String(e));
+      }
     }
     await prisma.importRun.update({ where: { id: run.id }, data: { ok: true, finishedAt: new Date(), summary: summary as object } });
     // In the workflow the history is pushed first and scripts/publish-history.ts

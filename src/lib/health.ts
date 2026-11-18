@@ -505,7 +505,8 @@ export function evalJobs(runs: WorkflowRun[], now: Date, jobs: JobExpectation[] 
 export function evalEmail(meta: string | null): Check {
   if (meta == null) return unknown("email-status", "email", "Email delivery", "The outbox has not reported yet.");
   if (meta === "on") return { id: "email-status", area: "email", label: "Email delivery", status: "ok", detail: "Email is on: alerts, welcomes and your own notifications can send." };
-  return { id: "email-status", area: "email", label: "Email delivery", status: "warn", detail: "Email is OFF: nothing is being sent, including inbox and health emails to you.", hint: "Add the two mail secrets described in docs/SETUP.md (OP Compare's own Resend account). Until then the watchdog tells you through a GitHub issue instead." };
+  // Off is the owner's choice (DECISIONS.md "/contact is email-only; no Resend", 2026-11-01), not a fault: shown, never flagged.
+  return { id: "email-status", area: "email", label: "Email delivery", status: "ok", detail: "Email is off, by your choice (1 Nov: no Resend account). Alerts land in members' in-app notifications; red health checks reach you on Empire HQ and as a GitHub issue.", hint: "To switch it on, add the two mail secrets described in docs/SETUP.md (OP Compare's own Resend account)." };
 }
 
 export interface InboxCounts {

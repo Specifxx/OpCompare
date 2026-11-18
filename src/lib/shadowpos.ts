@@ -4,7 +4,9 @@
 //
 // ── THE FEED ─────────────────────────────────────────────────────────────────
 // Every ShadowPOS storefront serves its own catalogue search at
-//   /api/advanced-search?game=onepiece&limit=100&offset=N&orderBy=title&inStockOnly=true
+//   /api/advanced-search?game=onepiece&limit=20&offset=N&orderBy=title&inStockOnly=true
+// (since about 16 Nov 2026 the platform refuses any limit above 20 with HTTP 400
+// "Search pagination is invalid"; 20 is what its own search page asks for)
 // which returns the HTML fragment the storefront's search page renders: one
 // `div.product-item` per product, holding
 //   - h2.productTitle  "Absalom (OP06-081 — Alternate Art)"  (TCGplayer's own
@@ -15,7 +17,7 @@
 //   - a link to /products/<product id>.
 // It is the public read the storefront itself makes, robots.txt allows it
 // ("User-agent: *  Allow: /", only AI crawlers are refused), and it is the
-// whole in-stock catalogue: about one request per 100 listings.
+// whole in-stock catalogue: one request per 20 listings.
 //
 // ── CURRENCY ─────────────────────────────────────────────────────────────────
 // price_money.currency is null. Every ShadowPOS store found is a US shop with a
@@ -23,16 +25,17 @@
 // market is not US (tests/stores.test.ts pins that the registry has none).
 //
 // ── POLITENESS ───────────────────────────────────────────────────────────────
-// A page is ~3 MB of HTML before gzip, and all of these storefronts are served
+// A page is ~700 KB of HTML before gzip, and all of these storefronts are served
 // by the same platform, so at most two ShadowPOS stores are read at once and
 // pages are a second apart.
 import { decodeEntities, getWithRetry, limiter, robotsAllows, sleep } from "./scrape";
 import type { StoreListing, StoreRead } from "./store-import";
 import type { StoreInfo } from "./stores";
 
-export const SHADOWPOS_PAGE = 100;
-/** 60 × 100: the deepest store found holds ~2,150 in-stock One Piece listings. */
-const MAX_PAGES = 60;
+/** The platform's own page size, and its maximum: a larger limit is a 400 (2026-11-18). */
+export const SHADOWPOS_PAGE = 20;
+/** 200 × 20 = 4,000: the deepest store found holds ~2,150 in-stock One Piece listings. */
+const MAX_PAGES = 200;
 const PAGE_DELAY_MS = 1000;
 const gate = limiter(2);
 
