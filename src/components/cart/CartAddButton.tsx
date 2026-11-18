@@ -5,7 +5,7 @@
 // else (an affiliate or partner link) stays a manual line with that link.
 import { useEffect, useState } from "react";
 import { track as vaTrack } from "@vercel/analytics";
-import { CART_ADDED_EVENT, addLine, makeLine, onCartChange, readCart, setQty, writeCart, type CartAddInput } from "@/lib/cart-list";
+import { CART_ON, CART_ADDED_EVENT, addLine, makeLine, onCartChange, readCart, setQty, writeCart, type CartAddInput } from "@/lib/cart-list";
 import { CartIcon } from "./CartIcon";
 
 export function CartAddButton({
@@ -25,7 +25,7 @@ export function CartAddButton({
     return onCartChange(sync);
   }, [id]);
 
-  if (!line) return null;
+  if (!line || !CART_ON) return null;
 
   const toggle = (e: React.MouseEvent) => {
     e.preventDefault();

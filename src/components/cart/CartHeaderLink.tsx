@@ -3,7 +3,7 @@
 // The header's cart: an icon with the number of lines, on every screen size. A click (or adding a
 // row) opens the cart drawer on the same page (CartDrawer.tsx; src/lib/cart-list.ts).
 import { useCallback, useEffect, useState } from "react";
-import { CART_ADDED_EVENT, CART_CLOSE_EVENT, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
+import { CART_ON, CART_ADDED_EVENT, CART_CLOSE_EVENT, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { CartDrawer } from "./CartDrawer";
 import { CartIcon } from "./CartIcon";
 
@@ -32,6 +32,8 @@ export function CartHeaderLink({ className = "", href = "/cart" }: { className?:
     };
   }, []);
 
+  // Cart off (CART_ON): only a visitor who already has lines sees it, to finish their checkout.
+  if (!CART_ON && count === 0 && !open) return null;
   return (
     <>
       {/* A real link to /cart for no-script and middle-click; a plain click opens the drawer instead. */}

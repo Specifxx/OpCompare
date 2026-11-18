@@ -26,6 +26,10 @@
 //
 // Pure apart from the guarded localStorage/window helpers at the bottom.
 
+// The cart's one switch (owner, 2026-11-18: "the cart was meant to be a very small feature"; buy clicks per visitor halved from
+// 14 Nov, the day "Add to cart" went on every row). Off: no row shows an Add to cart button, and the header and bottom-nav cart
+// show only for a visitor who already has lines, so they can still check out. Direct buy buttons are the rows' only action.
+export const CART_ON = false;
 export const CART_KEY = "ce_cart_v1";
 export const CART_EVENT = "ce-cart-change";
 export const CART_ADDED_EVENT = "ce-cart-added";

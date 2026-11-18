@@ -4425,6 +4425,22 @@ movers), Sealed, Cart (opens the drawer), Menu (`useMegaMenu`, the same full-scr
 ## 2026-11-18: llms.txt points AI agents at the free price file
 
 `/prices.json` already existed, but nothing an agent reads said so. `llms.txt` now has a "Free price data and citing" block: the file, that it is free and open to every origin, the date to quote and a suggested credit line. No new route, no spend.
+## 2026-11-18: Feedback asks: "Was this page useful?" in the footer, a /feedback page, counted by the daily triage (owner)
+
+The owner: "We need more feedback so can we find a way to get more". One RiftCompare visitor's note (sort the movers by %
+gain or loss) became a feature the same day, but across the network three weeks brought about 58 star ratings and fewer than
+ten written notes. Rift's own record also holds "too many popups asking for my opinion", so every ask here is inline.
+
+- `components/FeedbackAsk.tsx` (the same file on every site): one line at the top of the footer, "Was this page useful?
+  Yes / No". The tap is sent at once (a vote alone counts); only then does an optional "What would make it better?" box
+  open. Never a pop-up, nothing fixed or floating, hidden for the rest of the visit on a page already answered, and in no
+  quick view (the Dex / MTG quick-view A/B, 20 Nov to 3 Dec, is untouched).
+- `/feedback`: the full form (an idea, something wrong, something missing) and "You asked, we built it", the changes
+  visitors' notes have led to; add a line there when a note leads to a change. noindex, linked from the footer and the menu.
+- Both post to `/api/report` as kind `feedback` (`lib/reports-github.ts`). A note is an inbox file like any report; a bare
+  vote is `votes/<site>/<day>/<time>-up|down-<rand>.json`, counted from its file name by RiftCompare's daily *Reports
+  triage*, which now prints a 7-day feedback table per site and flags every note for a look. No email address is asked
+  for or kept: the thanks shows the site's inbox for anyone who wants a reply.
 
 ## 2026-11-18: Share for a deal, and guides and set pages count their shares (owner)
 
@@ -4443,3 +4459,12 @@ buttons of the Amazon row (`AmazonLiveSlot`). This reverses the 2026-11-02 "neve
 only; rel, tracking, "Ad" label, row order and prices are unchanged. The quick views' full-page link is now a full-width
 `btn-primary` (44px) reading "See full page: price history and details" (card: top of the left panel; sealed: right under
 the header instead of a small ghost button at the bottom). `tests/amazon-button.test.ts`.
+## 2026-11-18: The cart is off; the buy button is the row's one action again
+
+Owner, 2026-11-18: "I never intended the cart to be like a very big feature … we need to be promoting, getting more clicks rather than
+losing clicks … this is top priority." Measured in Vercel (buy_click, visitors): the share of visitors who clicked a buy link ran
+20-31% every day from 1 to 13 Nov (about 30 clickers and 100 clicks a day on about 150 visitors), then 11% and 12% on 14 and 15 Nov,
+the day labelled "Add to cart" buttons went on every price row and the quick view (#146, #147), with visitors flat. Card-page board
+rows fell from about 25 clicks a day to about 4. So the cart is switched off with one constant, `CART_ON` in `lib/cart-list.ts`:
+no row draws an Add to cart button, and the header and bottom-nav cart appear only for a visitor who already has lines, so nobody
+loses a cart. The cart code stays; `CART_ON = true` brings it back. Read buy clicks per visitor for 19-25 Nov against 14-17 Nov.

@@ -34,6 +34,8 @@ test("the footer's always-visible row links every page the brief names, in order
     ["/authors", "Who writes this"],
     ["/creators", "Creators"],
     ["/contact", "Contact &amp; feedback"],
+    // 2026-11-18 (owner: more feedback): the full feedback form, with "You asked, we built it".
+    ["/feedback", "Send feedback"],
     ["/privacy", "Privacy policy"],
     ["/terms", "Terms of service"],
   ]);
