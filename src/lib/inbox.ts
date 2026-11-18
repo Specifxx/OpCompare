@@ -68,6 +68,15 @@ export function isTrackedStoreUrl(storeUrl: string): boolean {
   return Boolean(host) && STORES.some((s) => bareHost(s.base) === host);
 }
 
+/** A suggested store we have since added to the registry is done: mark it "added" so it leaves the inbox.
+ *  Called by the daily import (scripts/import.ts), never by a page. Returns how many it closed. */
+export async function closeTrackedSuggestions(): Promise<number> {
+  const pending = await prisma.storeSuggestion.findMany({ where: { status: "pending" }, select: { id: true, storeUrl: true } });
+  const ids = pending.filter((p) => isTrackedStoreUrl(p.storeUrl)).map((p) => p.id);
+  if (ids.length) await prisma.storeSuggestion.updateMany({ where: { id: { in: ids }, status: "pending" }, data: { status: "added" } });
+  return ids.length;
+}
+
 export async function createStoreSuggestion(
   v: StoreSuggestionInput,
   userId: string | null,

@@ -146,7 +146,9 @@ test("evalJobs: failures and silence are problems; a cancelled run is neither", 
 
 test("evalEmail and evalInbox", () => {
   assert.equal(evalEmail("on").status, "ok");
-  assert.equal(evalEmail("off").status, "warn");
+  // Off is the owner's choice (2026-11-01): shown, never flagged.
+  assert.equal(evalEmail("off").status, "ok");
+  assert.match(evalEmail("off").detail, /off/);
   assert.match(evalEmail("off").hint!, /mail secrets/);
   assert.equal(evalEmail(null).status, "unknown");
   const none = { reports: 0, suggestions: 0, feedback: 0, contact: 0, support: 0 };
