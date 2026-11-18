@@ -71,7 +71,6 @@ export default async function MoversPage() {
     <div>
       <JsonLd data={faqLd(MOVERS_FAQ)} />
       <Breadcrumbs trail={[{ name: "Price movers" }]} />
-      <InlineAds page="movers" className="mt-4" />
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece price movers — this week
       </h1>
@@ -174,6 +173,8 @@ export default async function MoversPage() {
       <HubFaq faqs={MOVERS_FAQ} />
       <RelatedGuides guides={guidesForCatalogue("movers")} className="card-surface mt-6 p-5" />
       <InlineSignupPrompt className="mt-6" surface="movers" title="See which cards are cheap right now, free" body="A free account shows Deal Finder's three biggest savings in your market: real store listings under TCGplayer's market price." />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="movers" className="mt-12" />
     </div>
   );
 }

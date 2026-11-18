@@ -6,7 +6,12 @@
 import { getFamilyFeeds } from "@/lib/data";
 import { blockHeading, familyMoney, pickTiles, tileNote, type FamilyFeed } from "@/lib/family-network";
 
+// Off (2026-11-19, core-update quality pass): a block of links to our other sites on every deal and
+// pre-order page reads as a link network. The one link to the family is the footer's /our-sites.
+export const CROSS_SITE_BLOCKS = false;
+
 export async function FamilyCluster({ kind }: { kind: "deal" | "preorder" }) {
+  if (!CROSS_SITE_BLOCKS) return null;
   let feeds: FamilyFeed[] = [];
   try {
     feeds = await getFamilyFeeds();

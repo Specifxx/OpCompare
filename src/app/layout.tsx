@@ -197,8 +197,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line above the content. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
-                    <FooterAds />
                     {children}
+                    {/* The one ad block sits below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+                    <FooterAds />
                   </main>
                 </div>
                 {/* No Premium slider (owner, 2026-11-03, on RiftCompare: "get rid of all

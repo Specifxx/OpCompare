@@ -4606,3 +4606,13 @@ listings are the `EbayListing` rows `/api/card/<slug>` already read for the grad
 market, so the change adds no read and no eBay call. Display only, as everywhere: never a price row, an alert, a basket
 or "the cheapest". A market with no captured listing shows nothing extra (the eBay search row already covers it), and
 ad-free members get the plain search as on the card page. Read with the other ad tests on 2 Dec (`data-surface="ebay_carousel"`, `data-page="quickview"`).
+## 2026-11-19: Ads below content, fewer links, who runs it (core-update quality pass)
+
+Owner, 2026-11-19: "all the ads that can negatively impact our indexing let's remove and have more strategically placed
+ads". The footer ad zone (`FooterAds`) now sits after the page's own content in `layout.tsx`, and every page's
+`InlineAds` block is the last thing in its main column, never above a price board or a hero. The footer site map keeps
+20 links (`FOOTER_KEEP` in `nav-groups.ts`), down from about 54. The "other card games" block (`FamilyCluster`) is off
+(`CROSS_SITE_BLOCKS`): the only link to our other sites is the footer's `/our-sites`, which the about page also names
+instead of listing every sister. The about page says who runs the site (Bill and George), that AI tools help with code
+and guides while prices come from a program, and what the group costs to run (about A$790 a month, our books, 30 days
+to 15 Nov 2026).

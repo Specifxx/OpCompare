@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { StaticPage } from "@/components/StaticPage";
 import { getSiteStats } from "@/lib/data";
-import { CONTACT_EMAIL, SISTER_SITES, SITE_NAME, TCG_SISTER_SITES } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 import { pageOg } from "@/lib/og/meta";
 
 export const metadata: Metadata = {
@@ -29,25 +29,24 @@ export default async function About() {
         cheapest first. TCGplayer&apos;s catalogue is the backbone: every
         printing TCGplayer lists has a page here.
       </p>
-      <h2>Made by the RiftCompare team</h2>
+      <h2>Who runs it</h2>
       <p>
-        {SITE_NAME} is one of a family of price-comparison sites run by the
-        same team, one per game. The others are{" "}
-        {TCG_SISTER_SITES.map((s, i) => (
-          <span key={s.key}>
-            {i ? (i === TCG_SISTER_SITES.length - 1 ? ", and " : ", ") : ""}
-            <a href={s.url}>{s.name}</a> for {s.compares}
-          </span>
-        ))}
-        ; outside card games, the same team runs{" "}
-        {SISTER_SITES.filter((s) => s.key === "wargame").map((s, i) => (
-          <span key={s.key}>
-            {i ? " and " : ""}
-            <a href={s.url}>{s.name}</a> for {s.compares}
-          </span>
-        ))}
-        . Same approach, same rules: a price is a live listing you can buy,
-        never a guess, and a listing we cannot match with certainty is left out.
+        {SITE_NAME} is run by two people, Bill and George, who started it
+        together and own it outright. No publisher, store or distributor owns a
+        share or pays for a place in the tables. We use AI tools to help write
+        code and draft guides; the prices themselves are read by a program from
+        the stores&apos; own listings, never typed in or estimated.
+      </p>
+      <p>
+        We also run price sites for other card games; they are listed once, on{" "}
+        <Link href="/our-sites">our sites</Link>.
+      </p>
+      <h2>What it costs to run</h2>
+      <p>
+        Hosting, the database, the price imports and the tools we build with
+        cost us about A$790 a month across all our sites (our own books, the 30
+        days to 15 November 2026). The affiliate commission below is what pays
+        for it.
       </p>
       <h2>How it is paid for</h2>
       <p>

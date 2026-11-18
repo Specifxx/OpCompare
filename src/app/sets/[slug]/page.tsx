@@ -106,7 +106,6 @@ export default async function SetPage({ params, searchParams }: Props) {
       <Breadcrumbs
         trail={[{ href: "/sets", name: "Sets" }, { name: set.name }]}
       />
-      <InlineAds page="set" className="mt-4" />
       <p className="rb-eyebrow text-slate-500">
         {set.code} · {kind}
       </p>
@@ -286,6 +285,8 @@ export default async function SetPage({ params, searchParams }: Props) {
         </div>
       </section>
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="set" className="mt-12" />
     </div>
   );
 }

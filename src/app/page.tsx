@@ -46,7 +46,6 @@ export default async function HomePage() {
         updatedAt={data.stats.updatedAt}
         renderedAt={data.renderedAt}
       />
-      <InlineAds page="home" />
       <HomePopularCards data={data} storeCount={storeCount} />
       <HomeSealedLinks kinds={data.sealedKinds} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
@@ -140,6 +139,8 @@ export default async function HomePage() {
           ),
         }}
       />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="home" />
     </div>
   );
 }

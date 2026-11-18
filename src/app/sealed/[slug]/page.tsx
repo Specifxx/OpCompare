@@ -139,7 +139,6 @@ export default async function SealedDetailPage({ params }: Props) {
           { name: s.name },
         ]}
       />
-      <InlineAds page="sealed" className="mt-4" />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="card-surface h-fit bg-white/95 p-4">
           {s.imageUrl ? (
@@ -350,6 +349,8 @@ export default async function SealedDetailPage({ params }: Props) {
         guides={[...(set ? setOwnGuides(set.code, 1) : []), ...guidesForCatalogue("sealed")].filter((g, i, a) => a.findIndex((x) => x.slug === g.slug) === i).slice(0, 3)}
         className="card-surface mt-10 p-5"
       />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="sealed" className="mt-12" />
     </div>
   );
 }
