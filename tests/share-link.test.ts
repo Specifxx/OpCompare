@@ -25,3 +25,15 @@ test("share buttons, the arrival counter and the robots allow are wired in", () 
   assert.match(fs.readFileSync("src/app/layout.tsx", "utf8"), /<ShareArrival \/>/);
   assert.match(fs.readFileSync("src/app/robots.ts", "utf8"), /"\/\*utm_source=share"/);
 });
+
+// Share-for-a-deal (owner, 2026-11-18).
+import { pickShareArm } from "../src/lib/share-link";
+test("the share-for-a-deal arm is drawn once, half and half, and kept", () => {
+  assert.equal(pickShareArm(null, 0.2), "reward");
+  assert.equal(pickShareArm(null, 0.8), "plain");
+  assert.equal(pickShareArm("reward", 0.8), "reward");
+});
+test("guides and set pages share tagged links", () => {
+  assert.match(fs.readFileSync("src/components/blog/ShareRow.tsx", "utf8"), /shareUrl\(clean, "", "guide"\)/);
+  assert.match(fs.readFileSync("src/app/sets/[slug]/page.tsx", "utf8"), /<ShareButton [^>]*medium="set"/);
+});

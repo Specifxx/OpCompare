@@ -4425,3 +4425,12 @@ movers), Sealed, Cart (opens the drawer), Menu (`useMegaMenu`, the same full-scr
 ## 2026-11-18: llms.txt points AI agents at the free price file
 
 `/prices.json` already existed, but nothing an agent reads said so. `llms.txt` now has a "Free price data and citing" block: the file, that it is free and open to every origin, the date to quote and a suggested credit line. No new route, no spend.
+
+## 2026-11-18: Share for a deal, and guides and set pages count their shares (owner)
+
+Owner: a share feature people pass around, and "if you share … you can open Deal Finder … gives incentive". The share button,
+tagged links and share images already existed (2026-11-02), so this adds a 50/50 share-for-a-deal test: half of browsers
+(`share_arm` in localStorage, `pickShareArm` in `lib/share-link.ts`) see "Share · get a deal", and after a share completes a
+small card under the button (their own tap, ✕ to close) points to Deal Finder. Nothing that was gated is unlocked; Premium is
+unchanged. Events `share { medium, arm }`, `share_unlock { medium }`; read the share rate per arm after two weeks. The blog's
+`ShareRow` shared bare URLs: it now shares `utm_source=share&utm_medium=guide` and counts each tap. Set pages get the button.
