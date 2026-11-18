@@ -4434,3 +4434,12 @@ tagged links and share images already existed (2026-11-02), so this adds a 50/50
 small card under the button (their own tap, ✕ to close) points to Deal Finder. Nothing that was gated is unlocked; Premium is
 unchanged. Events `share { medium, arm }`, `share_unlock { medium }`; read the share rate per arm after two weeks. The blog's
 `ShareRow` shared bare URLs: it now shares `utm_source=share&utm_medium=guide` and counts each tap. Set pages get the button.
+
+## 2026-11-18: Amazon's button is amber, and the quick view's "See full page" is a real button (owner)
+
+Owner: the Amazon row's button must be visibly its own colour, not the store red or eBay and TCGplayer blue. `.btn-amazon`
+(`globals.css`): amber `#ffa41c` (hover `#fa8900`, 1px `#e08a00` border) with dark ink `#111` in both themes, used by both
+buttons of the Amazon row (`AmazonLiveSlot`). This reverses the 2026-11-02 "never in Amazon's own colours" line for the button
+only; rel, tracking, "Ad" label, row order and prices are unchanged. The quick views' full-page link is now a full-width
+`btn-primary` (44px) reading "See full page: price history and details" (card: top of the left panel; sealed: right under
+the header instead of a small ghost button at the bottom). `tests/amazon-button.test.ts`.

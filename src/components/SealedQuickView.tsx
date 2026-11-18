@@ -189,6 +189,13 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
           </div>
         </div>
 
+        {/* "See full page" (owner, 2026-11-18): a real button right under the header, visible without scrolling on a phone. */}
+        <div className="border-b border-ink-800 px-4 pb-4 pt-0 sm:px-5">
+          <Link href={`/sealed/${slug}`} data-quickview-fullpage className="btn-primary min-h-11 w-full text-sm" onClick={onLeave}>
+            See full page: price history and details →
+          </Link>
+        </div>
+
         {data && m ? (
           <div className="p-4">
             {/* The price history leads the panel (owner, 2026-11-17: "visible without scrolling past dozens of stores"), in the visitor's
@@ -271,11 +278,6 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                 <ReportPriceButton productId={data.id} market={country as Country} offers={reportable} />
               </div>
             ) : null}
-            <div className="mt-3 flex justify-end">
-              <Link href={`/sealed/${data.slug}`} className="btn-ghost text-xs" onClick={onLeave}>
-                Open full page →
-              </Link>
-            </div>
             <AffiliateDisclosure partner="both" />
           </div>
         ) : null}
