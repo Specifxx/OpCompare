@@ -6,6 +6,11 @@
 // publish canonical URLs, the sitemap, Open Graph or JSON-LD on another host;
 // NEXT_PUBLIC_SITE_URL overrides it (local development, a preview domain).
 export const SITE_NAME = "OP Compare";
+
+export type BottomNavMode = "off" | "optin" | "on";
+/** The phone bottom nav (components/BottomNav.tsx, DECISIONS.md 2026-11-18): "optin" = only a visitor who opens any page with ?bn=1
+ *  sees it (kept in localStorage; ?bn=0 clears it); "on" = every phone visitor; "off" = the rollback (ignores ?bn=1 too). */
+export const BOTTOM_NAV: BottomNavMode = "optin";
 export const SITE_SHORT = "OPCompare";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://opcompare.app").replace(/\/+$/, "");
 export const SITE_TAGLINE = "One Piece Card Game prices, compared";
