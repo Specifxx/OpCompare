@@ -193,6 +193,13 @@ jobs:
       #   writes matching fixes, not market news, so choose `baseline` to move
       #   every watch's baseline with nothing sent, or `free` to recover a
       #   missed 07:07 run.
+      # The home pages' ranking input (src/lib/home-rank.ts, DECISIONS.md 2026-11-18): product page views and buy clicks per
+      # item, last 28 and 7 days, from RiftCompare's /api/demand/oc, committed with no deploy marker before the release so the
+      # release bundles it.  Never fatal: a failed fetch keeps yesterday's file and the home page keeps its order.
+      - name: Home page demand
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: bash scripts/pull-demand.sh oc data/demand.json
       - name: Free price alerts (daily digest)
         if: ${{ !cancelled() && steps.import.outcome == 'success' && (github.event.schedule == '7 7 * * *' || (github.event_name == 'workflow_dispatch' && inputs.alerts == 'free')) }}
         env:
