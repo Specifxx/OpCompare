@@ -10,8 +10,8 @@ import { PIN_OUTLINE } from "@/lib/pinned-order";
 // 2026-11-03 (owner: Amazon "up there with eBay and TCGplayer … the third row out of the three") it is a row OF the board,
 // passed in through PriceBoard's `thirdRow` slot and drawn right after the pinned eBay and TCGplayer rows (first when neither
 // is shown); until then it sat above the board, which put it first. Drawn like a store row, labelled "Ad", with no wording
-// about the order. Never in Amazon's own colours (2026-11-02: Amazon Associates' rules forbid styling that could pass for
-// Amazon's site). Since 2026-11-06 (owner: eBay and Amazon rows "function exactly like a normal store price row … it just
+// about the order. Its button is amber (.btn-amazon, owner 2026-11-18, reversing the 2026-11-02 no-Amazon-colours rule) so it is never
+// mistaken for a store's button. Since 2026-11-06 (owner: eBay and Amazon rows "function exactly like a normal store price row … it just
 // sits on the very top. And it has a different colored outline") it is the second row, right under eBay, with an amber
 // outline, the store row's thumbs and, with a live price, its stock line and cart button; without one the row is not drawn (2026-11-12; it read "Also check
 // on Amazon"). Server component (the sealed page already knows the market); nothing renders where the market has no

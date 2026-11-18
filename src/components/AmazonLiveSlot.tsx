@@ -45,10 +45,10 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, page = "seale
       {live?.url && live.priceCents && live.currency && cart ? (
         <CartAddButton href={live.url} productUrl={live.url} storeName={label} title={cart.title} priceCents={live.priceCents} currency={live.currency} image={cart.image ?? null} className="text-slate-300" />
       ) : null}
-      <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-primary hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
+      <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-amazon hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48">
         View on Amazon →
       </a>
-      <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-primary shrink-0 px-3 sm:hidden" aria-label={`${live ? "View on" : "Check price on"} ${label}`}>
+      <a href={href} target="_blank" rel={AMAZON_REL} {...data} className="btn-amazon shrink-0 px-3 sm:hidden" aria-label={`${live ? "View on" : "Check price on"} ${label}`}>
         →
       </a>
       {live ? <p className="basis-full text-[10px] leading-4 text-slate-500">* {AMAZON_PRICE_DISCLAIMER}</p> : null}
