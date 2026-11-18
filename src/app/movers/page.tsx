@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
+import { MoversTable, type MoverTableRow } from "@/components/MoversTable";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { AnswerBox } from "@/components/AnswerBox";
@@ -46,6 +47,24 @@ export default async function MoversPage() {
     ? new Date(Date.parse(first) + 7 * 864e5).toISOString().slice(0, 10)
     : null;
   const noHistory = !up.length && !down.length;
+  // Every card the panels rank from (US$1+, a 7-day move), biggest move first,
+  // for the searchable % sort below (visitor feedback, 2026-11-18). 300 rows
+  // keeps the page light; the catalogue is already in hand, so no new read.
+  const tableRows: MoverTableRow[] = cat.cards
+    .filter((c) => c.change7d != null && c.change7d !== 0 && (c.marketUsd ?? 0) >= 100)
+    .sort((a, b) => Math.abs(b.change7d!) - Math.abs(a.change7d!))
+    .slice(0, 300)
+    .map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      variant: c.variant,
+      number: c.number,
+      setCode: cat.setById.get(c.setId)?.code ?? "",
+      priceCents: c.marketUsd!,
+      hasImage: c.hasImage,
+      d7pct: c.change7d!,
+    }));
 
   return (
     <div>
@@ -124,6 +143,7 @@ export default async function MoversPage() {
       {up.length || down.length || value.length ? (
         <EbayBuyCta className="mt-6" source="movers" page="movers" />
       ) : null}
+      <MoversTable rows={tableRows} />
       <div className="mt-6">
         <MoversToolsCta />
       </div>

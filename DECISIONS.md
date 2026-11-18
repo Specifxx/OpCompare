@@ -4374,3 +4374,11 @@ Rollback: remove `<ReturnNudge />` from the root layout.
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
+
+## 2026-11-18: Sort the Index and the movers by % gain or loss (visitor feedback, RiftCompare)
+
+A RiftCompare visitor asked to "search and sort index by % of gain or loss (better than just toggling the gainers or losers button)". The same
+change here: the Index on `/market` gets a visible "Sort by" menu (biggest 7-day % gain, loss or move either way, price, weight, name), which
+phones need because the 7-day column is hidden there; the headings still sort and the Gainers/Fallers toggle still filters. `/movers` gains one
+searchable list (`MoversTable.tsx`) of up to 300 cards worth US$1+ with a 7-day move, built from the catalogue the page already reads, under the
+eBay CTA. No new query, every % is the card's own TCGplayer 7-day move.
