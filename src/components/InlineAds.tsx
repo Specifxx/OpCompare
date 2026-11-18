@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { applyAdLook } from "@/lib/ad-look";
 import { affiliateUrl, ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import type { ChaseTile } from "@/lib/listing-panel";
 import type { Country } from "@/lib/country";
@@ -81,6 +82,7 @@ function Banner({ brand, tag, headline, cta, ctaHref, ctaRetailer, tiles, note, 
 }
 
 export function InlineAds({ page, className = "" }: { page: string; className?: string }) {
+  useEffect(() => applyAdLook(), []);
   const { country } = useCountry();
   const [chase, setChase] = useState<ChaseTile[] | null | undefined>(undefined);
   useEffect(() => {
