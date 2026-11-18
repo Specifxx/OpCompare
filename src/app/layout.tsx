@@ -16,6 +16,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
+import { ReturnNudge } from "@/components/ReturnNudge";
 import { ShareArrival } from "@/components/ShareArrival";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
@@ -230,6 +231,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />
         <AiReferralTracker />
+        <ReturnNudge />
         <ShareArrival />
         <GAPageViewTracker />
       </body>

@@ -4360,3 +4360,13 @@ Applied here (the full reasoning is in DexCompare's DECISIONS.md, same date):
   "Add to cart" (owner, 2026-11-14: a literal "Add to cart" on every row).
 - **The quick view sets the tab title and description while it is open** and restores them on close (the tab used to keep the list's title).
 - Already true here, no change: an eBay or Amazon row is never "the cheapest" or "Best price" (`neverCheapest`), so the table never contradicts its own headline.
+
+## 2026-11-18: The return nudge, ported from MTG Compare (owner)
+
+Earnings fell; the owner asked for targeted, subtle ads, and the card sites got a "return nudge" (MTG Compare #185). Here: after a click on a STORE row (`a[data-retailer]`
+inside `[data-price-row]`, network store), when the visitor comes back to the tab (away 4 s or more, within 30 minutes), a small dismissible card ("Still comparing?", Ad)
+offers the page's own eBay and TCGplayer links, copied unchanged (TCGplayer's is the `/out/tcgplayer` link). Once a session, 20 s or ✕ or Esc, never Amazon, no price or
+"best" claim, never for a first view, yields to the rating card. Not a pop-up for a new visitor: it needs a store click first. **Measured, GA4 only** (this site sends no custom
+event to Vercel): half the visitors are the control arm (localStorage `rn-arm`); `nudge_eligible` {arm} fires for both, `nudge_shown` and `nudge_click` {which} for "on", and
+`nudge_paid_click` {arm, network} for any eBay or TCGplayer click after an eligible return in either arm. Lift = `nudge_paid_click` per `nudge_eligible`, on against off.
+Rollback: remove `<ReturnNudge />` from the root layout.
