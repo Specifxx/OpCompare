@@ -129,7 +129,8 @@ function PrintingBadge({ printing, text, size = 18, dot = 11 }: { printing: stri
 const GUIDE_COLS = { card: 400, low: 203, market: 214, set: 150, last: 86 }; // 1053 = 1104 − 3 border − 48 padding
 
 export function PriceTable({ rows, showMove }: { rows: OgRow[]; showMove: boolean }) {
-  const c = GUIDE_COLS;
+  // A week's move can be four digits ("+357.1%"): the move column borrows from Set · No. so they never touch.
+  const c = showMove ? { ...GUIDE_COLS, set: GUIDE_COLS.set - 34, last: GUIDE_COLS.last + 34 } : GUIDE_COLS;
   const head: CSSProperties = { display: "flex", ...F.bold, fontSize: 15, letterSpacing: 1.6, color: OG.slate500, textTransform: "uppercase" };
   const num: CSSProperties = { display: "flex", ...F.mono, justifyContent: "flex-end" };
   return (
@@ -192,20 +193,21 @@ function Stats({ items, size = 26 }: { items: [string, string][]; size?: number 
   );
 }
 
-function GuideTitle({ size = 58 }: { size?: number }) {
+function GuideTitle({ size = 58, second = "Price Guide" }: { size?: number; second?: string }) {
   return (
     <div style={{ display: "flex", ...F.brand, fontSize: size, lineHeight: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
       <span style={{ color: OG.redWord, marginRight: Math.round(size * 0.28) }}>One Piece</span>
-      <span style={{ color: OG.white }}>Price Guide</span>
+      <span style={{ color: OG.white }}>{second}</span>
     </div>
   );
 }
 
-export type GuideVariant = "home" | "guide";
+export type GuideVariant = "home" | "guide" | "movers";
 
 const GUIDE_FOOTER: Record<GuideVariant, [string, string]> = {
   home: ["Every card, the cheapest store in your market, updated twice a day", "opcompare.app"],
   guide: ["Every printing in one table · sorted by price · updated twice a day", "opcompare.app/price-guide"],
+  movers: ["This week's biggest risers · 7-day change in TCGplayer market price", "opcompare.app/movers"],
 };
 
 /** The site default and /price-guide: brand header + a five-row price guide. */
@@ -217,7 +219,7 @@ export function GuideImage({ rows, cards, stores, variant = "home" }: { rows: Og
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Lockup />
           <div style={{ display: "flex", marginTop: 10 }}>
-            <GuideTitle />
+            {variant === "movers" ? <GuideTitle size={50} second="Price Movers" /> : <GuideTitle />}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", paddingBottom: 4 }}>
@@ -232,7 +234,7 @@ export function GuideImage({ rows, cards, stores, variant = "home" }: { rows: Og
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", marginTop: 14 }}>
-        <PriceTable rows={rows.slice(0, 5)} showMove={showMoveColumn(rows)} />
+        <PriceTable rows={rows.slice(0, 5)} showMove={variant === "movers" || showMoveColumn(rows)} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <div style={{ display: "flex", ...F.semi, fontSize: 20, color: OG.slate400 }}>{tag}</div>
