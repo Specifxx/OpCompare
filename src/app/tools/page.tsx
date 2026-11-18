@@ -166,6 +166,11 @@ const GROUPS: ToolGroup[] = [
         desc: "Value both sides of a card trade fairly before you commit.",
       },
       {
+        href: "/tools/should-i-grade",
+        title: "Should I grade this?",
+        desc: "Raw price against live PSA 10 and PSA 9 listings, at your odds and your grading cost: the break-even in one line.",
+      },
+      {
         href: "/tools/selling-fees",
         title: "Selling fee calculator",
         desc: "What you actually keep selling a card on TCGplayer or eBay, after commission, processing and postage.",
