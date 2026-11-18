@@ -152,8 +152,8 @@ export function QuickView({
           </div>
           {/* A plain anchor: the URL is already /card/<slug>, so this loads the
               full server-rendered page. */}
-          <a href={href} className="btn-ghost mt-3 w-full text-sm">
-            Open full page →
+          <a href={href} data-quickview-fullpage className="btn-primary mt-3 min-h-11 w-full text-sm">
+            See full page: price history and details →
           </a>
         </div>
 
