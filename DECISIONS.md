@@ -4498,3 +4498,13 @@ Retention lever 2 ("Since your last visit", on the sister sites) is a 50/50 test
 (no week of history) it draws the price guide's image instead. When the move column shows, it borrows 34 px from
 Set · No. so a four-digit move never touches the number. The page uses `pageOgOwnImage` and a share button (medium
 `movers`, tagged `utm_source=share&utm_medium=movers`).
+
+## The weekly Hot 100 at /hot-100 — 2026-11-18
+
+**What.** `/hot-100`: the cards whose TCGplayer market price rose most over the last seven days (the catalogue's `change7d`,
+the number `/movers` ranks by), biggest first, up to 100, worth US$3 or more (`lib/hot100.ts`, pure, from the cached
+`getCatalog()` only). A short week is the Hot 37, never padded (RiftCompare's Hot 40 rule). No last-week places here: those need
+every card's history file, and the page stays on the one cached read. Share image: the site's default (`pageOg`).
+
+**Why.** Owner, 2026-11-18: one stable URL per site to post on Reddit once a week as a link and title (tagged
+`utm_source=reddit&utm_medium=social&utm_campaign=hot100-opcompare-<date>`). Rides the weekly release.
