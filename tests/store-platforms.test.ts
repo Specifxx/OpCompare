@@ -11,7 +11,7 @@ import { ecwidListing, ecwidTokens, type EcwidProduct } from "../src/lib/ecwid";
 import { bestVariant, buildCardIndex, buildDonIndex, buildNameIndex, matchStoreProduct, type StoreMatchIndexes } from "../src/lib/match";
 import { inStockSpecId, nopPrice, parseNopPage } from "../src/lib/nopcommerce";
 import { decodeEntities, limiter, sleep } from "../src/lib/scrape";
-import { parseShadowposPage, shadowposSearchPath } from "../src/lib/shadowpos";
+import { parseShadowposPage, shadowposSearchPath, SHADOWPOS_PAGE } from "../src/lib/shadowpos";
 import { productUrl } from "../src/lib/store-import";
 import type { StoreInfo } from "../src/lib/stores";
 import { onePieceCategoryIds, wooListing, type WooProduct } from "../src/lib/woocommerce";
@@ -77,7 +77,9 @@ test("ShadowPOS titles match through the shared matcher, printing and set includ
 test("ShadowPOS: anything but a search-results fragment is a failed read, not an empty store", () => {
   assert.equal(parseShadowposPage("<html><body>Just a moment...</body></html>", "https://x.example"), null);
   assert.deepEqual(parseShadowposPage('<div id="products-container" data-advanced-search-results></div>', "https://x.example"), []);
-  assert.equal(shadowposSearchPath(200), "/api/advanced-search?game=onepiece&limit=100&offset=200&orderBy=title&inStockOnly=true");
+  assert.equal(shadowposSearchPath(200), "/api/advanced-search?game=onepiece&limit=20&offset=200&orderBy=title&inStockOnly=true");
+  // The platform answers 400 "Search pagination is invalid" to any limit above 20 (2026-11-18).
+  assert.ok(SHADOWPOS_PAGE <= 20);
 });
 
 // ── Ecwid ────────────────────────────────────────────────────────────────────

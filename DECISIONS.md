@@ -4498,3 +4498,15 @@ Retention lever 2 ("Since your last visit", on the sister sites) is a 50/50 test
 (no week of history) it draws the price guide's image instead. When the move column shows, it borrows 34 px from
 Set · No. so a four-digit move never touches the number. The page uses `pageOgOwnImage` and a share button (medium
 `movers`, tagged `utm_source=share&utm_medium=movers`).
+
+## 2026-11-18 — Health flags: ShadowPOS pages of 20, tracked suggestions close themselves, email-off is not a fault
+
+- **ShadowPOS (TCGLocal) caps a search page at 20.** Since about 16 Nov every one of the 26 ShadowPOS stores failed with
+  HTTP 400 "Search pagination is invalid. Please restart your search.": the platform now refuses any `limit` above 20
+  (checked 18 Nov on metatcg.com and darksidegames.com: 20 answers 200, 21, 24 and 100 answer 400; its own search page asks
+  for 20). `SHADOWPOS_PAGE` is 20 and `MAX_PAGES` 200 (4,000 listings; the deepest store held ~2,150). Five times the
+  requests, the same bytes (a page is ~700 KB instead of ~3 MB), still a second apart and two stores at a time.
+- **A store suggestion for a store already in the registry is closed by the import** (`closeTrackedSuggestions`,
+  status `added`). The watchdog flagged TCGandChill's suggestion for 8 days although the store had been added.
+- **Email off is shown, not flagged.** The owner chose no Resend on 2026-11-01, so `evalEmail("off")` is `ok` with a note
+  saying how to switch it on; a yellow line nobody intends to act on hid real warnings on Empire HQ.
