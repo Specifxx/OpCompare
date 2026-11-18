@@ -4519,3 +4519,13 @@ every card's history file, and the page stays on the one cached read. Share imag
 
 **Why.** Owner, 2026-11-18: one stable URL per site to post on Reddit once a week as a link and title (tagged
 `utm_source=reddit&utm_medium=social&utm_campaign=hot100-opcompare-<date>`). Rides the weekly release.
+
+## 2026-11-18 — "Should I grade this?" calculator (growth test #3)
+
+Owner approved three growth tests on 18 Nov (thread "Find new growth ideas we haven't tried"); this is the grading one. Grading hit
+a record 3.61 million cards in July 2026 and PSA's trading-card grading rose 81% year on year (SI / GemRate, 5 Aug 2026), and the
+/graded guide already holds the live US PSA 10 / PSA 9 asks at no extra eBay call. `/tools/should-i-grade` reads the US rows of
+`getGradedGuide` only (USD beside TCGplayer's USD raw price, never a conversion), so it never reads a cookie. A copy that misses a 10
+is valued at PSA 9, or raw when no PSA 9 is listed; we never guess a PSA 8. The grading cost is never pre-filled (graders change
+tiers often), the odds are the visitor's own slider, and the copy says asking prices, not sales. Math in `lib/grade-math.ts`,
+pinned by `tests/grade-math.test.ts`. Read on 9 Dec: Search Console impressions and clicks for the page; drop it if it has none.
