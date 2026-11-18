@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { track } from "@vercel/analytics";
 import { buyClickProps, clickContext, networkOf, type ClickEl } from "@/lib/buy-click";
 import { useConsent } from "@/lib/use-consent";
+import { dockArmNow } from "@/lib/dock-arm";
 
 // RiftCompare's ConsentGatedAnalytics: Vercel Analytics mounts only once
 // useConsent() resolves (a CMP grant, or the no-CMP grace period), never on the
@@ -31,6 +32,7 @@ function BuyClickEvents() {
       );
       if (!props) return;
       try {
+        Object.assign(props, { dock_arm: dockArmNow() });
         track("buy_click", props);
       } catch {
         /* an analytics failure never gets in the way of the click */

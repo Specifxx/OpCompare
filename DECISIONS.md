@@ -4529,3 +4529,16 @@ a record 3.61 million cards in July 2026 and PSA's trading-card grading rose 81%
 is valued at PSA 9, or raw when no PSA 9 is listed; we never guess a PSA 8. The grading cost is never pre-filled (graders change
 tiers often), the odds are the visitor's own slider, and the copy says asking prices, not sales. Math in `lib/grade-math.ts`,
 pinned by `tests/grade-math.test.ts`. Read on 9 Dec: Search Console impressions and clicks for the page; drop it if it has none.
+
+## 2026-11-18: The dock A/B: the phone ad dock stays up above the bottom nav for half of the visitors
+
+Owner, 2026-11-18: "right above the nav bar, we should have those ads show up … very, very visible for mobile phone users." Since
+the phone bottom nav went on (18 Nov) the eBay/TCGplayer dock (`AdDock.tsx`) yielded to it: one bar at a time, the dock only while
+scrolling down. `dockArm()` in `lib/dock-arm.ts` puts each visitor in localStorage `dock-arm` "on" or "off" (50/50; storage that
+fails is "off"). "On": the dock no longer yields to `html[data-bottomnav]`; it is lifted 57px (the nav's height) with `translate`
+while the nav shows, so both bars are visible and neither covers the other (dock 64px + nav 57px, about 15% of a phone screen,
+under Better Ads' 30% line). Every other dock rule stands: never on the first screen or a product page, yields to other ad units,
+the footer, dialogs and the keyboard, ✕ for the visit, labelled Ad, rel sponsored. "Off": unchanged. Every `buy_click` carries
+`dock_arm`. Verdict 2 Dec: buy clickers and paid buy clicks per arm. EPN's Network Agreement (Exhibit A §1.4, §2.5) puts any
+promotional method it does not expressly permit under prior written approval; the dock has run since 2026-11-06, this changes only
+when it shows. Not on Dex or MTG Compare (their phone A/B runs to 3 Dec).
