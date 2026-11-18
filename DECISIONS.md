@@ -4434,3 +4434,13 @@ tagged links and share images already existed (2026-11-02), so this adds a 50/50
 small card under the button (their own tap, ✕ to close) points to Deal Finder. Nothing that was gated is unlocked; Premium is
 unchanged. Events `share { medium, arm }`, `share_unlock { medium }`; read the share rate per arm after two weeks. The blog's
 `ShareRow` shared bare URLs: it now shares `utm_source=share&utm_medium=guide` and counts each tap. Set pages get the button.
+
+## 2026-11-18: The cart is off; the buy button is the row's one action again
+
+Owner, 2026-11-18: "I never intended the cart to be like a very big feature … we need to be promoting, getting more clicks rather than
+losing clicks … this is top priority." Measured in Vercel (buy_click, visitors): the share of visitors who clicked a buy link ran
+20-31% every day from 1 to 13 Nov (about 30 clickers and 100 clicks a day on about 150 visitors), then 11% and 12% on 14 and 15 Nov,
+the day labelled "Add to cart" buttons went on every price row and the quick view (#146, #147), with visitors flat. Card-page board
+rows fell from about 25 clicks a day to about 4. So the cart is switched off with one constant, `CART_ON` in `lib/cart-list.ts`:
+no row draws an Add to cart button, and the header and bottom-nav cart appear only for a visitor who already has lines, so nobody
+loses a cart. The cart code stays; `CART_ON = true` brings it back. Read buy clicks per visitor for 19-25 Nov against 14-17 Nov.

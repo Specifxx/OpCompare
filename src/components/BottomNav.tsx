@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
+import { CART_ON, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { BOTTOM_NAV, type BottomNavMode } from "@/lib/site";
 import { bottomNavEnabled, bottomNavShows, isActivePath, NAV_H, nextDir, OPT_KEY } from "@/lib/bottom-nav";
 import { CartIcon } from "./cart/CartIcon";
@@ -238,7 +238,7 @@ export function BottomNav({ mode = BOTTOM_NAV }: { mode?: BottomNavMode }) {
   return (
     <nav ref={ref} aria-label="Quick links" data-bottomnav-bar="hidden" aria-hidden="true" className="bn md:hidden">
       <ul className="bn-row">
-        {tabs().map((t) => {
+        {tabs().filter((t) => t.key !== "cart" || CART_ON || count > 0).map((t) => {
           const active = t.href ? isActivePath(pathname, t.href, t.also) : false;
           return (
             <li key={t.key} className="bn-cell">
