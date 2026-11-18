@@ -27,6 +27,7 @@ import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { PlanProvider } from "@/components/PlanProvider";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
+import { BottomNav } from "@/components/BottomNav";
 import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
 import { SignupWelcome } from "@/components/SignupWelcome";
 import { ReferralCapture } from "@/components/ReferralCapture";
@@ -36,7 +37,7 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { stripeEnabled } from "@/lib/stripe";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { enabledProviders } from "@/lib/oauth";
-import { CONTACT_EMAIL, DISCORD_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL, BOTTOM_NAV } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { OG_BASE } from "@/lib/og/meta";
@@ -184,6 +185,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
                 <PhoneDockAds />
+                {/* The phone bottom nav (DECISIONS.md 2026-11-18): browser only, below 768px, hidden while any dialog (the quick views, the
+                    menu, the cart) is open; BOTTOM_NAV in lib/site.ts is its rollback. Inside MegaMenuProvider: its Menu tab opens the menu. */}
+                {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
                 {/* RiftCompare's shell: the rail reservation on an OUTER wrapper,
                     the content container on <main> (a pl-* and container-app's
                     px-* on one element fight over padding-left). Pages never add

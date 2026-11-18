@@ -4382,3 +4382,18 @@ change here: the Index on `/market` gets a visible "Sort by" menu (biggest 7-day
 phones need because the 7-day column is hidden there; the headings still sort and the Gainers/Fallers toggle still filters. `/movers` gains one
 searchable list (`MoversTable.tsx`) of up to 300 cards worth US$1+ with a 7-day move, built from the catalogue the page already reads, under the
 eBay CTA. No new query, every % is the card's own TCGplayer 7-day move.
+
+## 2026-11-18: The phone bottom nav, ported from TCG Prices (owner)
+
+Owner tried TCG Prices' bottom bar on his phone ("looks good … a bit of lag"; the smoother version is in) and wants it on every site.
+`components/BottomNav.tsx` is tcgcompare's controller (no position arithmetic, `transform` only, browser only, below 768px, hidden while
+zoomed, typing, any dialog is open, an Add to cart button is under it, or the card page's buy bar is shown), its pure rules in
+`lib/bottom-nav.ts` so the node tests load them without React. OP Compare's tabs: Home, Prices (the price guide, sets, card pages,
+movers), Sealed, Cart (opens the drawer), Menu (`useMegaMenu`, the same full-screen menu as the header's button; mounted inside
+`MegaMenuProvider` for it). No Search tab: the header's second row keeps the card search on every phone screen.
+
+- `CardStickyBuyBar` is always mounted (`data-buybar=""`, aria-hidden until it slides in): the bar yields only to a shown one.
+- The phone dock yields to `html[data-bottomnav]`, one bar at a time. Its CSS sits above the last reduced-motion block, which stays last.
+- `BOTTOM_NAV` in `lib/site.ts`: shipped "optin" (`?bn=1`), flipped to "on" after the phone harness; "off" is the rollback.
+- Found on the way, not changed: the closed cart drawer and the closed menu are always in the DOM with `aria-modal="true"` (inert and
+  aria-hidden), and the phone dock's "a dialog is open" check matches them, so the dock may never show. Reported to the ads thread.
