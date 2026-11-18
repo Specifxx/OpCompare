@@ -31,6 +31,13 @@ export default async function Methodology() {
           as a US offer, and the market price, shown everywhere as a reference.
           Read daily from TCGCSV&apos;s public mirror of TCGplayer&apos;s data.
         </li>
+        <li>
+          <strong>Fetch TCG.</strong> The listing feed of{" "}
+          <a href="https://www.fetchtcg.com/">Fetch TCG</a>, the Australian and
+          New Zealand card marketplace, used with Fetch&apos;s permission. In
+          Australia a card Fetch lists shows its price as an ordinary store row,
+          linked to that listing on Fetch.
+        </li>
         {ebayLive ? (
           <li>
             <strong>eBay.</strong> Once a day we search eBay (US, UK, Australia,
