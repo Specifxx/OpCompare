@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { sendCardView } from "@/lib/card-views";
 import { COUNTRIES, MARKETS } from "@/lib/country";
 import { ebayAffiliateUrl, ebayLabel, isPaidLink, outboundRel } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
@@ -249,15 +251,17 @@ export function QuickView({
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Price comparison</p>
                 {m.rows.length || fetchHere.length || tcgExtra ? (
                   <ol className="divide-y divide-ink-800">
-                    {m.rows.map((r, i) => { const low = i === cheapestIndex(m.rows); const pin = i < (m.pinned ?? 0); return (
+                    {m.rows.map((r, i) => { const lowIdx = i === cheapestIndex(m.rows) && m.count > 1; const bt = bestTreatment(lowIdx, { ebay: r.ebay, source: r.source, paid: isPaidLink(r.href) }); const low = bt === "loud"; const pin = i < (m.pinned ?? 0); return (
                       <li key={`${r.source}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 sm:flex-nowrap">
                         <div className="min-w-0 flex-1">
                           <p className="flex min-w-0 flex-wrap items-center gap-1.5">
                             <span className="truncate text-sm font-semibold text-white">{r.label}</span>
-                            {low && m.count > 1 ? (
+                            {low ? (
                               <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-400">Cheapest</span>
                             ) : null}
+                            {bt === "plain" ? <BestPriceTag /> : null}
                           </p>
+                          {bt === "plain" ? <BestPriceNote has={{ ebay: m.rows.some((x) => x.ebay), tcgplayer: m.rows.some((x) => x.source === "tcgplayer") || Boolean(tcgExtra) }} /> : null}
                           <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                             {r.condition ? <span className="font-semibold text-slate-300">{r.condition}</span> : null}
                             {r.source === "tcgplayer" ? <span>lowest listing</span> : null}

@@ -1,10 +1,12 @@
 "use client";
 
 import { PIN_OUTLINE, pinnedOrder } from "@/lib/pinned-order";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { sendCardView } from "@/lib/card-views";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { outboundRel } from "@/lib/affiliate";
+import { isPaidLink, outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { ago, money } from "@/lib/format";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
@@ -233,18 +235,22 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
                   const state = offerStock(l);
                   const isOpen = state === "open";
                   const isBest = l === best;
+                  // Loud only on a paid cheapest row (owner, 2026-11-18); a plain store gets the neutral tag and a note.
+                  const bt = bestTreatment(isBest, { ebay: Boolean(l.ebay), source: l.source, paid: isPaidLink(l.href) });
                   return (
-                    <li key={l.source} data-stock={state} data-price-row="" data-cents={isOpen && l.priceCents > 0 ? l.priceCents : undefined} data-paid={l.ebay || l.source === "tcgplayer" ? 1 : 0} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${isBest && listings.length > 1 ? `-mx-1 rounded-md px-1 ${PIN_OUTLINE.cheapest}` : ""}`}>
+                    <li key={l.source} data-stock={state} data-price-row="" data-cents={isOpen && l.priceCents > 0 ? l.priceCents : undefined} data-paid={l.ebay || l.source === "tcgplayer" ? 1 : 0} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${bt === "loud" && listings.length > 1 ? `-mx-1 rounded-md px-1 ${PIN_OUTLINE.cheapest}` : ""}`}>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-semibold text-white">{l.label}</div>
+                        {bt === "plain" ? <BestPriceNote has={{ ebay: listings.some((x) => x.ebay), tcgplayer: listings.some((x) => x.source === "tcgplayer") }} /> : null}
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-brand-400" : "text-slate-500"}>● {offerStockLabel(state, data.preRelease)}</span>
                           <span className="text-slate-500">checked {ago(l.lastSeen)}</span>
                           {isOpen ? <StoreCodeChip href={l.href} /> : null}
                         </div>
                       </div>
-                      {isBest ? <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span> : null}
-                      <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>{money(l.priceCents, country as Country)}</div>
+                      {isBest && bt !== "plain" ? <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span> : null}
+                      {bt === "plain" ? <BestPriceTag className="shrink-0" /> : null}
+                      <div className={`num text-right text-sm font-bold ${isBest && bt !== "plain" ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>{money(l.priceCents, country as Country)}</div>
                       {/* "Add to cart" beside the buy button (owner, 2026-11-14): every open row, TCGplayer's too (2026-11-17). */}
                       {isOpen ? (
                         <CartAddButton href={l.href} productUrl={l.url} storeName={l.label} title={data.name} priceCents={l.priceCents} currency={COUNTRIES[country as Country].currency} image={data.imageUrl} className="text-slate-300" />

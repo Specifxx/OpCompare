@@ -1,6 +1,7 @@
 import type { Country } from "@/lib/country";
 import { money } from "@/lib/format";
-import { outboundRel } from "@/lib/affiliate";
+import { isPaidLink, outboundRel } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
 import type { BuyRow } from "@/lib/quick-view";
 
 /** Marks the top buy block for CardStickyBuyBar's observer. */
@@ -26,12 +27,14 @@ export function CardTopBuy({
   slug: string;
 }) {
   if (!best) return null;
+  // Owner, 2026-11-18: a plain store's cheapest price is drawn neutrally (the paid alternative line below is its hint).
+  const plain = bestTreatment(true, { ebay: best.ebay, source: best.source, paid: isPaidLink(best.href) }) === "plain";
   return (
-    <div {...{ [TOP_BUY_ATTR]: "" }} className="mt-4 rounded-lg border border-brand-500/30 bg-brand-500/[0.06] p-3 lg:hidden">
+    <div {...{ [TOP_BUY_ATTR]: "" }} data-best={plain ? "plain" : "loud"} className={`mt-4 rounded-lg border p-3 lg:hidden ${plain ? "border-ink-700 bg-ink-900/60" : "border-brand-500/30 bg-brand-500/[0.06]"}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cheapest</p>
-          <p className="num text-lg font-bold text-accent">{money(best.priceCents, country)}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{plain ? "Best price" : "Cheapest"}</p>
+          <p className={`num text-lg font-bold ${plain ? "text-white" : "text-accent"}`}>{money(best.priceCents, country)}</p>
           <p className="truncate text-xs text-slate-400">
             at {best.label} · {best.postage}
           </p>
@@ -48,7 +51,7 @@ export function CardTopBuy({
           data-rank={1}
           data-gap={0}
           data-paid={best.ebay || best.source.startsWith("tcgplayer") ? 1 : 0}
-          className={`${best.ebay ? "btn-ebay" : "btn-primary"} shrink-0`}
+          className={`${best.ebay ? "btn-ebay" : plain ? "btn-ghost" : "btn-primary"} shrink-0`}
         >
           Buy →
         </a>
