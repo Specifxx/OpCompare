@@ -4510,3 +4510,12 @@ Set · No. so a four-digit move never touches the number. The page uses `pageOgO
   status `added`). The watchdog flagged TCGandChill's suggestion for 8 days although the store had been added.
 - **Email off is shown, not flagged.** The owner chose no Resend on 2026-11-01, so `evalEmail("off")` is `ok` with a note
   saying how to switch it on; a yellow line nobody intends to act on hid real warnings on Empire HQ.
+## The weekly Hot 100 at /hot-100 — 2026-11-18
+
+**What.** `/hot-100`: the cards whose TCGplayer market price rose most over the last seven days (the catalogue's `change7d`,
+the number `/movers` ranks by), biggest first, up to 100, worth US$3 or more (`lib/hot100.ts`, pure, from the cached
+`getCatalog()` only). A short week is the Hot 37, never padded (RiftCompare's Hot 40 rule). No last-week places here: those need
+every card's history file, and the page stays on the one cached read. Share image: the site's default (`pageOg`).
+
+**Why.** Owner, 2026-11-18: one stable URL per site to post on Reddit once a week as a link and title (tagged
+`utm_source=reddit&utm_medium=social&utm_campaign=hot100-opcompare-<date>`). Rides the weekly release.
