@@ -25,6 +25,7 @@
 // RiftCompare's verification/reset (OP is OAuth-only), trial, checkout-recovery,
 // premium-offer, win-back, release-day, user-digest and consulting mail are not
 // ported (wave2-plan §7).
+import { MAILING_ADDRESS, mailingAddressRow } from "./mailing-address";
 import { SITE_NAME, SITE_URL } from "./site";
 import { TIER_NAMES, planPrice } from "./plans";
 import { SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -651,6 +652,7 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
     "You're getting this because you asked OP Compare to watch these cards for price changes. Free alerts come at most once a week; Plus and Premium target, below-market and restock alerts can arrive after each price update.",
     `Pause alert emails (your watchlist is kept): ${links.pause}`,
     `Delete all my watches: ${links.deleteAll}`,
+    MAILING_ADDRESS,
   ].join("\n");
 }
 
@@ -840,6 +842,7 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
       ${footer}
+      ${mailingAddressRow(C.muted)}
     </table></td></tr></table></body></html>`;
 }
 // ─── Weekly newsletter digest ────────────────────────────────────────────────
