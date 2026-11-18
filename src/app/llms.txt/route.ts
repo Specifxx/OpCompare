@@ -53,6 +53,7 @@ export async function GET() {
     ...POSTS.map((p) => `- [${titles.get(p.slug) ?? p.slug}](${u(postHref(p))}): ${p.description}`),
     "",
     "## Citing these prices",
+    `- [Price file (JSON)](${u("/prices.json")}): the cheapest in-stock store price per product and market, free to use and open to every origin.`,
     `- Every card and sealed page shows each store's price with the date it was read (stores are read twice a day), in the market's own currency; quote the date and the market.`,
     `- Suggested credit: "Source: ${SITE_NAME} (${SITE_URL}), prices as of <date>", linking the page the price came from.`,
     "",

@@ -4421,3 +4421,7 @@ movers), Sealed, Cart (opens the drawer), Menu (`useMegaMenu`, the same full-scr
 - `BOTTOM_NAV` in `lib/site.ts`: shipped "optin" (`?bn=1`), flipped to "on" after the phone harness; "off" is the rollback.
 - Found on the way, not changed: the closed cart drawer and the closed menu are always in the DOM with `aria-modal="true"` (inert and
   aria-hidden), and the phone dock's "a dialog is open" check matches them, so the dock may never show. Reported to the ads thread.
+
+## 2026-11-18: llms.txt points AI agents at the free price file
+
+`/prices.json` already existed, but nothing an agent reads said so. `llms.txt` now has a "Free price data and citing" block: the file, that it is free and open to every origin, the date to quote and a suggested credit line. No new route, no spend.
