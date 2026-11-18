@@ -8,6 +8,7 @@ import type { HomeStats, PopularKind } from "@/lib/home";
 import { dearFirst, FEATURE_CARD_MIN_CENTS } from "@/lib/featured-floor";
 import { movers, newestBoosterSet, upcomingSets } from "@/lib/selectors";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
+import { rankCards } from "@/lib/home-demand";
 import type { TileItem } from "./PopularCardsCarousel";
 import type { TrendingCard } from "./TrendingChips";
 
@@ -43,11 +44,12 @@ export async function loadHomeData(): Promise<HomeData> {
   const [cat, stats, popular, recent, deals, sealed] = await Promise.all([
     getCatalog(),
     getHomeStats(),
-    getPopular(12),
+    getPopular(24),
     getRecentlyUpdated(72),
     Promise.all(MARKETS.map((m) => getTopDeals(m))),
     getSealedCatalog().catch(() => [] as SealedLite[]),
   ]);
+  const ranked = rankCards(popular.cards).slice(0, 12);
   const newest = newestBoosterSet(cat.sets);
   // Biggest movers: TCGplayer's 7-day market change is one worldwide figure,
   // so the list is the same for every market (prices still localise).
@@ -59,10 +61,11 @@ export async function loadHomeData(): Promise<HomeData> {
     cat,
     stats,
     renderedAt: new Date().toISOString(),
-    popular: popular.cards.map((c) => tileOf(cat, c)),
+    // Most likely to earn first (owner, 2026-11-18; lib/home-rank.ts): 24 searched cards ranked, 12 shown, the trending six their head.
+    popular: ranked.map((c) => tileOf(cat, c)),
     popularKind: popular.kind,
     chaseSetName: popular.kind === "chase" ? newest?.name : undefined,
-    trending: popular.cards.slice(0, 6).map((c) => ({ id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant })),
+    trending: ranked.slice(0, 6).map((c) => ({ id: c.id, slug: c.slug, name: c.name, number: c.number, variant: c.variant })),
     biggestMovers: moved.map((c) => ({ ...tileOf(cat, c), pct: Math.round((c.change7d ?? 0) * 10) / 10 })),
     recentlyUpdated: dearFirst(recent, (r) => r.card.marketUsd, FEATURE_CARD_MIN_CENTS, 6).slice(0, 24).map((r) => ({ ...tileOf(cat, r.card), pct: r.pct })),
     dealsByCountry: Object.fromEntries(MARKETS.map((m, i) => [m, deals[i]])) as Record<Country, TopDeals>,
