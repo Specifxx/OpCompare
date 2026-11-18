@@ -1,3 +1,4 @@
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 import { cleanPageNumber } from "@/lib/facets";
 import Link from "next/link";
@@ -112,6 +113,7 @@ export default async function SetPage({ params, searchParams }: Props) {
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         {future && cards.length > 0 ? <>{set.name} spoilers: every card revealed so far</> : <>{set.name} card list &amp; prices</>}
       </h1>
+      <ShareButton className="mt-3" name={`${set.name} card list & prices`} medium="set" path={`/sets/${set.slug}`} />
       <div className="mt-3 max-w-3xl space-y-3 text-[15px] leading-relaxed text-slate-300">
         <p>
           {set.name} ({set.code}){" "}

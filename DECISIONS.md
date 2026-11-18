@@ -4441,3 +4441,12 @@ ten written notes. Rift's own record also holds "too many popups asking for my o
   vote is `votes/<site>/<day>/<time>-up|down-<rand>.json`, counted from its file name by RiftCompare's daily *Reports
   triage*, which now prints a 7-day feedback table per site and flags every note for a look. No email address is asked
   for or kept: the thanks shows the site's inbox for anyone who wants a reply.
+
+## 2026-11-18: Share for a deal, and guides and set pages count their shares (owner)
+
+Owner: a share feature people pass around, and "if you share … you can open Deal Finder … gives incentive". The share button,
+tagged links and share images already existed (2026-11-02), so this adds a 50/50 share-for-a-deal test: half of browsers
+(`share_arm` in localStorage, `pickShareArm` in `lib/share-link.ts`) see "Share · get a deal", and after a share completes a
+small card under the button (their own tap, ✕ to close) points to Deal Finder. Nothing that was gated is unlocked; Premium is
+unchanged. Events `share { medium, arm }`, `share_unlock { medium }`; read the share rate per arm after two weeks. The blog's
+`ShareRow` shared bare URLs: it now shares `utm_source=share&utm_medium=guide` and counts each tap. Set pages get the button.
