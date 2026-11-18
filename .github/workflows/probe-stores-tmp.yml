@@ -1,0 +1,24 @@
+name: Probe candidate stores (temporary)
+on:
+  push:
+    branches: [claude/project-thread-oscc7y]
+    paths: [.github/workflows/probe-stores-tmp.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          UA="OP Compare store probe (contact: compareempire@gmail.com)"
+          b=https://www.tcgandchill.com.au
+          curl -s -m 30 -A "$UA" -o /dev/null -w "robots %{http_code}\n" $b/robots.txt
+          curl -s -m 30 -A "$UA" -o /dev/null -w "shipping-policy %{http_code}\n" $b/policies/shipping-policy
+          curl -s -m 30 -A "$UA" -o /dev/null -w "refund-policy %{http_code}\n" $b/policies/refund-policy
+          curl -s -m 30 -A "$UA" "$b/collections.json?limit=250" | jq -r '.collections[]?|select(.handle|test("one-piece|op-|onepiece";"i"))|"\(.handle) \(.products_count)"'
+          for h in $(curl -s -m 30 -A "$UA" "$b/collections.json?limit=250" | jq -r '.collections[]?|select(.handle|test("one-piece|onepiece";"i"))|.handle' | head -3); do
+            sleep 1
+            curl -s -m 30 -A "$UA" "$b/collections/$h/products.json?limit=250" > /tmp/p.json
+            echo "-- $h: $(jq '.products|length' /tmp/p.json) products; sample:"
+            jq -r '.products[0:4][]|"   \(.title) | \(.variants[0].price) | avail=\(.variants[0].available) | vendor=\(.vendor)"' /tmp/p.json
+          done
+          curl -s -m 30 -A "$UA" $b/meta.json | jq -r '"currency=\(.currency) country=\(.country)"' 2>/dev/null || true
