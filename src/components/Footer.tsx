@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME } from "@/lib/site";
 import { FooterNav } from "./FooterNav";
 import { ShareRow } from "./ShareRow";
+import { FeedbackAsk } from "@/components/FeedbackAsk";
 
 // The site footer — RiftCompare's footer markup (inline in its layout.tsx),
 // moved into one component. The rail reservation sits on the <footer> itself
@@ -17,6 +18,8 @@ import { ShareRow } from "./ShareRow";
 export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) {
   return (
     <footer className="border-t border-ink-800 py-8 pl-[var(--sidenav-w)] text-center text-xs text-slate-500">
+      {/* "Was this page useful?" (owner, 2026-11-18: more feedback). One inline line, never a pop-up. */}
+      <div className="container-app mb-6 flex justify-center text-left text-sm text-slate-300"><FeedbackAsk email={CONTACT_EMAIL} /></div>
       <div className="container-app">
         {newsletter}
         <FooterNav />
@@ -35,6 +38,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
           <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
           <Link href="/creators" className="tap-link text-slate-300 hover:text-brand-400">Creators</Link>
           <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+          <Link href="/feedback" className="tap-link text-slate-300 hover:text-brand-400">Send feedback</Link>
           <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
           <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>
           {DISCORD_URL ? (
