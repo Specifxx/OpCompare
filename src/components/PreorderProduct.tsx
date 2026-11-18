@@ -4,7 +4,9 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import type { SealedLite } from "@/lib/data";
 import type { ProductBoard, SoldOutRow } from "@/lib/preorders";
 import type { BuyRow } from "@/lib/quick-view";
-import { ebayLabel, ebaySearchUrl, onePieceEbayQuery, outboundRel, affiliateUrl } from "@/lib/affiliate";
+import { ebayLabel, ebaySearchUrl, onePieceEbayQuery, outboundRel, affiliateUrl, isPaidLink } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { money, shortDate, usd } from "@/lib/format";
 
 const VISIBLE = 5;
@@ -154,17 +156,19 @@ export function PreorderProduct({
         aria: `See ${s.name} on TCGplayer`,
       });
 
-  const row = (r: BuyRow, i: number) => (
+  const row = (r: BuyRow, i: number) => { const bt = bestTreatment(i === 0, { ebay: r.ebay, source: r.source, paid: isPaidLink(r.href) }); return (
     <li key={`${r.source}-${i}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
       <span className="num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="min-w-0 break-words text-[15px] font-semibold text-white">{r.label}</span>
-          {i === 0 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest store</span> : null}
+          {bt === "loud" ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">Cheapest store</span> : null}
+          {bt === "plain" ? <BestPriceTag /> : null}
         </p>
+        {bt === "plain" ? <BestPriceNote has={{ ebay: true, tcgplayer: true }} className="mt-0.5" /> : null}
         <p className="mt-0.5 text-xs text-slate-400">pre-order · {r.postage}</p>
       </div>
-      <span className="num shrink-0 text-right text-base font-bold text-accent sm:text-lg">{money(r.priceCents, country)}</span>
+      <span className={`num shrink-0 text-right text-base font-bold sm:text-lg ${bt === "loud" ? "text-accent" : "text-white"}`}>{money(r.priceCents, country)}</span>
       <a
         href={r.href}
         target="_blank"
@@ -180,7 +184,7 @@ export function PreorderProduct({
         <span className="sm:hidden">→</span>
       </a>
     </li>
-  );
+  ); };
 
   // Sold out or not seen lately: no number, no price to buy at, no buy button.
   const dead = (o: SoldOutRow) => (

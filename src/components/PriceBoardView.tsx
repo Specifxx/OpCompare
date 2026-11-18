@@ -4,6 +4,8 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
 import { ebayLabel, outboundRel } from "@/lib/affiliate";
 import { PIN_OUTLINE, pinnedOrder } from "@/lib/pinned-order";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { money } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { StoreCodeChip } from "./StoreCodeChip";
@@ -90,6 +92,8 @@ export function PriceBoardView({
   };
   const fetchAfter = (o: (typeof ordered)[number] | null) => fetchItems.filter((f) => fetchAnchor(f.price) === o).map((f) => f.li);
   const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
+  // The eBay row always exists on this board (a listing, else the pinned search row); TCGplayer's only when it is drawn.
+  const hasMarketRows = { ebay: true, tcgplayer: Boolean(pinTcg) || showTcgRef };
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
   const newest = open.length ? open.reduce((a, b) => (a.updatedAt > b.updatedAt ? a : b)).updatedAt : null;
 
@@ -166,15 +170,20 @@ export function PriceBoardView({
             const tcg = o.source === "tcgplayer";
             const isEbay = Boolean(o.ebay);
             const surface = pinned ? "board_pinned" : "board_row";
+            // Cheapest mark (owner, 2026-11-18): loud only on a paid row; a plain store gets a small neutral tag and a note.
+            const best = bestTreatment(i === 0 && open.length > 1, o);
+            const plainBest = best === "plain";
             return [
-              <li key={`${o.source}-${country}`} data-price-row="" data-cents={o.priceCents > 0 ? o.priceCents : undefined} data-paid={o.paid || o.ebay || tcg ? 1 : 0} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${i === 0 && open.length > 1 ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
+              <li key={`${o.source}-${country}`} data-price-row="" data-cents={o.priceCents > 0 ? o.priceCents : undefined} data-paid={o.paid || o.ebay || tcg ? 1 : 0} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${best === "loud" ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
                 <span className="pb-n num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
                 <div className="pb-info min-w-0 flex-1">
                   <p className="pb-name flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{o.label}</span>
                     {o.host && <StoreVote url={o.host} name={o.label} className="text-slate-400" />}
-                    {i === 0 && open.length > 1 ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">Cheapest</span> : null}
+                    {best === "loud" ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">Cheapest</span> : null}
+                    {plainBest ? <BestPriceTag /> : null}
                   </p>
+                  {plainBest ? <BestPriceNote has={hasMarketRows} className="mt-0.5" /> : null}
                   {isEbay ? <p className="pb-sub mt-0.5 text-xs text-slate-400">Cheapest matching listing we found</p> : null}
                   <p className="pb-meta mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
                     {o.condition ? <span className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 font-semibold text-slate-200">{o.condition}</span> : null}
@@ -200,7 +209,7 @@ export function PriceBoardView({
                   </p>
                 </div>
                 <span className="pb-price shrink-0 text-right">
-                  <span className={`num block text-base font-bold sm:text-lg ${i === 0 ? "text-accent" : "text-white"}`}>{money(o.priceCents, country)}</span>
+                  <span className={`num block text-base font-bold sm:text-lg ${best === "loud" ? "text-accent" : "text-white"}`}>{money(o.priceCents, country)}</span>
                   {pinned && i > 0 && open[0].priceCents > 0 ? (
                     <span className="num block text-[11px] text-slate-500">+{Math.round(((o.priceCents - open[0].priceCents) / open[0].priceCents) * 100)}% vs cheapest</span>
                   ) : null}
@@ -209,10 +218,10 @@ export function PriceBoardView({
                 {o.host ? (
                   <CartAddButton href={o.href} productUrl={o.productUrl} storeName={o.label} title={name ?? slug ?? "Item"} detail={o.condition ?? null} priceCents={o.priceCents} currency={c.currency} image={image} className="pb-cart text-slate-300" />
                 ) : null}
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`${tcg ? "btn-tcg" : pinned || best === "loud" ? "btn-primary" : "btn-ghost"} hidden shrink-0 whitespace-nowrap sm:inline-flex sm:w-48`}>
                   {tcg ? "Buy on TCGplayer →" : isEbay ? "Buy on eBay →" : "View deal →"}
                 </a>
-                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`pb-go ${tcg ? "btn-tcg" : pinned || i === 0 ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
+                <a href={o.href} target="_blank" rel={outboundRel()} data-retailer={o.retailer} data-page={page} data-card={slug} data-surface={surface} className={`pb-go ${tcg ? "btn-tcg" : pinned || best === "loud" ? "btn-primary" : "btn-ghost"} shrink-0 px-3 sm:hidden`} aria-label={isEbay ? `Buy on ${o.label}` : `Buy at ${o.label}`}>
                   →
                 </a>
               </li>,
