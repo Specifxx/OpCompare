@@ -409,7 +409,6 @@ export default async function CardPage({ params }: Props) {
           { name: card.name },
         ]}
       />
-      <InlineAds page="card" className="mt-4" />
 
       {/* Phones: the eBay button first, above the art (the header copy is lg only). */}
       <EbayTopButton query={ebayQuery} name={card.name} listings={ebayTop} card={card.slug} className="mb-4 lg:hidden" />
@@ -762,6 +761,8 @@ export default async function CardPage({ params }: Props) {
 
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
       <MarketStickyBuyBar best={best} boardId="price-comparison" page="card" slug={card.slug} name={title} cardId={card.id} />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="card" className="mt-12" />
     </div>
   );
 }

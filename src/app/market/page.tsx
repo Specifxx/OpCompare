@@ -85,7 +85,6 @@ export default async function MarketPage() {
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Market index" }]} />
-      <InlineAds page="market" className="mt-4" />
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">The OP Compare Index</h1>
       <HubIntro path="/market" />
       {sentence ? <p className="mt-4 max-w-3xl text-[15px] font-semibold text-white">{sentence}</p> : null}
@@ -223,6 +222,8 @@ export default async function MarketPage() {
         </pre>
       </section>
       <RelatedGuides guides={guides} className="card-surface mt-6 p-5" />
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="market" className="mt-12" />
     </div>
   );
 }

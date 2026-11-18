@@ -63,9 +63,11 @@ test("one block per page, in the right place, never on an article", async () => 
   }
   assert.doesNotMatch(code("src/components/blog/ArticleView.tsx"), /<InlineAds\b/, "no new block on articles");
   const card = read("src/app/card/[slug]/page.tsx");
-  assert.ok(card.indexOf("<InlineAds") < card.indexOf("<MarketTiles"), "the banners are at the top of the card page (owner, 2026-11-14)");
+  assert.ok(card.indexOf("<InlineAds") > card.indexOf("<MarketTiles"), "below the card page's prices (2026-11-19, core-update quality pass)");
   const sealed = read("src/app/sealed/[slug]/page.tsx");
-  assert.ok(sealed.indexOf("<InlineAds") < sealed.indexOf("<PriceBoard"), "the banners are at the top of the sealed page");
+  assert.ok(sealed.indexOf("<InlineAds") > sealed.indexOf("<PriceBoard"), "below the sealed page's price board");
+  const layout = read("src/app/layout.tsx");
+  assert.ok(layout.indexOf("<FooterAds />") > layout.indexOf("{children}"), "the zone that places the block follows the page's content");
   const { footerMiniAllowed } = await import("../src/components/FooterMiniChase");
   for (const p of ["/", "/au", "/card/x", "/sealed/x", "/sets/x", "/browse", "/blog/x", "/guides/x", "/account"]) assert.equal(footerMiniAllowed(p), false, p);
   for (const p of ["/trade", "/tools/best-basket"]) assert.equal(footerMiniAllowed(p), true, p);

@@ -4595,3 +4595,14 @@ sitting on top of it.
   `var(--bn-space)` + a small gap up, and the body's bottom padding follows it. Hidden, it slides fully off-screen (transform only, CLS 0).
 - **Measured** (local build, dock stacked): Pixel 7 412×915 nav + dock take 129px (14.1%); iPhone 15 393×852 with a 34px safe area
   143px (16.8%); iPhone SE 375×667 129px (19.3%); the old flush bar took about the same plus the full safe area.
+
+## 2026-11-19: Ads below content, fewer links, who runs it (core-update quality pass)
+
+Owner, 2026-11-19: "all the ads that can negatively impact our indexing let's remove and have more strategically placed
+ads". The footer ad zone (`FooterAds`) now sits after the page's own content in `layout.tsx`, and every page's
+`InlineAds` block is the last thing in its main column, never above a price board or a hero. The footer site map keeps
+20 links (`FOOTER_KEEP` in `nav-groups.ts`), down from about 54. The "other card games" block (`FamilyCluster`) is off
+(`CROSS_SITE_BLOCKS`): the only link to our other sites is the footer's `/our-sites`, which the about page also names
+instead of listing every sister. The about page says who runs the site (Bill and George), that AI tools help with code
+and guides while prices come from a program, and what the group costs to run (about A$790 a month, our books, 30 days
+to 15 Nov 2026).

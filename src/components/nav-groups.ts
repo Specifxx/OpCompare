@@ -236,22 +236,31 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 const byTitle = Object.fromEntries(NAV_GROUPS.map((g) => [g.title, g.links.filter((l) => !l.hideInFooter)]));
 
 // The footer site map: RiftCompare's four columns, re-bucketed from the groups
-// above (its third column drops "& games" with the games).
+// above (its third column drops "& games" with the games). Since 2026-11-19 (core-update quality pass, "Fewer links on
+// every page") each column keeps only the pages a visitor most often wants (FOOTER_KEEP, ~20 links, was ~54); the header
+// menus and the hubs reach the rest.
+const FOOTER_KEEP = new Set([
+  "/browse", "/price-guide", "/sealed", "/market", "/movers", "/preorders",
+  "/sets", "/leaders", "/cards", "/release-dates",
+  "/tools/deal-finder", "/tools/best-basket", "/tools", "/decks",
+  "/guides", "/blog", "/about", "/methodology", "/how-we-pick-stores", "/contact",
+]);
+const keep = (links: NavGroup["links"]) => links.filter((l) => FOOTER_KEEP.has(l.href));
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? [])],
+    links: keep([...(byTitle["Prices"] ?? [])]),
   },
   {
     title: "Cards & collection",
-    links: [...(byTitle["The card database"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    links: keep([...(byTitle["The card database"] ?? []), ...(byTitle["Your collection"] ?? [])]),
   },
   {
     title: "Tools & decks",
-    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? [])],
+    links: keep([...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? [])]),
   },
   {
     title: "Learn & help",
-    links: [...(byTitle["Guides & News"] ?? []), ...(byTitle["Help"] ?? [])],
+    links: keep([...(byTitle["Guides & News"] ?? []), ...(byTitle["Help"] ?? [])]),
   },
 ];

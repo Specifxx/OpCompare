@@ -117,7 +117,6 @@ export default async function SetsPage() {
           </InShort>
         </div>
       </header>
-      <InlineAds page="sets" className="mt-4" />
 
       {upcoming.length ? (
         <section className="mt-10">
@@ -164,6 +163,8 @@ export default async function SetsPage() {
           </div>
         </section>
       ))}
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="sets" className="mt-12" />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { FooterMiniChase } from "./FooterMiniChase";
 import { usePathname } from "next/navigation";
 
-// The top-of-page ad zone (owner, 2026-11-14: the banners sit at the top): the two InlineAds banners, where a page does not carry them itself.
+// The ad zone after the page's content (2026-11-19, core-update quality pass; it sat at the top from 2026-11-14): the InlineAds block, where a page does not carry it itself.
 // Not shown on the policy pages, nor to Plus and Premium members (data-ad-placement, lib/ad-free.ts).
 const BANNER_FREE = ["/about", "/authors", "/contact", "/editorial-policy", "/methodology", "/privacy", "/terms"];
 

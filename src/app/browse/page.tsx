@@ -110,7 +110,6 @@ export default async function BrowsePage({
           </ReadMore>
         </div>
       </header>
-      <InlineAds page="browse" className="mt-4" />
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-w-0">
           {/* One copy of the filters: a CSS-only toggle on phones, always open from lg. */}
@@ -225,6 +224,8 @@ export default async function BrowsePage({
           <InlineSignupPrompt className="mt-8" surface="browse" title="Find the cheap ones, free" body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price." />
         </div>
       </div>
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds page="browse" className="mt-12" />
     </div>
   );
 }
