@@ -4468,3 +4468,7 @@ the day labelled "Add to cart" buttons went on every price row and the quick vie
 rows fell from about 25 clicks a day to about 4. So the cart is switched off with one constant, `CART_ON` in `lib/cart-list.ts`:
 no row draws an Add to cart button, and the header and bottom-nav cart appear only for a visitor who already has lines, so nobody
 loses a cart. The cart code stays; `CART_ON = true` brings it back. Read buy clicks per visitor for 19-25 Nov against 14-17 Nov.
+
+## 2026-11-18: the amber of the Amazon button is not Amazon's own orange
+
+The first cut used #FFA41C, which is Amazon's brand orange. Amazon's Associates agreement bars styling that could pass for Amazon, so the button is now a distinct, calmer amber (#F5A524, hover #DC8A0B, border #B7791F, dark text #111): still clearly different from the site's normal buy button, not Amazon's colour.

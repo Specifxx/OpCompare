@@ -9,7 +9,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
 test(".btn-amazon is amber with dark ink in both themes", () => {
   const css = read("src/app/globals.css");
-  assert.match(css, /\.btn-amazon \{\s*@apply btn border border-\[#e08a00\] bg-\[#ffa41c\] text-\[#111111\] hover:bg-\[#fa8900\]/);
+  assert.match(css, /\.btn-amazon \{\s*@apply btn border border-\[#B7791F\] bg-\[#F5A524\] text-\[#111111\] hover:bg-\[#DC8A0B\]/);
 });
 
 test("the Amazon row's buttons use .btn-amazon, keep rel and tracking", () => {
