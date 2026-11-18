@@ -4370,3 +4370,7 @@ offers the page's own eBay and TCGplayer links, copied unchanged (TCGplayer's is
 event to Vercel): half the visitors are the control arm (localStorage `rn-arm`); `nudge_eligible` {arm} fires for both, `nudge_shown` and `nudge_click` {which} for "on", and
 `nudge_paid_click` {arm, network} for any eBay or TCGplayer click after an eligible return in either arm. Lift = `nudge_paid_click` per `nudge_eligible`, on against off.
 Rollback: remove `<ReturnNudge />` from the root layout.
+
+## 2026-11-18: cart checkout opens every store or none (owner)
+
+Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
