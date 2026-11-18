@@ -5,9 +5,24 @@ import { useMemo, useState } from "react";
 import { cardImage } from "@/lib/images";
 import type { Constituent } from "@/lib/market-stats";
 
-type SortKey = "rank" | "name" | "weight" | "price" | "d7";
+type SortKey = "rank" | "name" | "weight" | "price" | "d7" | "abs7";
 type Dir = "asc" | "desc";
-const DEFAULT_DIR: Record<SortKey, Dir> = { rank: "asc", name: "asc", weight: "desc", price: "desc", d7: "desc" };
+const DEFAULT_DIR: Record<SortKey, Dir> = { rank: "asc", name: "asc", weight: "desc", price: "desc", d7: "desc", abs7: "desc" };
+
+// The "Sort by" menu (visitor feedback, 2026-11-18: "sort index by % of gain or
+// loss, better than just toggling the gainers or losers button"). Headings still
+// sort; this is the control phones can see, where the 7-day column is hidden.
+const SORTS: { key: SortKey; dir: Dir; label: string }[] = [
+  { key: "rank", dir: "asc", label: "Index rank" },
+  { key: "d7", dir: "desc", label: "Biggest % gain (7 days)" },
+  { key: "d7", dir: "asc", label: "Biggest % loss (7 days)" },
+  { key: "abs7", dir: "desc", label: "Biggest % move, up or down (7 days)" },
+  { key: "price", dir: "desc", label: "Price: high to low" },
+  { key: "price", dir: "asc", label: "Price: low to high" },
+  { key: "weight", dir: "desc", label: "Index weight" },
+  { key: "name", dir: "asc", label: "Name A–Z" },
+];
+const HEADING: Record<SortKey, string> = { rank: "#", name: "Card", weight: "Weight", price: "Price", d7: "7-day %", abs7: "7-day move" };
 const usd = (cents: number) => `US$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents >= 100000 ? 0 : 2, maximumFractionDigits: cents >= 100000 ? 0 : 2 })}`;
 
 // The interactive constituents table (RiftCompare's IndexConstituents): a text
@@ -29,7 +44,7 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
       return !needle || `${c.name} ${c.variant ?? ""} ${c.setCode} ${c.number ?? ""}`.toLowerCase().includes(needle);
     });
     const val = (r: { c: Constituent; rank: number }): number | string | null =>
-      sortKey === "rank" ? r.rank : sortKey === "name" ? r.c.name.toLowerCase() : sortKey === "weight" ? r.c.weightPct : sortKey === "price" ? r.c.priceCents : r.c.d7pct;
+      sortKey === "rank" ? r.rank : sortKey === "name" ? r.c.name.toLowerCase() : sortKey === "weight" ? r.c.weightPct : sortKey === "price" ? r.c.priceCents : sortKey === "abs7" ? (r.c.d7pct == null ? null : Math.abs(r.c.d7pct)) : r.c.d7pct;
     const sign = dir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) => {
       const va = val(a);
@@ -41,6 +56,25 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
       return ((va as number) - (vb as number)) * sign;
     });
   }, [ranked, q, move, sortKey, dir]);
+
+  const sortValue = `${sortKey}:${dir}`;
+  const chosen = SORTS.find((o) => `${o.key}:${o.dir}` === sortValue);
+
+  function pickSort(v: string) {
+    const [k, d] = v.split(":") as [SortKey, Dir];
+    setSortKey(k);
+    setDir(d);
+  }
+
+  // A Gainers/Fallers tap on the default order also puts that side's biggest
+  // move first; a sort the visitor chose is kept.
+  function pickMove(k: "all" | "up" | "down") {
+    setMove(k);
+    if (sortKey === "rank" && k !== "all") {
+      setSortKey("d7");
+      setDir(k === "up" ? "desc" : "asc");
+    }
+  }
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -64,11 +98,26 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
             className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-sm"
           />
         </div>
+        <label className="flex items-center gap-2 text-xs text-slate-400">
+          <span className="shrink-0 font-semibold">Sort by</span>
+          {/* text-base below sm: iOS Safari zooms in on a field under 16px. */}
+          <select
+            value={sortValue}
+            onChange={(e) => pickSort(e.target.value)}
+            aria-label="Sort the Index"
+            className="min-h-11 w-full min-w-0 rounded-lg border border-ink-700 bg-ink-900 px-2 text-base text-white focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:w-auto sm:py-2 sm:text-sm"
+          >
+            {!chosen && <option value={sortValue}>{HEADING[sortKey]} {dir === "asc" ? "▲" : "▼"}</option>}
+            {SORTS.map((o) => (
+              <option key={`${o.key}:${o.dir}`} value={`${o.key}:${o.dir}`}>{o.label}</option>
+            ))}
+          </select>
+        </label>
         <div className="flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">
           {([["all", "All"], ["up", "▲ Gainers"], ["down", "▼ Fallers"]] as const).map(([k, label]) => (
             <button
               key={k}
-              onClick={() => setMove(k)}
+              onClick={() => pickMove(k)}
               aria-pressed={move === k}
               className={`inline-flex min-h-11 items-center rounded-md px-3 text-xs font-semibold transition-colors sm:min-h-0 sm:py-1.5 ${move === k ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"} ${k === "up" && move === k ? "text-up" : ""} ${k === "down" && move === k ? "text-down" : ""}`}
             >
@@ -86,7 +135,7 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
               <SortTh label="Card" col="name" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" />
               <SortTh label="Weight" col="weight" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-2 sm:table-cell" align="right" />
               <SortTh label="Price" col="price" sortKey={sortKey} dir={dir} onSort={toggleSort} className="w-[6.75rem] pl-2 pr-3 sm:w-auto sm:px-2" align="right" />
-              <SortTh label="7-day" col="d7" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-4 sm:table-cell" align="right" />
+              <SortTh label="7-day" col="d7" sortKey={sortKey === "abs7" ? "d7" : sortKey} dir={dir} onSort={toggleSort} className="hidden px-4 sm:table-cell" align="right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
@@ -113,7 +162,7 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
                 <td className="num hidden px-2 py-2 text-right text-xs text-slate-400 sm:table-cell">{c.weightPct}%</td>
                 <td className="num py-2 pl-2 pr-3 text-right font-semibold text-white sm:px-2">
                   {usd(c.priceCents)}
-                  <span className={`block text-[11px] font-semibold sm:hidden ${pctClass(c.d7pct)}`}>{fmtPct(c.d7pct)}</span>
+                  <span className={`block text-[11px] font-semibold sm:hidden ${pctClass(c.d7pct)}`}>{fmtPct(c.d7pct)}<span className="font-normal text-slate-500"> 7d</span></span>
                 </td>
                 <td className={`num hidden px-4 py-2 text-right font-semibold sm:table-cell ${pctClass(c.d7pct)}`}>{fmtPct(c.d7pct)}</td>
               </tr>
@@ -123,7 +172,7 @@ export function IndexConstituents({ constituents }: { constituents: Constituent[
         {rows.length === 0 ? <p className="px-4 py-10 text-center text-sm text-slate-500">No cards match that filter.</p> : null}
       </div>
       <p className="mt-2 text-[11px] text-slate-600">
-        Showing {rows.length} of {constituents.length} · click a heading to sort ▲▼.
+        Showing {rows.length} of {constituents.length} · sorted by {(chosen?.label ?? `${HEADING[sortKey]} ${dir === "asc" ? "▲" : "▼"}`).toLowerCase()} · % changes are each card&apos;s own 7-day move.
       </p>
     </div>
   );
