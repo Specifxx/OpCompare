@@ -42,6 +42,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
+import { ReturnBeacon } from "@/components/ReturnBeacon";
 
 // RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
 // everything needs to be the same"). Headings — Archivo (since 2026-11-14,
@@ -238,6 +239,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ReturnNudge />
         <ShareArrival />
         <GAPageViewTracker />
+        <ReturnBeacon />
       </body>
     </html>
   );
