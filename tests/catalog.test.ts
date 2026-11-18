@@ -131,6 +131,23 @@ test("sealed kinds", () => {
   assert.equal(sealedKind("Starter Decks 1-4 [Set of 4]"), null);
 });
 
+test("an unnumbered spoiled card is not a sealed product (2026-11-18)", () => {
+  // TCGplayer lists OP-18 spoilers with no number or rarity yet; they were
+  // filed as sealed "Collection" and showed a single's price on /op18-preorders.
+  for (const name of ["Pell", "Eyelashes", "Nami (Heroines Battle Vol.2)", "Nami (Heroines Battle Vol.2 Winner)"]) assert.equal(sealedKind(name), null, name);
+  // Every real product that reached the fallback on 2026-11-18 stays a Collection.
+  for (const name of [
+    "One Piece English Version 3rd Anniversary Set (Sealed Promotional Bundle)",
+    "Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack",
+    "One Piece Mini Case Set Vol. 3 Boa Hancock (Ryuda Artwork)",
+    "One Piece Mini Case Set Vol. 3 -Shanks- (Sunohara Artwork)",
+    "Seven Warlords of the Sea Binder Set (Bundle)",
+    "Official 9 Pocket Binder Vol.1 (Sealed Promotional Bundle)",
+    "One Piece Heroines Special Set (Sealed Promotional Bundle)",
+  ]) assert.equal(sealedKind(name), "Collection", name);
+  assert.equal(sealedKind("One Piece Mini Case Set Vol. 3 Display Case"), "Collection");
+});
+
 test("pack counts only where certain", () => {
   assert.equal(sealedPackCount("Booster Box", "booster"), 24);
   assert.equal(sealedPackCount("Booster Box", "extra"), null);

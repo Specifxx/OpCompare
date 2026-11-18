@@ -4555,3 +4555,15 @@ badges, JSON-LD, feeds and alerts are untouched (display only). Pinned by `tests
 
 **Why.** The loud green on a non-paying store pulled clicks away from our paid rows. **Measure:** paid clicks per 100 buy clicks (`buy_click` with
 `data-paid`) for two weeks before and after the release that carries this.
+
+## 2026-11-18: An unnumbered spoiled card is not a sealed product
+
+`/op18-preorders` listed "Pell" (US$3.99) and "Eyelashes" (US$1.99) as OP-18 sealed products, and the promo set held two "Nami (Heroines
+Battle Vol.2)" rows priced at a single's price. TCGplayer lists spoiled cards before they carry a number or rarity, `isSealedProduct` reads
+"no number, no rarity" as sealed, and `sealedKind`'s last line filed any unknown name as a "Collection". Now that fallback needs a word only a
+product's name carries (set, pack, box, case, deck, display, binder, bundle, collection, kit, tin, sleeves, playmat, storage); anything else is
+refused and becomes a card once TCGplayer numbers it. Every real Collection on 2026-11-18 still matches (`tests/catalog.test.ts`). The import
+also drops the Sealed row of any product TCGplayer listed today that is no longer read as sealed (only ids seen in today's groups, so a group
+that failed to load removes nothing). Their `/sealed/<slug>` pages, days old, are gone: they were wrong products, not a path change.
+
+**Why.** A wrong product on a launch page is worse than a missing one, and these sat on the OP-18 page two days before release.

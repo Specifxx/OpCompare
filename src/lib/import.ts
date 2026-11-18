@@ -230,6 +230,17 @@ export async function importCatalog(log: Log, cacheDir?: string): Promise<Catalo
     ["name", "setId", "kind", "packCount", "imageUrl", "tcgplayerUrl", "releasedOn", "presale", "marketUsd", "updatedAt"],
   );
 
+  // A product TCGplayer listed today that is no longer read as sealed (an
+  // unnumbered spoiled card the old fallback filed as a "Collection", or one
+  // TCGplayer has since numbered) loses its sealed row. Only ids seen in
+  // today's groups: a group that failed to load removes nothing (2026-11-18).
+  const sealedIds = new Set(sealed.map((s) => s.id));
+  const notSealed = [...seen].filter((id) => !sealedIds.has(id));
+  if (notSealed.length) {
+    const dropped = await pub.sealed.deleteMany({ where: { id: { in: notSealed } } });
+    if (dropped.count) console.log(`Sealed rows dropped (not sealed any more): ${dropped.count}`);
+  }
+
   // TCGplayer's cheapest listing is the US market's TCGplayer offer. Replaced
   // wholesale: a product with no listing today has no row today.
   const tcgRows = [

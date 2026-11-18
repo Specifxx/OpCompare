@@ -6,7 +6,9 @@ import type { CardLite } from "./data";
 import { DEFAULT_COUNTRY } from "./country";
 import { rankItems, type DemandFile } from "./home-rank";
 
-export const HOME_DEMAND = raw as DemandFile;
+// Through unknown: the JSON infers number[] where the type says [views28, views7], and an empty `clicks`
+// broke the typecheck (and so every build) once the first real demand file landed (2026-11-18).
+export const HOME_DEMAND = raw as unknown as DemandFile;
 
 /** Cards, most likely to earn first: their page's views, US stores in stock, TCGplayer's market price. */
 export const rankCards = (cards: readonly CardLite[]): CardLite[] =>

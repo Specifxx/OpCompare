@@ -341,8 +341,17 @@ export function sealedKind(name: string): SealedKind | null {
   if (/booster box|collection box|edition box|\bbox\b \(wave/.test(n) || /extra booster: .* box$/.test(n)) return "Booster Box";
   if (/booster pack|collection pack|edition pack/.test(n) || /extra booster: .* pack$/.test(n)) return "Booster Pack";
   if (/anniversary set|binder|special set|bundle/.test(n)) return "Collection";
-  return "Collection";
+  // Anything else is a Collection only when its name says it is a product. A
+  // spoiled card TCGplayer lists before it has a number or rarity ("Pell",
+  // "Eyelashes" in OP-18, "Nami (Heroines Battle Vol.2)") is a single, not a
+  // sealed product: filed as one it showed a store's single price on the
+  // pre-order page (2026-11-18). Refused here, it becomes a card once
+  // TCGplayer numbers it.
+  return SEALED_WORD.test(n) ? "Collection" : null;
 }
+
+/** A word only a sealed product's name carries. */
+const SEALED_WORD = /\b(set|sets|pack|packs|bundle|binder|case|box|boxes|collection|display|deck|kit|tin|sleeves?|playmat|storage)\b/;
 
 /** Packs inside, only where it is certain. Main booster-set boxes hold 24. */
 export function sealedPackCount(kind: SealedKind, setKindOf: SetKind | null): number | null {
