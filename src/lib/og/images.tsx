@@ -33,7 +33,7 @@ import path from "node:path";
 import { BlogImage, CardImage, FallbackImage, GuideImage, PreorderImage, SealedImage, SetImage, type GuideVariant } from "./compose";
 import { OG_AFTER_ERROR, OG_CACHED, OG_FALLBACK_TTL, ogResponse } from "./respond";
 import { ogDate } from "./theme";
-import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, setPreviewCards, setTopRows, storesTracked } from "./select";
+import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, pickMoverRows, setPreviewCards, setTopRows, storesTracked } from "./select";
 
 function warn(where: string, err: unknown) {
   console.error(`[og] ${where} fell back:`, err instanceof Error ? err.message : err);
@@ -72,6 +72,19 @@ export async function guideOg(variant: GuideVariant): Promise<ImageResponse> {
     return ogResponse(<GuideImage rows={await withThumbs(rows)} cards={cat.cards.length} stores={storesTracked(stats)} variant={variant} />, OG_CACHED);
   } catch (err) {
     warn(`guide(${variant})`, err);
+    return fallbackOg();
+  }
+}
+
+/** /movers (2026-11-18): this week's five biggest risers; the price guide's image until a week of history exists. */
+export async function moversOg(): Promise<ImageResponse> {
+  try {
+    const [cat, stats] = await Promise.all([getCatalogForImages(), getSiteStatsForImages().catch(() => null)]);
+    const rows = pickMoverRows(cat, 5);
+    if (rows.length < 3) return guideOg("home");
+    return ogResponse(<GuideImage rows={await withThumbs(rows)} cards={cat.cards.length} stores={storesTracked(stats)} variant="movers" />, OG_CACHED);
+  } catch (err) {
+    warn("movers", err);
     return fallbackOg();
   }
 }

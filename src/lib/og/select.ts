@@ -113,6 +113,17 @@ export function pickGuideRows(cat: CatalogLike, country: Country = "US", n = 5):
   return picked.map((c) => toRow(c, cat.setById.get(c.setId)?.code ?? ""));
 }
 
+/**
+ * /movers' share image (more shareable artefacts, 2026-11-18): this week's biggest risers worth $3+, with art, one row
+ * per card name, the same 7-day change the page ranks by. Fewer than 3 means the page has no week of history yet.
+ */
+export function pickMoverRows(cat: CatalogLike, n = 5): OgRow[] {
+  const up = cat.cards
+    .filter((c) => c.hasImage && c.change7d != null && c.change7d > 0 && (c.marketUsd ?? 0) >= 300)
+    .sort((a, b) => (b.change7d ?? 0) - (a.change7d ?? 0) || a.id - b.id);
+  return dedupeByName(up, n).map((c) => toRow(c, cat.setById.get(c.setId)?.code ?? ""));
+}
+
 /** The last column shows 7-day moves only once at least 3 rows really moved; until then, store counts. */
 export function showMoveColumn(rows: Pick<OgRow, "change7d">[]): boolean {
   return rows.filter((r) => r.change7d != null && Math.abs(r.change7d) >= 0.05).length >= 3;

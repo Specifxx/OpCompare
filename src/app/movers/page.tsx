@@ -23,14 +23,15 @@ import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { FREE_DEMAND_ROWS } from "@/lib/tier-limits";
 import { longDate } from "@/lib/format";
 import { movers, offHighs } from "@/lib/selectors";
-import { pageOg } from "@/lib/og/meta";
+import { pageOgOwnImage } from "@/lib/og/meta";
+import { ShareButton } from "@/components/ShareButton";
 
 export const metadata: Metadata = {
   title: "One Piece Card Price Movers — This Week's Risers & Fallers",
   description:
     "The One Piece Card Game singles whose price moved most this week: the biggest risers, the biggest drops and the best value against a card's recent high.",
   alternates: { canonical: "/movers" },
-  openGraph: pageOg("/movers"),
+  openGraph: pageOgOwnImage("/movers"),
 };
 
 // "Most searched this week" (wave 2, tools track): Demand Finder's free rows.
@@ -74,6 +75,7 @@ export default async function MoversPage() {
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
         One Piece price movers — this week
       </h1>
+      <ShareButton className="mt-3" name="One Piece price movers this week" medium="movers" path="/movers" />
       <HubIntro path="/movers" />
       <div className="mt-6">
         <AnswerBox>

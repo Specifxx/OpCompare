@@ -4489,3 +4489,12 @@ retention thread. Rollback: remove `<ReturnBeacon />` from the layout.
 
 Retention lever 2 ("Since your last visit", on the sister sites) is a 50/50 test under `since-arm`; `ARM_KEYS` in
 `lib/return-visit.ts` gains `since` so the file stays the same in every repo. Nothing changes on this site until it runs the lever.
+
+## /movers gets its own share image and a share button (owner, 2026-11-18: "we need more shareable artefacts")
+
+`/movers` shares as this week's five biggest risers worth $3+ (`pickMoverRows`, one row per card name, the page's own
+7-day change), drawn by the price guide's composition with the title "Price Movers" and the 7-day column always on
+(`moversOg`, a thin `opengraph-image.tsx`, the day-old image catalogue like every other image). Under three risers
+(no week of history) it draws the price guide's image instead. When the move column shows, it borrows 34 px from
+Set · No. so a four-digit move never touches the number. The page uses `pageOgOwnImage` and a share button (medium
+`movers`, tagged `utm_source=share&utm_medium=movers`).
