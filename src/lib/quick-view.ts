@@ -12,6 +12,7 @@ import { affiliateUrl, cardEbayQuery, ebaySearchUrl, isPaidLink } from "./affili
 import { compareBoardRows, ebayRetailer, postageLine, retailerSubId } from "./board";
 import { COUNTRIES, MARKETS, type Country } from "./country";
 import type { CardDetail, HistoryPoint, OfferRow } from "./data";
+import type { PanelListing } from "./listing-panel";
 import { lastSeen } from "./card-price-state";
 import { decodeLastKnown, lastKnownTupleOf, type LastKnown } from "./last-known";
 import { isEbaySource, sourceLabel } from "./stores";
@@ -154,6 +155,11 @@ export interface QuickViewPayload {
    * "cheapest". Absent when empty.
    */
   lastKnown?: Partial<Record<Country, LastKnown>>;
+  /**
+   * The live eBay listings the card page's eBay panel draws (EbayListing, captured by the price pass; display only), for
+   * the quick view's ad carousel (owner, 2026-11-18: "ads can show in the quick view"). Never a price row. Absent when none.
+   */
+  ebayListings?: PanelListing[];
 }
 
 /** Days of price history the popup's chart shows (the card page shows a year). */

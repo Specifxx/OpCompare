@@ -11,6 +11,7 @@ import { ago, money, usd } from "@/lib/format";
 import { usdCentsToCountry } from "@/lib/fx";
 import { cardImage } from "@/lib/images";
 import { cardDisplayName, type QuickViewPayload } from "@/lib/quick-view";
+import { EbayAdCarouselLive } from "./EbayAdCarouselLive";
 import { CartAddButton } from "./cart/CartAddButton";
 import { pushRecentCard } from "@/lib/recently-viewed";
 import { ColorDots, Delta, PrintingBadge, RarityBadge } from "./ui";
@@ -384,6 +385,12 @@ export function QuickView({
                 <div className="mt-2 flex justify-start">
                   <CartAddButton href={m.ebaySearch} productUrl={m.ebaySearch} storeName={ebay} title={cardDisplayName(data)} detail="Search results" priceCents={0} currency={COUNTRIES[country].currency} image={data.hasImage ? cardImage.thumb(data.id) : null} className="text-slate-300" />
                 </div>
+              ) : null}
+
+              {/* The eBay ad carousel (owner, 2026-11-18: "ads can show in the quick view"): the card page's live listings in
+                  this market, labelled Ad; nothing when the market has none (the search above already covers it). */}
+              {data.ebayListings?.some((l) => l.market === country) ? (
+                <EbayAdCarouselLive listings={data.ebayListings} country={country} query={cardDisplayName(data)} name={display(data)} page={PAGE} card={data.slug} compact preRelease={data.preRelease} className="mt-3" />
               ) : null}
 
               {/* The one-click price-drop alert, compact (RiftCompare's QuickView

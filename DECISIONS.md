@@ -4595,3 +4595,14 @@ sitting on top of it.
   `var(--bn-space)` + a small gap up, and the body's bottom padding follows it. Hidden, it slides fully off-screen (transform only, CLS 0).
 - **Measured** (local build, dock stacked): Pixel 7 412×915 nav + dock take 129px (14.1%); iPhone 15 393×852 with a 34px safe area
   143px (16.8%); iPhone SE 375×667 129px (19.3%); the old flush bar took about the same plus the full safe area.
+
+## 2026-11-18: The eBay ad carousel in the card quick view (owner)
+
+Owner, 2026-11-18, while moving every ad that could hurt indexing below the page's own content: "Ads can show in the quick
+view for example". The quick view opens only when a visitor clicks a card, so an ad there comes after engagement and is
+never in a crawled page's HTML. The card quick view now draws the card page's own eBay carousel (`EbayAdCarouselLive`,
+compact, up to four live listings in the visitor's market, labelled "Ad · live listings on eBay") under the buy rows. The
+listings are the `EbayListing` rows `/api/card/<slug>` already read for the graded strip (`getEbayPanel`), at most four per
+market, so the change adds no read and no eBay call. Display only, as everywhere: never a price row, an alert, a basket
+or "the cheapest". A market with no captured listing shows nothing extra (the eBay search row already covers it), and
+ad-free members get the plain search as on the card page. Read with the other ad tests on 2 Dec (`data-surface="ebay_carousel"`, `data-page="quickview"`).
