@@ -601,9 +601,21 @@ export interface StoreVariant {
   available: boolean;
 }
 
-/** Best condition first, then cheapest, among in-stock variants. Null = nothing buyable. */
+// A variant that is a graded slab, not the raw card: "Graded - Beckett 9.5",
+// "PSA 10", "BGS 9.5", "CGC 9", "Slab". A store sells the raw card and its slabs
+// as variants of ONE product, so the product title passes NOT_A_RAW_SINGLE while
+// a slab variant would price the raw card (Stomping Grounds' Shanks OP09-004,
+// 2026-11-19). Such a variant is never a price, never "the cheapest", never shown.
+export const GRADED_VARIANT =
+  /\b(psa|bgs|cgc|beckett|sgc|graded|grade[d]?\s*\d|slab(bed)?|gem\s*mint|ace\s*grading|pristine\s*10|black\s*label)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b/i;
+
+export function isGradedVariant(title: string | null | undefined): boolean {
+  return !!title && GRADED_VARIANT.test(title);
+}
+
+/** Best condition first, then cheapest, among in-stock raw variants. Null = nothing buyable. */
 export function bestVariant(variants: StoreVariant[]): { priceCents: number; condition: string | null; variantId?: number } | null {
-  const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !/japanese|jp\b|chinese/i.test(v.title));
+  const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !/japanese|jp\b|chinese/i.test(v.title) && !isGradedVariant(v.title));
   if (!ok.length) return null;
   const best = ok.reduce((a, b) => {
     const ra = conditionRank(a.title);
@@ -616,7 +628,7 @@ export function bestVariant(variants: StoreVariant[]): { priceCents: number; con
 
 /** Cheapest variant of any condition (for out-of-stock listings we still show greyed). */
 export function anyVariant(variants: StoreVariant[]): number | null {
-  const ps = variants.map((v) => parseFloat(v.price)).filter((p) => p > 0);
+  const ps = variants.filter((v) => !isGradedVariant(v.title)).map((v) => parseFloat(v.price)).filter((p) => p > 0);
   return ps.length ? Math.round(Math.min(...ps) * 100) : null;
 }
 

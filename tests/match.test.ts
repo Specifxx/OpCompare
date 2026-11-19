@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  anyVariant,
   bestVariant,
+  isGradedVariant,
   buildCardIndex,
   buildDonIndex,
   buildNameIndex,
@@ -252,6 +254,26 @@ test("conditions and variants", () => {
     { priceCents: 1000, condition: "NM" },
   );
   assert.equal(bestVariant([{ title: "Near Mint", price: "9.00", available: false }]), null);
+});
+
+test("graded slab variants never price the raw card (Stomping Grounds, 2026-11-19)", () => {
+  // Real variants of Stomping Grounds' "Shanks (Wanted Poster) OP09-004": the
+  // US$115 slab was published as the Near Mint price; the raw card was A$344.
+  assert.deepEqual(
+    bestVariant([
+      { title: "Graded - Beckett 9.5", price: "115.00", available: true },
+      { title: "Near Mint", price: "344.00", available: true },
+    ]),
+    { priceCents: 34400, condition: "NM" },
+  );
+  for (const t of ["Graded - Beckett 9.5", "PSA 10", "BGS 9.5 Black Label", "CGC 9", "Slab", "Graded / PSA 9", "TAG 10", "SGC 10", "ACE Grading 10"]) {
+    assert.ok(isGradedVariant(t), t);
+    assert.equal(bestVariant([{ title: t, price: "50.00", available: true }]), null, t);
+  }
+  for (const t of ["Near Mint", "Lightly Played", "Near Mint Foil", "Default Title", "Moderately Played / Foil"]) assert.ok(!isGradedVariant(t), t);
+  // Out of stock: the greyed price is the raw card's, never the slab's.
+  assert.equal(anyVariant([{ title: "PSA 10", price: "40.00", available: false }, { title: "Near Mint", price: "90.00", available: false }]), 9000);
+  assert.equal(anyVariant([{ title: "PSA 10", price: "40.00", available: false }]), null);
 });
 
 test("prices far from market are treated as mismatches", () => {
