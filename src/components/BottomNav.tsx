@@ -44,9 +44,10 @@ const ico = (name: NavIconName) => <NavIcon name={name} className="h-[22px] w-[2
 export const tabs = (): Tab[] => [
   { key: "home", label: "Home", href: "/", icon: ico("home") },
   { key: "prices", label: "Prices", href: "/price-guide", also: ["/sets", "/card", "/cards", "/singles", "/movers", "/rising"], icon: ico("prices") },
-  { key: "sealed", label: "Sealed", href: "/sealed", also: ["/preorders", "/op18-preorders", "/eb05-preorders"], icon: ico("collection") },
+  { key: "sealed", label: "Sealed", href: "/sealed", also: ["/preorders", "/op18-preorders", "/eb05-preorders"], icon: ico("browse") },
   { key: "cart", label: "Cart", icon: <CartIcon size={22} /> },
-  { key: "menu", label: "Menu", icon: ico("menu") },
+  // My collection (owner, 2026-11-19: "replace the menu with My Collection"); the header keeps its menu button on phones.
+  { key: "collection", label: "Binder", href: "/portfolio", also: ["/portfolio"], icon: ico("collection") },
 ];
 
 function narrowNow(): boolean {
