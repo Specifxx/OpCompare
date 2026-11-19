@@ -40,3 +40,9 @@ test("the route validates both before Stripe sees them, and records the start", 
   const admin = readFileSync(join(process.cwd(), "src/app/admin/premium/page.tsx"), "utf8");
   assert.match(admin, /Started checkout by surface/);
 });
+
+test("the 14-day trial: a first-time buyer gets it, an earlier Stripe customer never does", () => {
+  assert.equal(checkoutParams(base).subscription_data.trial_period_days, 14);
+  const again = checkoutParams({ ...base, user: { ...base.user, stripeCustomerId: "cus_1" } });
+  assert.equal("trial_period_days" in again.subscription_data, false);
+});
