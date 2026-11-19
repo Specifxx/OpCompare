@@ -4788,3 +4788,21 @@ whose handle has a grading word as one of its hyphen-separated words (`-psa-`, `
 `-bgs-`, `-cgc-9-`, `-grade-9-` ...), or whose tag or product type is a grading word
 ("Graded", "PSA", "Graded Cards"). Miss reason `graded`. Word-bounded on purpose: a
 random handle like "product_26qj...bjpsa41..." is not refused. Rides the next import.
+
+## 2026-11-19: Display ads on guides and explainers only
+
+**Owner:** "Let's do it", on the board's G4: display ads on guide and explainer pages only, never on buy, product,
+account or Premium pages, killed if the RPM is under A$4 or buy clicks fall more than 3%. It partly reverses the
+2026-10-27 AdSense-off call on the sister sites. OP Compare carries it because it is outside the heavy/light ad test
+(Rift and MTG light, Dex and YGO heavy, read 10 Dec), which these ads must not touch.
+
+- A real AdSense unit fills ONLY the `article` slot (`ArticleView`: `/guides/*` and `/blog/*`), and only when both
+  `NEXT_PUBLIC_ADSENSE_CLIENT_ID` and `NEXT_PUBLIC_ADSENSE_GUIDE_SLOT` (the console's display unit id) are set
+  (`realUnitFor`, `lib/adsense.ts`). The card, price guide, movers and market slots stay house promos whatever is set.
+- No site-wide loader: the root layout's `AdSenseLoader` is gone. The unit adds Google's script when it first mounts
+  near the viewport, so no other page loads AdSense, and an ad-free member (`html[data-adfree]`) never loads it.
+  The slot sits below the article body, as before, never beside a buy button or above a price.
+- The `google-adsense-account` meta tag and `/ads.txt` follow the publisher id alone, for AdSense's site review.
+- Off until opcompare.com is approved in AdSense and the unit id is set. Kill switch: unset
+  `NEXT_PUBLIC_ADSENSE_GUIDE_SLOT`; the next release is ad-free. `tests/ads.test.ts` pins the slot, the loader and
+  the two article routes.

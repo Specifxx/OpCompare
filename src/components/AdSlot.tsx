@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ADSENSE_CLIENT_ID, AD_UNITS_ENABLED } from "@/lib/adsense";
+import { ADSENSE_CLIENT_ID, adsenseLoaderSrc, realUnitFor } from "@/lib/adsense";
 
 // One in-content slot (RiftCompare's AdSlot). Renders exactly one of:
 //   - a real AdSense <ins> unit: only when a publisher id is configured AND the
@@ -13,7 +13,10 @@ import { ADSENSE_CLIENT_ID, AD_UNITS_ENABLED } from "@/lib/adsense";
 //     slot carries data-ad-placement, so the root's ad-free CSS hides it.
 // The frame is a fixed-height, overflow-hidden box, so whatever lands in it
 // (promo, ad, or an unfilled unit that collapses) never moves the layout.
-// The AdSense loader script is separate (AdSenseLoader) and never gated here.
+// Real units: the article slot only (guides and explainers, lib/adsense.ts realUnitFor).
+// There is no site-wide loader: the unit itself adds Google's script the first time it
+// mounts, so a page without a guide slot (a card, a store list, an account page) never
+// loads AdSense at all, and an ad-free member (html[data-adfree]) never loads it either.
 const HOUSE_ADS = [
   { title: "This week's biggest price moves", sub: "Risers, drops and best-value buys, updated daily", cta: "See the movers", href: "/movers" },
   { title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
@@ -49,18 +52,30 @@ declare global {
 
 // Pushed once per mount; the ref guard matters because React StrictMode double-invokes
 // effects in development and a double push throws, which would kill every later slot.
-function AdSenseUnit({ slot, height }: { slot: string; height: number }) {
+function ensureLoader(clientId: string) {
+  if (document.getElementById("adsense-loader")) return;
+  const s = document.createElement("script");
+  s.id = "adsense-loader";
+  s.async = true;
+  s.crossOrigin = "anonymous";
+  s.src = adsenseLoaderSrc(clientId);
+  document.head.appendChild(s);
+}
+
+function AdSenseUnit({ unitId, height }: { unitId: string; height: number }) {
   const pushed = useRef(false);
   useEffect(() => {
-    if (pushed.current) return;
+    if (pushed.current || !ADSENSE_CLIENT_ID) return;
+    if (document.documentElement.hasAttribute("data-adfree")) return;
     pushed.current = true;
     try {
+      ensureLoader(ADSENSE_CLIENT_ID);
       (window.adsbygoogle = window.adsbygoogle ?? []).push({});
     } catch {
       /* loader blocked or not present: the slot stays empty */
     }
   }, []);
-  return <ins className="adsbygoogle block" style={{ display: "block", height, width: "100%" }} data-ad-client={ADSENSE_CLIENT_ID ?? undefined} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" />;
+  return <ins className="adsbygoogle block" style={{ display: "block", height, width: "100%" }} data-ad-client={ADSENSE_CLIENT_ID ?? undefined} data-ad-slot={unitId} data-ad-format="auto" data-full-width-responsive="true" />;
 }
 
 // Mount the real unit only once the slot nears the viewport, so a page with a
@@ -91,10 +106,10 @@ function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
 export function AdSlot({ slot, seed, height = 100, thin = false, noindex = false, className = "" }: { slot: string; seed?: string; height?: number; thin?: boolean; noindex?: boolean; className?: string }) {
   const [ref, near] = useNearViewport<HTMLDivElement>();
   if (thin || noindex) return null;
-  const real = AD_UNITS_ENABLED;
+  const unitId = realUnitFor(slot);
   return (
     <div ref={ref} data-ad-placement={`slot-${slot}`} className={`w-full ${className}`} style={{ height }} aria-label="Advertisement">
-      {real ? near ? <AdSenseUnit slot={slot} height={height} /> : null : <HouseAd seed={seed ?? slot} height={height} />}
+      {unitId ? near ? <AdSenseUnit unitId={unitId} height={height} /> : null : <HouseAd seed={seed ?? slot} height={height} />}
     </div>
   );
 }
