@@ -6,6 +6,7 @@ import {
   anyVariant,
   bestVariant,
   isGradedVariant,
+  gradedByListing,
   buildCardIndex,
   buildDonIndex,
   buildNameIndex,
@@ -650,6 +651,36 @@ test("a store's own language tag marks a foreign card even when the title says n
   assert.ok("id" in matchStoreProduct(title, [], ix, { tags: ["English"] }));
 });
 
+test("a slab titled like the raw card is refused by its handle, tag or type (2026-11-19 snapshot)", () => {
+  // Real handles from the 19 Nov snapshot, each published as the raw card's price.
+  for (const h of [
+    "boa-hancock-op15-release-event-winner-one-piece-promotion-cards-686458-grade-10-foil-en-psa-6acaa70112dff78c56cfc9b0",
+    "monkey-d-luffy-one-piece-card-game-st29-001-psa-10",
+    "monkey-d-luffy-119-alternate-art-op05-op05-119-grade-9-5-foil-en-bgs-0020846423",
+    "one-piece-promotion-cards-psa10-176040558-don-card-la-dodgers-2026-promo-foil-don",
+    "awakening-of-the-new-era-op05-119-psa10-88396308-monkey-d-luffy-119-alternate-art-op05-119-foil-secret-rare",
+    "monkey-d-luffy-event-pack-vol-2-p-033-eng-psa10",
+    "shanks-op09-004-cgc-9-5",
+  ]) assert.ok(gradedByListing(h), h);
+  // Raw cards keep their handles, including a random one with "psa" inside a word.
+  for (const h of [
+    "product_26qjfzjs75bjpsa41nfm56v345",
+    "roronoa-zoro-prb02-006-sp-the-azure-seas-seven-op14",
+    "nami-op15-086-op15-eb04-op15-086",
+    "trafalgar-law-010-tr-op07-st10-010",
+    "upgrade-pack-op16",
+  ]) assert.ok(!gradedByListing(h), h);
+  assert.ok(gradedByListing("x", ["Graded"]));
+  assert.ok(gradedByListing("x", "One Piece, PSA", null));
+  assert.ok(gradedByListing("x", [], "Graded Cards"));
+  assert.ok(!gradedByListing("x", ["One Piece", "Singles", "Near Mint"], "Single"));
+  assert.ok(!gradedByListing("x", ["Grading Supplies? no", "Upgrade"]));
+  const ix: StoreMatchIndexes = { cards: buildCardIndex([{ id: 530122, name: "Monkey.D.Luffy", number: "OP05-119", variant: null, setCode: "OP05", setName: "Awakening of the New Era" }]), names: buildNameIndex([]), dons: [], sealed: [] };
+  const title = "OP05-119 Monkey.D.Luffy - One Piece TCG";
+  assert.ok("id" in matchStoreProduct(title, [], ix, { handle: "monkey-d-luffy-op05-119-alternate-art" }));
+  assert.deepEqual(matchStoreProduct(title, [], ix, { handle: "monkey-d-luffy-119-alternate-art-op05-op05-119-grade-9-5-foil-en-bgs-0020846423" }), { miss: "graded" });
+});
+
 test("every path answers to the SKU number: a title number and a SKU number that disagree is no match", () => {
   const luffy = (id: number, number: string) => ({ id, name: "Monkey.D.Luffy", number, variant: null, setCode: "OP16", setName: "The Time of Battle" });
   const ix: StoreMatchIndexes = { cards: buildCardIndex([luffy(1, "OP16-015"), luffy(2, "OP16-052")]), names: buildNameIndex([]), dons: [], sealed: [] };
@@ -840,9 +871,9 @@ test("a sealed-only store prices nothing as a single, and every title of Beaches
   assert.ok("id" in matchStoreProduct("Shanks (OP12-007) [Legacy of the Master]", [], ix));
 });
 
-test("the import and the probe hand the store's sealed-only flag to the matcher", () => {
+test("the import and the probe hand the store's sealed-only flag and the handle to the matcher", () => {
   for (const f of ["../src/lib/import.ts", "../scripts/probe-stores.ts"]) {
     const src = fs.readFileSync(path.resolve(__dirname, f), "utf8");
-    assert.match(src, /tags: p\.tags, productType: p\.product_type, sealedOnly: store\.sealedOnly/, f);
+    assert.match(src, /tags: p\.tags, productType: p\.product_type, sealedOnly: store\.sealedOnly, handle: p\.handle/, f);
   }
 });
