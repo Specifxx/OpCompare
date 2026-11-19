@@ -4655,3 +4655,9 @@ OP Compare: `tierOf` gives sealed its own tiers, PH (hot sealed, 48 h) and P1 (t
 (`comparePairs`). `planRun` already stops a market at the first pair that does not fit, so no single is planned while
 a due sealed pair of that market waits. The budget ceilings (`DAILY_CALL_CAP` 2,500, live remaining minus 300) are
 unchanged. `tests/ebay-plan.test.ts` pins it.
+
+## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
+
+A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
+conversion and utility pages, so the layout's ad units (PhoneDockAds, FooterAds) stand down on them (`lib/ad-free-paths.ts`,
+`AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).
