@@ -4675,3 +4675,13 @@ content "spread across a large network of sites" and re-dating pages to look fre
 - **Honest sitemap dates.** Blog posts and guides carry the day they were published, not the build's "now".
 
 Black Friday and Cyber Monday pages are unchanged (in season). Judge the effect on 1 to 8 Dec against 3 to 9 Nov.
+
+## 2026-11-19: Collection check-up test
+
+The owner's AI subscription idea is aimed at collectors (decision card, 19 Nov): a weekly "Collection Advisor" note on a
+member's own collection. Before anything is built, a two-week hand-written test runs on RiftCompare, MTG Compare, OP
+Compare and DexCompare. Here, `/portfolio` shows a "Free binder check-up" card (`components/CheckupOffer.tsx`) to a
+member with 10+ cards. One tap posts their list (card, set, number, condition, today's value, what they paid), their
+account address, an optional question and a "founder price (US$5.99 instead of US$7.99), no charge" tick to
+`https://riftcompare.com/api/checkup`, which keeps the request privately (RiftCompare's DECISIONS.md, same date). This
+site stores nothing and calls no AI. It ships with the Monday release. Read 3 Dec 2026.
