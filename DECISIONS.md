@@ -4724,6 +4724,24 @@ zillerstore.it's "NM / Giapponese" variants priced as the English card, because 
 English words (`FOREIGN_VARIANT` adds the Italian, French, German and Spanish words and CJK). Store-protection
 variants ("Sleeve", "Top-Loader") and EU stores' prices under TCGplayer's US market are real prices and stay.
 
+## 2026-11-19 — eBay stand-out row, 50/50
+
+The owner, the same evening eBay's blue came back: the colour change moved eBay clicks, so "we can do something even more than just a
+color change … make it stand out even more". Every visitor keeps eBay's blue button; a new 50/50 (localStorage `ebay-pop`, arm on
+`<html data-ebaypop>`, `ebay_pop` on buy_click) gives arm "pop" a bolder, larger eBay button with a soft blue halo and tints the list
+row that holds an eBay button eBay blue with a blue edge. Shape and colour only: no new words, no new claim (eBay is called the cheapest
+only when it is), no position change, no extra eBay API call, white on #0064d2 passes contrast. Run on Rift, Dex, MTG and OP. Read
+3 Dec: eBay buy clicks per arm, total buy clicks per arm as the check; keep the winner and roll it out to the other card sites.
+
+## 2026-11-19 — Paid rows always there, and a tag lint that stops the build
+
+From the 19 Nov boardroom review, on the four money sites: a row that is always there beats a perfect row that is often missing. The
+price board's eBay row was already always there (a listing, else its tagged search). TCGplayer's now is too: with no TCGplayer listing
+and no reference price in the market, its tagged link stands in (the product when we know it, else a search; surface `tcg_fallback`),
+so `BestPriceNote` can always point at both. And `scripts/tag-lint.ts` runs first in `npm run build` (`src/lib/tag-lint.ts`,
+`tests/tag-lint.test.ts`): every eBay builder in every market must carry campaign 5339155912 and a customid, every TCGplayer link must
+go through Impact, and no component may hard-code a bare eBay or TCGplayer href. A failure stops the release.
+
 ## 2026-11-19: [urgent] needs eight hours too: a network ceiling of 57 builds a day
 
 [urgent] in a commit subject used to skip the 12-hour gap altogether. On 17 and 18 Nov the network built production 94
