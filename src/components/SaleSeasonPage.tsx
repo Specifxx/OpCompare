@@ -6,7 +6,7 @@ import { getSealedCatalog } from "@/lib/data";
 import { money } from "@/lib/format";
 import { pageOg } from "@/lib/og/meta";
 import { underMarket } from "@/lib/black-friday";
-import { listRegions, saleHeading, saleIntro, saleYear, SALE_SEASONS, type SaleSlug } from "@/lib/sale-seasons";
+import { listRegions, saleHeading, saleIntro, saleYear, SALE_SEASONS, type SaleSlug, saleIndexable } from "@/lib/sale-seasons";
 import type { Country } from "@/lib/country";
 
 // The seasonal sale pages, /boxing-day, /january-sales and /lunar-new-year (DECISIONS.md, "Seasonal sale pages",
@@ -33,6 +33,7 @@ export function saleMetadata(slug: SaleSlug): Metadata {
     description: `${name} ${y} One Piece deals: booster boxes and sealed product under TCGplayer's market price today, and the cheapest booster boxes in ${REGIONS}, checked daily.`,
     alternates: { canonical: `/${slug}` },
     openGraph: pageOg(`/${slug}`),
+    ...(saleIndexable(slug, new Date().toISOString().slice(0, 10)) ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
