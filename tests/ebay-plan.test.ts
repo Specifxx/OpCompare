@@ -266,18 +266,18 @@ test("isDue: never searched, then interval minus a 3h grace; force ignores inter
 const now = new Date("2026-10-03T05:37:00Z");
 const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
 
-test("due order: S1 before S2, never-searched before stale, then most overdue, then value", () => {
+test("due order: sealed before every single, then S1 before S2, never-searched before stale, then most overdue, then value", () => {
   const products: PlanProduct[] = [
     { id: 1, kind: "single", marketUsd: 5000, number: "OP01-001", launch: false }, // S2, never
     { id: 2, kind: "single", marketUsd: 20000, number: "OP01-002", launch: false }, // S1, stale 55h
     { id: 3, kind: "single", marketUsd: 15000, number: "OP01-003", launch: false }, // S1, never
     { id: 4, kind: "single", marketUsd: 90000, number: "OP01-004", launch: false }, // S1, stale 50h
     { id: 5, kind: "single", marketUsd: null, number: "OP16-001", launch: true, refUsd: 4000 }, // SU, never
-    { id: 6, kind: "sealed", marketUsd: 12000, sealedKind: "Booster Box", launch: false }, // P1, never
+    { id: 6, kind: "sealed", marketUsd: 12000, sealedKind: "Booster Box", launch: false }, // P1, never: sealed goes first (owner, 2026-11-19)
   ];
   const checks = new Map([["2|US", ago(55)], ["4|US", ago(50)]]);
   const due = duePairs(products, "US", checks, now);
-  assert.deepEqual(due.map((p) => p.productId), [3, 2, 4, 6, 1, 5]);
+  assert.deepEqual(due.map((p) => p.productId), [6, 3, 2, 4, 1, 5]);
 });
 
 const pairs = (market: EbayMarket, n: number, kind: "single" | "sealed" = "single"): Pair[] =>
@@ -299,8 +299,8 @@ test("planRun: each market within its share in phase 1, the leftover spills in p
 
 test("planRun: strict priority — a cheap low-tier pair never jumps a higher-tier one that doesn't fit", () => {
   const s1: Pair = { productId: 1, market: "US", kind: "single", tier: "S1", marketUsd: 20000, checkedAt: null, cost: 1.25, score: 0 };
-  const p1: Pair = { productId: 2, market: "US", kind: "sealed", tier: "P1", marketUsd: 9000, checkedAt: null, cost: 1, score: 0 };
-  const plan = planRun({ US: [s1, p1] }, 1, now, { only: "US" });
+  const s2: Pair = { productId: 2, market: "US", kind: "single", tier: "S2", marketUsd: 9000, checkedAt: null, cost: 1, score: 0 };
+  const plan = planRun({ US: [s1, s2] }, 1, now, { only: "US" });
   assert.deepEqual(plan.order, []);
   assert.deepEqual(plan.overflow.map((p) => p.productId), [1, 2]);
 });
@@ -399,7 +399,7 @@ test("demand: hot products (or US$100+ singles) refresh every 48h and go first; 
   assert.equal(tierOf(single(1, 3000, { demand: HOT_DEMAND_POINTS }), "US"), "S1", "a hot US$30 card");
   assert.equal(tierOf(single(1, 3000, { demand: HOT_DEMAND_POINTS - 1 }), "US"), "S2", "one point short");
   assert.equal(tierOf(single(2, S1_MIN_CENTS), "US"), "S1", "a chase card needs no demand");
-  assert.equal(tierOf(sealedP(3, 5000, { demand: HOT_DEMAND_POINTS }), "US"), "S1", "a hot sealed product");
+  assert.equal(tierOf(sealedP(3, 5000, { demand: HOT_DEMAND_POINTS }), "US"), "PH", "a hot sealed product");
   assert.equal(tierOf(sealedP(3, 5000), "US"), "P1", "a quiet one rotates");
   const now = new Date("2026-10-24T12:37:00Z");
   const hot = single(10, 2500, { demand: 40 });
@@ -469,4 +469,26 @@ test("quotaDayStart: eBay's day runs 07:00 UTC to 07:00 UTC, so a drifting sched
   const cron = /cron: "(\d+) (\d+) \* \* \*"/.exec(read(".github/workflows/ebay-prices.yml"))!;
   const hour = Number(cron[2]);
   assert.ok(hour >= 9 && hour <= 16, `run hour ${hour} should sit mid-day, clear of the 07:00 reset and the 07:07/19:07 imports`);
+});
+
+// ── Sealed first, by popularity (owner, 2026-11-19) ──────────────────────────
+// "Everything goes to sealed products first … the most in-demand sealed products, and not the least popular ones."
+test("sealed first: every due sealed pair, most in-demand first, before any single; singles get only what is left", () => {
+  const prods: PlanProduct[] = [
+    { id: 1, kind: "single", marketUsd: 90000, number: "OP01-001", launch: false, demand: 500 }, // the hottest chase card
+    sealedP(2, 3000, { demand: 1 }), // a quiet sealed product
+    sealedP(3, 3000, { demand: 9 }), // warmer
+    sealedP(4, 3000, { demand: HOT_DEMAND_POINTS + 40 }), // hot sealed (PH)
+    sealedP(5, 3000, { demand: HOT_DEMAND_POINTS + 2 }), // hot sealed, less so
+  ];
+  const due = duePairs(prods, "US", new Map(), now);
+  assert.deepEqual(due.map((p) => p.productId), [4, 5, 3, 2, 1], "hot sealed by demand, then the rest by demand, then singles");
+  // A budget that only fits the sealed: the single waits, never a sealed product.
+  const plan = planRun({ US: due }, 4, now, { only: "US" });
+  assert.deepEqual(plan.order.map((p) => p.productId), [4, 5, 3, 2]);
+  assert.deepEqual(plan.overflow.map((p) => p.productId), [1]);
+  // Inside the sealed tier demand beats being never searched: a popular product refreshed 80h ago goes before a quiet new one.
+  const checks = new Map([["3|US", ago(80)]]);
+  const due2 = duePairs([sealedP(2, 3000, { demand: 0 }), sealedP(3, 3000, { demand: 9 })], "US", checks, now);
+  assert.deepEqual(due2.map((p) => p.productId), [3, 2]);
 });

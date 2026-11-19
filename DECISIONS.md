@@ -4616,3 +4616,20 @@ ads". The footer ad zone (`FooterAds`) now sits after the page's own content in 
 instead of listing every sister. The about page says who runs the site (Bill and George), that AI tools help with code
 and guides while prices come from a program, and what the group costs to run (about A$790 a month, our books, 30 days
 to 15 Nov 2026).
+
+## 2026-11-19: eBay calls go to sealed first, the most popular first; cards get what is left (owner)
+
+The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
+products first, or at least the most in-demand sealed products, and not the least popular ones … they have TCGplayer
+prices, and they also have their own store prices … we cannot kill the eBay quota." A card page already shows
+TCGplayer's market price and the stores'; a sealed product's eBay price is the one shoppers compare against. So every
+eBay plan now searches every due sealed product, ordered by demand, before any single, and a single gets a call only
+from what sealed leaves. Measured 17-18 Nov before the change: no keyset ran out, but several shared ones ended the
+day at 88-96% of 5,000, and on RiftCompare the singles pass (2,081 calls on 18 Nov) ran before the sealed pass with
+no ceiling of its own.
+
+OP Compare: `tierOf` gives sealed its own tiers, PH (hot sealed, 48 h) and P1 (the rest, 72 h), ranked ahead of S1/S2/SU
+(`TIER_PRIORITY`); inside a sealed tier the higher demand goes first, before never-searched or most overdue
+(`comparePairs`). `planRun` already stops a market at the first pair that does not fit, so no single is planned while
+a due sealed pair of that market waits. The budget ceilings (`DAILY_CALL_CAP` 2,500, live remaining minus 300) are
+unchanged. `tests/ebay-plan.test.ts` pins it.
