@@ -4774,3 +4774,17 @@ US total at most about 3,600 calls a day (ScentCompare about 61%, ScentCompare a
 
 Here `AMAZON_LIVE_ON = false` in `src/lib/amazon-live.ts`: the sealed page's route answers "off" without calling Amazon,
 and the row keeps its tagged search link.
+
+## 2026-11-19: A slab titled like the raw card is refused by its handle, tag or type
+
+The 19 Nov snapshot published graded slabs as raw single prices where the store's
+product title reads like the raw card and only the handle says slab:
+151Collectables' Boa Hancock OP15 event winner (US$240, handle "...-grade-10-foil-en-psa-..."),
+Beardy Cards' PSA 10 Luffy P-033 (C$850) and LA Dodgers DON!! (C$1,100), Crystal
+Collectables' BGS 9.5 Luffy OP05-119 (A$440), GS GameOn's PSA 10 P-033 and Collector
+Store's PSA 10 ST29-001. `NOT_A_RAW_SINGLE` reads only the title and #212's
+`isGradedVariant` only the variant title. `matchStoreProduct` now also refuses a listing
+whose handle has a grading word as one of its hyphen-separated words (`-psa-`, `-psa10-`,
+`-bgs-`, `-cgc-9-`, `-grade-9-` ...), or whose tag or product type is a grading word
+("Graded", "PSA", "Graded Cards"). Miss reason `graded`. Word-bounded on purpose: a
+random handle like "product_26qj...bjpsa41..." is not refused. Rides the next import.

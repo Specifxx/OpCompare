@@ -88,7 +88,7 @@ async function main() {
     let matched = 0;
     let inStock = 0;
     for (const p of products) {
-      const m = matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix, { tags: p.tags, productType: p.product_type, sealedOnly: store.sealedOnly });
+      const m = matchStoreProduct(p.title, (p.variants ?? []).map((v) => v.sku), ix, { tags: p.tags, productType: p.product_type, sealedOnly: store.sealedOnly, handle: p.handle });
       if ("id" in m) {
         matched++;
         if (bestVariant(p.variants ?? [])) inStock++;
