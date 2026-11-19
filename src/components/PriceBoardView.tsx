@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { BoardModel } from "@/lib/board-model";
-import { ebayLabel, outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, outboundRel } from "@/lib/affiliate";
 import { PIN_OUTLINE, pinnedOrder } from "@/lib/pinned-order";
 import { bestTreatment } from "@/lib/best-price";
 import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
@@ -92,8 +92,12 @@ export function PriceBoardView({
   };
   const fetchAfter = (o: (typeof ordered)[number] | null) => fetchItems.filter((f) => fetchAnchor(f.price) === o).map((f) => f.li);
   const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
-  // The eBay row always exists on this board (a listing, else the pinned search row); TCGplayer's only when it is drawn.
-  const hasMarketRows = { ebay: true, tcgplayer: Boolean(pinTcg) || showTcgRef };
+  // TCGplayer's row is always there too (2026-11-19, "a row that is always there beats a perfect row that is often missing"): with
+  // no TCGplayer listing and no reference price here, its tagged link stands in, the product when we know it, else a search.
+  const showTcgSearch = !pinTcg && !showTcgRef;
+  const tcgSearchHref = tcgRef?.href || affiliateUrl(`https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=${encodeURIComponent(name ?? slug ?? "")}`, "tcgplayer", page === "sealed" ? "/sealed" : "/card");
+  // The eBay row always exists on this board (a listing, else the pinned search row), and so does TCGplayer's.
+  const hasMarketRows = { ebay: true, tcgplayer: true };
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
   const newest = open.length ? open.reduce((a, b) => (a.updatedAt > b.updatedAt ? a : b)).updatedAt : null;
 
@@ -111,7 +115,7 @@ export function PriceBoardView({
           </span>
         ) : null}
       </div>
-      {!hasEbayRow || showTcgRef ? (
+      {!hasEbayRow || showTcgRef || showTcgSearch ? (
         <ol className="divide-y divide-ink-800 border-b border-ink-800">
           {hasEbayRow ? null : (
             <li className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.ebay}`}>
@@ -156,6 +160,24 @@ export function PriceBoardView({
               <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
                 <span className="hidden sm:inline">Buy on TCGplayer →</span>
                 <span className="sm:hidden">→</span>
+              </a>
+            </li>
+          ) : null}
+          {showTcgSearch ? (
+            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  No TCGplayer price on file for this {noun}. See its current listings.{" "}
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              <CartAddButton href={tcgSearchHref} productUrl={tcgRef?.url ?? tcgSearchHref} storeName="TCGplayer" title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
+              <a href={tcgSearchHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="tcg_fallback" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
+                {tcgRef?.href ? "Buy on TCGplayer →" : "Search TCGplayer →"}
               </a>
             </li>
           ) : null}
