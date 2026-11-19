@@ -69,7 +69,8 @@ read rows through `public-data.ts` / `public-db.ts` (a Prisma-shaped read-only c
   search and open (`CardDemand`; `sealedview:<id>` Counter rows for sealed, written by
   `SealedViewBeacon` and the sealed quick view) are HOT (`HOT_DEMAND_POINTS`) and, with
   singles of US$100+, refreshed every 48h and first in the queue; the rest rotate every
-  72h, most overdue first, price × (1 + demand) breaking ties. Never rank by price alone
+  72h, most overdue first, price × (1 + demand) breaking ties. **Sealed first (owner, 2026-11-19):** every due sealed pair, most
+  in-demand first, is searched before any single (tiers PH/P1 ahead of S1/S2/SU); cards get only what sealed leaves. Never rank by price alone
   again, never add a depth-by-budget floor back (`marketFloors` is gone on purpose).
 - The budget is `min(EBAY_MAX_CALLS, remaining − EBAY_QUOTA_RESERVE)` per run
   (unknown `remaining` → daily limit minus our last-24h spend; the cap is at

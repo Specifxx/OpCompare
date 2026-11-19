@@ -12,10 +12,16 @@
 // people who click items on demand"):
 //   FLOOR     nothing under US$20 is ever searched (US$40 in the EU), whatever
 //             its demand: the visitor gets the eBay search link instead.
-//   HOT       a card or sealed product people are searching for and opening
-//             (HOT_DEMAND_POINTS), or any single of US$100+, is refreshed every
-//             48h and goes first.
-//   ROTATING  everything else above the floor is refreshed every 72h, most
+//   SEALED FIRST (owner, 2026-11-19: "everything goes to sealed products first
+//             … the most in-demand sealed products, not the least popular"):
+//             every due sealed pair is searched before ANY single, the most
+//             in-demand first (hot sealed PH every 48h, then the rest P1 every
+//             72h, each ordered by demand). Singles have TCGplayer and store
+//             prices already; they get eBay only with the calls sealed leaves.
+//   HOT       a card people are searching for and opening (HOT_DEMAND_POINTS),
+//             or any single of US$100+, is refreshed every 48h, first of the
+//             singles.
+//   ROTATING  every other single above the floor is refreshed every 72h, most
 //             overdue first, as the budget allows.
 // Within a tier a pair's SCORE (price × (1 + demand)) breaks ties; a run that
 // has searched everything due tops up with the hottest pairs, so no quota is
@@ -77,10 +83,14 @@ export const SEALED_MIN_CENTS = 2000; // sealed of US$20+ (the same floor as sin
 export const LAUNCH_WINDOW_DAYS = 60; // unpriced products are searched only this long after release (or in presale), and only with a store reference price
 export const DUE_GRACE_HOURS = 3; // a 24h pair checked at 05:39 yesterday is due at 05:37 today
 
-export type Tier = "S1" | "S2" | "SU" | "P1";
-export const TIER_INTERVAL_HOURS: Record<Tier, number> = { S1: 48, S2: 72, SU: 72, P1: 72 };
-/** S1 < S2 = P1 < SU. */
-export const TIER_PRIORITY: Record<Tier, number> = { S1: 1, S2: 2, P1: 2, SU: 3 };
+export type Tier = "PH" | "P1" | "S1" | "S2" | "SU";
+export const TIER_INTERVAL_HOURS: Record<Tier, number> = { PH: 48, P1: 72, S1: 48, S2: 72, SU: 72 };
+/**
+ * Sealed before singles (owner, 2026-11-19): PH (hot sealed) < P1 (other sealed) < S1 < S2 < SU. planRun stops a
+ * market at the first pair that does not fit, so no single is searched while a due sealed pair of that market waits.
+ */
+export const TIER_PRIORITY: Record<Tier, number> = { PH: 1, P1: 2, S1: 3, S2: 4, SU: 5 };
+export const isSealedTier = (t: Tier): boolean => t === "PH" || t === "P1";
 
 /**
  * Sealed kinds the eBay pass searches: the ones matchSealedTitle can recognise
@@ -240,7 +250,7 @@ export function tierOf(p: PlanProduct, m: EbayMarket, minValueCents: number = DE
   }
   if (!scope.sealed || !p.sealedKind || !SEARCHED_SEALED_KINDS.has(p.sealedKind)) return null;
   if ((p.marketUsd ?? ref ?? -1) < SEALED_MIN_CENTS) return null;
-  return (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "S1" : "P1";
+  return (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "PH" : "P1";
 }
 
 /** Is a pair due? Never searched → yes; else when its age reaches interval − grace. EBAY_FORCE → always. */
@@ -266,14 +276,24 @@ export interface Pair {
   cost: number; // modelled calls
   /** pairScore: what a click is worth (price × (1 + demand)); orders pairs inside a tier. */
   score: number;
+  /** Demand points (sealed pairs are ordered by this first: the most in-demand sealed product is searched first). */
+  demand?: number;
 }
 
 export const pairKey = (productId: number, market: string) => `${productId}|${market}`;
 
-/** Tier first of all (hot before rotating), then never-searched, then most overdue (the rotation), then the higher score. */
+/**
+ * Tier first of all (sealed before singles, hot before rotating). Inside a sealed tier the most in-demand product
+ * first (owner, 2026-11-19: by popularity, never the least popular). Then never-searched, then most overdue (the
+ * rotation), then the higher score.
+ */
 export function comparePairs(a: Pair, b: Pair, now: Date): number {
   const t = TIER_PRIORITY[a.tier] - TIER_PRIORITY[b.tier];
   if (t) return t;
+  if (isSealedTier(a.tier)) {
+    const d = (b.demand ?? 0) - (a.demand ?? 0);
+    if (d) return d;
+  }
   if (!a.checkedAt !== !b.checkedAt) return a.checkedAt ? 1 : -1;
   if (a.checkedAt && b.checkedAt) {
     const oa = now.getTime() - a.checkedAt.getTime() - TIER_INTERVAL_HOURS[a.tier] * 3600_000;
@@ -300,7 +320,7 @@ export function duePairs(
     if (!tier) continue;
     const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
     if (!isDue(checkedAt, tier, now, opts.force)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand) });
+    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand), demand: p.demand ?? 0 });
   }
   return out.sort((a, b) => comparePairs(a, b, now));
 }
@@ -324,7 +344,7 @@ export function fillPairs(
     if (!tier) continue;
     const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
     if (isDue(checkedAt, tier, now)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand) });
+    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand), demand: p.demand ?? 0 });
   }
   return out.sort((a, b) => comparePairs(a, b, now));
 }
