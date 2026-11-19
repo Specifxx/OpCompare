@@ -8,6 +8,7 @@ import { useConsent } from "@/lib/use-consent";
 import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
 import { ebayBtnNow } from "@/lib/buy-btn-arm";
+import { ebayPopNow } from "@/lib/stand-out-arm";
 
 // RiftCompare's ConsentGatedAnalytics: Vercel Analytics mounts only once
 // useConsent() resolves (a CMP grant, or the no-CMP grace period), never on the
@@ -34,7 +35,7 @@ function BuyClickEvents() {
       );
       if (!props) return;
       try {
-        Object.assign(props, { dock_arm: dockArmNow(), ad_look: adLookNow(), ebay_btn: ebayBtnNow() });
+        Object.assign(props, { dock_arm: dockArmNow(), ad_look: adLookNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow() });
         track("buy_click", props);
       } catch {
         /* an analytics failure never gets in the way of the click */
