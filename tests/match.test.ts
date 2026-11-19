@@ -271,6 +271,15 @@ test("graded slab variants never price the raw card (Stomping Grounds, 2026-11-1
     assert.equal(bestVariant([{ title: t, price: "50.00", available: true }]), null, t);
   }
   for (const t of ["Near Mint", "Lightly Played", "Near Mint Foil", "Default Title", "Moderately Played / Foil"]) assert.ok(!isGradedVariant(t), t);
+  // Another language's printing, named in the store's language (zillerstore.it).
+  assert.deepEqual(
+    bestVariant([
+      { title: "NM / Giapponese / SECRETRARE - (Secret Rare) - OP-09: Emperors in the New Wor.", price: "7.00", available: true },
+      { title: "NM / Inglese / SECRETRARE - (Secret Rare) - OP-09: Emperors in the New Wor.", price: "19.00", available: true },
+    ])?.priceCents,
+    1900,
+  );
+  assert.equal(bestVariant([{ title: "Englisch / Near Mint / Regulär", price: "5.00", available: true }])?.priceCents, 500);
   // Out of stock: the greyed price is the raw card's, never the slab's.
   assert.equal(anyVariant([{ title: "PSA 10", price: "40.00", available: false }, { title: "Near Mint", price: "90.00", available: false }]), 9000);
   assert.equal(anyVariant([{ title: "PSA 10", price: "40.00", available: false }]), null);
@@ -466,6 +475,10 @@ test("store words for printings TCGplayer doesn't list are never the plain card"
   assert.equal(r("Izo (OP01-033) (Extended Art)"), "no-printing");
   assert.equal(r("Izo OP01-033 - OP-13 Carrying On His Will Box Topper"), "no-printing");
   assert.equal(r("Blast Breath (-Best Selection Vol. 1-) - ST04-016 - Common"), "no-printing");
+  // BinderPOS's "OPRP" is the Revision Pack reprint, never ST04's own card (2026-11-19:
+  // "Monkey.D.Luffy [OPRP - ST01-001]" priced ST01-001 at a third of market).
+  assert.equal(r("Blast Breath [OPRP - ST04-016]"), 599780);
+  assert.equal(r("Blast Breath [OP-RP - ST04-016]"), 599780);
 });
 
 test("canonical set names on the name path", () => {

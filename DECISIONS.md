@@ -4714,3 +4714,12 @@ the card page showed a slab price as a Near Mint offer 50–70% under market. `b
 variant `isGradedVariant` reads as a slab (PSA, BGS, CGC, SGC, Beckett, TAG/AGS grades, "Graded", "Slab", ACE
 grading); a product with only slab variants yields no row. The import rewrites each store's rows every run, so slab
 rows already published fall out at the next import. `tests/match.test.ts` pins it with the real variant titles.
+
+## 2026-11-19 — Two more ways a cheap wrong price reached a card (audit after the slab fix)
+
+A live read of the 141 single-card store offers under 55% of TCGplayer's market (19 Nov) found, besides Stomping
+Grounds' slabs: BinderPOS stores' "Monkey.D.Luffy [OPRP - ST01-001]" (the Revision Pack reprint, TCGplayer's OP-RP)
+matched to ST01's own card, because "OPRP" was not read as a set code (`setCodesIn` now reads OP-RP / OPRP); and
+zillerstore.it's "NM / Giapponese" variants priced as the English card, because the variant language filter knew only
+English words (`FOREIGN_VARIANT` adds the Italian, French, German and Spanish words and CJK). Store-protection
+variants ("Sleeve", "Top-Loader") and EU stores' prices under TCGplayer's US market are real prices and stay.

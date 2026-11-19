@@ -609,13 +609,19 @@ export interface StoreVariant {
 export const GRADED_VARIANT =
   /\b(psa|bgs|cgc|beckett|sgc|graded|grade[d]?\s*\d|slab(bed)?|gem\s*mint|ace\s*grading|pristine\s*10|black\s*label)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b/i;
 
+// A variant that is another language's printing, in the store's own language too:
+// zillerstore.it's "NM / Giapponese / SECRETRARE" was priced as the English card
+// (2026-11-19). "Inglese", "Englisch" and "English" variants stay.
+const FOREIGN_VARIANT =
+  /japanese|jp\b|jpn\b|chinese|korean|giapponese|cinese|coreano|japonais|chinois|cor[ée]en|japanisch|chinesisch|koreanisch|japon[ée]s|\bchino\b|[㐀-鿿぀-ヿ가-힯]/i;
+
 export function isGradedVariant(title: string | null | undefined): boolean {
   return !!title && GRADED_VARIANT.test(title);
 }
 
 /** Best condition first, then cheapest, among in-stock raw variants. Null = nothing buyable. */
 export function bestVariant(variants: StoreVariant[]): { priceCents: number; condition: string | null; variantId?: number } | null {
-  const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !/japanese|jp\b|chinese/i.test(v.title) && !isGradedVariant(v.title));
+  const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !FOREIGN_VARIANT.test(v.title) && !isGradedVariant(v.title));
   if (!ok.length) return null;
   const best = ok.reduce((a, b) => {
     const ra = conditionRank(a.title);
@@ -672,6 +678,10 @@ export function setCodesIn(title: string): string[] {
     const ev = m[3] ? (/^pre/i.test(m[3]) ? "PRE" : /^re/i.test(m[3]) ? "RE" : "ANN") : null;
     out.add(ev ? `${code} ${ev}` : code);
   }
+  // "Monkey.D.Luffy [OPRP - ST01-001]": BinderPOS's code for the Revision Pack
+  // reprint (TCGplayer's OP-RP), a different, cheaper printing than ST01's own.
+  // Unread, it priced ST01-001 at a third of its market (2026-11-19).
+  if (/\bOP-?RP\b/i.test(title)) out.add("OP-RP");
   return [...out];
 }
 
