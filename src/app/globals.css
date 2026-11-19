@@ -1360,6 +1360,17 @@ html[data-adlook="b"] [data-leave-nudge]::before {
   html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a { transition: none; }
   html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a:hover { transform: none; }
 }
+/* The eBay-button A/B (lib/buy-btn-arm.ts, 2026-11-19): in arm "b" an eBay link wearing the filled site button is drawn in eBay's
+   own blue, white ink in both themes. Colour only. */
+html[data-ebaybtn="b"] a[data-retailer^="ebay"].btn-primary {
+  background-color: #0064d2;
+  border-color: #0064d2;
+  color: #ffffff;
+}
+html[data-ebaybtn="b"] a[data-retailer^="ebay"].btn-primary:hover {
+  background-color: #0079e6;
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
@@ -1381,13 +1392,3 @@ html[data-adlook="b"] [data-leave-nudge]::before {
 
 
 
-/* The eBay-button A/B (lib/ebay-btn.ts, 2026-11-19): in arm "b" an eBay link wearing the filled site button is drawn in eBay's
-   own blue, white ink in both themes. Colour only. */
-html[data-ebaybtn="b"] a[data-retailer^="ebay"].btn-primary {
-  background-color: #0064d2;
-  border-color: #0064d2;
-  color: #ffffff;
-}
-html[data-ebaybtn="b"] a[data-retailer^="ebay"].btn-primary:hover {
-  background-color: #0079e6;
-}

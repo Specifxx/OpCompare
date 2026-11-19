@@ -12,5 +12,5 @@ test("arm b colours only eBay links that wear the filled site button, in eBay bl
 
 test("buy_click carries the arm and the layout assigns it", () => {
   assert.match(read("src/components/ConsentGatedAnalytics.tsx"), /ebay_btn: ebayBtnNow\(\)/);
-  assert.match(read("src/app/layout.tsx"), /<EbayBtnArm \/>/);
+  assert.match(read("src/app/layout.tsx"), /<BuyBtnArm \/>/);
 });

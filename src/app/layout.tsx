@@ -44,7 +44,7 @@ import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
 import { AdRouteGate } from "@/components/AdRouteGate";
-import { EbayBtnArm } from "@/components/EbayBtnArm";
+import { BuyBtnArm } from "@/components/BuyBtnArm";
 
 // RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
 // everything needs to be the same"). Headings — Archivo (since 2026-11-14,
@@ -238,7 +238,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Vercel Analytics behind the consent signal (RiftCompare's
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />
-        <EbayBtnArm />
+        <BuyBtnArm />
         <AiReferralTracker />
         <ReturnNudge />
         <ShareArrival />

@@ -7,7 +7,7 @@ import { buyClickProps, clickContext, networkOf, type ClickEl } from "@/lib/buy-
 import { useConsent } from "@/lib/use-consent";
 import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
-import { ebayBtnNow } from "@/lib/ebay-btn";
+import { ebayBtnNow } from "@/lib/buy-btn-arm";
 
 // RiftCompare's ConsentGatedAnalytics: Vercel Analytics mounts only once
 // useConsent() resolves (a CMP grant, or the no-CMP grace period), never on the

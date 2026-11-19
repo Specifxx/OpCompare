@@ -4690,7 +4690,7 @@ site stores nothing and calls no AI. It ships with the Monday release. Read 3 De
 
 Owner (2026-11-19) wants more eBay clicks through placement and visibility. Vercel buy clicks, 5-11 Nov vs 12-18 Nov: eBay fell
 60% here (153 to 61), 45% on RiftCompare and 31% on DexCompare, from the 12 Nov calm palette that gave the pinned eBay row the same
-red filled button as the best store; TCGplayer kept its own colour and rose. Test (`lib/ebay-btn.ts`, localStorage `ebay-btn`,
+red filled button as the best store; TCGplayer kept its own colour and rose. Test (`lib/buy-btn-arm.ts`, localStorage `ebay-btn`,
 50/50, browser only): arm "b" draws every eBay link wearing the filled site button (`a[data-retailer^="ebay"].btn-primary`) in eBay
 blue #0064d2 with white ink; arm "a" keeps the red. Colour only. `buy_click` carries `ebay_btn`. Read 3 Dec (eBay clicks per arm;
 total buy clicks per arm check the even split). Keep: `ebayBtn()` returns "b"; drop: "a". Same test on RiftCompare.
