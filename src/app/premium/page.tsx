@@ -10,7 +10,7 @@ import { PremiumPlans } from "./PremiumPlans";
 
 export const metadata: Metadata = {
   title: "Plus & Premium — Every Deal, No Ads, a Store Plan for Your List",
-  description: `Comparing One Piece card prices on ${SITE_NAME} is free. Plus (${planPrice("plus", "month")}/mo) shows every Deal Finder deal with no ads; Premium (${planPrice("premium", "month")}/mo) plans which stores to buy your list from.`,
+  description: `Comparing One Piece card prices on ${SITE_NAME} is free. 14 days free the first time. Plus (${planPrice("plus", "month")}/mo) shows every Deal Finder deal with no ads; Premium (${planPrice("premium", "month")}/mo) plans which stores to buy your list from.`,
   alternates: { canonical: "/premium" },
   openGraph: pageOg("/premium"),
 };
@@ -27,6 +27,10 @@ const FAQ = [
   {
     q: "What is Best Basket?",
     a: "Paste a deck or send your watchlist, and it works out the cheapest delivered way to buy it across the stores in your market, each store's measured postage included. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from, beside the best one-store and two-store orders, at the minimum condition you set.",
+  },
+  {
+    q: "Is there a free trial?",
+    a: "Yes, 14 days on Plus or Premium the first time you subscribe. Stripe takes your card at checkout and charges nothing until day 15; cancel before then from your account page and you pay nothing.",
   },
   {
     q: "How do I cancel?",
@@ -75,8 +79,11 @@ export default function Premium() {
       />
       <Breadcrumbs trail={[{ name: "Plus & Premium" }]} />
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">Find the deals. Buy them for less.</h1>
-        <p className="mt-1.5 text-sm text-slate-300 sm:text-[15px]">Comparing prices is free. Plus shows every deal with no ads; Premium plans your list.</p>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-gold">First time? 14 days free · cancel any time</p>
+        <h1 className="mt-1 font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">Your binder, its value, and every deal.</h1>
+        <p className="mt-1.5 text-sm text-slate-300 sm:text-[15px]">
+          Comparing prices is free, and so is your binder. Plus adds no ads, price watches and an unlimited binder; Premium plans which stores to buy your list from.
+        </p>
       </div>
       <div className="mt-4 sm:mt-6" id="top-pricing">
         <PremiumPlans checkoutOpen={open} />

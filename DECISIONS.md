@@ -4623,3 +4623,18 @@ The owner, 2026-11-19: "I want it for all the sites, so people have like an ad o
 2026-11-18 (`lib/dock-arm.ts`) ends early with its "on" arm for every visitor: the eBay (and, where the site has it, TCGplayer) dock is
 stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
 scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
+
+## 2026-11-19 — A 14-day free trial, a collector-first Premium page, Binder in the phone bar
+
+Owner, 2026-11-19: Premium "very, very easy to get", with a free trial and a page that sells the collector side (the binder,
+notifications, rising cards, deals), freemium, never paywalling the cheapest price; and "replace the menu with My Collection" on the
+bottom nav. This reverses "Premium: ported, minus the trial" on the owner's word.
+
+- **Trial**: `checkoutParams` adds `trial_period_days: 14` for a buyer who has never been our Stripe customer (no `stripeCustomerId`),
+  so one person gets one trial. Stripe Checkout takes the card; nothing is charged until day 15. `trialing` already entitles
+  (`ENTITLED_STATUSES`), and plan switching already refuses a trialing subscription. Prices and tier features are unchanged.
+- **Premium page**: the headline leads with the binder and says "First time? 14 days free"; a trial question joins the FAQ. Pricing stays
+  at the very top.
+- **Bottom nav**: Binder (/portfolio) replaces Menu; Sealed takes the browse icon. The header keeps its menu button on phones.
+
+**Measure (read 9 Dec):** Stripe trials started and converted on day 15 (`/admin/subscriptions`), the bottom nav's Binder taps.
