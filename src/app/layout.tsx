@@ -43,6 +43,7 @@ import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { OG_BASE } from "@/lib/og/meta";
 import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
+import { AdRouteGate } from "@/components/AdRouteGate";
 
 // RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
 // everything needs to be the same"). Headings — Archivo (since 2026-11-14,
@@ -185,7 +186,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SideNav />
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
-                <PhoneDockAds />
+                <AdRouteGate><PhoneDockAds /></AdRouteGate>
                 {/* The phone bottom nav (DECISIONS.md 2026-11-18): browser only, below 768px, hidden while any dialog (the quick views, the
                     menu, the cart) is open; BOTTOM_NAV in lib/site.ts is its rollback. Inside MegaMenuProvider: its Menu tab opens the menu. */}
                 {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
@@ -199,7 +200,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <main id="main-content" className="container-app min-w-0 py-6">
                     {children}
                     {/* The one ad block sits below the page's own content, never above it (2026-11-19, core-update quality pass). */}
-                    <FooterAds />
+                    <AdRouteGate><FooterAds /></AdRouteGate>
                   </main>
                 </div>
                 {/* No Premium slider (owner, 2026-11-03, on RiftCompare: "get rid of all
