@@ -469,6 +469,13 @@ const RAW_STORES: StoreInfo[] = [
   // is not published (no /policies/shipping-policy; its terms say shipping costs
   // "are provided at checkout"), so it has no shippingCents and no policyUrl.
   { key: "beachestcg", name: "BeachesTCG", base: "https://beachestcg.com.au", country: "AU", collections: ["one-piece"], sealedOnly: true },
+  // Forge and Fire Gaming, Maryland Heights MO (2026-11-20): its staff asked on
+  // Reddit to be listed. BigCommerce (Cornerstone theme), US$, ships to the 48
+  // contiguous states only: US$6 flat, measured at its own checkout (carts of
+  // US$14.95 and US$474.85 to New York, San Francisco, Dallas and Chicago) and
+  // kept in shipping-rates.json; no page states it, so no shippingCents. Its One Piece categories held 13 sealed products that
+  // day (booster boxes and starter decks) and no singles: sealed only.
+  { key: "forgeandfire", name: "Forge and Fire Gaming", base: "https://forgeandfiregaming.com", country: "US", collections: ["/OnePiece", "/one-piece/"], platform: "bigcommerce", sealedOnly: true },
   // ── Store audit, 2026-10-28 (DECISIONS.md "Store audit: dead stores out,
   // stores from the sister sites in"): every store the sister sites track that
   // OP Compare did not, read through scripts/probe-stores.ts (the import's own

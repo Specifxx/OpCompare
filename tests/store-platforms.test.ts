@@ -126,6 +126,34 @@ test("BigCommerce: category cards with price, currency and the stock button", ()
   assert.deepEqual(parseBigCommercePage(fixture("bigcommerce-category.html"), "USD"), []);
 });
 
+test("BigCommerce: a Cornerstone theme with <article> split over lines, an h4 title and a sale price (Forge and Fire)", () => {
+  // Shaped on forgeandfiregaming.com's /one-piece/ page, 2026-11-20: the
+  // class sits on the line after `<article`, the title is an h4, and the card
+  // carries the struck-out price before the price you pay.
+  const card = (id: number, title: string, was: string, now: string, button: string) => `
+<article
+    class="card
+     has-sale-price"
+>
+  <a href="https://forgeandfiregaming.com/cart.php?action=add&amp;product_id=${id}" class="button button--small card-figcaption-button">${button}</a>
+  <h4 class="card-title">
+    <a aria-label="${title},
+        Was: ${was}, Now: ${now}" href="https://forgeandfiregaming.com/one-piece/p${id}/" data-event-type="product-click">${title}</a>
+  </h4>
+  <span data-product-non-sale-price-without-tax class="price price--non-sale">${was}</span>
+  <span data-product-price-without-tax class="price price--withoutTax">${now}</span>
+</article>`;
+  const html = card(1, "Starter Deck 27: BLACK Marshall.D.Teach", "$39.99", "$29.95", "Add to Cart") +
+    card(2, "STARTER DECK EX - GEAR 5 LUFFY", "$74.99", "$64.95", "Out of stock");
+  assert.deepEqual(
+    parseBigCommercePage(html, "USD").map((p) => [p.title, p.variants[0].price, p.variants[0].available, p.url]),
+    [
+      ["Starter Deck 27: BLACK Marshall.D.Teach", "29.95", true, "https://forgeandfiregaming.com/one-piece/p1/"],
+      ["STARTER DECK EX - GEAR 5 LUFFY", "64.95", false, "https://forgeandfiregaming.com/one-piece/p2/"],
+    ],
+  );
+});
+
 test("BigCommerce money: thousands separators, and only the market's currency", () => {
   assert.equal(parseMoney("3,096.00$ AUD", "AUD"), 3096);
   assert.equal(parseMoney("22.00$ AUD", "AUD"), 22);

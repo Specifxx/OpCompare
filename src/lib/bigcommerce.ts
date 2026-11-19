@@ -34,8 +34,11 @@ export function parseMoney(text: string, currency: string): number | null {
 /** The products on one category page (an empty list past the last page). */
 export function parseBigCommercePage(html: string, currency: string): StoreListing[] {
   const out: StoreListing[] = [];
-  for (const chunk of html.split(/<article class="card\b/).slice(1)) {
-    const a = /<h3 class="card-title">\s*<a\b[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/.exec(chunk);
+  // `<article` and its class may sit on separate lines, and themes title a card
+  // with h3 (Grand J) or h4 (Forge and Fire): the same tolerance as RiftCompare's
+  // lib/storefront-html.ts.
+  for (const chunk of html.split(/<article\b[^>]*\bclass="card\b/).slice(1)) {
+    const a = /<h[2-5] class="card-title">\s*<a\b[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/.exec(chunk);
     if (!a) continue;
     const priceText = /data-product-price-with(?:out)?-tax[^>]*>([^<]+)</.exec(chunk)?.[1] ?? "";
     const price = parseMoney(priceText, currency);
@@ -71,7 +74,7 @@ export async function fetchBigCommerceStore(store: StoreInfo): Promise<StoreRead
         // A first page with product cards but no price in the market's currency is
         // a currency problem, not an empty category; with no cards at all, the grid
         // is rendered client-side. Either way, nothing here can be trusted.
-        const cards = (res.text.match(/<article class="card\b/g) ?? []).length;
+        const cards = (res.text.match(/<article\b[^>]*\bclass="card\b/g) ?? []).length;
         return { products, failed: true, handles, note: cards ? `no price in ${cur} on ${path}` : `no server-rendered product grid on ${path}` };
       }
       // Past the last page BigCommerce serves an empty grid (or nothing new).
