@@ -36,6 +36,8 @@ import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
 import { visitorHistory } from "@/lib/price-history-view";
+import { BlackFridayStrip } from "@/components/BlackFridayStrip";
+import { bfStripFor } from "@/lib/bf-strip-sealed";
 
 type Props = { params: { slug: string } };
 
@@ -102,6 +104,15 @@ export default async function SealedDetailPage({ params }: Props) {
     `${s.name.replace(/\s+-\s+/, " ")} English`,
   ).replace(/\bbooster box\b/i, "booster (box,display)");
 
+  // The Black Friday strip (lib/bf-strip-sealed.ts, 2026-11-19), through 1 Dec: facts this page already holds.
+  const bf = bfStripFor({
+    offers: s.offers,
+    country,
+    currentCents: h.kind === "listing" ? h.cents : null,
+    history: vh.low.points,
+    presale: s.presale,
+    releasedOn: s.releasedOn ?? set?.releasedOn ?? null,
+  });
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
     <div>
@@ -239,6 +250,7 @@ export default async function SealedDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+          {bf && <BlackFridayStrip {...bf} />}
           <PriceBoard
             productId={s.id}
             offers={s.offers}

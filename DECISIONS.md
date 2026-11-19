@@ -4723,3 +4723,17 @@ matched to ST01's own card, because "OPRP" was not read as a set code (`setCodes
 zillerstore.it's "NM / Giapponese" variants priced as the English card, because the variant language filter knew only
 English words (`FOREIGN_VARIANT` adds the Italian, French, German and Spanish words and CJK). Store-protection
 variants ("Sleeve", "Top-Loader") and EU stores' prices under TCGplayer's US market are real prices and stay.
+
+## 2026-11-19 — Black Friday strip on sealed pages
+
+The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
+under the product's price summary, through 1 Dec (`lib/bf-strip.ts`, `lib/bf-strip-sealed.ts`, `BlackFridayStrip.tsx`, labelled
+by `saleStrip`: Black Friday, then Cyber Monday), in the visitor's market: the cheapest open store or TCGplayer row and where (never
+eBay, which keeps its pinned row), its postage only where the row or the store's own page states it (`lib/stores.ts`; nothing is
+guessed, so most rows show none), when that price was read, the pre-order date, and where today's price sits against the product's
+own history in that market (`visitorHistory`). The cue needs 14 priced days in the last 90; it says "Lowest price in 90 days" only
+when the history reaches back 90 days, otherwise "Lowest price since <first day>"; a price that never moved says "Same price since
+<first day>"; above the low it gives the window's real low and its day. A day under half the window's median is a wrong listing and
+never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue. No new read, no eBay call;
+the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and RiftCompare. Judge on buy clicks per
+sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
