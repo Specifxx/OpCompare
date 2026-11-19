@@ -4815,3 +4815,12 @@ server "TCG Deals & Restocks" (the sealed restock and price-drop feeds on top, a
 own never-expiring invite code, so the server's Invites list counts the members each site brings with no tracking of
 ours. `DiscordCta` ("Restock and price-drop alerts, free on Discord") sits under the price table on the product page and
 in the footer: never above a price, never a pop-up. `tests/discord-cta.test.ts`.
+
+## 2026-11-20: The /movers share image shows rises AND drops (owner)
+
+A Reddit reply to a snapshot post asked for "the biggest drops. I just want to rip and play"; the owner: every snapshot thumbnail
+is half biggest rises, half biggest drops. `/movers`' image (`moversOg`, `MoversImage` in `lib/og/compose.tsx`) is now the week's
+three biggest rises (`pickMoverRows`) above its three biggest drops (`pickDropRows`: the import's own `change7d`, the same $3
+floor, biggest fall first), each in the guide's own columns. A fall of 80% or more in a week is left out as a misread market
+price (RiftCompare's movers rule): on 20 Nov the Manga Portgas.D.Ace showed −96.8% on a US$54.56 market. Fewer than three of
+either draws the price guide's image, as before. `tests/og.test.ts`.

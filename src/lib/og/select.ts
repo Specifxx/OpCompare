@@ -124,6 +124,18 @@ export function pickMoverRows(cat: CatalogLike, n = 5): OgRow[] {
   return dedupeByName(up, n).map((c) => toRow(c, cat.setById.get(c.setId)?.code ?? ""));
 }
 
+/**
+ * This week's biggest drops (owner, 2026-11-20, from a Reddit reply: "show me the biggest drops. I just want to rip and
+ * play"): pickMoverRows the other way, the same $3 floor and the import's own change7d, biggest fall first.
+ */
+export function pickDropRows(cat: CatalogLike, n = 3): OgRow[] {
+  const down = cat.cards
+    // A fall of 80% or more in a week is a misread market price, not a move (RiftCompare's movers rule).
+    .filter((c) => c.hasImage && c.change7d != null && c.change7d < 0 && c.change7d > -80 && (c.marketUsd ?? 0) >= 300)
+    .sort((a, b) => (a.change7d ?? 0) - (b.change7d ?? 0) || a.id - b.id);
+  return dedupeByName(down, n).map((c) => toRow(c, cat.setById.get(c.setId)?.code ?? ""));
+}
+
 /** The last column shows 7-day moves only once at least 3 rows really moved; until then, store counts. */
 export function showMoveColumn(rows: Pick<OgRow, "change7d">[]): boolean {
   return rows.filter((r) => r.change7d != null && Math.abs(r.change7d) >= 0.05).length >= 3;

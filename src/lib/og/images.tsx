@@ -30,10 +30,10 @@ import { postContextForImages } from "../blog/context";
 import { ogArt, withThumbs } from "./art";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { BlogImage, CardImage, FallbackImage, GuideImage, PreorderImage, SealedImage, SetImage, type GuideVariant } from "./compose";
+import { BlogImage, CardImage, FallbackImage, GuideImage, MoversImage, PreorderImage, SealedImage, SetImage, type GuideVariant } from "./compose";
 import { OG_AFTER_ERROR, OG_CACHED, OG_FALLBACK_TTL, ogResponse } from "./respond";
 import { ogDate } from "./theme";
-import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, pickMoverRows, setPreviewCards, setTopRows, storesTracked } from "./select";
+import { findSealed, ogPriceLines, setBoxImage, pickGuideRows, pickDropRows, pickMoverRows, setPreviewCards, setTopRows, storesTracked } from "./select";
 
 function warn(where: string, err: unknown) {
   console.error(`[og] ${where} fell back:`, err instanceof Error ? err.message : err);
@@ -76,13 +76,18 @@ export async function guideOg(variant: GuideVariant): Promise<ImageResponse> {
   }
 }
 
-/** /movers (2026-11-18): this week's five biggest risers; the price guide's image until a week of history exists. */
+/**
+ * /movers: this week's three biggest rises above its three biggest drops (owner, 2026-11-20; five risers from 2026-11-18);
+ * the price guide's image until a week of history gives three of each.
+ */
 export async function moversOg(): Promise<ImageResponse> {
   try {
-    const [cat, stats] = await Promise.all([getCatalogForImages(), getSiteStatsForImages().catch(() => null)]);
-    const rows = pickMoverRows(cat, 5);
-    if (rows.length < 3) return guideOg("home");
-    return ogResponse(<GuideImage rows={await withThumbs(rows)} cards={cat.cards.length} stores={storesTracked(stats)} variant="movers" />, OG_CACHED);
+    const cat = await getCatalogForImages();
+    const ups = pickMoverRows(cat, 3);
+    const downs = pickDropRows(cat, 3);
+    if (ups.length < 3 || downs.length < 3) return guideOg("home");
+    const [a, b] = await Promise.all([withThumbs(ups), withThumbs(downs)]);
+    return ogResponse(<MoversImage ups={a} downs={b} />, OG_CACHED);
   } catch (err) {
     warn("movers", err);
     return fallbackOg();
