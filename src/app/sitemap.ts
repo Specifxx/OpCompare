@@ -11,6 +11,7 @@ import { leaderSlug, PRINTING_FACETS, RARITY_FACETS, TYPE_FACETS } from "@/lib/f
 import { KEYWORDS } from "@/lib/keywords";
 import { STORES } from "@/lib/stores";
 import { thinCardIds, upcomingSetIds } from "@/lib/card-index";
+import { withoutOffSeasonSales } from "@/lib/sale-seasons";
 
 // Revalidated daily; reads the same cached loaders as the pages (egress rule 1).
 // Private paths (the admin area, account pages) are never listed here.
@@ -19,14 +20,16 @@ export const revalidate = 86400;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const fixed = [
-    "", "/browse", "/price-guide", "/graded", "/sealed", "/black-friday", "/cyber-monday", "/boxing-day", "/january-sales", "/lunar-new-year", "/embed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
+    "", "/browse", "/price-guide", "/graded", "/sealed", "/black-friday", "/cyber-monday", ...withoutOffSeasonSales(["/boxing-day", "/january-sales"], new Date().toISOString().slice(0, 10)), "/embed", "/market", "/market/records", "/movers", "/stores", "/sets", "/leaders", "/colors", "/cards", "/cards/all",
     "/tools/deal-finder", "/tools/box-ev", "/tools/pack-sim", "/daily", "/tools/pull-tracker", "/tools/best-basket", "/tools/rising", "/tools/demand", "/trade", "/premium", "/release-dates", "/preorders", "/eb05-preorders", "/op18-preorders", "/stores/suggest", "/how-we-pick-stores", "/stores/partners", "/feedback", "/blog", "/authors", "/creators", "/editorial-policy", "/about", "/methodology", "/contact", "/privacy", "/terms",
     "/tools", "/deck", "/tools/selling-fees", "/tools/should-i-grade", "/tools/is-this-a-good-price", "/singles", "/keywords", "/cards/rarity", "/alerts",
   ].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 }));
   // The five region homes (design track), each a market-locked copy of "/".
   const regions = ["/au", "/uk", "/ca", "/sg", "/eu"].map((p) => ({ url: `${SITE_URL}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.9 }));
   fixed.push(...regions);
-  const posts = POSTS.map((p) => ({ url: `${SITE_URL}${postHref(p)}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }));
+  // A post carries the day it was published, never "today" on every build: Google names re-dating pages to look fresh as
+  // search-engine-first (search-engine-first audit, 2026-11-19).
+  const posts = POSTS.map((p) => ({ url: `${SITE_URL}${postHref(p)}`, lastModified: new Date(`${p.date}T00:00:00Z`), changeFrequency: "weekly" as const, priority: 0.8 }));
   // A build with no database yet (the very first deploy) still gets a sitemap;
   // the daily revalidation fills in the cards once the import has run.
   let data: [Awaited<ReturnType<typeof getCatalog>>, Awaited<ReturnType<typeof getSealedCatalog>>];
