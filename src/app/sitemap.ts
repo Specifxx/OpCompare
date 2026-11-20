@@ -80,7 +80,7 @@ async function deckEntries(now: Date): Promise<MetadataRoute.Sitemap> {
 }
 
 // The tools track's landing pages: card facets, keywords, one page per Leader
-// number and per store with stock only while SITEMAP_STORE_PAGES is on (it is off: store pages stay live, out of the sitemap).
+// number and per store with stock only while SITEMAP_STORE_PAGES is on (on again since 2026-11-20).
 function toolsTrackEntries(cat: Awaited<ReturnType<typeof getCatalog>>, stats: Awaited<ReturnType<typeof getStoreStats>>, now: Date): MetadataRoute.Sitemap {
   const leaders = new Set(cat.cards.filter((c) => c.cardType === "Leader" && c.number).map((c) => leaderSlug(c.name, c.number)));
   const stocked = new Set(stats.filter((s) => s.inStock >= 10).map((s) => s.source));

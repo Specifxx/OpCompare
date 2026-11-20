@@ -4861,6 +4861,15 @@ arrived, 17 to 19 never did; Rift's card-row buy_click carried 19 to 21 from 18 
 most 15 (buyClickProps' 11 and the four A/B arms), so none was lost here. `forVercel` (lib/buy-click.ts) now caps what is sent at 16,
 the click's own facts first and the arms last, and `tests/vercel-props.test.ts` fails if a fully loaded buy_click passes 16. A new A/B
 arm folds into an existing key instead of adding one.
+
+## 2026-11-20: Store pages back in the sitemap (reverses SEO-4)
+
+- SEO-4 (2026-11-10) took `/stores/<store>` out of the sitemap on the guess that nobody searches a shop's page on a
+  comparison site. Search Console says otherwise: over 27 Oct to 16 Nov, 284 store pages earned 3,364 Google impressions
+  while unlisted, the most of any OP template, ahead of card pages (3,274), at position 13.2. People search the shop's name.
+- `SITEMAP_STORE_PAGES = true` (`lib/sitemap-core.ts`) lists each store with 10 or more products in stock, as before SEO-4.
+  Listing them gives Google a lastmod and a crawl path for the pages it already ranks. Search Recovery plan, 20 Nov
+  (code red boardroom); measured by the TCGEmpire maintenance task `gsc-pagetypes`. Read again ~9 Dec.
 emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
 
 ## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line

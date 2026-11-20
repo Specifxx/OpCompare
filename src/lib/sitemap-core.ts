@@ -41,7 +41,8 @@ export function sitemapSealed<S extends Sealed>(sealed: readonly S[], today: str
 }
 
 /**
- * Whether each store's own /stores/<store> page is listed (off since 2026-11-10, SEO-4): 400 of the sitemap's 1,350 URLs,
- * and nobody searches a shop's page on a comparison site. The pages stay live and indexable, linked from /stores (listed).
+ * Whether each store's own /stores/<store> page is listed (stocked stores, 10+ in stock). Off 2026-11-10 (SEO-4) on the guess
+ * that nobody searches a shop's page here; back on 2026-11-20: 284 store pages earned 3,364 Google impressions in three weeks
+ * while unlisted, the most of any OP template (TCGEmpire maintenance task gsc-pagetypes).
  */
-export const SITEMAP_STORE_PAGES = false;
+export const SITEMAP_STORE_PAGES = true;

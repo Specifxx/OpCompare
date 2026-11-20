@@ -23,10 +23,10 @@ test("sealed: two stores in one market or still to release; promo packs never", 
   assert.deepEqual(sitemapSealed(list as never, "2026-11-07").map((x) => list.indexOf(x as never)), [0, 2, 3]);
 });
 
-test("store pages are out of the sitemap, the stores index stays (SEO-4, 2026-11-10)", async () => {
+test("stocked store pages are in the sitemap again (2026-11-20), the stores index stays", async () => {
   const { readFileSync } = await import("node:fs");
   const { SITEMAP_STORE_PAGES } = await import("../src/lib/sitemap-core");
-  assert.equal(SITEMAP_STORE_PAGES, false);
+  assert.equal(SITEMAP_STORE_PAGES, true);
   const src = readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8");
   assert.match(src, /SITEMAP_STORE_PAGES \? STORES\.filter/, "individual store pages sit behind the switch");
   assert.match(src, /"\/stores",/, "the stores index stays listed");
