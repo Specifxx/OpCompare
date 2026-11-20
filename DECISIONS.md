@@ -4839,3 +4839,17 @@ asked for hats and lights by name, so they come back after the 2026-11-08 tone-d
   but two class names, so titles, metadata and structured data are untouched. Favicons and share images are unchanged.
 - Off switch: `CHRISTMAS_FESTIVE_LAYER` (`lib/season.ts`, the `data-xmas-layer` attribute on `<html>`); the Christmas window
   also ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
+
+## 2026-11-20: /movers sells, not just ranks (buy-clicks boardroom, move 2)
+
+Reddit link posts land on `/movers`, and Reddit visitors almost never clicked buy (0.7–3% against 12–23% from Google).
+The boardroom decided to make every snapshot and Hot 100 page buyable (target 8%+, read 27 Nov and 4 Dec).
+
+- **"Shop the top risers"** (`MoversBuy.tsx` `RisersShop`) under the h1: the week's top three risers, each with its
+  cheapest in-stock store price now in the visitor's market (`CardLite.low`, what the tiles show; TCGplayer's market
+  price, labelled, where no store has it) and a Buy button. The row is a `CardQuickLink`, so it opens the quick view.
+- **Every panel row** (`MoverList buy`) shows that same price in place of the TCGplayer figure, then the move, then a
+  Buy pill under it, inside the row's existing quick-view link (under the price, never beside it, so names keep their
+  width on a 390px phone).
+- The catalogue the page already loaded, no new read; the page's cache is unchanged; the display-only last price is not
+  read. No deploy marker: it rides the weekly release.
