@@ -29,7 +29,7 @@ test("values are clipped, so a long slug can never exceed Vercel's property limi
 
 test("the listener sits inside the consent gate and sends only to Vercel", () => {
   const src = read("src/components/ConsentGatedAnalytics.tsx");
-  assert.match(src, /track\("buy_click", props\)/);
+  assert.match(src, /track\("buy_click", forVercel\(props\)\)/);
   assert.match(src, /if \(!analytics\) return null;/);
   assert.doesNotMatch(src, /fetch\(|sendBeacon|\/api\//, "no request to our own server");
   assert.match(src, /startsWith\("\/admin"\)/);

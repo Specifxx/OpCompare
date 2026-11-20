@@ -4853,3 +4853,11 @@ The boardroom decided to make every snapshot and Hot 100 page buyable (target 8%
   width on a 390px phone).
 - The catalogue the page already loaded, no new read; the page's cache is unchanged; the display-only last price is not
   read. No deploy marker: it rides the weekly release.
+
+## 2026-11-20 — buy_click stays at 16 properties or fewer
+
+Vercel Web Analytics silently drops a custom event with more than 16 properties (measured on riftcompare.com on 20 Nov: 9 to 16
+arrived, 17 to 19 never did; Rift's card-row buy_click carried 19 to 21 from 18 Nov and went uncounted). OP Compare's buy_click has at
+most 15 (buyClickProps' 11 and the four A/B arms), so none was lost here. `forVercel` (lib/buy-click.ts) now caps what is sent at 16,
+the click's own facts first and the arms last, and `tests/vercel-props.test.ts` fails if a fully loaded buy_click passes 16. A new A/B
+arm folds into an existing key instead of adding one.
