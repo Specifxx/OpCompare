@@ -30,7 +30,7 @@ export function Navbar() {
        <div className="flex h-16 w-full items-center justify-between gap-1 sm:gap-4">
         <div className="flex min-w-0 items-center gap-0.5 sm:gap-3">
           <Link href="/" className="tap-link min-w-11 shrink-0 gap-2 lg:hidden" aria-label="OP Compare home">
-            <BrandLogo />
+            <BrandLogo cap />
             <span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">
               OP<span className="text-brand-400">Compare</span>
             </span>
