@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { track } from "@vercel/analytics";
-import { buyClickProps, clickContext, networkOf, type ClickEl } from "@/lib/buy-click";
+import { buyClickProps, clickContext, forVercel, networkOf, type ClickEl } from "@/lib/buy-click";
 import { useConsent } from "@/lib/use-consent";
 import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
@@ -36,7 +36,7 @@ function BuyClickEvents() {
       if (!props) return;
       try {
         Object.assign(props, { dock_arm: dockArmNow(), ad_look: adLookNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow() });
-        track("buy_click", props);
+        track("buy_click", forVercel(props));
       } catch {
         /* an analytics failure never gets in the way of the click */
       }
