@@ -20,10 +20,10 @@ test("the Amazon row's buttons use .btn-amazon, keep rel and tracking", () => {
   assert.match(src, /data-retailer/);
 });
 
-test("both quick views have a See full page button, secondary so the buy buttons stay the primary ones (2026-11-20)", () => {
+test("both quick views have a prominent See full page button", () => {
   for (const f of ["src/components/QuickView.tsx", "src/components/SealedQuickView.tsx"]) {
     const src = read(f);
-    assert.match(src, /data-quickview-fullpage className="btn-ghost[^"]*min-h-11 w-full/, f);
+    assert.match(src, /data-quickview-fullpage className="btn-primary[^"]*min-h-11 w-full/, f);
     assert.match(src, /See full page: price history and details/, f);
   }
 });
