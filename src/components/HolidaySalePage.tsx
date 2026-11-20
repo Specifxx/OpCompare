@@ -8,6 +8,7 @@ import { pageOg } from "@/lib/og/meta";
 import { blackFriday, cyberMonday, longDate, seasonYear, underMarket } from "@/lib/black-friday";
 import { FamilyCluster } from "@/components/FamilyCluster";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
+import { RealDrops } from "@/components/RealDrops";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 
 // The Black Friday and Cyber Monday pages, /black-friday (DECISIONS.md, "Black Friday page", 2026-11-02) and
@@ -55,6 +56,8 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
           <a href="#price-watch" className="text-brand-400 hover:underline">price watch</a>: sealed boxes, the week&apos;s biggest price drops and graded cards, each with a live eBay listing.
         </p>
       </header>
+
+      <RealDrops sealed={sealed} market={DEFAULT_COUNTRY} page={event} source={event} />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xl font-bold">Sealed under TCGplayer market today (US)</h2>

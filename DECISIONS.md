@@ -4861,3 +4861,15 @@ arrived, 17 to 19 never did; Rift's card-row buy_click carried 19 to 21 from 18 
 most 15 (buyClickProps' 11 and the four A/B arms), so none was lost here. `forVercel` (lib/buy-click.ts) now caps what is sent at 16,
 the click's own facts first and the arms last, and `tests/vercel-props.test.ts` fails if a fully loaded buy_click passes 16. A new A/B
 arm folds into an existing key instead of adding one.
+emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
+
+## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line
+
+Code red plan (20 Nov), Cyber Week buy sprint: the season's pages lead with a list a shopper can act on. `lib/real-drops.ts`: a product
+is listed only when its cheapest in-stock price today is 10% or more under the median of its OWN recorded daily prices over the
+last 30 days (today left out), with 14+ recorded days, wrong-listing days (under half the median) left out, no claim when the
+records swing more than 2x, no placeholder prices (9999.99), and a typical price of 20.00 or more. Each line carries the
+cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search, surface `bf_drops`. It replaces the
+"Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
+30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
+28 Nov to 1 Dec against the 4 days before. OP shows the US list (the page reads nothing about the visitor), from the 120 in-stock sealed products most stores carry, their daily lows read from the history bucket files the charts use (`getHistories`). The same file ships on Dex, Rift and MTG.
