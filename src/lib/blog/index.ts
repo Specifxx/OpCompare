@@ -11,7 +11,7 @@ import { mostExpensive } from "./posts/most-expensive";
 import { op18GreenLuffy } from "./posts/op18-green-luffy";
 import { op18Karoo } from "./posts/op18-karoo";
 import { op18SaintGunko } from "./posts/op18-saint-gunko";
-import { LEADER_GUIDE_POSTS } from "./posts/leader-guides";
+import { OP18_LEADER_POSTS, RELEASED_LEADER_POSTS } from "./posts/leader-guides";
 import { eb05CardList, eb05ChaseCards, op17MostValuable, op18CardList, op18ChaseCards } from "./posts/set-reveals";
 import { rarities } from "./posts/rarities";
 import { setReview } from "./posts/set-review";
@@ -27,8 +27,9 @@ import type { Post } from "./types";
 // Newest first. Adding a post: write it in posts/, add it here — the blog
 // index, sitemap, RSS feed and share images follow.
 export const POSTS: Post[] = [
+  ...OP18_LEADER_POSTS,
   op18BoosterBox,
-  ...LEADER_GUIDE_POSTS,
+  ...RELEASED_LEADER_POSTS,
   fakeCards,
   marketNovember2026,
   crews,
