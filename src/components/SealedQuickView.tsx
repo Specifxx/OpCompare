@@ -191,9 +191,11 @@ function SealedQuickViewModal({ slug, thumb, label, onClose, onLeave }: { slug: 
           </div>
         </div>
 
-        {/* "See full page" (owner, 2026-11-18): a real button right under the header, visible without scrolling on a phone. */}
+        {/* "See full page" (owner, 2026-11-18): a real button right under the header, visible without scrolling on a phone. Secondary
+            (btn-ghost) since 2026-11-20: as the first primary button above the price rows it drew taps away from the buy buttons
+            (Rift quick-view buy clickers fell ~41 to ~10 a day the day it went primary). */}
         <div className="border-b border-ink-800 px-4 pb-4 pt-0 sm:px-5">
-          <Link href={`/sealed/${slug}`} data-quickview-fullpage className="btn-primary min-h-11 w-full text-sm" onClick={onLeave}>
+          <Link href={`/sealed/${slug}`} data-quickview-fullpage className="btn-ghost min-h-11 w-full text-sm" onClick={onLeave}>
             See full page: price history and details →
           </Link>
         </div>
