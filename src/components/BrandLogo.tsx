@@ -8,9 +8,10 @@
 // A plain <span> with a CSS mask, not an <img>: the fill follows the theme-free
 // brand ramp, there is no extra request for a second coloured asset, and the
 // element sizes like any other box (`h-9 w-9` by default, `h-8 w-8` in the hero).
-export function BrandLogo({ className = "h-9 w-9" }: { className?: string }) {
+// `cap`: the header's mark wears the Christmas Santa hat (globals.css xmas-logo block; owner, 2026-11-20).
+export function BrandLogo({ className = "h-9 w-9", cap = false }: { className?: string; cap?: boolean }) {
   return (
-    <span className="relative inline-flex shrink-0">
+    <span className={`relative inline-flex shrink-0${cap ? " xmas-cap" : ""}`}>
       <span
         role="img"
         aria-label="OP Compare logo"

@@ -223,7 +223,7 @@ export function SideNav() {
         aria-label="OP Compare home"
         className="flex h-[calc(4rem+1px)] shrink-0 items-center gap-2.5 border-b border-ink-800 px-3 transition-colors hover:bg-ink-800/60"
       >
-        <BrandLogo />
+        <BrandLogo cap />
         <span className="min-w-0">
           <span className="block truncate text-sm font-extrabold tracking-tight text-white">
             OP<span className="text-brand-400">Compare</span>
