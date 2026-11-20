@@ -5,13 +5,14 @@ import { HubFaq } from "@/components/HubFaq";
 import { PreorderProduct } from "@/components/PreorderProduct";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { SealedTile } from "@/components/SealedTile";
 import { setOwnGuides } from "@/lib/content/catalogue-guides";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getEbayPanel, getSealedCatalog, getSealedDetail, type SealedLite, type SetLite } from "@/lib/data";
 import { getCountry } from "@/lib/get-country";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageOgOwnImage } from "@/lib/og/meta";
-import { codeSlug, daysUntil, groupForSet, longDateOf, preorderGroups, preorderRouteOf, preorderSummary, productBoard, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
+import { codeSlug, daysUntil, groupForSet, longDateOf, preorderGroups, preorderRouteOf, preorderSummary, productBoard, releasedSetProducts, shortDateOf, type PreorderGroup, type PreorderItem } from "@/lib/preorders";
 import { ebaySearchUrl, onePieceEbayQuery, outboundRel } from "@/lib/affiliate";
 import { money } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
@@ -160,6 +161,9 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
   const days = releaseIso ? daysUntil(releaseIso, today) : null;
   const setName = set?.name ?? cfg.fallbackName;
   const eventSet = cfg.eventCode ? cat.sets.find((s) => s.code === cfg.eventCode) : undefined;
+  // Released: the set's own sealed products with their live prices (2026-11-20), so the
+  // page its "Now Out" title promises is a price list, not a link to /sealed.
+  const outProducts = released ? releasedSetProducts(sealed, set?.id) : [];
 
   const now = Date.now();
   const [mainBoards, otherBoards] = await Promise.all([main ? boardsFor(main.products, country, PAGE, now) : Promise.resolve([]), Promise.all(others.map((g) => boardsFor(g.products, country, PAGE, now)))]);
@@ -206,8 +210,16 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
   ];
 
   const ld = ldJson(
-    webPage({ name: `One Piece ${L} Pre-Order Prices`, href: PATH, description: `Pre-order price comparison for One Piece ${L} sealed products across every tracked store, TCGplayer and eBay, updated daily.`, type: "CollectionPage" }),
-    priced.length
+    webPage({ name: released ? `One Piece ${L} Booster Box Prices` : `One Piece ${L} Pre-Order Prices`, href: PATH, description: `Pre-order price comparison for One Piece ${L} sealed products across every tracked store, TCGplayer and eBay, updated daily.`, type: "CollectionPage" }),
+    outProducts.length
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: `One Piece ${L} sealed products`,
+          url: `${SITE_URL}${PATH}`,
+          itemListElement: outProducts.slice(0, 12).map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.name, url: `${SITE_URL}/sealed/${s.slug}` })),
+        }
+      : priced.length
       ? {
           "@context": "https://schema.org",
           "@type": "ItemList",
@@ -245,10 +257,12 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
       <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
         {released ? "Now out" : `Pre-order${releaseIso ? ` · releases ${longDateOf(releaseIso)}` : ""}${days != null && days > 0 ? ` · ${days} ${days === 1 ? "day" : "days"} to go` : ""}`}
       </span>
-      <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">One Piece {L} pre-order prices</h1>
+      <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">{released ? `One Piece ${L} booster box prices` : `One Piece ${L} pre-order prices`}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         {released
-          ? `${setName} is out, so its products are priced alongside every other set. Live prices are on the sealed page.`
+          ? outProducts.length
+            ? `${setName} is out. Every ${L} sealed product below shows its cheapest price at the stores we track in ${info.place}, in ${info.currency}; open one for every store, TCGplayer and eBay side by side. Prices refresh daily.`
+            : `${setName} is out, so its products are priced alongside every other set. Live prices are on the sealed page.`
           : `${L} is "${setName}", ${cfg.kindLine}. Nothing has shipped yet, so every seller is simply picking an opening price, and they are picking very different ones. Below, each product shows eBay's and TCGplayer's cheapest listing first, then every tracked ${info.adjective} store taking pre-orders, cheapest first, in ${info.currency}. Prices refresh daily.`}
       </p>
 
@@ -311,7 +325,25 @@ export async function PreorderPage({ cfg }: { cfg: PreorderConfig }) {
         </div>
       ) : null}
 
-      {mainBoards.length ? (
+      {outProducts.length ? (
+        <section className="mt-5">
+          <h2 className="mb-3 text-xl font-extrabold text-white">{L} sealed prices now</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {outProducts.slice(0, 12).map((s) => (
+              <SealedTile key={s.id} s={s} country={country} setCode={L} />
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-slate-400">
+            {set ? (
+              <>
+                <Link href={`/sets/${set.slug}`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">Every {L} card, priced →</Link>
+                <span className="mx-2 text-slate-600">·</span>
+              </>
+            ) : null}
+            <Link href="/sealed" className="font-semibold text-brand-300 underline-offset-2 hover:underline">All sealed prices →</Link>
+          </p>
+        </section>
+      ) : mainBoards.length ? (
         <div className="mt-5 space-y-4">
           <h2 className="sr-only">{L} pre-order prices by product</h2>
           {mainBoards.map(({ s, board }) => (
