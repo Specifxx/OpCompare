@@ -1,0 +1,129 @@
+{
+ "v": 1,
+ "site": "op",
+ "generatedAt": "2026-11-21T20:02:33.835Z",
+ "links": {
+  "US": {
+   "deals": "https://opcompare.app/black-friday",
+   "preorders": "https://opcompare.app/preorders"
+  }
+ },
+ "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 34: PURPLE Charlotte Katakuri",
+   "url": "https://opcompare.app/sealed/starter-deck-34-purple-charlotte-katakuri",
+   "cents": 1000,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/704893_in_1000x1000.jpg",
+   "refCents": 1948,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 49
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Time of Battle Booster Box",
+   "url": "https://opcompare.app/sealed/the-time-of-battle-booster-box",
+   "cents": 10000,
+   "currency": "USD",
+   "store": "Galactic Gamez",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/689336_in_1000x1000.jpg",
+   "refCents": 19755,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 49
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Sleeved Booster Pack",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-sleeved-booster-pack",
+   "cents": 1200,
+   "currency": "USD",
+   "store": "Frank's Card Shop",
+   "refCents": 2063,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 42
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box",
+   "url": "https://opcompare.app/sealed/the-dominance-of-god-booster-box",
+   "cents": 11999,
+   "currency": "USD",
+   "store": "Columbus Card Shop",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_in_1000x1000.jpg",
+   "refCents": 20762,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 42
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 4: Animal Kingdom Pirates",
+   "url": "https://opcompare.app/sealed/starter-deck-4-animal-kingdom-pirates",
+   "cents": 1700,
+   "currency": "USD",
+   "store": "Burbank Sportscards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/288224_in_1000x1000.jpg",
+   "refCents": 2750,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 38
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Double Pack Set Vol. 13",
+   "url": "https://opcompare.app/sealed/double-pack-set-vol-13",
+   "cents": 2400,
+   "currency": "USD",
+   "store": "Card x Cards",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712907_in_1000x1000.jpg",
+   "refCents": 3899,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 38
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Extra Booster: East Blue Pack",
+   "url": "https://opcompare.app/sealed/extra-booster-east-blue-pack",
+   "cents": 1000,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "releaseDate": "2027-01-29"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Extra Booster: East Blue Box",
+   "url": "https://opcompare.app/sealed/extra-booster-east-blue-box",
+   "cents": 22999,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "releaseDate": "2027-01-29"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Extra Booster: East Blue Box Case",
+   "url": "https://opcompare.app/sealed/extra-booster-east-blue-box-case",
+   "cents": 279999,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "releaseDate": "2027-01-29"
+  }
+ ]
+}
