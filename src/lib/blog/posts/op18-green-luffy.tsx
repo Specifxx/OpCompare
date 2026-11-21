@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardGrid } from "@/components/blog/BlogBits";
+import { CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -13,6 +13,9 @@ import {
   ReportedCard,
   ReportedLine,
   ReportedNote,
+  DeckCallout,
+  deckBullet,
+  op18Out,
   andList,
   boxLine,
   byNumber,
@@ -37,7 +40,7 @@ export const op18GreenLuffy: Post = {
   slug: "op18-green-luffy-leader-deck-guide",
   title: () => "OP18 Green Luffy Deck Guide: How to Play It",
   description:
-    "How to play the OP18 green Monkey.D.Luffy deck: the leader's attack-twice effect, the green cards that untap it, the game plan and where to pre-order.",
+    "How to play the OP18 green Monkey.D.Luffy deck: the leader's attack-twice effect, the green cards that untap it, the game plan and where to buy OP18.",
   tags: ["guide", "op18", "leaders", "green"],
   category: "guide",
   date: "2026-10-16",
@@ -45,7 +48,7 @@ export const op18GreenLuffy: Post = {
   faq: [
     {
       q: "What is the OP18 green Luffy leader's card number?",
-      a: "OP18-022, as TCGplayer lists it before release: a green Monkey.D.Luffy Leader with 5 Life and 5000 power. Bandai's official card list has no OP18 cards yet. [The Luffy leader page](/leaders/monkey-d-luffy-op18-022) lists every printing as it appears.",
+      a: "OP18-022: a green Monkey.D.Luffy Leader with 5 Life and 5000 power, as TCGplayer listed it before release. [The Luffy leader page](/leaders/monkey-d-luffy-op18-022) lists every printing as it appears.",
     },
     {
       q: "What does the OP18 Luffy leader effect do?",
@@ -56,8 +59,8 @@ export const op18GreenLuffy: Post = {
       a: "On the reported pre-release text: Gonbe (OP18-025) and Kokoro (OP18-024) at the end of your turn, Nico Robin (OP18-031) at the end of your turn through the Water Seven type, and Chimney (OP18-028) in your Main Phase, by resting Gonbe and itself.",
     },
     {
-      q: "When does OP18 release in English?",
-      a: "Bandai's English product page lists 20 November 2026, at an MSRP of US$4.99 per pack. Bandai's Japanese page dates the Japanese edition 21 November 2026. Pre-order prices are on [the OP18 pre-order board](/op18-preorders).",
+      q: "When did OP18 release in English?",
+      a: "On 20 November 2026, by Bandai's English product page, at an MSRP of US$4.99 per pack; Bandai's Japanese page dates the Japanese edition 21 November 2026. Box and pack prices at every store we track are on [the OP18 price board](/op18-preorders).",
     },
     {
       q: "Is green Luffy going to be good?",
@@ -67,7 +70,7 @@ export const op18GreenLuffy: Post = {
   related: [
     { href: leaderPath(LEADER.luffy), label: "Green Luffy leader page" },
     { href: "/sets/op18-the-dominance-of-god", label: "OP18 card list" },
-    { href: OP18_PREORDERS, label: "OP18 pre-order prices" },
+    { href: OP18_PREORDERS, label: "OP18 box and pack prices" },
     { href: "/leaders", label: "Every Leader" },
   ],
   build: ({ cat, sealed, country }) => {
@@ -110,7 +113,7 @@ export const op18GreenLuffy: Post = {
             {pre ? ", a pre-order listing that moves daily." : "."}
           </>
         ) : null,
-        <>No decklist yet: Bandai has not published OP18&apos;s card list, and this guide will not guess one.</>,
+        deckBullet(cat, "green Luffy", <>No decklist yet: Bandai has not published OP18&apos;s card list, and this guide will not guess one.</>),
       ].filter(Boolean),
       lede: (
         <>
@@ -122,7 +125,7 @@ export const op18GreenLuffy: Post = {
           <p>
             Prices and every printing of the card itself are on <Link href="/leaders/monkey-d-luffy-op18-022">the Luffy OP18-022 leader page</Link>.
           </p>
-          <ReportedNote />
+          <ReportedNote cat={cat} />
         </>
       ),
       sections: [
@@ -235,8 +238,10 @@ export const op18GreenLuffy: Post = {
               {untappers.length ? (
                 <>
                   <p>
-                    The green OP18 cards above, priced as they are listed today. Before release these are pre-order listings, so treat them as a watchlist, not a
-                    valuation:
+                    The green OP18 cards above, priced as they are listed today.{" "}
+                    {op18Out(cat)
+                      ? "Launch-week prices swing the most, so check a card's price history before you buy the playset:"
+                      : "Before release these are pre-order listings, so treat them as a watchlist, not a valuation:"}
                   </p>
                   <CardGrid cards={untappers} setById={cat.setById} country={country} />
                 </>
@@ -246,10 +251,16 @@ export const op18GreenLuffy: Post = {
                   TCGplayer also lists a <Link href={`/card/${manga.slug}`}>Manga printing of Nico Robin (OP18-031)</Link>, the same card with manga-panel art.
                 </p>
               ) : null}
-              <Callout title="No decklist yet">
-                Bandai has not published the full OP18 card list, and a 50-card list built on part of a set would be a guess. {setLink("The OP18 card list")}{" "}
-                {setCards ? `holds ${plural(setCards, "OP18 printing")} today and ` : ""}fills in as TCGplayer lists more cards.
-              </Callout>
+              <DeckCallout
+                cat={cat}
+                leader="green Luffy"
+                pre={
+                  <>
+                    Bandai has not published the full OP18 card list, and a 50-card list built on part of a set would be a guess. {setLink("The OP18 card list")}{" "}
+                    {setCards ? `holds ${plural(setCards, "OP18 printing")} today and ` : ""}fills in as TCGplayer lists more cards.
+                  </>
+                }
+              />
             </>
           ),
         },
@@ -286,7 +297,7 @@ export const op18GreenLuffy: Post = {
           body: (
             <ul>
               <li>
-                <strong>Pre-orders:</strong> {boxLine(cat, sealed, country)} Bandai&apos;s MSRP is US$4.99 per pack.
+                <strong>{op18Out(cat) ? "Boxes and packs:" : "Pre-orders:"}</strong> {boxLine(cat, sealed, country)} Bandai&apos;s MSRP is US$4.99 per pack.
               </li>
               <li>
                 <strong>The Leader itself:</strong> {cardPrice(cat, luffy, "Luffy OP18-022", country)} {leaderLink("The Luffy leader page")} lists every printing.

@@ -320,3 +320,20 @@ test("linked from the pages a reader of OP18 lands on: the set page, the pre-ord
   assert.match(read("src/app/keywords/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
   assert.match(read("src/app/keywords/[slug]/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
 });
+
+test("after OP18's release (2026-11-21): no pre-order wording, the decklist box sends the reader to the deck pricer, never a typed list", () => {
+  const out = SETS.map((s) => (s.code === "OP18" ? { ...s, releasedOn: day(-1) } : s));
+  const sealed = SEALED.map((s) => ({ ...s, presale: false }));
+  for (const slug of SLUGS.slice(0, 3)) {
+    const c = ctx("US", CARDS, out, sealed);
+    const html = render(post(slug), c);
+    assert.doesNotMatch(html, /No decklist yet|pre-order board|Pre-orders:|Pre-order boxes:|pre-order listing|Before release these/, slug);
+    assert.doesNotMatch(html, /official card list has no OP18 cards/, slug);
+    assert.match(html, /reported pre-release text, as TCGplayer listed it on 16 October 2026, before the set came out/, slug);
+    assert.match(html, /Price a [^<]+ decklist/, slug);
+    assert.match(html, /href="\/deck"/, slug);
+    assert.match(html, /href="\/decks"/, slug);
+    assert.match(html, /OP18 box and pack prices/, slug);
+    for (const m of html.matchAll(/href="([^"]+)"/g)) if (m[1].startsWith("/")) assert.ok(resolves(m[1], c.cat), `${slug}: ${m[1]}`);
+  }
+});

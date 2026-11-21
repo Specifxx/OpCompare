@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { SimpleTable } from "@/components/blog/BlogBits";
+import { Callout, SimpleTable } from "@/components/blog/BlogBits";
 import { COLOR_KEYS, type ColorKey } from "../../constants";
 import { COUNTRIES, type Country } from "../../country";
 import type { CardLite, Catalog, SealedLite, SetLite } from "../../data";
@@ -173,8 +173,20 @@ export const withArt = (cards: (CardLite | undefined)[]): CardLite[] => cards.fi
 
 const today = () => new Date().toISOString().slice(0, 10);
 const released = (set: SetLite | undefined) => Boolean(set?.releasedOn && set.releasedOn <= today());
+/** Is OP18 out, by the catalogue's release date? The guides switch their pre-release copy on it (2026-11-21). */
+export const op18Out = (cat: Catalog): boolean => released(op18Set(cat));
 
-export function ReportedNote() {
+export function ReportedNote({ cat }: { cat?: Catalog } = {}) {
+  if (cat && op18Out(cat)) {
+    return (
+      <p>
+        <em>
+          OP18 card text in this guide is the reported pre-release text, as TCGplayer listed it on {READ_ON}, before the set came out. The final English
+          wording may differ; each card&apos;s page on OP Compare shows the text as it stands.
+        </em>
+      </p>
+    );
+  }
   return (
     <p>
       <em>
@@ -232,6 +244,33 @@ export function ReportedLine({ number, name, c }: { number: string; name: string
   );
 }
 
+/**
+ * The guide's decklist box. Before release: no list, it would be a guess (the
+ * text passed in). After release: still no list of our own until results exist,
+ * but the reader who searched for one is sent to the deck pricer and the deck
+ * library, which price a real list card by card. Never a typed list.
+ */
+export function DeckCallout({ cat, leader, pre }: { cat: Catalog; leader: string; pre: ReactNode }) {
+  if (!op18Out(cat)) return <Callout title="No decklist yet">{pre}</Callout>;
+  return (
+    <Callout title={`Price a ${leader} decklist`}>
+      OP18 is out, but this guide prints no sample list of its own until tournament results exist: a list built in launch week would be a guess. Paste any{" "}
+      {leader} decklist into <Link href="/deck">the deck pricer</Link> to see what it costs at the cheapest store in your market, card by card, or browse{" "}
+      <Link href="/decks">the decks players have published</Link>.
+    </Callout>
+  );
+}
+
+/** The summary bullet that goes with DeckCallout. */
+export const deckBullet = (cat: Catalog, leader: string, pre: ReactNode): ReactNode =>
+  op18Out(cat) ? (
+    <>
+      No sample decklist yet: OP18 is days old. <Link href="/deck">The deck pricer</Link> prices any {leader} list you paste, card by card.
+    </>
+  ) : (
+    pre
+  );
+
 /** The cheapest live listing of one card in the reader's market, and TCGplayer's market price; never a typed figure. */
 export function cardPrice(cat: Catalog, c: CardLite | undefined, label: string, country: Country): ReactNode {
   const m = COUNTRIES[country];
@@ -258,17 +297,18 @@ export function cardPrice(cat: Catalog, c: CardLite | undefined, label: string, 
 export function boxLine(cat: Catalog, sealed: SealedLite[], country: Country): ReactNode {
   const set = op18Set(cat);
   const m = COUNTRIES[country];
-  const board = <Link href={OP18_PREORDERS}>the OP18 pre-order board</Link>;
+  const out = released(set);
+  const board = <Link href={OP18_PREORDERS}>{out ? "the OP18 box and pack prices" : "the OP18 pre-order board"}</Link>;
   const box = set ? sealed.find((s) => s.setId === set.id && s.kind === "Booster Box") : undefined;
   if (!box) return <>No OP18 booster box is in our catalogue yet; {board} lists it as soon as a seller does.</>;
   const low = box.low[country];
-  const word = released(set) ? "listing" : "pre-order";
+  const word = out ? "listing" : "pre-order";
   if (low == null) return <>No seller we track in {m.place} has listed an OP18 booster box yet; {board} fills in as they do, in {m.currency}.</>;
   return (
     <>
       The cheapest OP18 booster box {word} we track in {m.place} today is <strong>{money(low, country)}</strong>
       {box.stores[country] ? ` (${plural(box.stores[country], "tracked seller")} listing it)` : " (an eBay listing; no tracked store has one yet)"}, before postage.{" "}
-      <Link href={OP18_PREORDERS}>The OP18 pre-order board</Link> ranks every tracked store in your market, cheapest first, under eBay&apos;s and TCGplayer&apos;s listings.
+      <Link href={OP18_PREORDERS}>{out ? "The OP18 box and pack prices" : "The OP18 pre-order board"}</Link> ranks every tracked store in your market, cheapest first, under eBay&apos;s and TCGplayer&apos;s listings.
     </>
   );
 }

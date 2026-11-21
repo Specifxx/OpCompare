@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardGrid } from "@/components/blog/BlogBits";
+import { CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -14,6 +14,9 @@ import {
   ReportedCard,
   ReportedLine,
   ReportedNote,
+  DeckCallout,
+  deckBullet,
+  op18Out,
   boxLine,
   byNumber,
   cardPrice,
@@ -48,7 +51,7 @@ export const op18Karoo: Post = {
     },
     {
       q: "What colour is the Karoo leader?",
-      a: "Red and blue, with 4 Life and 5000 power, as TCGplayer lists it before release. A Karoo deck can use red and blue cards; Bandai's official card list has no OP18 cards yet.",
+      a: "Red and blue, with 4 Life and 5000 power, as TCGplayer listed it before release. A Karoo deck can use red and blue cards.",
     },
     {
       q: "Which characters get Rush from Karoo?",
@@ -56,13 +59,13 @@ export const op18Karoo: Post = {
     },
     {
       q: "When can I get the Karoo leader?",
-      a: "With OP18, which Bandai's English product page dates 20 November 2026. Pre-order prices for boxes and packs are on [the OP18 pre-order board](/op18-preorders), cheapest first in your currency.",
+      a: "Now: he is in OP18, out in English since 20 November 2026 by Bandai's product page. Box and pack prices are on [the OP18 price board](/op18-preorders), cheapest first in your currency, and [the Karoo leader page](/leaders/karoo-op18-001) prices the single.",
     },
   ],
   related: [
     { href: leaderPath(LEADER.karoo), label: "Karoo leader page" },
     { href: "/sets/op18-the-dominance-of-god", label: "OP18 card list" },
-    { href: OP18_PREORDERS, label: "OP18 pre-order prices" },
+    { href: OP18_PREORDERS, label: "OP18 box and pack prices" },
     { href: "/keywords/rush", label: "Every card with [Rush]" },
   ],
   build: ({ cat, sealed, country }) => {
@@ -103,7 +106,7 @@ export const op18Karoo: Post = {
             {pre ? ", a pre-order listing that moves daily." : "."}
           </>
         ) : null,
-        <>No decklist yet: Bandai has not published OP18&apos;s card list.</>,
+        deckBullet(cat, "Karoo", <>No decklist yet: Bandai has not published OP18&apos;s card list.</>),
       ].filter(Boolean),
       lede: (
         <>
@@ -113,7 +116,7 @@ export const op18Karoo: Post = {
             <strong>Carue</strong>, and the Japanese name is カルー; both refer to the same character. This guide covers what Karoo does, the kind of deck he
             leads, and what to watch as the rest of OP18 is revealed.
           </p>
-          <ReportedNote />
+          <ReportedNote cat={cat} />
         </>
       ),
       sections: [
@@ -183,7 +186,7 @@ export const op18Karoo: Post = {
           title: "Building around Karoo: a checklist",
           body: (
             <>
-              <p>Until the full card list lands, use this checklist instead of a decklist:</p>
+              <p>{op18Out(cat) ? "Until the first results are in" : "Until the full card list lands"}, use this checklist instead of a decklist:</p>
               <ol>
                 <li>
                   <strong>Count your dual-typed bodies.</strong> The deck lives or dies on how many good Animal and Alabasta Characters exist
@@ -219,9 +222,11 @@ export const op18Karoo: Post = {
                   <strong>Watch the once-per-turn limit.</strong> The draw fires once per turn, so do not over-commit expecting several draws.
                 </li>
               </ol>
-              <Callout title="No decklist yet">
-                A sample list waits for Bandai&apos;s full OP18 card list and the first results. Until then, any 50-card list would be a guess.
-              </Callout>
+              <DeckCallout
+                cat={cat}
+                leader="Karoo"
+                pre={<>A sample list waits for Bandai&apos;s full OP18 card list and the first results. Until then, any 50-card list would be a guess.</>}
+              />
             </>
           ),
         },
@@ -266,7 +271,7 @@ export const op18Karoo: Post = {
               </li>
               <li>
                 <strong>Budget:</strong> read <Link href="/blog/cheapest-one-piece-leaders">the cheapest One Piece leaders</Link> and{" "}
-                <Link href="/guides/where-to-buy-one-piece-cards">where to buy One Piece cards</Link> before paying full pre-order prices.
+                <Link href="/guides/where-to-buy-one-piece-cards">where to buy One Piece cards</Link> before paying full price.
               </li>
             </ul>
           ),

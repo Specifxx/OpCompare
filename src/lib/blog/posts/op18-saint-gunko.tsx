@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Callout, CardGrid } from "@/components/blog/BlogBits";
+import { CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
 import { money } from "../../format";
 import type { Post } from "../types";
@@ -13,6 +13,9 @@ import {
   ReportedCard,
   ReportedLine,
   ReportedNote,
+  DeckCallout,
+  deckBullet,
+  op18Out,
   andList,
   boxLine,
   byNumber,
@@ -40,7 +43,7 @@ export const op18SaintGunko: Post = {
   slug: "saint-gunko-leader-guide-op18",
   title: () => "Saint Gunko Leader OP18-060: Effect, Deck Plan & Key Cards",
   description:
-    "Saint Gunko (OP18-060), the Purple/Black OP18 Leader: how her trash-recursion and DON!! ramp effect works, the key cards, and where to pre-order OP18.",
+    "Saint Gunko (OP18-060), the Purple/Black OP18 Leader: how her trash-recursion and DON!! ramp effect works, the key cards, and where to buy OP18.",
   tags: ["guide", "op18", "leaders"],
   category: "guide",
   date: "2026-10-16",
@@ -48,7 +51,7 @@ export const op18SaintGunko: Post = {
   faq: [
     {
       q: "What is the Saint Gunko leader's card number?",
-      a: "OP18-060, as TCGplayer lists it before release: a Purple/Black Leader with 4 Life and 5000 power. Bandai's official card list has no OP18 cards yet, so treat pre-release numbers as provisional until it does.",
+      a: "OP18-060: a Purple/Black Leader with 4 Life and 5000 power, as TCGplayer listed it before release. [The Saint Gunko leader page](/leaders/saint-gunko-op18-060) lists every printing as it appears.",
     },
     {
       q: "What does Saint Gunko's leader effect do?",
@@ -63,14 +66,14 @@ export const op18SaintGunko: Post = {
       a: "Not confirmed. On 16 October 2026 TCGplayer listed only the standard Saint Gunko Leader, and Bandai had not published the OP18 card list. [The OP18 card list](/sets/op18-the-dominance-of-god) shows every printing, priced, as it is added.",
     },
     {
-      q: "When does Saint Gunko release?",
-      a: "With OP18 The Dominance of God, which Bandai's English product page dates 20 November 2026 (21 November 2026 for the Japanese edition). Pre-order prices are on [the OP18 pre-order board](/op18-preorders).",
+      q: "When did Saint Gunko release?",
+      a: "With OP18 The Dominance of God, out in English on 20 November 2026 by Bandai's English product page (21 November 2026 for the Japanese edition). Box and pack prices are on [the OP18 price board](/op18-preorders).",
     },
   ],
   related: [
     { href: leaderPath(LEADER.gunko), label: "Saint Gunko leader page" },
     { href: "/sets/op18-the-dominance-of-god", label: "OP18 card list" },
-    { href: OP18_PREORDERS, label: "OP18 pre-order prices" },
+    { href: OP18_PREORDERS, label: "OP18 box and pack prices" },
     { href: "/keywords/activate-main", label: "Every card with [Activate: Main]" },
   ],
   build: ({ cat, sealed, country }) => {
@@ -119,7 +122,7 @@ export const op18SaintGunko: Post = {
             {pre ? ", a pre-order listing that moves daily." : "."}
           </>
         ) : null,
-        <>No decklist yet: Bandai has not published OP18&apos;s card list.</>,
+        deckBullet(cat, "Saint Gunko", <>No decklist yet: Bandai has not published OP18&apos;s card list.</>),
       ].filter(Boolean),
       lede: (
         <>
@@ -128,7 +131,7 @@ export const op18SaintGunko: Post = {
             as a <strong>Purple/Black Leader</strong>, and Bandai&apos;s OP18 product page names her and Saint Shamrock as the set&apos;s debuts. This guide
             covers what the Leader does, how the two halves of her effect work together, and the cards worth watching.
           </p>
-          <ReportedNote />
+          <ReportedNote cat={cat} />
         </>
       ),
       sections: [
@@ -215,7 +218,7 @@ export const op18SaintGunko: Post = {
                   ) : null;
                 })}
               </ul>
-              <CardGrid cards={key} setById={cat.setById} country={country} caption="Priced as listed today (pre-release listings move daily)" />
+              <CardGrid cards={key} setById={cat.setById} country={country} caption={op18Out(cat) ? "Priced as listed today (launch-week prices move daily)" : "Priced as listed today (pre-release listings move daily)"} />
               <h3>What to watch for</h3>
               <ul>
                 <li>
@@ -258,9 +261,11 @@ export const op18SaintGunko: Post = {
                   Leader&apos;s draw 2, trash 1, once per turn.
                 </li>
               </ol>
-              <Callout title="No decklist yet">
-                A sample list waits for Bandai&apos;s full OP18 card list and the first results. Until then, any 50-card list would be a guess.
-              </Callout>
+              <DeckCallout
+                cat={cat}
+                leader="Saint Gunko"
+                pre={<>A sample list waits for Bandai&apos;s full OP18 card list and the first results. Until then, any 50-card list would be a guess.</>}
+              />
             </>
           ),
         },
@@ -298,7 +303,7 @@ export const op18SaintGunko: Post = {
           body: (
             <ul>
               <li>
-                <strong>Pre-order boxes:</strong> {boxLine(cat, sealed, country)} Bandai&apos;s MSRP is US$4.99 per pack.
+                <strong>{op18Out(cat) ? "Booster boxes:" : "Pre-order boxes:"}</strong> {boxLine(cat, sealed, country)} Bandai&apos;s MSRP is US$4.99 per pack.
               </li>
               <li>
                 <strong>The Leader:</strong> {cardPrice(cat, gunko, "Saint Gunko OP18-060", country)} {leaderLink("The Saint Gunko leader page")} lists every
