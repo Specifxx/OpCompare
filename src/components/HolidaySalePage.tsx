@@ -1,3 +1,4 @@
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/ui";
@@ -58,6 +59,13 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       </header>
 
       <RealDrops sealed={sealed} market={DEFAULT_COUNTRY} page={event} source={event} />
+
+      {/* Cyber Weekend capture (owned audience, 2026-11-21): a free account (Deal Finder's top three savings). */}
+      <InlineSignupPrompt
+        surface="black_friday"
+        title="Find this weekend's cheapest listings, free"
+        body="A free account shows Deal Finder's three biggest savings in your market right now: real store listings under TCGplayer's market price."
+      />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xl font-bold">Sealed under TCGplayer market today (US)</h2>
