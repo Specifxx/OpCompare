@@ -1,0 +1,129 @@
+{
+ "v": 1,
+ "site": "opcompare.app",
+ "at": "2026-11-21T16:58:54.508Z",
+ "overall": "ok",
+ "checks": [
+  {
+   "name": "Neon network transfer",
+   "status": "unknown",
+   "detail": "Not connected: Neon's counters have not been read."
+  },
+  {
+   "name": "Neon compute hours",
+   "status": "unknown",
+   "detail": "Not connected: Neon's counters have not been read."
+  },
+  {
+   "name": "Database size",
+   "status": "unknown",
+   "detail": "The size could not be read."
+  },
+  {
+   "name": "Price import",
+   "status": "unknown",
+   "detail": "The last import could not be read."
+  },
+  {
+   "name": "GitHub price snapshot",
+   "status": "ok",
+   "detail": "Last snapshot 1 h ago."
+  },
+  {
+   "name": "Family feed (sister sites)",
+   "status": "ok",
+   "detail": "Last family feed 1 h ago."
+  },
+  {
+   "name": "eBay pass",
+   "status": "unknown",
+   "detail": "The eBay runs could not be read: \nInvalid `prisma.importRun.findMany()` invocation in\n/home/runner/work/OpCompare/OpCompare/src/lib/health-collect.ts:164:43\n\n  161 return guarded(\n  162   \"eBay"
+  },
+  {
+   "name": "Store scrapers",
+   "status": "unknown",
+   "detail": "The last reads could not be loaded."
+  },
+  {
+   "name": "Store partner codes",
+   "status": "ok",
+   "detail": "No store partner codes yet."
+  },
+  {
+   "name": "Live site",
+   "status": "ok",
+   "detail": "4 pages answered normally (slowest 0.3 s)."
+  },
+  {
+   "name": "Amazon prices (Creators API)",
+   "status": "ok",
+   "detail": "Off by the owner's choice (2026-11-19: the Amazon API allowance goes to ScentCompare); the rows are search links."
+  },
+  {
+   "name": "Fetch TCG row (card pages)",
+   "status": "ok",
+   "detail": "The Fetch TCG row is on /card/roronoa-zoro-op01-001."
+  },
+  {
+   "name": "Price import",
+   "status": "ok",
+   "detail": "Last run 2 h ago: success."
+  },
+  {
+   "name": "eBay pass",
+   "status": "ok",
+   "detail": "Last run 20 h ago: success."
+  },
+  {
+   "name": "Email outbox",
+   "status": "ok",
+   "detail": "Last run 6 h ago: success."
+  },
+  {
+   "name": "Weekly newsletter",
+   "status": "ok",
+   "detail": "Last run 15 h ago: success."
+  },
+  {
+   "name": "Weekly deploy",
+   "status": "ok",
+   "detail": "Last run 44 h ago: success."
+  },
+  {
+   "name": "Shipping rates",
+   "status": "unknown",
+   "detail": "No finished run in GitHub's recent history."
+  },
+  {
+   "name": "IndexNow",
+   "status": "ok",
+   "detail": "Last run 52 min ago: success."
+  },
+  {
+   "name": "Search Console report",
+   "status": "ok",
+   "detail": "Last run 2 h ago: success."
+  },
+  {
+   "name": "Inbox audit",
+   "status": "ok",
+   "detail": "Last run 3 days ago: success."
+  },
+  {
+   "name": "Tests (CI)",
+   "status": "ok",
+   "detail": "Last run 7 min ago: success."
+  },
+  {
+   "name": "Email delivery",
+   "status": "unknown",
+   "detail": "The outbox has not reported yet."
+  },
+  {
+   "name": "Inbox",
+   "status": "unknown",
+   "detail": "The inbox could not be counted."
+  }
+ ],
+ "inbox": null
+}
