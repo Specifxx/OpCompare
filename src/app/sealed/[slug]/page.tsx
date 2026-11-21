@@ -27,6 +27,7 @@ import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { InlineAds } from "@/components/InlineAds";
 import { DiscordCta } from "@/components/DiscordCta";
+import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
 import { AmazonCheck } from "@/components/AmazonCheck";
 import { amazonCarriesSealed } from "@/lib/amazon";
 import { headline } from "@/lib/price";
@@ -278,6 +279,18 @@ export default async function SealedDetailPage({ params }: Props) {
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* The Discord hub's restock and price-drop feed, under the comparison (owner, 2026-11-20). */}
+          {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the comparison, 24 Nov to 1 Dec, labelled Ad. */}
+          <TcgplayerCyberBanner
+            href={affiliateUrl(
+              `https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=${encodeURIComponent(s.name)}&ProductTypeName=Sealed+Products`,
+              "tcgplayer",
+              `/sealed/${s.slug}`,
+            )}
+            at={Date.now()}
+            page="sealed"
+            slug={s.slug}
+            className="mt-4"
+          />
           <DiscordCta className="mt-4" />
           {/* TCGplayer's market price: a reference under the comparison, with
               its affiliate button — never a row in it. */}

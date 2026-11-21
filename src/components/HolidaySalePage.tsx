@@ -11,6 +11,8 @@ import { FamilyCluster } from "@/components/FamilyCluster";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
 import { RealDrops } from "@/components/RealDrops";
 import { TcgplayerSaleBlock } from "@/components/TcgplayerSaleBlock";
+import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
+import { affiliateUrl } from "@/lib/affiliate";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 
 // The Black Friday and Cyber Monday pages, /black-friday (DECISIONS.md, "Black Friday page", 2026-11-02) and
@@ -121,6 +123,11 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       {/* The price watch (2026-11-06): the US, the market that earns; every row ends in a live eBay listing. */}
       <SalePriceWatch market={DEFAULT_COUNTRY} page={event} source={event} />
 
+      <TcgplayerCyberBanner
+        href={affiliateUrl("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&ProductTypeName=Sealed+Products", "tcgplayer", `/${event}`)}
+        at={Date.now()}
+        page={event}
+      />
       <TcgplayerSaleBlock name={event === "black-friday" ? "Black Friday" : "Cyber Monday"} page={event} />
 
       <p className="text-sm">
