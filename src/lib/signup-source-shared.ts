@@ -32,6 +32,7 @@ export const SIGNUP_SOURCES = new Set<string>([
   "feedback",
   "article_intro",
   "article_end",
+  "black_friday", // the Black Friday / Cyber Monday page's prompt (Cyber Weekend, 2026-11-21)
   "other",
 ]);
 
