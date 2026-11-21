@@ -9,6 +9,7 @@ import { blackFriday, cyberMonday, longDate, seasonYear, underMarket } from "@/l
 import { FamilyCluster } from "@/components/FamilyCluster";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
 import { RealDrops } from "@/components/RealDrops";
+import { TcgplayerSaleBlock } from "@/components/TcgplayerSaleBlock";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 
 // The Black Friday and Cyber Monday pages, /black-friday (DECISIONS.md, "Black Friday page", 2026-11-02) and
@@ -111,6 +112,8 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
 
       {/* The price watch (2026-11-06): the US, the market that earns; every row ends in a live eBay listing. */}
       <SalePriceWatch market={DEFAULT_COUNTRY} page={event} source={event} />
+
+      <TcgplayerSaleBlock name={event === "black-friday" ? "Black Friday" : "Cyber Monday"} page={event} />
 
       <p className="text-sm">
         <Link className="text-brand-400 hover:underline" href={event === "black-friday" ? "/cyber-monday" : "/black-friday"}>{event === "black-friday" ? "Cyber Monday deals" : "Black Friday deals"} →</Link> ·{" "}
