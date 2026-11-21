@@ -597,6 +597,21 @@ export async function getSparklines(ids: number[], days = 30): Promise<Record<nu
   return out;
 }
 
+/**
+ * Up to 120 products' last `days` of daily prices (the Black Friday pages' "furthest under their own price" list): the same bucket
+ * files the charts read (each ~50 KB, held by the data cache like every history read).
+ */
+export async function getHistories(ids: number[], days = 40): Promise<Record<number, HistoryPoint[]>> {
+  const want = [...new Set(ids)].slice(0, 120);
+  const buckets = [...new Set(want.map(bucketOf))];
+  const files = await Promise.all(buckets.map((b) => historyFile<BucketFile>(`products/${b}.json`)));
+  const byBucket = new Map(buckets.map((b, i) => [b, files[i]]));
+  const today = dayNum(new Date().toISOString());
+  const out: Record<number, HistoryPoint[]> = {};
+  for (const id of want) out[id] = chartSeries(byBucket.get(bucketOf(id))?.p[String(id)], today, days);
+  return out;
+}
+
 // ── wave2:foundation ──
 // EMAIL STATUS. Every send is script-side (GitHub Actions) and happens only
 // when both mail secrets are set there (isEmailEnabled()); the

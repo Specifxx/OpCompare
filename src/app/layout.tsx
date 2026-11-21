@@ -1,4 +1,4 @@
-import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { ADSENSE_CLIENT_ID } from "@/lib/adsense";
 import { HolidayStrip } from "@/components/HolidayStrip";
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Archivo } from "next/font/google";
@@ -107,6 +107,9 @@ export const metadata: Metadata = {
     ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
     ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
   },
+  // AdSense's site-ownership tag (its review reads it); the ad script itself loads only
+  // inside a guide's ad slot (components/AdSlot.tsx), never site-wide.
+  ...(ADSENSE_CLIENT_ID ? { other: { "google-adsense-account": ADSENSE_CLIENT_ID } } : {}),
 };
 
 // Brand chrome colour for the browser UI / installed-PWA theme: the dark
@@ -234,7 +237,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         />
         </PlanProvider>
-        <AdSenseLoader />
         {/* Vercel Analytics behind the consent signal (RiftCompare's
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />

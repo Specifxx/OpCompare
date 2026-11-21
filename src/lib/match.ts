@@ -619,6 +619,26 @@ export function isGradedVariant(title: string | null | undefined): boolean {
   return !!title && GRADED_VARIANT.test(title);
 }
 
+// A graded slab the store titled like the raw card: the title passes
+// NOT_A_RAW_SINGLE, but the product's handle ("...-grade-10-foil-en-psa-6acaa...",
+// "...-op05-119-psa10-88396308-..."), a tag or its product type says slab. Seen on
+// 151Collectables, Beardy Cards, Crystal Collectables, GS GameOn and Collector Store
+// (2026-11-19 snapshot): slabs at US$240 to US$1,100 published as the card's price.
+// The handle is read by its hyphen-separated words only, so a random handle that
+// happens to contain "psa" ("...75bjpsa41...") is not refused.
+const GRADED_HANDLE = /-(?:psa|bgs|cgc|sgc|beckett|graded|slab|slabbed)(?:-?\d{1,2})?-|-grade-\d/i;
+const GRADED_TAG = /^(?:graded(?:\s+(?:cards?|singles?|slabs?))?|slabs?|slabbed|psa|bgs|cgc|sgc|beckett|psa\s*graded|graded\s+one\s+piece(?:\s+cards?)?)$/i;
+
+export function gradedByListing(
+  handle: string | null | undefined,
+  tags?: string[] | string | null,
+  productType?: string | null,
+): boolean {
+  if (handle && GRADED_HANDLE.test(`-${handle}-`)) return true;
+  const list = (Array.isArray(tags) ? tags : typeof tags === "string" ? tags.split(",") : []).concat(productType ?? "");
+  return list.some((t) => GRADED_TAG.test(t.trim()));
+}
+
 /** Best condition first, then cheapest, among in-stock raw variants. Null = nothing buyable. */
 export function bestVariant(variants: StoreVariant[]): { priceCents: number; condition: string | null; variantId?: number } | null {
   const ok = variants.filter((v) => v.available && parseFloat(v.price) > 0 && !FOREIGN_VARIANT.test(v.title) && !isGradedVariant(v.title));
@@ -811,9 +831,10 @@ export function matchStoreProduct(
   title: string,
   skus: (string | null | undefined)[],
   ix: StoreMatchIndexes,
-  meta: { tags?: string[] | string | null; productType?: string | null; sealedOnly?: boolean } = {},
+  meta: { tags?: string[] | string | null; productType?: string | null; sealedOnly?: boolean; handle?: string | null } = {},
 ): { id: number; path: StoreMatchPath } | { miss: string } {
   if (foreignByTags(meta.tags, meta.productType)) return { miss: "foreign" };
+  if (gradedByListing(meta.handle, meta.tags, meta.productType)) return { miss: "graded" };
   if (isEventListing(title, meta.productType)) return { miss: "event" };
   if (meta.sealedOnly) {
     const s = matchSealedTitle(title, ix.sealed);

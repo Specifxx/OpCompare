@@ -413,6 +413,7 @@ export function evalAmazon(answer: { status?: string } | null, slug: string | nu
   if (!answer || !slug) return unknown(id, "site", label, "The route could not be asked (no sealed product, or no answer).");
   const st = answer.status ?? "error";
   const hint = "Set AMAZON_CREATORS_AU_CLIENT_ID / _CLIENT_SECRET / _VERSION in Vercel (Production) once Associates Central shows the credential; a 403 means the US store's account has no qualifying sales yet.";
+  if (st === "off") return { id, area: "site", label, status: "ok", detail: "Off by the owner's choice (2026-11-19: the Amazon API allowance goes to ScentCompare); the rows are search links." };
   if (st === "no-credentials") return unknown(id, "site", label, "No AMAZON_CREATORS_* variables in Vercel: the Amazon rows are search links.", hint);
   if (st === "ok") return { id, area: "site", label, status: "ok", detail: `Amazon US priced /sealed/${slug}.` };
   if (st === "none") return { id, area: "site", label, status: "ok", detail: `Amazon US answered for /sealed/${slug}; no listing matched it (the row keeps its search link).` };

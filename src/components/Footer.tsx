@@ -3,6 +3,7 @@ import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME } from "@/lib/site";
 import { FooterNav } from "./FooterNav";
 import { ShareRow } from "./ShareRow";
 import { FeedbackAsk } from "@/components/FeedbackAsk";
+import { DiscordCta } from "@/components/DiscordCta";
 
 // The site footer — RiftCompare's footer markup (inline in its layout.tsx),
 // moved into one component. The rail reservation sits on the <footer> itself
@@ -22,6 +23,7 @@ export function Footer({ newsletter = null }: { newsletter?: React.ReactNode }) 
       <div className="container-app mb-6 flex justify-center text-left text-sm text-slate-300"><FeedbackAsk email={CONTACT_EMAIL} /></div>
       <div className="container-app">
         {newsletter}
+        <DiscordCta className="mx-auto mb-6 max-w-2xl" />
         <FooterNav />
         <div className="mb-5 flex flex-col items-center gap-2 border-y border-ink-800/70 py-4">
           <span className="text-xs text-slate-400">Find OP Compare useful? Send it to someone who plays One Piece.</span>

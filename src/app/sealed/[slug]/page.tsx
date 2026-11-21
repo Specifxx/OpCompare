@@ -26,6 +26,7 @@ import {
 import { longDate, money, usd } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { InlineAds } from "@/components/InlineAds";
+import { DiscordCta } from "@/components/DiscordCta";
 import { AmazonCheck } from "@/components/AmazonCheck";
 import { amazonCarriesSealed } from "@/lib/amazon";
 import { headline } from "@/lib/price";
@@ -112,6 +113,8 @@ export default async function SealedDetailPage({ params }: Props) {
     history: vh.low.points,
     presale: s.presale,
     releasedOn: s.releasedOn ?? set?.releasedOn ?? null,
+    name: s.name,
+    slug: s.slug,
   });
   const ebayLd = ebayJsonLdOffers(inMarket, co.currency, isoCountry(country));
   return (
@@ -274,6 +277,8 @@ export default async function SealedDetailPage({ params }: Props) {
           />
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
+          {/* The Discord hub's restock and price-drop feed, under the comparison (owner, 2026-11-20). */}
+          <DiscordCta className="mt-4" />
           {/* TCGplayer's market price: a reference under the comparison, with
               its affiliate button — never a row in it. */}
           <TcgMarketPrice

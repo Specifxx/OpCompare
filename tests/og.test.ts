@@ -10,7 +10,7 @@ import { MARKETS, type Country } from "../src/lib/country";
 import { OG_FONT_DIR, OG_FONT_FILES, isSfnt, loadOgFonts } from "../src/lib/og/fonts";
 import { DEFAULT_OG_IMAGE, pageOg, pageOgOwnImage } from "../src/lib/og/meta";
 import { OG_AFTER_ERROR, OG_CACHED, OG_FALLBACK_TTL } from "../src/lib/og/respond";
-import { ogPriceLines, pickGuideRows, setTopRows, showMoveColumn, storesTracked } from "../src/lib/og/select";
+import { ogPriceLines, pickDropRows, pickGuideRows, pickMoverRows, setTopRows, showMoveColumn, storesTracked } from "../src/lib/og/select";
 import { OG_REVALIDATE, SET_STATS, badgeText, clip, clipWords, fitStats, ogDate, ogDelta, ogMoney, setTitleSize, splitEdition, statWidth } from "../src/lib/og/theme";
 import { dynamicApiUses, routeTree, stripComments } from "./helpers/route-tree";
 
@@ -207,6 +207,20 @@ function card(o: Partial<CardLite> & { lowUS?: number | null; storesUS?: number 
   };
 }
 const catOf = (cards: CardLite[]) => ({ cards, setById: new Map(SETS.map((s) => [s.id, s])) });
+
+test("/movers image: the week's biggest rises and biggest drops, $3+, a misread 80% fall left out (owner, 2026-11-20)", () => {
+  const cards = [
+    card({ name: "Up 40", change7d: 40 }),
+    card({ name: "Up 10", change7d: 10 }),
+    card({ name: "Down 30", change7d: -30 }),
+    card({ name: "Down 12", change7d: -12 }),
+    card({ name: "Misread", change7d: -96.8 }),
+    card({ name: "Cheap fall", change7d: -50, marketUsd: 250 }),
+    card({ name: "Flat", change7d: 0 }),
+  ];
+  assert.deepEqual(pickMoverRows(catOf(cards), 3).map((r) => r.name), ["Up 40", "Up 10"]);
+  assert.deepEqual(pickDropRows(catOf(cards), 3).map((r) => r.name), ["Down 30", "Down 12"]);
+});
 
 test("pickGuideRows: excludes promos, odd variants, no-art, single-store and out-of-band listings", () => {
   const good = [10, 9, 8, 7, 6].map((k) => card({ name: `Good ${k}`, marketUsd: k * 10000 }));

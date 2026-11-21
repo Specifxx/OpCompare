@@ -5,6 +5,7 @@ import { bfStripOn, cueDate, lowCue, lowCueText } from "./bf-strip";
 import type { Country } from "./country";
 import type { OfferRow } from "./data";
 import { money } from "./format";
+import { affiliateUrl } from "./affiliate";
 import { saleStrip } from "./holiday-strip";
 import { marketRows } from "./quick-view";
 import { isEbaySource, sourceLabel, storeForSource } from "./stores";
@@ -18,6 +19,9 @@ export function bfStripFor(opts: {
   history: { x: string; y: number | null }[];
   presale: boolean;
   releasedOn: string | null;
+  /** The product's name and slug, for the tagged TCGplayer search and the click beacon. */
+  name?: string;
+  slug?: string;
   now?: number;
 }): BlackFridayStripData | null {
   const now = opts.now ?? Date.now();
@@ -44,6 +48,14 @@ export function bfStripFor(opts: {
     now,
     preorder: opts.presale && opts.releasedOn && opts.releasedOn >= today ? `Pre-order · out ${cueDate(opts.releasedOn, today)}` : opts.presale ? "Pre-order" : null,
     cue: cue ? { text: lowCueText(cue, fmt, today), lowest: cue.kind === "lowest" } : null,
+    tcgplayerHref: opts.name
+      ? affiliateUrl(
+          `https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=${encodeURIComponent(opts.name)}&ProductTypeName=Sealed+Products`,
+          "tcgplayer",
+          opts.slug ? `/sealed/${opts.slug}` : "/sealed",
+        )
+      : null,
+    slug: opts.slug,
   };
   return out.cheapest || out.preorder || out.cue ? out : null;
 }

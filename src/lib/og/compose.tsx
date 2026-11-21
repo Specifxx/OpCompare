@@ -128,7 +128,7 @@ function PrintingBadge({ printing, text, size = 18, dot = 11 }: { printing: stri
 // thumbnail, x 285–915) keeps the site's selling point and the market beside it.
 const GUIDE_COLS = { card: 400, low: 203, market: 214, set: 150, last: 86 }; // 1053 = 1104 − 3 border − 48 padding
 
-export function PriceTable({ rows, showMove }: { rows: OgRow[]; showMove: boolean }) {
+export function PriceTable({ rows, showMove, label = "Card", labelColor, rowHeight = 76 }: { rows: OgRow[]; showMove: boolean; label?: string; labelColor?: string; rowHeight?: number }) {
   // A week's move can be four digits ("+357.1%"): the move column borrows from Set · No. so they never touch.
   const c = showMove ? { ...GUIDE_COLS, set: GUIDE_COLS.set - 34, last: GUIDE_COLS.last + 34 } : GUIDE_COLS;
   const head: CSSProperties = { display: "flex", ...F.bold, fontSize: 15, letterSpacing: 1.6, color: OG.slate500, textTransform: "uppercase" };
@@ -136,7 +136,7 @@ export function PriceTable({ rows, showMove }: { rows: OgRow[]; showMove: boolea
   return (
     <div style={PANEL}>
       <div style={{ display: "flex", alignItems: "center", height: 40, padding: "0 24px", borderBottom: `1.5px solid ${OG.ink800}`, background: OG.ink850 }}>
-        <div style={{ ...head, width: c.card }}>Card</div>
+        <div style={{ ...head, width: c.card, ...(labelColor ? { color: labelColor, fontSize: 18 } : {}) }}>{label}</div>
         <div style={{ ...head, width: c.low, justifyContent: "flex-end", color: OG.straw }}>Cheapest ▼</div>
         <div style={{ ...head, width: c.market, justifyContent: "flex-end" }}>TCGplayer market</div>
         <div style={{ ...head, width: c.set, justifyContent: "flex-end" }}>Set · No.</div>
@@ -150,14 +150,14 @@ export function PriceTable({ rows, showMove }: { rows: OgRow[]; showMove: boolea
             style={{
               display: "flex",
               alignItems: "center",
-              height: 76,
+              height: rowHeight,
               padding: "0 24px",
               borderBottom: i < rows.length - 1 ? ROW_RULE : "none",
               background: i % 2 ? "rgba(255,255,255,0.012)" : "transparent",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", width: c.card }}>
-              <Art src={r.art} width={50} height={70} />
+              <Art src={r.art} width={rowHeight < 76 ? Math.round((rowHeight - 10) * 0.715) : 50} height={rowHeight < 76 ? rowHeight - 10 : 70} />
               <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
                 <div style={{ display: "flex", ...F.bold, fontSize: 27, color: OG.slate100, lineHeight: 1.1 }}>{clip(r.name, 21)}</div>
                 <div style={{ display: "flex", marginTop: 6 }}>
@@ -207,10 +207,36 @@ export type GuideVariant = "home" | "guide" | "movers";
 const GUIDE_FOOTER: Record<GuideVariant, [string, string]> = {
   home: ["Every card, the cheapest store in your market, updated twice a day", "opcompare.app"],
   guide: ["Every printing in one table · sorted by price · updated twice a day", "opcompare.app/price-guide"],
-  movers: ["This week's biggest risers · 7-day change in TCGplayer market price", "opcompare.app/movers"],
+  movers: ["This week's biggest rises and drops · 7-day change in TCGplayer market price", "opcompare.app/movers"],
 };
 
 /** The site default and /price-guide: brand header + a five-row price guide. */
+/**
+ * /movers (owner, 2026-11-20: every snapshot thumbnail is half biggest rises, half biggest drops): the week's top three
+ * rises above its top three drops, each table the guide's own columns. Rows from pickMoverRows / pickDropRows.
+ */
+export function MoversImage({ ups, downs }: { ups: OgRow[]; downs: OgRow[] }) {
+  const [tag, url] = GUIDE_FOOTER.movers;
+  return (
+    <Canvas padding="26px 48px 0" column>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
+        <Lockup />
+        <GuideTitle size={44} second="Rises & Drops" />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
+        <PriceTable rows={ups.slice(0, 3)} showMove label="Biggest rises · 7 days" labelColor={OG.up} rowHeight={64} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
+        <PriceTable rows={downs.slice(0, 3)} showMove label="Biggest drops · 7 days" labelColor={OG.down} rowHeight={64} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+        <div style={{ display: "flex", ...F.semi, fontSize: 20, color: OG.slate400 }}>{tag}</div>
+        <div style={{ display: "flex", ...F.mono, fontSize: 20, color: OG.slate300 }}>{url}</div>
+      </div>
+    </Canvas>
+  );
+}
+
 export function GuideImage({ rows, cards, stores, variant = "home" }: { rows: OgRow[]; cards: number; stores: number; variant?: GuideVariant }) {
   const [tag, url] = GUIDE_FOOTER[variant];
   return (

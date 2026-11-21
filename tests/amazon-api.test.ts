@@ -84,3 +84,10 @@ test("the Creators API client is reached only through lib/amazon-live.ts, only f
   const quick = fs.readFileSync("src/lib/sealed-quick-view.ts", "utf8");
   assert.doesNotMatch(quick, /amazon/i, "no Amazon in the quick view (no Amazon link in a pop-up)");
 });
+
+test("the request-time Amazon price is off and asks Amazon nothing (owner, 2026-11-19)", () => {
+  const src = fs.readFileSync(path.join(process.cwd(), "src/lib/amazon-live.ts"), "utf8");
+  assert.match(src, /export const AMAZON_LIVE_ON = false;/);
+  const body = src.slice(src.indexOf("export async function amazonLivePrice"));
+  assert.ok(body.indexOf('if (!AMAZON_LIVE_ON) return { status: "off" };') < body.indexOf("searchItems("), "off returns before any call");
+});

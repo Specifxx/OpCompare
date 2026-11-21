@@ -108,6 +108,20 @@ export const kindRank = (kind: string) => {
   return i < 0 ? KIND_ORDER.length : i;
 };
 
+/**
+ * A released set's own sealed products for its pre-order page's "now out" state
+ * (2026-11-20): the same URL keeps ranking for "<code> booster box price" after
+ * release, so it lists the set's products (box first, KIND_ORDER) with their live
+ * prices instead of a dead end. Presale or not: a store still flagging stock as a
+ * pre-order on release day is still a price for the same product.
+ */
+export function releasedSetProducts(sealed: SealedLite[], setId: number | null | undefined): SealedLite[] {
+  if (setId == null) return [];
+  return sealed
+    .filter((s) => s.setId === setId)
+    .sort((a, b) => kindRank(a.kind) - kindRank(b.kind) || (b.marketUsd ?? 0) - (a.marketUsd ?? 0) || a.name.localeCompare(b.name));
+}
+
 export interface PreorderGroup {
   /** YYYY-MM-DD, the release date shared by the group. */
   releasedOn: string;

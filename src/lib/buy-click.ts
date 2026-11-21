@@ -128,3 +128,15 @@ export function buyClickProps(attrs: { retailer: string | null; page: string | n
   }
   return out;
 }
+
+/**
+ * Vercel Web Analytics silently drops a custom event with more than 16 properties (measured on riftcompare.com, 2026-11-20: 9-16
+ * arrived, 17-19 never did; Rift's card-row buy_click had 19-21 and went uncounted from 18 Nov). Here buy_click has at most 15 (11
+ * from buyClickProps and the 4 A/B arms), so nothing is dropped today; this keeps it that way if a key is added: the first 16 keys go,
+ * in insertion order (the click's own facts first, the arms last). Fold a new arm into an existing key rather than adding one.
+ */
+export const VERCEL_MAX_PROPS = 16;
+export function forVercel<T extends Record<string, unknown>>(props: T): Partial<T> {
+  const kept = Object.entries(props).filter(([, v]) => v !== undefined && v !== null);
+  return Object.fromEntries(kept.slice(0, VERCEL_MAX_PROPS)) as Partial<T>;
+}

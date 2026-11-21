@@ -64,7 +64,7 @@ export function familySearchLinks(q: string): { key: SisterSite["key"]; name: st
   if (!term) return [];
   return TCG_SISTER_SITES.filter((s) => s.search).map((s) => ({ key: s.key, name: s.name, game: s.game, href: s.search!.replace("{q}", encodeURIComponent(term)) }));
 }
-// OP Compare's Discord invite. Unset by default: the header icon, the footer
-// link and the nav entry render only when NEXT_PUBLIC_DISCORD_URL is set, so
-// there is never a dead invite on the page.
-export const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "";
+// OP Compare's Discord invite: its own never-expiring code to the family's hub "TCG Deals & Restocks" (lands in
+// #one-piece; owner, 2026-11-20: grow the Discord), so the server's Invites list counts the members OP Compare brings.
+// NEXT_PUBLIC_DISCORD_URL overrides it; the header icon, footer link, nav entry and DiscordCta all read this one value.
+export const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/zkUVnPbaHD";

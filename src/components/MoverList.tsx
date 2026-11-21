@@ -5,8 +5,9 @@ import { Sparkline } from "./Sparkline";
 import { cardImage } from "@/lib/images";
 import CardQuickLink from "./CardQuickLink";
 import { EbayCardSearchRow } from "./EbayCardSearchRow";
+import { CheapestNow } from "./MoversBuy";
 
-export function MoverList({ title, sub, tone, rows, setById, empty, spark, ebaySource }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string; spark?: Record<number, number[]>; /** Adds a "Search eBay" row naming the top three cards (the /movers page). */ ebaySource?: string }) {
+export function MoverList({ title, sub, tone, rows, setById, empty, spark, ebaySource, buy = false }: { title: string; sub: string; tone: string; rows: { card: CardLite; right: React.ReactNode; price: number | null }[]; setById: Map<number, SetLite>; country?: Country; empty: string; spark?: Record<number, number[]>; /** Adds a "Search eBay" row naming the top three cards (the /movers page). */ ebaySource?: string; /** Today's cheapest in the visitor's market and a Buy pill (the /movers page, MoversBuy.tsx). */ buy?: boolean }) {
   return (
     <div className="card-surface min-w-0">
       <div className="border-b border-ink-800 px-4 py-3">
@@ -34,10 +35,14 @@ export function MoverList({ title, sub, tone, rows, setById, empty, spark, ebayS
                   </span>
                 </span>
                 {spark ? <Sparkline values={spark[card.id]} className="hidden h-7 w-14 min-[400px]:block lg:hidden 2xl:block" /> : null}
-                <span className="flex shrink-0 flex-col items-end">
-                  <span className="num text-sm font-semibold text-accent">{money(price, "US")}</span>
-                  {right}
-                </span>
+                {buy ? (
+                  <CheapestNow low={card.low} marketUsd={card.marketUsd}>{right}</CheapestNow>
+                ) : (
+                  <span className="flex shrink-0 flex-col items-end">
+                    <span className="num text-sm font-semibold text-accent">{money(price, "US")}</span>
+                    {right}
+                  </span>
+                )}
               </CardQuickLink>
             </li>
           ))}

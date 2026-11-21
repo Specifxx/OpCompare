@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { OfferRow, SealedLite, SetLite } from "../src/lib/data";
 import type { PanelListing } from "../src/lib/listing-panel";
-import { AUTO_PREORDER_KINDS, codeSlug, preorderPageRetired, preorderRouteOf, setForPreorderSlug, daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderPageFor, preorderSummary, productBoard, releaseDateOf, shortDateOf, upcomingPreorderPages } from "../src/lib/preorders";
+import { AUTO_PREORDER_KINDS, codeSlug, preorderPageRetired, preorderRouteOf, setForPreorderSlug, daysUntil, groupForSet, longDateOf, PREORDER_PAGES, preorderGroups, preorderPageFor, preorderSummary, productBoard, releaseDateOf, releasedSetProducts, shortDateOf, upcomingPreorderPages } from "../src/lib/preorders";
 import { storesIn } from "../src/lib/stores";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -404,4 +404,20 @@ test("the automatic route and hub: the shared page, no database, its own share i
   const sitemap = read("src/app/sitemap.ts");
   assert.ok(sitemap.includes('"/preorders"'));
   assert.match(sitemap, /upcomingPreorderPages/);
+});
+
+test("released (2026-11-20): the page lists the set's own sealed products, box first, never a dead end", () => {
+  const sealed = [
+    product({ id: 1, name: "OP18 Booster Pack", kind: "Booster Pack", setId: 1, marketUsd: 5 }),
+    product({ id: 2, name: "OP18 Booster Box", setId: 1, marketUsd: 120 }),
+    product({ id: 3, name: "OP17 Booster Box", setId: 2, marketUsd: 110 }),
+    product({ id: 4, name: "OP18 Booster Box Case", kind: "Booster Box Case", setId: 1, marketUsd: 1400, presale: true }),
+  ];
+  const out = releasedSetProducts(sealed, 1).map((s) => s.id);
+  assert.ok(out.indexOf(2) < out.indexOf(1), "box before pack");
+  assert.deepEqual([...out].sort(), [1, 2, 4], "only the set's own products, presale or not");
+  assert.deepEqual(releasedSetProducts(sealed, null), []);
+  const page = read("src/components/PreorderPage.tsx");
+  assert.match(page, /releasedSetProducts\(sealed, set\?\.id\)/);
+  assert.match(page, /<SealedTile key=\{s\.id\}/);
 });

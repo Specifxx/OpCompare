@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { MoverList } from "@/components/MoverList";
+import { RisersShop } from "@/components/MoversBuy";
 import { MoversTable, type MoverTableRow } from "@/components/MoversTable";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
@@ -75,6 +76,19 @@ export default async function MoversPage() {
         One Piece price movers — this week
       </h1>
       <ShareButton className="mt-3" name="One Piece price movers this week" medium="movers" path="/movers" />
+      {/* Shop the top risers (boardroom 2026-11-20), in the first screen: MoversBuy.tsx. */}
+      <RisersShop
+        cards={up.slice(0, 3).map((c) => ({
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+          variant: c.variant,
+          sub: `${cat.setById.get(c.setId)?.code ?? ""} · ${c.number ?? "DON!!"}`,
+          hasImage: c.hasImage,
+          marketUsd: c.marketUsd,
+          low: c.low,
+        }))}
+      />
       <HubIntro path="/movers" />
       <div className="mt-6">
         <AnswerBox>
@@ -104,6 +118,7 @@ export default async function MoversPage() {
           spark={spark}
           empty="No week-on-week moves yet."
           ebaySource="movers-panel"
+          buy
         />
         <MoverList
           title="Biggest drops this week"
@@ -118,6 +133,7 @@ export default async function MoversPage() {
           spark={spark}
           empty="No week-on-week moves yet."
           ebaySource="movers-panel"
+          buy
         />
         <MoverList
           title="Best value right now"
@@ -136,6 +152,7 @@ export default async function MoversPage() {
           spark={spark}
           empty="Appears once a card has fallen from a recorded high."
           ebaySource="movers-panel"
+          buy
         />
       </div>
       {/* Straight after the lists (RiftCompare): a reader who has just seen a

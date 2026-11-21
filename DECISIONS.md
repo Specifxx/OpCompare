@@ -4724,6 +4724,165 @@ zillerstore.it's "NM / Giapponese" variants priced as the English card, because 
 English words (`FOREIGN_VARIANT` adds the Italian, French, German and Spanish words and CJK). Store-protection
 variants ("Sleeve", "Top-Loader") and EU stores' prices under TCGplayer's US market are real prices and stay.
 
+## 2026-11-19 — eBay stand-out row, 50/50
+
+The owner, the same evening eBay's blue came back: the colour change moved eBay clicks, so "we can do something even more than just a
+color change … make it stand out even more". Every visitor keeps eBay's blue button; a new 50/50 (localStorage `ebay-pop`, arm on
+`<html data-ebaypop>`, `ebay_pop` on buy_click) gives arm "pop" a bolder, larger eBay button with a soft blue halo and tints the list
+row that holds an eBay button eBay blue with a blue edge. Shape and colour only: no new words, no new claim (eBay is called the cheapest
+only when it is), no position change, no extra eBay API call, white on #0064d2 passes contrast. Run on Rift, Dex, MTG and OP. Read
+3 Dec: eBay buy clicks per arm, total buy clicks per arm as the check; keep the winner and roll it out to the other card sites.
+
+## 2026-11-19 — Paid rows always there, and a tag lint that stops the build
+
+From the 19 Nov boardroom review, on the four money sites: a row that is always there beats a perfect row that is often missing. The
+price board's eBay row was already always there (a listing, else its tagged search). TCGplayer's now is too: with no TCGplayer listing
+and no reference price in the market, its tagged link stands in (the product when we know it, else a search; surface `tcg_fallback`),
+so `BestPriceNote` can always point at both. And `scripts/tag-lint.ts` runs first in `npm run build` (`src/lib/tag-lint.ts`,
+`tests/tag-lint.test.ts`): every eBay builder in every market must carry campaign 5339155912 and a customid, every TCGplayer link must
+go through Impact, and no component may hard-code a bare eBay or TCGplayer href. A failure stops the release.
+
+## 2026-11-19: [urgent] needs eight hours too: a network ceiling of 57 builds a day
+
+[urgent] in a commit subject used to skip the 12-hour gap altogether. On 17 and 18 Nov the network built production 94
+and 137 times a day, almost all of them [urgent] (about eight builds per site per day), and Vercel reached $10.27 a day
+against the $6 cap: every build rewrites the ISR cache and burns build CPU. `scripts/vercel-ignore-build.sh` now builds an
+[urgent] commit only when production last built at least `URGENT_MIN_GAP_HOURS` (8) ago; a plain [deploy] still waits 12.
+So one site builds at most three times a day, and the 19 production projects at most 57 a day (normally about 25).
+Batch urgent changes into one release instead of one per merge. Pinned by `tests/deploy-gap.test.ts`. The same change
+went to every Compare site's gate.
+
+## Amazon API allowance: mostly ScentCompare, card sites at zero (owner, 2026-11-19)
+
+Amazon's Creators API limit is per Associates account (one a country), shared by every site on it: 1 call a second and
+8,640 a day for the first 30 days (the US until about 8 Dec 2026), then 1 a day per US$0.05 of shipped revenue the API
+referred in 30 days. The owner: "be very frugal", no Amazon calls for card sites ("people aren't buying on Amazon"), and
+half or more for ScentCompare, the best performer. Each site's daily calls (environment variables can only lower them):
+
+| Site | searchItems a day (US / other) | getItems at build (US / other) |
+|---|---|---|
+| ScentCompare | 2,000 / 600 | 200 / 100 |
+| KaeYoung | 600 / 300 | 100 / 60 |
+| DexCompare | 300 | 30 |
+| MTG Compare, WargameCompare | 100 | 20 |
+| Compare Empire | 100 | 30 |
+| CamCompare | 150 (AU only) | about 30 (AU only) |
+| Rift, OP, YGO, Lorcana, Cyberpunk, Gundam (and kits), Bandai, SportsCardCompare, TCG Prices, Figure, Motor | 0 | 0 |
+
+US total at most about 3,600 calls a day (ScentCompare about 61%, ScentCompare and KaeYoung together about 81%), against
+8,640 until about 8 Dec 2026 and a revenue-based limit after it (1 a day per US$0.05 of API-referred shipped revenue).
+
+Here `AMAZON_LIVE_ON = false` in `src/lib/amazon-live.ts`: the sealed page's route answers "off" without calling Amazon,
+and the row keeps its tagged search link.
+
+## 2026-11-19: A slab titled like the raw card is refused by its handle, tag or type
+
+The 19 Nov snapshot published graded slabs as raw single prices where the store's
+product title reads like the raw card and only the handle says slab:
+151Collectables' Boa Hancock OP15 event winner (US$240, handle "...-grade-10-foil-en-psa-..."),
+Beardy Cards' PSA 10 Luffy P-033 (C$850) and LA Dodgers DON!! (C$1,100), Crystal
+Collectables' BGS 9.5 Luffy OP05-119 (A$440), GS GameOn's PSA 10 P-033 and Collector
+Store's PSA 10 ST29-001. `NOT_A_RAW_SINGLE` reads only the title and #212's
+`isGradedVariant` only the variant title. `matchStoreProduct` now also refuses a listing
+whose handle has a grading word as one of its hyphen-separated words (`-psa-`, `-psa10-`,
+`-bgs-`, `-cgc-9-`, `-grade-9-` ...), or whose tag or product type is a grading word
+("Graded", "PSA", "Graded Cards"). Miss reason `graded`. Word-bounded on purpose: a
+random handle like "product_26qj...bjpsa41..." is not refused. Rides the next import.
+
+## 2026-11-19: Display ads on guides and explainers only
+
+**Owner:** "Let's do it", on the board's G4: display ads on guide and explainer pages only, never on buy, product,
+account or Premium pages, killed if the RPM is under A$4 or buy clicks fall more than 3%. It partly reverses the
+2026-10-27 AdSense-off call on the sister sites. OP Compare carries it because it is outside the heavy/light ad test
+(Rift and MTG light, Dex and YGO heavy, read 10 Dec), which these ads must not touch.
+
+- A real AdSense unit fills ONLY the `article` slot (`ArticleView`: `/guides/*` and `/blog/*`), and only when both
+  `NEXT_PUBLIC_ADSENSE_CLIENT_ID` and `NEXT_PUBLIC_ADSENSE_GUIDE_SLOT` (the console's display unit id) are set
+  (`realUnitFor`, `lib/adsense.ts`). The card, price guide, movers and market slots stay house promos whatever is set.
+- No site-wide loader: the root layout's `AdSenseLoader` is gone. The unit adds Google's script when it first mounts
+  near the viewport, so no other page loads AdSense, and an ad-free member (`html[data-adfree]`) never loads it.
+  The slot sits below the article body, as before, never beside a buy button or above a price.
+- The `google-adsense-account` meta tag and `/ads.txt` follow the publisher id alone, for AdSense's site review.
+- Off until opcompare.com is approved in AdSense and the unit id is set. Kill switch: unset
+  `NEXT_PUBLIC_ADSENSE_GUIDE_SLOT`; the next release is ad-free. `tests/ads.test.ts` pins the slot, the loader and
+  the two article routes.
+
+## 2026-11-20: A "Join the Discord" box with a reason, linking the family's one hub
+
+The owner asked why the Discord had 9 members after five months: the only link anywhere went (from RiftCompare's menu) to
+a server the owner does not run, with two empty channels and no reason to join. The family now has ONE hub, the owner's
+server "TCG Deals & Restocks" (the sealed restock and price-drop feeds on top, a channel per game). This site links its
+own never-expiring invite code, so the server's Invites list counts the members each site brings with no tracking of
+ours. `DiscordCta` ("Restock and price-drop alerts, free on Discord") sits under the price table on the product page and
+in the footer: never above a price, never a pop-up. `tests/discord-cta.test.ts`.
+
+## 2026-11-20: The /movers share image shows rises AND drops (owner)
+
+A Reddit reply to a snapshot post asked for "the biggest drops. I just want to rip and play"; the owner: every snapshot thumbnail
+is half biggest rises, half biggest drops. `/movers`' image (`moversOg`, `MoversImage` in `lib/og/compose.tsx`) is now the week's
+three biggest rises (`pickMoverRows`) above its three biggest drops (`pickDropRows`: the import's own `change7d`, the same $3
+floor, biggest fall first), each in the guide's own columns. A fall of 80% or more in a week is left out as a misread market
+price (RiftCompare's movers rule): on 20 Nov the Manga Portgas.D.Ace showed −96.8% on a US$54.56 market. Fewer than three of
+either draws the price guide's image, as before. `tests/og.test.ts`.
+
+## 2026-11-20: A Santa hat on the logo and lights under the header
+
+**Owner, 2026-11-20:** "change the logo for all of our websites so that it's Christmas themed now. Put a Santa hat on top
+of the logos … and add some decorations here and there, like some Christmas lights … and yeah, Santa Claus." The owner
+asked for hats and lights by name, so they come back after the 2026-11-08 tone-down, kept to the header.
+
+- The logo mark wears a Santa hat (class `xmas-cap` on its wrapper), a string of lights hangs under the sticky header
+  (`xmas-garland`), and the home page's gift-guide line, where there is one, gets a small Santa. All of it is the
+  `xmas-logo` block in `globals.css`, the same block on every Compare site (RiftCompare's DECISIONS has the history).
+- CSS only: three inline SVG data URIs (~2.5 KB of stylesheet), no request, no script, no animation. Every piece is
+  `position: absolute` and `pointer-events: none`: no layout shift, no tap caught, nothing in the server HTML changes
+  but two class names, so titles, metadata and structured data are untouched. Favicons and share images are unchanged.
+- Off switch: `CHRISTMAS_FESTIVE_LAYER` (`lib/season.ts`, the `data-xmas-layer` attribute on `<html>`); the Christmas window
+  also ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
+
+## 2026-11-20: /movers sells, not just ranks (buy-clicks boardroom, move 2)
+
+Reddit link posts land on `/movers`, and Reddit visitors almost never clicked buy (0.7–3% against 12–23% from Google).
+The boardroom decided to make every snapshot and Hot 100 page buyable (target 8%+, read 27 Nov and 4 Dec).
+
+- **"Shop the top risers"** (`MoversBuy.tsx` `RisersShop`) under the h1: the week's top three risers, each with its
+  cheapest in-stock store price now in the visitor's market (`CardLite.low`, what the tiles show; TCGplayer's market
+  price, labelled, where no store has it) and a Buy button. The row is a `CardQuickLink`, so it opens the quick view.
+- **Every panel row** (`MoverList buy`) shows that same price in place of the TCGplayer figure, then the move, then a
+  Buy pill under it, inside the row's existing quick-view link (under the price, never beside it, so names keep their
+  width on a 390px phone).
+- The catalogue the page already loaded, no new read; the page's cache is unchanged; the display-only last price is not
+  read. No deploy marker: it rides the weekly release.
+
+## 2026-11-20 — buy_click stays at 16 properties or fewer
+
+Vercel Web Analytics silently drops a custom event with more than 16 properties (measured on riftcompare.com on 20 Nov: 9 to 16
+arrived, 17 to 19 never did; Rift's card-row buy_click carried 19 to 21 from 18 Nov and went uncounted). OP Compare's buy_click has at
+most 15 (buyClickProps' 11 and the four A/B arms), so none was lost here. `forVercel` (lib/buy-click.ts) now caps what is sent at 16,
+the click's own facts first and the arms last, and `tests/vercel-props.test.ts` fails if a fully loaded buy_click passes 16. A new A/B
+arm folds into an existing key instead of adding one.
+
+## 2026-11-20: Store pages back in the sitemap (reverses SEO-4)
+
+- SEO-4 (2026-11-10) took `/stores/<store>` out of the sitemap on the guess that nobody searches a shop's page on a
+  comparison site. Search Console says otherwise: over 27 Oct to 16 Nov, 284 store pages earned 3,364 Google impressions
+  while unlisted, the most of any OP template, ahead of card pages (3,274), at position 13.2. People search the shop's name.
+- `SITEMAP_STORE_PAGES = true` (`lib/sitemap-core.ts`) lists each store with 10 or more products in stock, as before SEO-4.
+  Listing them gives Google a lastmod and a crawl path for the pages it already ranks. Search Recovery plan, 20 Nov
+  (code red boardroom); measured by the TCGEmpire maintenance task `gsc-pagetypes`. Read again ~9 Dec.
+emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
+
+## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line
+
+Code red plan (20 Nov), Cyber Week buy sprint: the season's pages lead with a list a shopper can act on. `lib/real-drops.ts`: a product
+is listed only when its cheapest in-stock price today is 10% or more under the median of its OWN recorded daily prices over the
+last 30 days (today left out), with 14+ recorded days, wrong-listing days (under half the median) left out, no claim when the
+records swing more than 2x, no placeholder prices (9999.99), and a typical price of 20.00 or more. Each line carries the
+cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search, surface `bf_drops`. It replaces the
+"Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
+30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
+28 Nov to 1 Dec against the 4 days before. OP shows the US list (the page reads nothing about the visitor), from the 120 in-stock sealed products most stores carry, their daily lows read from the history bucket files the charts use (`getHistories`). The same file ships on Dex, Rift and MTG.
+
 ## 2026-11-19 — Black Friday strip on sealed pages
 
 The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
@@ -4737,3 +4896,9 @@ when the history reaches back 90 days, otherwise "Lowest price since <first day>
 never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue. No new read, no eBay call;
 the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and RiftCompare. Judge on buy clicks per
 sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
+
+Amended 2026-11-21 (partner terms): TCGplayer's commission rises with a calendar month's sales, so Cyber Weekend sales through us
+also lift the month's rate. The strip gains ONE link, on its own line under the facts: an "Ad"-labelled, tagged TCGplayer search
+for the product ("See Black Friday prices on TCGplayer", `data-surface="bf_strip"`). It claims no price and no deal, ranks nothing,
+and never takes the cheapest badge; the board below stays sorted by price. Counted in the 3 Dec Cyber Week read. When TCGplayer's
+own Cyber Weekend landing page is available it replaces the search.

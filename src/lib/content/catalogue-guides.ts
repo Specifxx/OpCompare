@@ -67,6 +67,10 @@ export const LEADER_GUIDES: Record<string, Ref> = {
   "ST29-001": { slug: "egghead-luffy-leader-guide-st29", reason: "What the low-Life draw does, the yellow Egghead cards, and the starter deck's price" },
   "OP16-079": { slug: "yamato-leader-guide-op16", reason: "Rush for Land of Wano Characters played from the trash, and every Black Wano Character, priced" },
   "OP06-080": { slug: "gecko-moria-leader-guide-op06", reason: "How the mill-and-replay effect works, and every Thriller Bark Pirates Character it can bring back, priced" },
+  // 2026-11-20, OP18 release day: the other three OP18 Leaders.
+  "OP18-021": { slug: "franky-leader-guide-op18", reason: "How Stages become counters and free plays, the OP18 ships it wants, and what they cost" },
+  "OP18-041": { slug: "ms-all-sunday-leader-guide-op18", reason: "How a K.O.'d Baroque Works Character draws you a card and costs your opponent one, priced" },
+  "OP18-079": { slug: "spandam-leader-guide-op18", reason: "How trashing a CP card adds Life, and every Black or Yellow CP card, priced" },
 };
 
 function resolve(refs: readonly Ref[], limit: number): RelatedGuide[] {
