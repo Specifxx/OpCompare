@@ -1,7 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { priceGap, shareText, shareUrl } from "../src/lib/share-link";
+import { dropText, priceGap, shareText, shareUrl } from "../src/lib/share-link";
+
+test("dropText: the cheapest store's real price and name, or nothing", () => {
+  const fmt = (c: number) => `C$${(c / 100).toFixed(2)}`;
+  assert.equal(dropText("OP-14 Booster Box", { priceCents: 15999, retailerName: "Shop" }, "Canada", fmt), "OP-14 Booster Box for C$159.99 at Shop, the cheapest store price we found in Canada. Every store compared on OP Compare:");
+  assert.equal(dropText("X", null, "Canada", fmt), null);
+  assert.equal(shareUrl("https://opcompare.app", "/sealed/x", "drop"), "https://opcompare.app/sealed/x?utm_source=share&utm_medium=drop");
+});
 
 // Word of mouth (DECISIONS.md, "Share buttons and shared lists").
 test("every shared link carries utm_source=share and its medium, keeping the page's own query", () => {

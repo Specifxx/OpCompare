@@ -4936,3 +4936,14 @@ Owner, 2026-11-22: a giveaway on five sites (Rift, Dex, MTG, YGO, OP), one OP-18
 - Points as on Rift: enter 10, bonus 40 (free with one press, so no purchase is ever needed; RiftCompare Premium gets it
   automatically), +5 per Sydney day checked in, +25 a confirmed friend (+100 a star friend), at most ten friends.
 - `src/lib/giveaway.ts` must match RiftCompare's `GIVEAWAYS` entry with key `op-op18-2026-12`.
+
+## 2026-11-23: "Share this deal with your group chat" on the product page
+
+`components/DropShare.tsx` (ported from DexCompare) sits under the sealed page's header: the phone's share sheet, else one line copied with
+the cheapest in-stock STORE price in the visitor's market (`dropText` in `lib/share-link.ts`, written on the server for the visitor's country: never eBay, TCGplayer or Amazon, never
+converted, "Pre-order: " when that offer is one) and this page's link tagged `utm_source=share&utm_medium=drop`. A separate component,
+so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: "drop" }`.
+
+**Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
+a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
+Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
