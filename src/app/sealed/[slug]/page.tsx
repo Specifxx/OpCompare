@@ -11,11 +11,12 @@ import { PriceBoard } from "@/components/PriceBoard";
 import { SealedTile } from "@/components/SealedTile";
 import { TcgMarketPrice } from "@/components/TcgMarketPrice";
 import { ShareButton } from "@/components/ShareButton";
+import { DropShare } from "@/components/DropShare";
 import { SealedWatchButton } from "@/components/SealedWatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
 import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
-import { priceGap, shareText } from "@/lib/share-link";
+import { dropText, priceGap, shareText } from "@/lib/share-link";
 import { buyRow, marketRows } from "@/lib/quick-view";
 import {
   getCatalog,
@@ -215,6 +216,10 @@ export default async function SealedDetailPage({ params }: Props) {
                 <ShareButton responsive name={s.name} medium="sealed" text={shareText(s.name, priceGap(marketRows(s.offers, country).map((o) => ({ priceCents: o.priceCents, retailerName: buyRow(o, country, `/sealed/${s.slug}`).label }))), (c) => money(c, country))} />
               </div>
             </div>
+            {(() => {
+              const top = marketRows(s.offers, country).find((o) => isStoreSource(o.source));
+              return <DropShare path={`/sealed/${s.slug}`} name={s.name} text={dropText(s.name, top ? { priceCents: top.priceCents, retailerName: buyRow(top, country, `/sealed/${s.slug}`).label } : null, COUNTRIES[country].place, (c) => money(c, country))} className="mt-2" />;
+            })()}
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
