@@ -78,8 +78,52 @@ async function main() {
     say("| Query | Clicks | Impressions | Position |");
     say("|---|---|---|---|");
     for (const r of queries.rows ?? []) say(`| ${r.keys[0]} | ${r.clicks} | ${r.impressions} | ${r.position.toFixed(1)} |`);
+    pageTables(rows, (await q({ startDate: day(56), endDate: day(29), dimensions: ["page"], rowLimit: 25000 })).rows ?? []);
   }
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n") + "\n");
+}
+
+type Row = { keys: string[]; clicks: number; impressions: number; position: number };
+
+// The per-page tables the site loop's job D reads (its fix list): the top pages,
+// pages Google shows on pages 1-2 that nobody clicks, and the pages gaining and
+// losing the most clicks against the 28 days before. Bounded: 15 rows each.
+function pageTables(now: Row[], before: Row[]) {
+  const path = (u: string) => u.replace(/^https?:\/\/[^/]+/, "") || "/";
+  const line = (r: Row) => `| ${path(r.keys[0])} | ${r.clicks} | ${r.impressions} | ${r.impressions ? ((100 * r.clicks) / r.impressions).toFixed(1) : "0.0"}% | ${r.position.toFixed(1)} |`;
+  const head = () => {
+    say("| Page | Clicks | Impressions | CTR | Position |");
+    say("|---|---|---|---|---|");
+  };
+  say("");
+  say("### Top pages by clicks (28 days)");
+  head();
+  for (const r of [...now].sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions).slice(0, 15)) say(line(r));
+  say("");
+  say("### Fix list: shown on Google pages 1-2, clicked least (28 days, 100+ impressions)");
+  head();
+  for (const r of now
+    .filter((r) => r.impressions >= 100 && r.position <= 20)
+    .sort((a, b) => a.clicks / a.impressions - b.clicks / b.impressions || b.impressions - a.impressions)
+    .slice(0, 15))
+    say(line(r));
+  const prev = new Map(before.map((r) => [r.keys[0], r.clicks]));
+  const cur = new Map(now.map((r) => [r.keys[0], r.clicks]));
+  const delta = [...new Set([...now.map((r) => r.keys[0]), ...before.map((r) => r.keys[0])])].map((k) => ({
+    k,
+    now: cur.get(k) ?? 0,
+    before: prev.get(k) ?? 0,
+  }));
+  for (const [title, list] of [
+    ["Gaining", delta.filter((d) => d.now > d.before).sort((a, b) => b.now - b.before - (a.now - a.before))],
+    ["Losing", delta.filter((d) => d.now < d.before).sort((a, b) => a.now - a.before - (b.now - b.before))],
+  ] as const) {
+    say("");
+    say(`### ${title} pages (clicks, 28 days vs the 28 before)`);
+    say("| Page | Now | Before | Change |");
+    say("|---|---|---|---|");
+    for (const d of list.slice(0, 15)) say(`| ${path(d.k)} | ${d.now} | ${d.before} | ${d.now - d.before > 0 ? "+" : ""}${d.now - d.before} |`);
+  }
 }
 
 main().catch((e) => {
