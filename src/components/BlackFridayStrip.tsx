@@ -1,5 +1,4 @@
 import { Ago } from "./Ago";
-import { outboundRel } from "@/lib/affiliate";
 
 // The Black Friday strip on a sealed product's page (lib/bf-strip.ts; DECISIONS.md, "Black Friday strip on sealed pages",
 // 2026-11-19): one short card of facts the page already holds, in the visitor's market, under the product's price summary.
@@ -21,13 +20,13 @@ export interface BlackFridayStripData {
   preorder: string | null;
   /** The history cue (lowCueText), or null. */
   cue: { text: string; lowest: boolean } | null;
-  /** The tagged TCGplayer search for this product (affiliateUrl), or null. */
+  /** Not drawn since 2026-11-22 (page budget rule 3: no ad above the price table); kept so the data stays typed. The tagged TCGplayer search for this product (affiliateUrl), or null. */
   tcgplayerHref?: string | null;
   /** The product's slug, for the click beacon's data-card. */
   slug?: string;
 }
 
-export function BlackFridayStrip({ label, cheapest, shipping, checked, now, preorder, cue, tcgplayerHref, slug }: BlackFridayStripData) {
+export function BlackFridayStrip({ label, cheapest, shipping, checked, now, preorder, cue }: BlackFridayStripData) {
   if (!cheapest && !preorder && !cue) return null;
   return (
     <section aria-label={`${label} price check`} data-bf-strip="" className="card-surface px-4 py-3 text-sm leading-6">
@@ -47,23 +46,6 @@ export function BlackFridayStrip({ label, cheapest, shipping, checked, now, preo
         {preorder && <span className="font-medium text-gold">{preorder}</span>}
         {cue && <span className={cue.lowest ? "font-semibold text-emerald-400" : "text-slate-400"}>{cue.text}</span>}
       </p>
-      {tcgplayerHref && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 border-t border-ink-700 pt-2">
-          <span className="rounded border border-ink-700 px-1.5 text-[11px] font-semibold uppercase leading-5 text-slate-400">Ad</span>
-          <a
-            href={tcgplayerHref}
-            target="_blank"
-            rel={outboundRel()}
-            data-retailer="tcgplayer"
-            data-page="sealed"
-            data-card={slug}
-            data-surface="bf_strip"
-            className="font-semibold text-white underline decoration-slate-600 underline-offset-2 hover:decoration-white"
-          >
-            See {label} prices on TCGplayer →
-          </a>
-        </p>
-      )}
     </section>
   );
 }
