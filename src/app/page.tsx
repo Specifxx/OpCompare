@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CompareOtherTcgs } from "@/components/CompareOtherTcgs";
 import { InlineAds } from "@/components/InlineAds";
 import { CinematicHero } from "@/components/home/CinematicHero";
+import { GiveawayHomeBanner } from "@/components/giveaway/GiveawayHomeBanner";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { HomePopularCards, HomeSections } from "@/components/home/HomeSections";
 import { HomeTopDeals } from "@/components/home/HomeTopDeals";
@@ -46,6 +47,7 @@ export default async function HomePage() {
         updatedAt={data.stats.updatedAt}
         renderedAt={data.renderedAt}
       />
+      <GiveawayHomeBanner />
       <HomePopularCards data={data} storeCount={storeCount} />
       <HomeSealedLinks kinds={data.sealedKinds} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
