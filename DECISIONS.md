@@ -4921,3 +4921,18 @@ pasted URL or a translate proxy is "none" or "cross-site". "yandex" and "baidu" 
 builds, baiduboxapp). Now `looksLikeBot` (the one thing that untags) is only an empty User-Agent or a self-named crawler or
 script; the header checks moved to `suspectClick`, which at most leaves a click out of the server-side click log, never the tag.
 The 10-14 Nov crawler with full browser headers will reach the networks tagged again: accepted by the owner's rule.
+
+## 2026-11-22 — A One Piece giveaway, entered by email, run by RiftCompare
+
+Owner, 2026-11-22: a giveaway on five sites (Rift, Dex, MTG, YGO, OP), one OP-18 booster pack under A$20 here, closing
+14 Dec 23:59 Sydney and drawn on 15 Dec, then a new round every two months; featured on the home page.
+
+- RiftCompare runs every giveaway (points, the drand draw, the winner's claim and the owner's notice). This site holds no
+  entry: `/giveaway` and the home banner (`components/giveaway/`) post to `https://riftcompare.com/api/sister-giveaway`
+  and read its `/api/giveaway/leaderboard?site=op`.
+- OP Compare's accounts are its own, not RiftCompare's, so an entrant confirms an email address instead: RiftCompare
+  mails a one-time link back to `/giveaway#c=…`, trades it for a RiftCompare session token kept in this browser's
+  localStorage (`op_giveaway_v1`) and nothing else. No address is stored here and no mail key is used here.
+- Points as on Rift: enter 10, bonus 40 (free with one press, so no purchase is ever needed; RiftCompare Premium gets it
+  automatically), +5 per Sydney day checked in, +25 a confirmed friend (+100 a star friend), at most ten friends.
+- `src/lib/giveaway.ts` must match RiftCompare's `GIVEAWAYS` entry with key `op-op18-2026-12`.

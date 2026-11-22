@@ -1440,6 +1440,35 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 }
 
 
+/* Giveaways (owner, 2026-11-22: "as nice and aesthetic ... as possible"; components/giveaway/). */
+.gw-hero {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(var(--c-gold) / 0.16), transparent 60%),
+    radial-gradient(90% 70% at 0% 100%, rgb(var(--c-brand-400) / 0.10), transparent 60%),
+    rgb(255 255 255 / 0.03);
+}
+.gw-prize { transform: rotate(-2.5deg); transition: transform 0.3s ease; }
+.gw-prize:hover { transform: rotate(0deg) scale(1.02); }
+.gw-panel { backdrop-filter: blur(6px); }
+.gw-flash { animation: gw-flash 2.4s ease-out forwards; }
+@keyframes gw-flash {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  15% { opacity: 1; transform: translateY(0) scale(1.05); }
+  25% { transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+.gw-trophy {
+  background:
+    radial-gradient(80% 120% at 50% 0%, rgb(var(--c-gold) / 0.28), transparent 65%),
+    linear-gradient(180deg, rgb(var(--c-gold) / 0.08), rgb(255 255 255 / 0.02));
+  box-shadow: 0 0 40px rgb(var(--c-gold) / 0.18) inset;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-flash { animation: none; }
+  .gw-prize, .gw-prize:hover { transform: none; transition: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {
@@ -1456,7 +1485,3 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
      content once it's gone — nothing here is lost by hiding it outright. */
   #nprogress { display: none !important; }
 }
-
-
-
-
