@@ -279,7 +279,7 @@ export default async function SealedDetailPage({ params }: Props) {
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* The Discord hub's restock and price-drop feed, under the comparison (owner, 2026-11-20). */}
-          {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the comparison, 24 Nov to 1 Dec, labelled Ad. */}
+          {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the comparison, 22 Nov to 1 Dec, labelled Ad. */}
           <TcgplayerCyberBanner
             href={affiliateUrl(
               `https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=${encodeURIComponent(s.name)}&ProductTypeName=Sealed+Products`,
