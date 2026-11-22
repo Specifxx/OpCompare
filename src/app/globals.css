@@ -1468,6 +1468,19 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
   .gw-flash { animation: none; }
   .gw-prize, .gw-prize:hover { transform: none; transition: none; }
 }
+/* The sign-in slides on /login and the profile's header band (components/account/LoginSlides.tsx, app/profile; owner 2026-11-22).
+   OP red, deepened, so white type sits at 7:1 or more on every part of it in both themes. */
+.signin-panel {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+    linear-gradient(150deg, #b11f27 0%, #5c0c12 100%);
+}
+.profile-band {
+  background:
+    radial-gradient(90% 140% at 100% 0%, rgb(255 255 255 / 0.16), transparent 55%),
+    linear-gradient(120deg, #d92b33 0%, #5c0c12 100%);
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
