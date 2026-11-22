@@ -4947,3 +4947,17 @@ so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: 
 **Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
 a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
 Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## 2026-11-23: A real profile page, and sign-in slides on /login (no self-opening slider)
+
+**Decision.** `/profile` gets a header band (avatar, name, email, a Free/Plus/Premium chip, sign out) and four tiles, each a door to
+what the account holds: Dashboard, Watching (the count, one bounded `watchedCardIds` read), Binder, and the giveaway while it is
+open (Membership otherwise). The setup checklist and Account & security stay below. `/login` puts the sign-in slides
+(`components/account/LoginSlides.tsx`: watchlist, binder, the Deal Finder's top three, no password) beside the buttons; on phones
+they sit under them. They sell the free account only: no price, no Premium. Event `signin_prompt` {surface: "login", step: "view"}.
+
+**Why.** Owner, 2026-11-22: "Can we significantly uplift the profile pages and the sign in and login incentive for all our other
+websites". DexCompare, MTG Compare, YGO Compare and TCG Prices also got a corner card, the visit's one self-opening prompt. OP Compare
+did NOT: the owner's 2026-11-03 rule here ("get rid of all the sliders regarding the premium and the signups. People can do it if
+they want to") still stands, and the home page's one promo banner is the giveaway's (ops/product-ux/page-budget.md). Revisit only if
+the owner asks for a prompt on OP Compare.
