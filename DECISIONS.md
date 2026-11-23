@@ -5005,3 +5005,17 @@ for "opcompare". The real gap was `/leaders/monkey-d-luffy-op18-022` (811 impres
 its searches name the Leader by colour ("green luffy leader op18", "green luffy op18 deck"), and the
 title did not. Every Leader title now starts with its colour ("Green Monkey.D.Luffy OP18-022 Leader —
 Prices, Printings & Cards"). "Deck" stays out of it: the guide owns "<leader> deck" (2026-10-27).
+
+## 2026-11-24: Set pages take RiftCompare's set template
+
+The SEO read of 21 Nov (`seo/rift-op-drop-2026-11-21.md`): OP set pages sit at about position 38 on Google, Rift's at about
+10 on the same kind of query ("<set> card list"). Rift's set page puts the grid a list searcher came for straight under the
+hero and the data-written read-out under the grid; ours put an eBay panel, the sealed tiles and the price guide first and the
+grid last, with the set's own prose folded behind "More about". `/sets/[slug]` now runs, top to bottom: hero (with a gallery
+link), stat tiles, the filterable grid, "About <code> <set> prices" (the narrative and the set's TCGplayer value, open),
+the price guide, "How to read <code> prices" (method, plus the set's dearest and cheapest priced printing and the rarity that
+fills its top ten: `setGuideFacts` in `lib/set-price-guide.ts`), sealed, guides, "Other One Piece sets" (internal links to
+every released set with cards), and only then the eBay panel and the ad block. A released set's title leads with the count
+("OP13 Carrying On His Will Card List: All 177 Cards + Prices") when it fits 60 characters, else the old title; spoiler titles
+are unchanged. A CollectionPage JSON-LD joins the breadcrumb. URLs, canonicals, noindex rules and the H1 are unchanged.
+`tests/set-template.test.ts` pins the order. Read on 2 Dec and judge 8 Dec against the set pages' position.
