@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/stores" },
 };
 
+// Stores of a country shown before "Show all" (2026-11-23): the table is sorted by listings matched, so these are the biggest.
+// Every row stays in the server HTML; the fold is CSS only (globals.css, .store-fold) and shows everything where :has() is missing.
+const FIRST = 12;
+
 export default async function StoresPage() {
   const stats = await getSiteStats();
   const by = new Map(
@@ -50,7 +54,7 @@ export default async function StoresPage() {
           .sort((a, b) => (b.st?.offers ?? 0) - (a.st?.offers ?? 0));
         const tcg = c.code === "US" ? by.get("tcgplayer|US") : undefined;
         return (
-          <section key={c.code} className="mt-10">
+          <section key={c.code} className="store-fold mt-10">
             <h2 className="mb-3 text-xl text-white">
               {c.flag} {c.label}{" "}
               <span className="text-sm font-normal text-slate-500">
@@ -58,7 +62,7 @@ export default async function StoresPage() {
               </span>
             </h2>
             <div className="card-surface overflow-x-auto">
-              <table className={`${DATA_TABLE} min-w-[520px]`}>
+              <table className={`${DATA_TABLE} sm:min-w-[520px]`}>
                 <thead>
                   <tr>
                     <th>Store</th>
@@ -80,8 +84,8 @@ export default async function StoresPage() {
                       </td>
                     </tr>
                   ) : null}
-                  {list.map(({ s, st }) => (
-                    <tr key={s.key}>
+                  {list.map(({ s, st }, i) => (
+                    <tr key={s.key} className={i >= FIRST ? "store-fold-x" : undefined}>
                       <td>
                         <Link
                           href={`/stores/${s.key}`}
@@ -89,7 +93,7 @@ export default async function StoresPage() {
                         >
                           {s.name}
                         </Link>
-                        <span className="ml-2 text-xs text-slate-500">
+                        <span className="ml-2 hidden text-xs text-slate-500 sm:inline">
                           {s.base.replace(/^https?:\/\/(www\.)?/, "")}
                         </span>
                       </td>
@@ -104,6 +108,14 @@ export default async function StoresPage() {
                 </tbody>
               </table>
             </div>
+            {list.length > FIRST ? (
+              <>
+                <input type="checkbox" id={`store-fold-${c.code}`} className="store-fold-toggle sr-only" />
+                <label htmlFor={`store-fold-${c.code}`} className="store-fold-more">
+                  Show all {list.length} stores in {c.label}
+                </label>
+              </>
+            ) : null}
           </section>
         );
       })}

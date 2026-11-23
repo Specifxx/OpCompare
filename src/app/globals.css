@@ -1506,6 +1506,20 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 }
 
 
+/* /stores (2026-11-23): each country's table shows its twelve biggest stores; a checkbox opens the rest. CSS only, every
+   row is in the HTML, and a browser without :has() shows them all. */
+.store-fold-more { display: none; }
+@supports selector(:has(*)) {
+  .store-fold:not(:has(.store-fold-toggle:checked)) .store-fold-x { display: none; }
+  .store-fold-more {
+    display: inline-flex; align-items: center; min-height: 2.75rem; margin-top: 0.75rem; padding: 0 1.125rem;
+    border: 1px solid rgb(255 255 255 / 0.15); border-radius: 9999px; font-size: 0.875rem; font-weight: 600; color: #e2e8f0; cursor: pointer;
+  }
+  .store-fold-more:hover { border-color: rgb(255 255 255 / 0.4); }
+  .store-fold:has(.store-fold-toggle:checked) .store-fold-more { display: none; }
+  .store-fold-toggle:focus-visible + .store-fold-more { outline: 2px solid currentColor; outline-offset: 2px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {

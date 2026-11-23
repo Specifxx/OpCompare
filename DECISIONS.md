@@ -4973,3 +4973,16 @@ more" that opens it; `/sealed`'s first product is about 580 px down.
 CSS only (`globals.css` `.hub-intro`, a checkbox and `:has()`): every paragraph is in the HTML at every width, there is no
 script, and from 640px up, or in a browser without `:has()`, the intro shows whole as before. The intro stays directly under
 the h1, its links and words unchanged. `tests/hub-intros-catalogue.test.ts` pins it. Rides the weekly release.
+
+## 2026-11-23: The stores page folds and the home page's guides are one row on a phone
+
+Second pass on the pages past the hero (owner, 23 Nov). On a 390px phone `/stores` was 20,000 px (the US table alone has 151
+stores) and its table scrolled sideways; the home page's six guide cards stacked to about 2,000 px.
+
+- `/stores`: each country's table shows its twelve biggest stores (it is already sorted by listings matched) and a "Show all"
+  control opens the rest. CSS only (`.store-fold`, a checkbox and `:has()`): every row is in the server HTML and a browser
+  without `:has()` shows them all. On a phone the table drops its 520px minimum and the store's domain, so all three
+  columns fit. 6,100 px.
+- Home: `HomeGuides` is one sideways row below `sm`, the grid above. Same six links and images.
+
+No URL, title, heading, prompt, banner or ad changed.
