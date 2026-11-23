@@ -19,12 +19,13 @@ export function HomeGuides({ cat }: { cat: Catalog }) {
           All guides and news →
         </Link>
       </div>
-      <ul role="list" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* On a phone the six guides are one sideways row (2026-11-23: stacked, they were about 2,000 px of the home page); the grid from sm up. */}
+      <ul role="list" className="-mx-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
         {posts.map((p) => {
           const href = postHref(p);
           const title = p.title({ cat });
           return (
-            <li key={p.slug}>
+            <li key={p.slug} className="w-[78%] shrink-0 snap-start sm:w-auto">
               <Link href={href} className="card-surface group flex h-full flex-col overflow-hidden transition-colors hover:border-brand-300/60">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
