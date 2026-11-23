@@ -32,13 +32,20 @@ function findLeader(cat: Catalog, slug: string): { base: CardLite; prints: CardL
   return { base: sorted[0], prints: sorted };
 }
 
+/** "Green " or "Red/Green " ahead of a Leader's name; nothing when the catalogue has no colour. */
+function colorWords(colors: string[]): string {
+  return colors.length ? `${colors.join("/")} ` : "";
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = await getCatalog().catch(() => null);
   const l = cat ? findLeader(cat, params.slug) : null;
   if (!l) return { title: "Leader not found" };
   const slug = leaderSlug(l.base.name, l.base.number);
   return {
-    title: `${l.base.name} ${l.base.number} Leader — Prices, Printings & Cards`,
+    // The colour leads the title (2026-11-23, Search Console): searchers name a Leader by colour ("green luffy
+    // leader op18"), and two Leaders can share a name in one set. The deck phrase stays the guide's (2026-10-27).
+    title: `${colorWords(l.base.colors)}${l.base.name} ${l.base.number} Leader — Prices, Printings & Cards`,
     description: `${l.base.name} (${l.base.number}), a ${l.base.colors.join("/")} One Piece Leader: every printing priced across stores, its life and power, and the cards that share its types.`,
     alternates: { canonical: `/leaders/${slug}` },
     openGraph: pageOg(`/leaders/${slug}`),
