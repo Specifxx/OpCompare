@@ -78,7 +78,25 @@ async function main() {
     say("| Query | Clicks | Impressions | Position |");
     say("|---|---|---|---|");
     for (const r of queries.rows ?? []) say(`| ${r.keys[0]} | ${r.clicks} | ${r.impressions} | ${r.position.toFixed(1)} |`);
-    pageTables(rows, (await q({ startDate: day(56), endDate: day(29), dimensions: ["page"], rowLimit: 25000 })).rows ?? []);
+    const fix = pageTables(rows, (await q({ startDate: day(56), endDate: day(29), dimensions: ["page"], rowLimit: 25000 })).rows ?? []);
+    // What each of the top fix-list pages is shown for, so job D can tell a
+    // title/description fix from a navigational query no title can win.
+    say("");
+    say("### Fix list: the queries each page is shown for (28 days, top 8)");
+    for (const r of fix.slice(0, 8)) {
+      const pq = await q({
+        startDate: day(28),
+        endDate: day(2),
+        dimensions: ["query"],
+        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: r.keys[0] }] }],
+        rowLimit: 8,
+      });
+      say("");
+      say(`**${r.keys[0].replace(/^https?:\/\/[^/]+/, "") || "/"}**`);
+      say("| Query | Clicks | Impressions | Position |");
+      say("|---|---|---|---|");
+      for (const x of pq.rows ?? []) say(`| ${x.keys[0]} | ${x.clicks} | ${x.impressions} | ${x.position.toFixed(1)} |`);
+    }
   }
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n") + "\n");
 }
@@ -88,7 +106,7 @@ type Row = { keys: string[]; clicks: number; impressions: number; position: numb
 // The per-page tables the site loop's job D reads (its fix list): the top pages,
 // pages Google shows on pages 1-2 that nobody clicks, and the pages gaining and
 // losing the most clicks against the 28 days before. Bounded: 15 rows each.
-function pageTables(now: Row[], before: Row[]) {
+function pageTables(now: Row[], before: Row[]): Row[] {
   const path = (u: string) => u.replace(/^https?:\/\/[^/]+/, "") || "/";
   const line = (r: Row) => `| ${path(r.keys[0])} | ${r.clicks} | ${r.impressions} | ${r.impressions ? ((100 * r.clicks) / r.impressions).toFixed(1) : "0.0"}% | ${r.position.toFixed(1)} |`;
   const head = () => {
@@ -102,11 +120,11 @@ function pageTables(now: Row[], before: Row[]) {
   say("");
   say("### Fix list: shown on Google pages 1-2, clicked least (28 days, 100+ impressions)");
   head();
-  for (const r of now
+  const fix = now
     .filter((r) => r.impressions >= 100 && r.position <= 20)
     .sort((a, b) => a.clicks / a.impressions - b.clicks / b.impressions || b.impressions - a.impressions)
-    .slice(0, 15))
-    say(line(r));
+    .slice(0, 15);
+  for (const r of fix) say(line(r));
   const prev = new Map(before.map((r) => [r.keys[0], r.clicks]));
   const cur = new Map(now.map((r) => [r.keys[0], r.clicks]));
   const delta = [...new Set([...now.map((r) => r.keys[0]), ...before.map((r) => r.keys[0])])].map((k) => ({
@@ -124,6 +142,7 @@ function pageTables(now: Row[], before: Row[]) {
     say("|---|---|---|---|");
     for (const d of list.slice(0, 15)) say(`| ${path(d.k)} | ${d.now} | ${d.before} | ${d.now - d.before > 0 ? "+" : ""}${d.now - d.before} |`);
   }
+  return fix;
 }
 
 main().catch((e) => {

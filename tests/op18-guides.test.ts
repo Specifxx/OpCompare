@@ -317,6 +317,8 @@ test("linked from the pages a reader of OP18 lands on: the set page, the pre-ord
   // One page, one phrase (2026-10-27): a Leader with a deck guide links it up top and leaves "<leader> deck" to the guide.
   assert.match(read("src/app/leaders/[slug]/page.tsx"), /Building the deck\? Read/);
   assert.match(read("src/app/leaders/[slug]/page.tsx"), /deckGuide \? `Cards that share/);
+  // The colour leads a Leader's title ("Green Monkey.D.Luffy OP18-022 Leader …", 2026-11-23); "deck" stays out of it.
+  assert.match(read("src/app/leaders/[slug]/page.tsx"), /title: `\$\{colorWords\(l\.base\.colors\)\}\$\{l\.base\.name\} \$\{l\.base\.number\} Leader — Prices, Printings & Cards`/);
   assert.match(read("src/app/keywords/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
   assert.match(read("src/app/keywords/[slug]/page.tsx"), /href="\/guides\/one-piece-tcg-keywords-explained"/);
 });

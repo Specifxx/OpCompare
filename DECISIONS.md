@@ -4993,3 +4993,15 @@ Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a li
 one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/browse`, Sealed to `/sealed`, Market to `/market`. Hover still opens the panel after the same
 intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
 `aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.
+
+## Store pages win only their own name; Leader titles lead with the colour — 2026-11-23
+
+Search Console (run 45220148893, 28 days to 21 Nov; `gsc-report.ts` now lists the queries behind each
+fix-list page): the zero-click pages on Google's first page were `/stores/justcardstuff` (443 of 574
+impressions for "just card stuff"), `/stores/finalboss` ("the final boss collectables") and
+`/stores/spellroo` ("spellroo"): navigational searches for the shop itself, which the shop's own site
+answers. No title wins those, so the store pages are left as they are. `/singles` and `/gallery` show
+for "opcompare". The real gap was `/leaders/monkey-d-luffy-op18-022` (811 impressions, 4.6% CTR):
+its searches name the Leader by colour ("green luffy leader op18", "green luffy op18 deck"), and the
+title did not. Every Leader title now starts with its colour ("Green Monkey.D.Luffy OP18-022 Leader —
+Prices, Printings & Cards"). "Deck" stays out of it: the guide owns "<leader> deck" (2026-10-27).
