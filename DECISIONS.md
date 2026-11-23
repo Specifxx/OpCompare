@@ -4986,3 +4986,10 @@ stores) and its table scrolled sideways; the home page's six guide cards stacked
 - Home: `HomeGuides` is one sideways row below `sm`, the grid above. Same six links and images.
 
 No URL, title, heading, prompt, banner or ad changed.
+
+## 2026-11-23: A header dropdown's label is a link
+
+Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a link and … take me somewhere … when I click on
+one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/browse`, Sealed to `/sealed`, Market to `/market`. Hover still opens the panel after the same
+intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
+`aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.
