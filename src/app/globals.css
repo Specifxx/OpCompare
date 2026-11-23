@@ -1482,6 +1482,30 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 }
 
 
+/* A hub page's intro on a phone (components/HubIntro.tsx, 2026-11-23): its first three lines and a "Read more", so the page's
+   own content is on the first screen. The text is all in the HTML; the toggle is a checkbox. From sm up, and in a browser
+   without :has(), the intro shows whole and the toggle is not drawn. */
+.hub-intro-more { display: none; }
+@supports selector(:has(*)) {
+  @media (max-width: 639.98px) {
+    .hub-intro:not(:has(.hub-intro-toggle:checked)) .hub-intro-body {
+      max-height: 4.9em; /* three lines of 15px text at 1.625 */
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(#000 55%, transparent);
+      mask-image: linear-gradient(#000 55%, transparent);
+    }
+    .hub-intro-more {
+      display: inline-flex; align-items: center; min-height: 2.5rem; margin-top: 0.125rem;
+      font-size: 0.875rem; font-weight: 600; color: rgb(var(--brand-400, 248 113 113)); cursor: pointer;
+    }
+    .hub-intro-close { display: none; }
+    .hub-intro:has(.hub-intro-toggle:checked) .hub-intro-open { display: none; }
+    .hub-intro:has(.hub-intro-toggle:checked) .hub-intro-close { display: inline; }
+    .hub-intro:has(.hub-intro-toggle:focus-visible) .hub-intro-more { outline: 2px solid currentColor; outline-offset: 2px; }
+  }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {

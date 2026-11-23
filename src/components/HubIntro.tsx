@@ -17,11 +17,22 @@ import { hubIntro } from "@/lib/content/hub-intros";
 export function HubIntro({ path, className }: { path: string; className?: string }) {
   const paragraphs = hubIntro(path);
   if (!paragraphs.length) return null;
+  const id = path.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home";
+  // On a phone the intro is clamped to its first three lines with a "Read more" (2026-11-23: the page budget's rule 6, the
+  // page's own content on the first screen; the intro ran to two screens before the first product on /sealed and /movers).
+  // CSS only (globals.css .hub-intro): the whole text is in the HTML at every width, the toggle is a checkbox, no script.
   return (
-    <div className={className ?? "mt-3 max-w-[65ch] space-y-3 text-[15px] leading-relaxed text-slate-300"}>
-      {paragraphs.map((p, i) => (
-        <p key={i}>{withLinks(p)}</p>
-      ))}
+    <div className="hub-intro">
+      <input type="checkbox" id={`hub-intro-${id}`} className="hub-intro-toggle sr-only" aria-label="Show the whole introduction" />
+      <div className={`hub-intro-body ${className ?? "mt-3 max-w-[65ch] space-y-3 text-[15px] leading-relaxed text-slate-300"}`}>
+        {paragraphs.map((p, i) => (
+          <p key={i}>{withLinks(p)}</p>
+        ))}
+      </div>
+      <label htmlFor={`hub-intro-${id}`} className="hub-intro-more" aria-hidden="true">
+        <span className="hub-intro-open">Read more</span>
+        <span className="hub-intro-close">Show less</span>
+      </label>
     </div>
   );
 }

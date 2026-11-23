@@ -4961,3 +4961,15 @@ websites". DexCompare, MTG Compare, YGO Compare and TCG Prices also got a corner
 did NOT: the owner's 2026-11-03 rule here ("get rid of all the sliders regarding the premium and the signups. People can do it if
 they want to") still stands, and the home page's one promo banner is the giveaway's (ops/product-ux/page-budget.md). Revisit only if
 the owner asks for a prompt on OP Compare.
+
+## 2026-11-23: Hub intros are three lines and "Read more" on a phone
+
+Owner: the pages past the home page should feel as good as the home page ("the database pages, the filters, the guides
+… and hubs"). The page budget's rule 6 is the page's own content on a phone's first screen. On a 390px phone the hub intro
+(`HubIntro`, two or three paragraphs under the h1 on 16 pages) put the first product of `/sealed` about 1,150 px down and the
+first set of `/sets` under two screens of text. Now, below 640px, the intro shows its first three lines faded out and a "Read
+more" that opens it; `/sealed`'s first product is about 580 px down.
+
+CSS only (`globals.css` `.hub-intro`, a checkbox and `:has()`): every paragraph is in the HTML at every width, there is no
+script, and from 640px up, or in a browser without `:has()`, the intro shows whole as before. The intro stays directly under
+the h1, its links and words unchanged. `tests/hub-intros-catalogue.test.ts` pins it. Rides the weekly release.
