@@ -196,6 +196,8 @@ export const RAIL_GROUPS: NavGroup[] = [
 // (tests/header-menus.test.ts). Price browses only (the 2026-10-28 minimal rule). 7 top-level items in the header row.
 export interface HeaderMenu {
   label: string;
+  /** Where a click on the label goes: the section's own page (owner, 2026-11-23). A NAV_GROUPS page. */
+  href: string;
   columns: { title: string; links: { href: string; label: string }[] }[];
 }
 const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
@@ -209,6 +211,7 @@ function pick(...hrefs: string[]): { href: string; label: string }[] {
 export const HEADER_MENUS: HeaderMenu[] = [
   {
     label: "Singles",
+    href: "/browse",
     columns: [
       { title: "Browse cards by", links: pick("/sets", "/leaders", "/colors", "/cards") },
       { title: "Find a card", links: pick("/browse", "/price-guide", "/graded") },
@@ -216,10 +219,12 @@ export const HEADER_MENUS: HeaderMenu[] = [
   },
   {
     label: "Sealed",
+    href: "/sealed",
     columns: [{ title: "Boxes & packs", links: pick("/sealed", "/preorders", "/release-dates") }],
   },
   {
     label: "Market",
+    href: "/market",
     columns: [
       { title: "Prices", links: pick("/market", "/market/records", "/movers") },
       { title: "Deals", links: pick("/tools/deal-finder", "/stores") },
