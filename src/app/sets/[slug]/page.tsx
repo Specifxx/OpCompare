@@ -2,7 +2,6 @@ import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 import { cleanPageNumber } from "@/lib/facets";
 import Link from "next/link";
-import { ReadMore } from "@/components/ReadMore";
 import { notFound } from "next/navigation";
 import CardQuickLink from "@/components/CardQuickLink";
 import { CardTile } from "@/components/CardTile";
@@ -13,8 +12,8 @@ import { SealedTile } from "@/components/SealedTile";
 import { cardEbayQuery, onePieceEbayQuery } from "@/lib/affiliate";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { PreorderCallout } from "@/components/PreorderCallout";
-import { Breadcrumbs, InShort, SectionHeader, StatTile } from "@/components/ui";
-import { SET_KINDS } from "@/lib/constants";
+import { Breadcrumbs, SectionHeader, StatTile } from "@/components/ui";
+import { RARITIES, SET_KINDS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { getCatalog, getSealedCatalog } from "@/lib/data";
 import { int, longDate, money } from "@/lib/format";
@@ -34,7 +33,8 @@ import { JsonLd } from "@/components/ui";
 import { browseHref, parseBrowse, runBrowse, type SearchParams } from "@/lib/browse";
 import { guidesForSet } from "@/lib/content/catalogue-guides";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
-import { setPriceGuideRows } from "@/lib/set-price-guide";
+import { setGuideFacts, setPriceGuideRows } from "@/lib/set-price-guide";
+import { SITE_URL } from "@/lib/site";
 
 type Props = { params: { slug: string }; searchParams: SearchParams };
 
@@ -50,13 +50,23 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const spoilers = upcoming && revealed > 0;
   const t = spoilers ? `${s.code} ${s.name} Spoilers: ${revealed} Cards Revealed` : `${s.code} ${s.name} Card List & Prices`;
   const short = spoilers ? `${s.code} Spoilers: ${revealed} Cards Revealed & Prices` : `${s.code} Card List & Prices`;
+  // RiftCompare's set template (2026-11-24): list intent first, the count in the first half of the title, because the
+  // count is the answer a "card list" searcher checks for. Released sets only; a rung that does not fit 60 characters
+  // falls to the one below, and the uncounted titles above stay the floor.
+  const counted = !spoilers && revealed > 0
+    ? [`${s.code} ${s.name} Card List: All ${revealed} Cards + Prices`, `${s.code} ${s.name} Card List & Prices`, `${s.code} Card List: All ${revealed} Cards + Prices`]
+    : [];
+  const title = [...counted, t].find((x) => x.length <= 60) ?? short;
+  const releasedDesc = `${s.code} ${s.name} card list: all ${revealed} printings with live prices compared across stores in six markets, the chase cards and sealed product. Updated twice a day.`;
   const n = cleanPageNumber(searchParams);
   const suffix = n ? `?page=${n}` : "";
   return {
-    title: { absolute: t.length <= 60 ? t : short },
+    title: { absolute: title },
     description: spoilers
       ? `Every ${s.code} ${s.name} card revealed so far (${revealed} and counting), with pre-order prices as stores list them. Releases ${s.releasedOn}; updated as new spoilers land.`
-      : `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
+      : revealed > 0 && releasedDesc.length <= 155
+        ? releasedDesc
+        : `${s.code} ${s.name} card list with live prices compared across stores in six markets: every card, the chase cards and sealed product.`,
     // Clean page 2+ (?page=N alone) is its own page, self-canonical; a filtered or sorted grid is a slice of the same
     // list: noindex, follow (SEO audit, 2026-11-07).
     alternates: { canonical: `/sets/${s.slug}${suffix}` },
@@ -84,6 +94,10 @@ export default async function SetPage({ params, searchParams }: Props) {
     siteMedianCents: median(cat.cards.map((x) => x.low[country]).filter((v): v is number => v != null)),
   });
   const guideRows = setPriceGuideRows(cards, country);
+  const facts = setGuideFacts(guideRows);
+  // Internal links to the other sets (RiftCompare's "Other Riftbound sets"): newest first, released ones only.
+  const withCards = new Set(cat.cards.map((y) => y.setId));
+  const otherSets = cat.sets.filter((x) => x.id !== set.id && withCards.has(x.id) && !(x.releasedOn && x.releasedOn > new Date().toISOString().slice(0, 10)));
   const guides = guidesForSet(set.code);
   const setsByCode = Object.fromEntries(cat.sets.flatMap((x) => [[x.slug, `${x.name} (${x.code})`], [x.code.toLowerCase(), `${x.name} (${x.code})`]]));
   const priced = cards.filter((x) => x.low[country] != null);
@@ -101,8 +115,21 @@ export default async function SetPage({ params, searchParams }: Props) {
   // An unreleased set with a pre-order board links to it; null from release day on.
   const preorderHref = preorderPageFor(set, today);
 
+  const collection = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${set.code} ${set.name} card list & prices`,
+    url: page > 1 && !Object.keys(searchParams).some((k) => k !== "page") ? `${SITE_URL}/sets/${set.slug}?page=${page}` : `${SITE_URL}/sets/${set.slug}`,
+    description: `Live prices for every ${set.code} ${set.name} card.`,
+  };
+
+  // RiftCompare's set template (2026-11-24, the SEO thread's 21 Nov read: OP set pages sit at position ~38, Rift's at
+  // ~10): the hero, then the card grid a "card list" searcher came for, then the data-written read-out (about the set,
+  // the price guide, how to read its prices), the sealed product, the guides and the other sets, and only then the eBay
+  // links and the ad block. The commercial blocks never sit above the page's own content.
   return (
     <div>
+      <JsonLd data={collection} />
       <Breadcrumbs
         trail={[{ href: "/sets", name: "Sets" }, { name: set.name }]}
       />
@@ -128,12 +155,13 @@ export default async function SetPage({ params, searchParams }: Props) {
           where no {c.adjective} store has the card. Open a card for every
           store&apos;s price.
         </p>
-        {narrative.length ? (
-          <ReadMore label={`More about ${set.code} prices`}>
-            {narrative.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </ReadMore>
+        {cards.length > 0 ? (
+          <p className="text-sm">
+            <Link href={`/sets/${set.slug}/gallery`} className="font-semibold text-brand-400 underline-offset-2 hover:underline">
+              Browse the {set.code} card gallery →
+            </Link>
+            <span className="text-slate-500"> every card on one page, with images</span>
+          </p>
         ) : null}
       </div>
 
@@ -175,77 +203,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         />
       </div>
 
-      {marketTotal ? (
-        <div className="mt-6">
-          <InShort>
-            Every printing in {set.code} together is worth about{" "}
-            <span className="num font-semibold text-white">
-              {money(marketTotal, "US")}
-            </span>{" "}
-            at TCGplayer&apos;s market prices — and{" "}
-            {top?.marketUsd
-              ? `${Math.round(((top.marketUsd ?? 0) / marketTotal) * 100)}%`
-              : "a large share"}{" "}
-            of that is its single most valuable card, {top?.name}. Value in One
-            Piece sets sits in a handful of Manga, SP and Parallel arts; most of
-            the list costs well under a dollar.
-          </InShort>
-        </div>
-      ) : null}
-
-      <div className="mt-6">
-        <EbaySearchPanel
-          heading={`${set.name} on eBay`}
-          country={country}
-          page="set"
-          links={[
-            ...(["booster", "extra", "premium"].includes(set.kind)
-              ? [
-                  {
-                    label: `${set.code} booster box`,
-                    query: onePieceEbayQuery(
-                      `${set.name} ${set.code} booster box English`,
-                    ),
-                  },
-                ]
-              : []),
-            {
-              label: `${set.code} singles`,
-              query: onePieceEbayQuery(`${set.code} ${set.name}`),
-            },
-            ...[...cards]
-              .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
-              .slice(0, 4)
-              .map((c) => ({
-                label: `${c.name}${c.variant ? ` (${c.variant.split(" · ")[0]})` : ""}`,
-                query: cardEbayQuery(c),
-              })),
-          ]}
-        />
-      </div>
-
-      {setSealed.length ? (
-        <section className="mt-10">
-          <SectionHeader title={`${set.code} sealed products`} />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {setSealed.slice(0, 6).map((s) => (
-              <SealedTile
-                key={s.id}
-                s={s}
-                country={country}
-                setCode={set.code}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <div className="mt-10">
-        <SetPriceGuide setName={set.name} rows={guideRows} country={country} adjective={c.adjective} currency={c.currency} />
-      </div>
-
-
-      <section id="cards" className="mt-10 scroll-mt-20">
+      <section id="cards" className="mt-8 scroll-mt-20">
         <SectionHeader
           title={`Every ${set.code} card`}
           sub={`${int(grid.total)} printings · page ${page} of ${grid.pages}`}
@@ -284,7 +242,134 @@ export default async function SetPage({ params, searchParams }: Props) {
           </div>
         </div>
       </section>
+
+      {/* About the set: written from its own rows (lib/content/collection-narrative.ts), open, under the grid, as on
+          RiftCompare's set pages. It used to sit folded behind "More about" above the grid. */}
+      {narrative.length || marketTotal ? (
+        <section aria-label={`About ${set.code}`} className="card-surface mt-10 p-5" data-set-intro>
+          <h2 className="text-xl font-extrabold text-white">About {set.code} {set.name} prices</h2>
+          <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            {narrative.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+            {marketTotal ? (
+              <p>
+                Every printing in {set.code} together is worth about{" "}
+                <span className="num font-semibold text-white">{money(marketTotal, "US")}</span> at TCGplayer&apos;s market
+                prices, and{" "}
+                {top?.marketUsd ? `${Math.round(((top.marketUsd ?? 0) / marketTotal) * 100)}%` : "a large share"} of that is
+                its single most valuable card, {top?.name}. Value in One Piece sets sits in a handful of Manga, SP and
+                Parallel arts; most of the list costs well under a dollar.
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="mt-10">
+        <SetPriceGuide setName={set.name} rows={guideRows} country={country} adjective={c.adjective} currency={c.currency} />
+      </div>
+
+      {/* How to read the prices above (RiftCompare's set template): the method, and a middle paragraph only this set
+          has (its dearest and cheapest priced cards, the rarity filling its top ten). Released sets only. */}
+      {!future && cards.length > 0 ? (
+        <section aria-labelledby="set-read-h" className="card-surface mt-10 p-5 sm:p-6">
+          <h2 id="set-read-h" className="text-xl font-extrabold text-white">How to read {set.code} prices</h2>
+          <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            <p>
+              Each price on this page is the cheapest in-stock listing we track for that printing in {c.place}, in{" "}
+              {c.currency}: the item price, before postage. {int(priced.length)} of {set.code}&apos;s {int(cards.length)}{" "}
+              printings have one right now
+              {priced.length < cards.length
+                ? `; the other ${int(cards.length - priced.length)} show TCGplayer's market price or no price until a seller in ${c.place} lists them in stock`
+                : ""}
+              . Prices come from two imports a day.
+            </p>
+            {facts.top ? (
+              <p>
+                The dearest {set.code} printing in {c.place} right now is {facts.top.name}, at {money(facts.top.priceCents, country)}
+                {facts.low ? <>; the cheapest priced one is {facts.low.name}, at {money(facts.low.priceCents, country)}</> : null}.
+                {facts.topTenRarity ? (
+                  <> {facts.topTenRarity.n} of the ten dearest are {RARITIES[facts.topTenRarity.rarity]?.label ?? facts.topTenRarity.rarity} cards.</>
+                ) : null}{" "}
+                The price guide lists all {int(guideRows.length)} printings dearest first; the grid above can be re-sorted and
+                filtered.
+              </p>
+            ) : null}
+            <p>
+              Open any card for every store&apos;s price in {c.place}, cheapest first by item price. To cost a whole
+              want-list with each store&apos;s postage, use{" "}
+              <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link>; to weigh buying
+              these singles against opening a box, the{" "}
+              <Link href="/tools/box-ev" className="text-brand-400 hover:underline">box EV calculator</Link>.
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      {setSealed.length ? (
+        <section className="mt-10">
+          <SectionHeader title={`${set.code} sealed products`} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {setSealed.slice(0, 6).map((s) => (
+              <SealedTile
+                key={s.id}
+                s={s}
+                country={country}
+                setCode={set.code}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
+
+      {/* Internal links to the other sets (crawl + UX), as on RiftCompare's set pages. */}
+      <section className="mt-10">
+        <h2 className="mb-3 text-lg font-bold text-white">Other One Piece sets</h2>
+        <div className="flex flex-wrap gap-2">
+          {otherSets.map((x) => (
+            <Link key={x.id} href={`/sets/${x.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
+              {x.code} {x.name}
+            </Link>
+          ))}
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All cards →</Link>
+          <Link href="/price-guide" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All One Piece card prices →</Link>
+          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
+        </div>
+      </section>
+
+      <div className="mt-10">
+        <EbaySearchPanel
+          heading={`${set.name} on eBay`}
+          country={country}
+          page="set"
+          links={[
+            ...(["booster", "extra", "premium"].includes(set.kind)
+              ? [
+                  {
+                    label: `${set.code} booster box`,
+                    query: onePieceEbayQuery(
+                      `${set.name} ${set.code} booster box English`,
+                    ),
+                  },
+                ]
+              : []),
+            {
+              label: `${set.code} singles`,
+              query: onePieceEbayQuery(`${set.code} ${set.name}`),
+            },
+            ...[...cards]
+              .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
+              .slice(0, 4)
+              .map((c) => ({
+                label: `${c.name}${c.variant ? ` (${c.variant.split(" · ")[0]})` : ""}`,
+                query: cardEbayQuery(c),
+              })),
+          ]}
+        />
+      </div>
       {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
       <InlineAds page="set" className="mt-12" />
     </div>

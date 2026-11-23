@@ -37,3 +37,31 @@ export function setPriceGuideRows(cards: readonly CardLite[], country: Country):
     return (a.number ?? "~").localeCompare(b.number ?? "~", "en", { numeric: true }) || a.id - b.id;
   });
 }
+
+export interface SetGuideFacts {
+  /** The dearest priced card. */
+  top: { name: string; priceCents: number } | null;
+  /** The cheapest priced card, when there are two or more. */
+  low: { name: string; priceCents: number } | null;
+  /** The rarity that fills at least five of the ten dearest, when ten are priced. */
+  topTenRarity: { rarity: string; n: number } | null;
+}
+
+/**
+ * The facts only this set has, for "How to read <set> prices" (RiftCompare's set
+ * template, lib/set-view.ts): a sentence that reads the same on every set page is
+ * template chrome, so the middle paragraph is built from these. Pure; reads the rows
+ * setPriceGuideRows already made (dearest first).
+ */
+export function setGuideFacts(rows: readonly SetPriceGuideRow[]): SetGuideFacts {
+  const priced = rows.filter((r): r is SetPriceGuideRow & { priceCents: number } => r.priceCents != null);
+  const fact = (r: (typeof priced)[number] | undefined) => (r ? { name: r.name, priceCents: r.priceCents } : null);
+  const tally = new Map<string, number>();
+  for (const r of priced.slice(0, 10)) if (r.rarity) tally.set(r.rarity, (tally.get(r.rarity) ?? 0) + 1);
+  const [rarity, n] = [...tally].sort((x, y) => y[1] - x[1])[0] ?? [null, 0];
+  return {
+    top: fact(priced[0]),
+    low: priced.length > 1 ? fact(priced[priced.length - 1]) : null,
+    topTenRarity: rarity && priced.length >= 10 && n >= 5 ? { rarity, n } : null,
+  };
+}
