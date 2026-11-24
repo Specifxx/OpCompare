@@ -5019,3 +5019,20 @@ every released set with cards), and only then the eBay panel and the ad block. A
 ("OP13 Carrying On His Will Card List: All 177 Cards + Prices") when it fits 60 characters, else the old title; spoiler titles
 are unchanged. A CollectionPage JSON-LD joins the breadcrumb. URLs, canonicals, noindex rules and the H1 are unchanged.
 `tests/set-template.test.ts` pins the order. Read on 2 Dec and judge 8 Dec against the set pages' position.
+
+## Black Friday page: one deal list, deals above the fold (owner's review, 2026-11-24)
+
+The owner reviewed DexCompare's Black Friday page and asked for the changes "urgently" on every site: deals above the fold with a
+one-line intro, one list with a toggle, a discount badge on every row, filters and sort, sticky section chips, per-row freshness, a
+sparkline, plain labels, one affiliate disclosure, aligned rows, the store button primary and eBay a text link, bigger thumbnails,
+one slim alerts bar, phone rows with 44px targets, and click and scroll tracking per section.
+
+- The page's two US lists ("furthest under their own 30-day price", `RealDrops`, and the "under TCGplayer market" table) are ONE
+  list (`lib/sale-deals.ts`, `lib/sale-deals-data.ts`, `components/SaleDeals.tsx`). Each row carries one offer, the cheapest store
+  or TCGplayer listing a shopper can order now (never eBay), and both discounts are measured against that price; the toggle
+  ("Biggest price drops" / "Under TCGplayer") picks the basis that badges and ranks. The struck price is that basis's reference,
+  labelled for screen readers, never "was".
+- A row read more than 12 hours ago says so in amber (the offer's own `updatedAt`). Store shipping is not read, so every row says
+  "Shipping at checkout" and no delivered price is claimed.
+- Section chips stick under the header at its measured height (two rows below xl). Buy clicks keep the beacon's data-* attributes
+  with surface `bf_list`; GA gets `bf_section` once per section seen (scroll depth) and `bf_filter` per filter used.
