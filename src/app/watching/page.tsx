@@ -67,7 +67,7 @@ export default async function WatchingPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-5">
+      <div className="mb-4">
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-slate-300">
             Home
@@ -79,9 +79,52 @@ export default async function WatchingPage() {
           <NavIcon name="heart" className="h-6 w-6 shrink-0 text-brand-400" />
           My watchlist
         </h1>
+        <ul className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300" aria-label="What we flag">
+          {["New low", "Your price", "Back in stock", emailOn ? "Max 1 email a week" : "Flagged here"].map((c) => (
+            <li key={c} className="rounded-full border border-ink-700 bg-ink-900/60 px-2.5 py-1">
+              {c}
+            </li>
+          ))}
+          <li>
+            <a href="#how-alerts" className="inline-flex px-1 py-1 text-brand-400 hover:underline">
+              How it works
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <Watchlist />
+
+      {(member || lapsedSealed > 0) && (
+        <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
+          <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
+            Sealed
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">Checked {SEALED_CHECK_CADENCE}: back in stock after selling out everywhere, at your target, or a real drop.</p>
+          <div className="mt-3">
+            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} lapsed={!member} snooze={emailOn} />
+          </div>
+        </section>
+      )}
+      {/* Sealed products a free account saved in this browser stay there. */}
+      {!member && <LocalSealedSection />}
+
+      {/* Decks (Premium deck price watch): the tools track's DeckWatchList
+          renders here once it lands — wave2-plan §3 Track 2 item 4. */}
+
+      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={member} surface="nudge:watchlist" className="mt-8" />}
+
+      {/* LIST FIRST, PROSE FOLDED (owner, 2026-11-24: "I hate text heavy pages
+          like this"): the rules that sat above the list are here, closed by
+          default but in the server HTML. */}
+      <details id="how-alerts" className="card-surface group mt-8 scroll-mt-header p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-semibold text-white">
+          How alerts work
+          <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-180">⌄</span>
+        </summary>
         {emailOn ? (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-            Every card you&apos;re tracking, with the price it was at when you started. We email <strong className="text-slate-200">{user.email}</strong>{" "}
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Every card you&apos;re tracking, with the price it was at when you started. We email your account email{" "}
             when the cheapest copy at a store we track hits a new low (at least 5% under the price we last told you), when a card is first listed, and
             when one is back in stock, naming the stores — at most one email a week.{" "}
             {member ? (
@@ -100,7 +143,7 @@ export default async function WatchingPage() {
             {!member && <>A free account watches up to {FREE_WATCHLIST_LIMIT} cards; if you already watch more, you keep them all.</>}
           </p>
         ) : (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
             Every card you&apos;re tracking, with the price it was at when you started and today&apos;s cheapest price at a store we track (never eBay).
             When one hits a new low we flag it here and in your dashboard&apos;s Recent alerts, after every price update.{" "}
             {member ? (
@@ -115,13 +158,9 @@ export default async function WatchingPage() {
             {!member && <>A free account watches up to {FREE_WATCHLIST_LIMIT} cards; if you already watch more, you keep them all.</>}
           </p>
         )}
-      </div>
-
-      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={member} surface="nudge:watchlist" className="mb-5" />}
-
       {/* WHAT YOU CAN WATCH: three kinds, each in one plain line. The paid
           kinds carry the ordinary PlanButton, inline. */}
-      <section aria-labelledby="what-h" className="card-surface mb-5 p-4" data-watch-explainer>
+      <section aria-labelledby="what-h" className="mt-4" data-watch-explainer>
         <h2 id="what-h" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           What you can watch
         </h2>
@@ -156,25 +195,7 @@ export default async function WatchingPage() {
           </li>
         </ul>
       </section>
-
-      <Watchlist />
-
-      {(member || lapsedSealed > 0) && (
-        <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
-          <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
-            Sealed
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">Checked {SEALED_CHECK_CADENCE}: back in stock after selling out everywhere, at your target, or a real drop.</p>
-          <div className="mt-3">
-            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} lapsed={!member} snooze={emailOn} />
-          </div>
-        </section>
-      )}
-      {/* Sealed products a free account saved in this browser stay there. */}
-      {!member && <LocalSealedSection />}
-
-      {/* Decks (Premium deck price watch): the tools track's DeckWatchList
-          renders here once it lands — wave2-plan §3 Track 2 item 4. */}
+      </details>
     </div>
   );
 }
