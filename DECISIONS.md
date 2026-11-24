@@ -5079,3 +5079,13 @@ discounted) by email on 24 Nov, linked to our affiliate account, so an order wit
 the ref parameter is lost on a phone or app handoff. It is the first entry in `STORE_PARTNER_DEALS`, shown by
 `StoreCodeChip` beside Cardboard Hero's rows and never applied to a price or a sort. The store kept the rate at 2%
 (every affiliate gets the same) and that is fine: we already earn from it, and we don't push for more.
+
+## Display ads: a guides-only test — 2026-11-24
+
+The owner asked to reconsider display ads (report: /mnt/project-files/strategy/display-ads-2026-11-24.html). The guide-article
+slot from "Display ads on guides and explainers only" (2026-11-19) becomes a 50/50 test: once the unit is configured, half of
+visitors (coin in localStorage `oc_gad`) get the real unit and half keep the house promo, nobody before 2 Dec 2026 (the A/B
+freeze) or ad-free. Events `gad_seen` and `gad_buy` {arm}, once a visit. The old kill rule (RPM under A$4) becomes a net rule:
+keep the unit only if ad money per 1,000 guide views beats the buy clicks it costs, and guide pages do not get slower. About 93%
+of OP's desktop views were bots in late November, so the unit stays on guides until those stop reaching ad pages (AdSense
+invalid-traffic risk).
