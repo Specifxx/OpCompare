@@ -16,9 +16,12 @@ const kw = (slug: string, name: string) => <Link href={`/keywords/${slug}`}>[{na
 
 export const keywordsExplained: Post = {
   slug: "one-piece-tcg-keywords-explained",
-  title: () => "What Is Rush in One Piece TCG? Every Keyword Explained",
+  // Search Console (28 days to 20 Nov 2026): ~240 impressions at position ~8, one click, and the
+  // searches are "rush character optcg". The title and description now name that keyword and
+  // the OPTCG shorthand first; the guide body already answers it (#rush-character, first FAQ).
+  title: () => "Rush vs Rush: Character (OPTCG): Every Keyword Explained",
   description:
-    "Rush, Rush: Character, Blocker, Double Attack, Banish, Trigger, Counter and DON!! ×N explained in plain English, with the official rule number for each.",
+    "Rush: Character attacks the turn it is played, but only Characters, never the Leader (rule 10-1-6-1). Rush, Blocker, Banish and every other OPTCG keyword too.",
   tags: ["guide", "rules", "keywords"],
   category: "guide",
   date: "2026-10-16",
