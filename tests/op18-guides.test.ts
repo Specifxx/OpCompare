@@ -157,7 +157,7 @@ test("the four are published as guides at /guides/<slug>, dated 16 October 2026,
   }
   assert.match(post(SLUGS[0]).title(ctx("US")), /Green Luffy/);
   assert.match(post(SLUGS[1]).description, /Carue/, "the Carue spelling is targeted");
-  assert.match(post(SLUGS[3]).title(ctx("US")), /^What Is Rush in One Piece TCG\?/);
+  assert.match(post(SLUGS[3]).title(ctx("US")), /^Rush vs Rush: Character \(OPTCG\)/);
 });
 
 test("no placeholder survives: no [VERIFY], no [live price], no guessed slug, in the sources or the rendered posts", () => {
