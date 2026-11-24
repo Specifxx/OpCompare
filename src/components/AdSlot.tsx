@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ADSENSE_CLIENT_ID, adsenseLoaderSrc, realUnitFor } from "@/lib/adsense";
+import { track } from "@vercel/analytics";
+import { ADSENSE_CLIENT_ID, GUIDE_AD_TEST_START, adsenseLoaderSrc, realUnitFor } from "@/lib/adsense";
 
 // One in-content slot (RiftCompare's AdSlot). Renders exactly one of:
 //   - a real AdSense <ins> unit: only when a publisher id is configured AND the
@@ -103,10 +104,62 @@ function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
   return [ref, near] as const;
 }
 
+// The guides ad test (DECISIONS.md "Display ads: a guides-only test", 2026-11-24): when the article slot can hold a real unit, half
+// of visitors (a coin in their own localStorage, "oc_gad") get it and the other half keep the house promo. Nobody is in the test
+// before GUIDE_AD_TEST_START, without storage, or ad-free; they keep the house promo. gad_seen and gad_buy {arm} once a visit each.
+export const GAD_STORE = "oc_gad";
+export type GadArm = "ad" | "none";
+
+export function guideAdArm(now: number = Date.now()): GadArm | null {
+  try {
+    if (typeof window === "undefined" || now < GUIDE_AD_TEST_START) return null;
+    if (document.documentElement.hasAttribute("data-adfree")) return null;
+    let arm = window.localStorage.getItem(GAD_STORE) as GadArm | null;
+    if (arm !== "ad" && arm !== "none") {
+      arm = window.crypto.getRandomValues(new Uint8Array(1))[0] < 128 ? "ad" : "none";
+      window.localStorage.setItem(GAD_STORE, arm);
+      if (window.localStorage.getItem(GAD_STORE) !== arm) return null;
+    }
+    return arm;
+  } catch {
+    return null;
+  }
+}
+
+function gadOnce(key: string, name: string, arm: GadArm) {
+  try {
+    if (window.sessionStorage.getItem(key)) return;
+    window.sessionStorage.setItem(key, "1");
+    track(name, { arm });
+  } catch {
+    /* analytics never gets in the way */
+  }
+}
+
+function useGuideArm(active: boolean): GadArm | null {
+  const [arm, setArm] = useState<GadArm | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    const a = guideAdArm();
+    if (!a) return;
+    setArm(a);
+    gadOnce("oc_gad_seen", "gad_seen", a);
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (link && (/\bsponsored\b/.test(link.rel) || new URL(link.href, location.href).pathname === "/go")) gadOnce("oc_gad_buy", "gad_buy", a);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [active]);
+  return arm;
+}
+
 export function AdSlot({ slot, seed, height = 100, thin = false, noindex = false, className = "" }: { slot: string; seed?: string; height?: number; thin?: boolean; noindex?: boolean; className?: string }) {
   const [ref, near] = useNearViewport<HTMLDivElement>();
+  const configured = realUnitFor(slot);
+  const arm = useGuideArm(configured != null && !thin && !noindex);
   if (thin || noindex) return null;
-  const unitId = realUnitFor(slot);
+  const unitId = configured && arm === "ad" ? configured : null;
   return (
     <div ref={ref} data-ad-placement={`slot-${slot}`} className={`w-full ${className}`} style={{ height }} aria-label="Advertisement">
       {unitId ? near ? <AdSenseUnit unitId={unitId} height={height} /> : null : <HouseAd seed={seed ?? slot} height={height} />}

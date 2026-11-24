@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { adsTxtBody, adsenseLoaderSrc, parseAdsenseClientId } from "../src/lib/adsense";
 import { parseCreatives } from "../src/lib/tcgplayer-creatives";
@@ -53,4 +54,15 @@ test("no page loads AdSense site-wide: the script comes only from the guide slot
   assert.deepEqual(users.map((f) => f.replace(/\\/g, "/")), ["src/components/blog/ArticleView.tsx"]);
   const viewUsers = files.filter((f) => /<ArticleView\b/.test(readFileSync(f, "utf8"))).map((f) => f.replace(/\\/g, "/")).sort();
   assert.deepEqual(viewUsers, ["src/app/blog/[slug]/page.tsx", "src/app/guides/[slug]/page.tsx"]);
+});
+
+test("the guides ad test: a real unit only for the ad arm, from 2 Dec, never for a member", async () => {
+  const { GUIDE_AD_TEST_START } = await import("../src/lib/adsense");
+  assert.equal(GUIDE_AD_TEST_START, Date.UTC(2026, 11, 2));
+  const c = readFileSync(new URL("../src/components/AdSlot.tsx", import.meta.url), "utf8");
+  assert.match(c, /now < GUIDE_AD_TEST_START\) return null/);
+  assert.match(c, /hasAttribute\("data-adfree"\)\) return null/);
+  assert.match(c, /< 128 \? "ad" : "none"/);
+  assert.match(c, /const unitId = configured && arm === "ad" \? configured : null;/);
+  assert.match(c, /track\(name, \{ arm \}\)/);
 });

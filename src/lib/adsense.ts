@@ -38,6 +38,9 @@ export function parseAdUnitId(raw: string | undefined | null): string | null {
 export const GUIDE_AD_UNIT_ID: string | null = parseAdUnitId(process.env.NEXT_PUBLIC_ADSENSE_GUIDE_SLOT);
 export const GUIDE_AD_SLOTS: readonly string[] = ["article"];
 
+/** The guides ad test starts here (the A/B freeze ends 2 Dec 2026): before it the article slot keeps the house promo. */
+export const GUIDE_AD_TEST_START = Date.UTC(2026, 11, 2);
+
 /** Whether a slot may hold a real AdSense unit in this build. */
 export function realUnitFor(slot: string, clientId: string | null = CLIENT_ID, unitId: string | null = GUIDE_AD_UNIT_ID): string | null {
   if (!clientId || !unitId) return null;
