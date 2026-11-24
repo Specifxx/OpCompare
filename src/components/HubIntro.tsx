@@ -30,7 +30,7 @@ export function HubIntro({ path, className }: { path: string; className?: string
         ))}
       </div>
       <label htmlFor={`hub-intro-${id}`} className="hub-intro-more" aria-hidden="true">
-        <span className="hub-intro-open">Read more</span>
+        <span className="hub-intro-open">How it works</span>
         <span className="hub-intro-close">Show less</span>
       </label>
     </div>

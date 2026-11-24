@@ -5,6 +5,7 @@ import { headline } from "@/lib/price";
 import { money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { norm, searchCards, suggestNames } from "@/lib/search";
+import { sealedNameMatches } from "@/lib/sealed-query";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,8 @@ export async function GET(req: Request) {
   });
   const words = norm(q).split(" ").filter(Boolean);
   const sealedHits = sealed
-    .filter((s) => /box|deck|pack|case/i.test(s.kind) && words.every((w) => norm(s.name).includes(w)))
+    // Synonyms (BB, SD, DP, PB) and one-letter typos (owner, 2026-11-23 UX review, P0 5): lib/sealed-query.ts sealedNameMatches.
+    .filter((s) => /box|deck|pack|case/i.test(s.kind) && words.length > 0 && sealedNameMatches(s.name, q))
     .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
     .slice(0, 3)
     .map((s) => {

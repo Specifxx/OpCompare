@@ -30,6 +30,8 @@ import { int } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
 import { cleanPageNumber } from "@/lib/facets";
+import { suggestNames } from "@/lib/search";
+import { SearchOutcome } from "@/components/SearchOutcome";
 
 const BROWSE_TITLE = "One Piece Card List — Every Card, Live Prices";
 
@@ -56,14 +58,26 @@ export default async function BrowsePage({
   const country = getCountry();
   const c = COUNTRIES[country];
   const cat = await getCatalog();
-  const q = parseBrowse(searchParams);
-  const { total, pages, items } = runBrowse(
-    cat.cards,
-    cat.sets,
-    cat.setById,
-    q,
-    country,
-  );
+  const asked = parseBrowse(searchParams);
+  let q = asked;
+  let res = runBrowse(cat.cards, cat.sets, cat.setById, q, country);
+  // Typo-tolerant search (owner, 2026-11-23 UX review, P0 5: "charizrd" returned nothing): a search that matches no card is
+  // answered with the nearest real card name (suggestNames, the box's "Did you mean"), said out loud above the grid.
+  let fixedFrom: string | null = null;
+  if (asked.q && res.total === 0) {
+    const [best] = suggestNames(cat.cards.map((x) => x.name), asked.q, 1);
+    if (best) {
+      const retry = runBrowse(cat.cards, cat.sets, cat.setById, { ...asked, q: best }, country);
+      if (retry.total > 0) {
+        fixedFrom = asked.q;
+        q = { ...asked, q: best };
+        res = retry;
+      }
+    }
+  }
+  const { total, pages, items } = res;
+  // Nothing at all: the most valuable cards instead of a dead end (P2 18).
+  const popular = asked.q && total === 0 ? mostValuable(cat.cards, 8) : [];
   const page = Math.min(q.page, pages);
   const newest = newestBoosterSet(cat.sets);
   const chase = newest
@@ -153,6 +167,13 @@ export default async function BrowsePage({
             </div>
           </div>
 
+          {asked.q ? <SearchOutcome query={asked.q} fixedTo={fixedFrom ? q.q : null} results={total} template="browse" /> : null}
+          {fixedFrom ? (
+            <p className="mt-3 text-sm text-slate-300" data-search-fixed="">
+              Showing results for <b className="text-white">{q.q}</b>. No card matches “{fixedFrom}”.
+            </p>
+          ) : null}
+
           {/* A visitor who typed a search has said what they want: eBay's
               search for those words sits by the count (RiftCompare). Their
               words, so "Search eBay for “q”", never "Buy q". */}
@@ -207,6 +228,16 @@ export default async function BrowsePage({
               ) : (
                 <EmptyState icon="browse" title="No cards match those filters" body="Try fewer filters, or start over." primary={{ href: "/browse", label: "Start over" }} />
               )}
+              {popular.length ? (
+                <section className="mt-6" aria-label="Popular cards">
+                  <h2 className="text-lg text-white">Popular cards right now</h2>
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                    {popular.map((card) => (
+                      <CardTile key={card.id} card={card} setCode={cat.setById.get(card.setId)?.code ?? ""} country={country} />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
               {/* A search we have no card for (a typo, a set not loaded yet, a
                   product that is not a single) can still be on eBay. */}
               <EbayBuyCta

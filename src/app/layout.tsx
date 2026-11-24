@@ -16,7 +16,6 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
-import { ReturnNudge } from "@/components/ReturnNudge";
 import { ShareArrival } from "@/components/ShareArrival";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
@@ -45,6 +44,7 @@ import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
 import { AdRouteGate } from "@/components/AdRouteGate";
 import { BuyBtnArm } from "@/components/BuyBtnArm";
+import { ImageRescue } from "@/components/ImageRescue";
 
 // RiftCompare's font block, verbatim (wave 2, 2026-10-03; owner: "the font and
 // everything needs to be the same"). Headings — Archivo (since 2026-11-14,
@@ -241,8 +241,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ConsentGatedAnalytics); GA4 with explicit page views. */}
         <ConsentGatedAnalytics />
         <BuyBtnArm />
+        <ImageRescue />
         <AiReferralTracker />
-        <ReturnNudge />
+        {/* ReturnNudge (the floating "Still comparing?" eBay/TCGplayer card) is off: owner, 2026-11-23 UX review, P0 1, "ads must
+            never ... cover content". Its A/B ends here; the component stays for the record. */}
         <ShareArrival />
         <GAPageViewTracker />
         <ReturnBeacon />

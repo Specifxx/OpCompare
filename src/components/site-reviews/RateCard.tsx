@@ -13,6 +13,8 @@ import {
   shouldAsk,
 } from "@/lib/site-reviews";
 import { RatingForm } from "./RatingForm";
+import { visitorBusy, watchTyping } from "@/lib/visitor-busy";
+import { claimPromptSlot, promptSlotHolder } from "@/lib/prompt-slot";
 
 // The rate-us corner card, mounted once in the root layout. When it asks on
 // its own is lib/site-reviews.ts (never on arrival, after real use or a store
@@ -50,11 +52,13 @@ function askedThisVisit(): boolean {
   }
 }
 
-/** Another dialog is open, or they are typing: not the moment. */
+/** Another dialog is open, they are typing (or typed in the last 5 s), or another card already had this visit's one prompt
+ *  (owner, 2026-11-23 UX review, P0 1): not the moment. */
 function busy(): boolean {
-  if (document.querySelector('[aria-modal="true"]')) return true;
-  const a = document.activeElement;
-  return !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT");
+  watchTyping();
+  if (visitorBusy()) return true;
+  const holder = promptSlotHolder();
+  return !!holder && holder !== "rate-card";
 }
 
 export function RateCard() {
@@ -139,6 +143,7 @@ export function RateCard() {
   }, [open]);
 
   function show() {
+    if (!claimPromptSlot("rate-card")) return;
     const s = loadState();
     saveState({ ...s, asks: s.asks + 1 });
     try {

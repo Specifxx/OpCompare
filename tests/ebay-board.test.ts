@@ -61,9 +61,9 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   assert.match(src, /Buy on eBay →/);
   assert.match(src, /Cheapest matching listing we found/);
   assert.match(src, /More listings on \$\{ebayLabel\(country\)\} →/);
-  // The search leads the board when there is no eBay row (2026-10-27).
+  // Stores first, marketplaces below (owner, 2026-11-23 UX review, P1 10): the eBay search sits under the store rows.
   assert.match(src, /data-surface="ebay_fallback"[^>]*>\s*Search eBay →/);
-  assert.ok(src.indexOf('data-retailer="ebay_no_listing"') < src.indexOf("{ordered.map("), "the eBay search sits above the ranked rows");
+  assert.ok(src.indexOf('data-retailer="ebay_no_listing"') > src.indexOf("{ordered.map("), "the eBay search sits below the store rows");
   assert.match(model, /isPaidLink\(o\.url\)/);
   assert.match(src, /\{o\.paid \? <span[^>]*>Paid link<\/span> : null\}/);
   assert.match(src, /eBay Partner Network affiliate/);
@@ -73,10 +73,12 @@ test("the board: eBay button, basis line, search strip relabel, disclosure on fi
   assert.match(src, /rel=\{outboundRel\(\)\}/);
 });
 
-test("the board pins eBay and TCGplayer (the cheaper on top), keeps price ranks, and labels the pin", () => {
+test("the board leads with the stores, then eBay and TCGplayer (the cheaper first) under a Marketplaces · Ad line", () => {
   const src = fs.readFileSync(path.resolve(__dirname, "../src/components/PriceBoardView.tsx"), "utf8");
   assert.match(src, /const pins = pinnedOrder\(pinEbay, pinTcg\);/);
-  assert.match(src, /const ordered = \[\.\.\.pins, \.\.\.open\.filter/);
+  assert.match(src, /const ordered = \[\.\.\.stores, \.\.\.pins\];/);
+  assert.match(src, /o === pins\[0\] \? <Fragment key="market-head">\{marketHead\}<\/Fragment>/);
+  assert.match(src, /Marketplaces <span[^>]*>Ad<\/span>/);
   assert.match(src, /const i = open\.indexOf\(o\);/);
   assert.doesNotMatch(src, /Shown ?first/i, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /% vs cheapest/);

@@ -34,6 +34,7 @@ export function HeaderWatchButton({ className = "" }: { className?: string }) {
       type="button"
       onClick={() => setOpen(!open)}
       aria-expanded={open}
+      title="Your watchlist"
       aria-label={`${count > 0 ? `Watchlist, ${count} card${count === 1 ? "" : "s"}` : "Watchlist"}${unread > 0 ? `, ${unread} new alert${unread === 1 ? "" : "s"}` : ""}`}
       className={`tap-icon relative rounded-lg transition-colors hover:bg-ink-800 hover:text-white ${open ? "text-brand-400" : "text-slate-200"} ${className}`}
     >

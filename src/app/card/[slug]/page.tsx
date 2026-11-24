@@ -13,6 +13,7 @@ import { DecksUsingCard } from "@/components/decks/DecksUsingCard";
 import { ShareButton } from "@/components/ShareButton";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { marketsTableData } from "@/components/CardMarketsTable";
+import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import {
   MarketAlertCta,
@@ -523,6 +524,8 @@ export default async function CardPage({ params }: Props) {
             </Link>
           </p>
 
+          {/* Jump links (owner, 2026-11-23 UX review, P1 13: long product pages). Plain anchors; no request reads. */}
+          <MarketSectionNav sections={[{ id: "price-comparison", label: "Prices" }, { id: "history", label: "History" }, { id: "faq", label: "Questions" }, { id: "printings", label: "Printings" }]} />
           <MarketNoListings states={noListings} cardId={card.id} name={title} slug={card.slug} setName={card.set.name} setSlug={card.set.slug} preRelease={preRelease} inStockPrintings={inStockPrintings} />
 
           <MarketBoard
@@ -544,7 +547,9 @@ export default async function CardPage({ params }: Props) {
           <MarketReference marketUsd={card.marketUsd} tcgHref={tcgHref} page="card" card={card.slug} />
           {cardText ? <div className="lg:hidden">{cardText}</div> : null}
 
-          <MarketHistory history={historyTuples} live={liveIn} />
+          <div id="history" className="scroll-mt-40 xl:scroll-mt-36">
+            <MarketHistory history={historyTuples} live={liveIn} />
+          </div>
 
           <InlineSignupPrompt surface="card" title="Get the top deals in your market, free" body="A free account shows Deal Finder's three biggest savings in your market right now, and is how you get Plus or Premium when you want them." />
 
@@ -605,7 +610,7 @@ export default async function CardPage({ params }: Props) {
             </div>
           </section>
 
-          <section className="card-surface p-5">
+          <section id="faq" className="card-surface scroll-mt-40 p-5 xl:scroll-mt-36">
             <h2 className="font-bold text-white">Frequently asked questions</h2>
             <dl className="mt-3 space-y-4">
               <MarketFaq faqs={faqs} />

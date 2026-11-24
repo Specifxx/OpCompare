@@ -1,0 +1,61 @@
+name: Price freshness
+
+# Owner, 2026-11-23 UX review, P0 2: "Fresh prices, or honest staleness … Add a pipeline alert when data is over 12 hours old."
+# Every page reads the `snapshot` branch's prices, so the snapshot's age IS the age of every price on the site. GitHub starts the
+# twice-daily scheduled import hours late (07:07 ran at 15:12 and 19:07 at 00:14 on 22-23 Nov: 19 hours between snapshots), so
+# every two hours this reads snapshot/meta.json and, once it is 11 hours old or more, starts Import prices itself (a routine
+# re-import: alerts "none", the scheduled runs keep the alerts). At 13 hours or more it fails red, so GitHub emails the owner.
+# Reads only git and the Actions API; no database, no Vercel call, no secret. Never dispatches while an import or the eBay pass
+# (same concurrency group) is running or queued.
+
+on:
+  schedule:
+    - cron: "41 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: price-freshness
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Snapshot age
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --depth 1 origin snapshot
+          gen=$(git show FETCH_HEAD:meta.json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).generatedAt))')
+          now=$(date -u +%s)
+          age_h=$(( (now - $(date -u -d "$gen" +%s)) / 3600 ))
+          echo "Snapshot ${gen}: ${age_h}h old."
+          echo "### OP Compare price freshness: snapshot ${age_h}h old (${gen})" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$age_h" -ge 11 ]; then
+            busy=0
+            for wf in import-prices.yml ebay-prices.yml; do
+              for st in in_progress queued pending waiting; do
+                n=$(gh run list -w "$wf" -s "$st" --json databaseId -q 'length')
+                busy=$(( busy + n ))
+              done
+            done
+            if [ "$busy" = "0" ]; then
+              gh workflow run import-prices.yml -f stores=true -f alerts=none
+              echo "Started Import prices." | tee -a "$GITHUB_STEP_SUMMARY"
+            else
+              echo "An import or the eBay pass is already running or queued." | tee -a "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          if [ "$age_h" -ge 13 ]; then
+            echo "::error::OP Compare's price snapshot is ${age_h} hours old (over 12). Every page shows prices this old."
+            exit 1
+          fi
