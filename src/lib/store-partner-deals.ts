@@ -41,9 +41,14 @@ export interface StorePartnerDeal {
   ref?: { param: string; value: string };
 }
 
-// Empty until the first store signs. Add an entry per store; see
+// Add an entry per store; see
 // docs/store-partners.md for the steps.
-export const STORE_PARTNER_DEALS: StorePartnerDeal[] = [];
+export const STORE_PARTNER_DEALS: StorePartnerDeal[] = [
+  // Cardboard Hero (CA): we are its GoAffPro affiliate (ref apthvqnu, lib/awin.ts). Anthony issued COMPEMP5 by
+  // email on 2026-11-24, linked to our affiliate account, so orders with it count as ours even where the ref is lost.
+  // 5% off the order; items already on sale are excluded. Re-check before 2026-12-24.
+  { host: "cardboardhero.com", name: "Cardboard Hero", since: "2026-11-24", code: "COMPEMP5", offer: "5% off", checked: "2026-11-24" },
+];
 
 export const CODE_RECHECK_DAYS = 30;
 const DAY = 86_400_000;

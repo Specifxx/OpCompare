@@ -5071,3 +5071,11 @@ on hub intros; this entry is what fitted and was missing here.
 - **Not done here, and why:** delivered price by default (P1 9: the board has no price + shipping mode to switch on; postage is a
   line on each row); the Deals menu (P2 16: OP's has two seasonal entries, not nine); visual set index (P2 17: set pages changed in
   #253 the same day). Rides the same release as the Black Friday page work (#255), so it costs no extra build.
+
+## 2026-11-24: Cardboard Hero's code COMPEMP5 is the first store partner code
+
+Cardboard Hero (CA, GoAffPro affiliate since 13 Nov) issued COMPEMP5 (5% off the order, not on items already
+discounted) by email on 24 Nov, linked to our affiliate account, so an order with it is credited to us even when
+the ref parameter is lost on a phone or app handoff. It is the first entry in `STORE_PARTNER_DEALS`, shown by
+`StoreCodeChip` beside Cardboard Hero's rows and never applied to a price or a sort. The store kept the rate at 2%
+(every affiliate gets the same) and that is fine: we already earn from it, and we don't push for more.
