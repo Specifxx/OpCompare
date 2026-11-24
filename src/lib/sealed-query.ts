@@ -5,12 +5,17 @@
 import { COUNTRIES, type Country } from "./country";
 import type { SealedLite } from "./data";
 import { sortPrice } from "./price";
+import { usdCentsToCountry } from "./fx";
+import { editDistance, norm } from "./search";
 
 export const SEALED_SORTS = {
   featured: "Featured",
   "price-asc": "Price: low to high",
   "price-desc": "Price: high to low",
-  newest: "Recently added",
+  // Owner, 2026-11-23 UX review, P0 3: price per pack and % under the market, beside price and newest.
+  "per-pack": "Price per pack",
+  "under-market": "Most under TCGplayer market",
+  newest: "Newest set",
   name: "Name A–Z",
 } as const;
 export type SealedSort = keyof typeof SEALED_SORTS;
@@ -95,7 +100,7 @@ export interface SealedCtx {
 export const inStockHere = (s: SealedLite, country: Country): boolean => s.low[country] != null;
 
 export function filterSealed(rows: SealedLite[], q: SealedQuery, ctx: SealedCtx): SealedLite[] {
-  const needle = q.q.toLowerCase();
+  const needle = q.q;
   const kinds = new Set(q.kinds);
   const sets = new Set(q.sets);
   return rows.filter((s) => {
@@ -107,7 +112,7 @@ export function filterSealed(rows: SealedLite[], q: SealedQuery, ctx: SealedCtx)
       if (!slug || !sets.has(slug)) return false;
     }
     if (q.stock && !inStockHere(s, ctx.country)) return false;
-    if (needle && !s.name.toLowerCase().includes(needle)) return false;
+    if (needle && !sealedNameMatches(s.name, needle)) return false;
     if (q.min != null || q.max != null) {
       const cents = sortPrice(s, ctx.country);
       if (cents == null) return false;
@@ -127,6 +132,10 @@ export function sortSealed(rows: SealedLite[], sort: SealedSort, ctx: SealedCtx)
         return (sortPrice(a, ctx.country) ?? Infinity) - (sortPrice(b, ctx.country) ?? Infinity) || a.id - b.id;
       case "price-desc":
         return (sortPrice(b, ctx.country) ?? -1) - (sortPrice(a, ctx.country) ?? -1) || a.id - b.id;
+      case "per-pack":
+        return (perPack(a, ctx.country) ?? Infinity) - (perPack(b, ctx.country) ?? Infinity) || a.id - b.id;
+      case "under-market":
+        return (underMarket(b, ctx.country) ?? -Infinity) - (underMarket(a, ctx.country) ?? -Infinity) || a.id - b.id;
       case "newest":
         return rel(b).localeCompare(rel(a)) || a.id - b.id;
       case "name":
@@ -140,3 +149,46 @@ export function sortSealed(rows: SealedLite[], sort: SealedSort, ctx: SealedCtx)
 
 /** The market's currency code, for the price filter's label. */
 export const sealedCurrency = (country: Country): string => COUNTRIES[country].currency;
+
+/** The cheapest in-stock price here divided by the packs inside; null without a price or a pack count. */
+export function perPack(s: SealedLite, country: Country): number | null {
+  const low = s.low[country];
+  return low != null && s.packCount && s.packCount > 0 ? low / s.packCount : null;
+}
+
+/**
+ * How far the cheapest in-stock price here sits under TCGplayer's market price (0.2 = 20% under), for ORDERING only: outside the
+ * US the market price is converted at the indicative rate (lib/fx.ts) and never shown converted. Null without both prices.
+ */
+export function underMarket(s: SealedLite, country: Country): number | null {
+  const low = s.low[country];
+  if (low == null || s.marketUsd == null || s.marketUsd <= 0) return null;
+  const ref = usdCentsToCountry(s.marketUsd, country);
+  return ref > 0 ? 1 - low / ref : null;
+}
+
+// What people type for sealed product (owner, 2026-11-23 UX review, P0 5: synonyms such as BB, and typos).
+const SEALED_SYNONYMS: Record<string, string> = {
+  bb: "booster box",
+  bbox: "booster box",
+  boosterbox: "booster box",
+  sd: "starter deck",
+  st: "starter deck",
+  starter: "starter deck",
+  dp: "double pack",
+  pb: "premium booster",
+  prb: "premium booster",
+};
+
+/** Every query word (after synonyms) matches a word of the name: exactly, as a prefix, or within one edit (two for 7+ letters). */
+export function sealedNameMatches(name: string, query: string): boolean {
+  const qn = norm(query);
+  if (!qn) return true;
+  const nn = norm(name);
+  if (nn.includes(qn)) return true;
+  const words = qn.split(" ").flatMap((w) => (SEALED_SYNONYMS[w] ?? w).split(" "));
+  const nameWords = nn.split(" ");
+  return words.every((w) =>
+    nameWords.some((t) => t === w || t.startsWith(w) || (w.length >= 4 && editDistance(w, t, w.length >= 7 ? 2 : 1) <= (w.length >= 7 ? 2 : 1))),
+  );
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DiscoveryTip } from "@/components/DiscoveryTip";
 import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
+import { SearchOutcome } from "@/components/SearchOutcome";
 import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { Breadcrumbs, JsonLd } from "@/components/ui";
@@ -134,6 +135,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
             </p>
             <SealedSort />
           </div>
+          {query.q ? <SearchOutcome query={query.q} fixedTo={null} results={rows.length} template="sealed" /> : null}
           {rows.length ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {shown.map((s) => (
@@ -141,7 +143,20 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
               ))}
             </div>
           ) : (
-            <EmptyState icon="browse" title="No sealed products match" body="Try another set or product type." primary={{ href: "/sealed", label: "Clear filters" }} />
+            <>
+              <EmptyState icon="browse" title="No sealed products match" body="Try another set or product type." primary={{ href: "/sealed", label: "Clear filters" }} />
+              {/* Never a dead end (owner, 2026-11-23 UX review, P2 18): the most widely stocked products here instead. */}
+              <h2 className="mt-6 text-lg text-white">Most widely stocked</h2>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                {[...sealed]
+                  .filter((s) => s.stores[country] > 0 && s.kind !== "Promo Pack")
+                  .sort((a, b) => b.stores[country] - a.stores[country] || a.id - b.id)
+                  .slice(0, 8)
+                  .map((s) => (
+                    <SealedTile key={s.id} s={s} country={country} setCode={s.setId ? cat.setById.get(s.setId)?.code : null} soldOut={soldOut.has(s.id)} />
+                  ))}
+              </div>
+            </>
           )}
           {rows.length > 120 ? <p className="mt-4 text-sm text-slate-400">Showing 120 of {rows.length}. Narrow by set or type to see the rest.</p> : null}
         </div>

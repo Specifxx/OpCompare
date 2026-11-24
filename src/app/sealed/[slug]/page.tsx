@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LineChart } from "@/components/LineChart";
+import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForCatalogue, setOwnGuides } from "@/lib/content/catalogue-guides";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
@@ -259,8 +260,11 @@ export default async function SealedDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+          {/* Jump links (owner, 2026-11-23 UX review, P1 13: the page is long). Plain anchors in the server HTML. */}
+          <MarketSectionNav sections={[{ id: "prices", label: "Prices" }, { id: "history", label: "History" }, { id: "faq", label: "Questions" }]} />
           {bf && <BlackFridayStrip {...bf} />}
           <PriceBoard
+            id="prices"
             productId={s.id}
             offers={s.offers}
             country={country}
@@ -281,6 +285,21 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
+          {/* The price history sits right under the prices (owner, 2026-11-23 UX review, P1 13), above the banners. */}
+          <section id="history" className="card-surface scroll-mt-40 p-5 xl:scroll-mt-36">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-lg text-white">{vh.title}</h2>
+              <p className="text-xs text-slate-400">TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}</p>
+            </div>
+            <LineChart
+              series={[
+                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
+                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
+              ]}
+              format={(v) => money(Math.round(v), country)}
+              empty="The chart draws once there are two days of prices."
+            />
+          </section>
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
           {/* The Discord hub's restock and price-drop feed, under the comparison (owner, 2026-11-20). */}
@@ -306,20 +325,6 @@ export default async function SealedDetailPage({ params }: Props) {
             page="sealed"
             card={s.slug}
           />
-          <section className="card-surface p-5">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg text-white">{vh.title}</h2>
-              <p className="text-xs text-slate-400">TCGplayer market shown in {vh.currency} at an indicative rate{vh.lowSince && vh.lowDays < history.length ? `; ${co.place} listing history starts ${longDate(vh.lowSince)}` : ""}</p>
-            </div>
-            <LineChart
-              series={[
-                { label: `Cheapest ${co.adjective} listing`, color: "#ff6b6b", points: vh.low.points },
-                { label: "TCGplayer market (converted)", color: "#e9b73a", points: vh.market.points, dashed: true },
-              ]}
-              format={(v) => money(Math.round(v), country)}
-              empty="The chart draws once there are two days of prices."
-            />
-          </section>
           {/* Listings tab only: no graded slabs for sealed product. */}
           <EbayCardPanel productId={s.id} country={country} query={ebayQ} name={s.name} card={s.slug} page="sealed" sealed preRelease={s.presale || isPreRelease(s.releasedOn ?? set?.releasedOn ?? null, new Date().toISOString().slice(0, 10))} />
         </div>
@@ -357,7 +362,7 @@ export default async function SealedDetailPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-      <section className="mt-10">
+      <section id="faq" className="mt-10 scroll-mt-40 xl:scroll-mt-36">
         <SectionHeader title="Questions" />
         <Faq
           items={[

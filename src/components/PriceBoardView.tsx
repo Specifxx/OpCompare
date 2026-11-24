@@ -81,14 +81,18 @@ export function PriceBoardView({
   const pinEbay = open.find((o) => o.ebay) ?? null;
   const pinTcg = open.find((o) => o.source === "tcgplayer") ?? null;
   const pins = pinnedOrder(pinEbay, pinTcg);
-  const ordered = [...pins, ...open.filter((o) => o !== pinEbay && o !== pinTcg)];
+  // Stores first, marketplaces below (owner, 2026-11-23 UX review, P1 10: "Lead with the best-price store and move marketplaces
+  // to a labelled block below"). This reverses the eBay-then-TCGplayer pin at the top (2026-11-17) on the board; the pins keep
+  // their own order (pinnedOrder) under a "Marketplaces · Ad" line, and the truly cheapest row keeps its Cheapest mark.
+  const stores = open.filter((o) => o !== pinEbay && o !== pinTcg);
+  const ordered = [...stores, ...pins];
   // Outside the US only: there the page's TcgMarketPrice block steps aside (CardMarket MarketReference).
   // Fetch TCG is an ordinary store row (owner, 2026-11-12): it sits among the stores by price, after the last open store
   // row that costs no more (else after the pinned rows), with no pin, Ad or Marketplace tag.
   const fetchAnchor = (cents: number) => {
     let at: (typeof ordered)[number] | null = null;
     for (const o of ordered) if (o !== pinEbay && o !== pinTcg && o.priceCents <= cents) at = o;
-    return at ?? pins[pins.length - 1] ?? null;
+    return at;
   };
   const fetchAfter = (o: (typeof ordered)[number] | null) => fetchItems.filter((f) => fetchAnchor(f.price) === o).map((f) => f.li);
   const showTcgRef = country !== "US" && !pinTcg && tcgRef?.marketUsd != null;
@@ -100,6 +104,11 @@ export function PriceBoardView({
   const hasMarketRows = { ebay: true, tcgplayer: true };
   const oldest = open.length ? open.reduce((a, b) => (a.updatedAt < b.updatedAt ? a : b)).updatedAt : null;
   const newest = open.length ? open.reduce((a, b) => (a.updatedAt > b.updatedAt ? a : b)).updatedAt : null;
+  const marketHead = (
+    <li className="bg-ink-850/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 sm:px-5" data-market-head="">
+      Marketplaces <span className="ml-1 rounded border border-ink-600 px-1 text-[10px]">Ad</span>
+    </li>
+  );
 
   return (
     <>
@@ -115,74 +124,6 @@ export function PriceBoardView({
           </span>
         ) : null}
       </div>
-      {!hasEbayRow || showTcgRef || showTcgSearch ? (
-        <ol className="divide-y divide-ink-800 border-b border-ink-800">
-          {hasEbayRow ? null : (
-            <li className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.ebay}`}>
-              <span className="w-5 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-2">
-                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{ebayLabel(country)}</span>
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {preRelease
-                    ? "Not released yet: eBay sellers set their own dispatch dates, so check each listing."
-                    : `No ${ebayLabel(country)} price on file for this ${noun}. Search its current listings.`}{" "}
-                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
-                </p>
-              </div>
-              {/* Every price row has an Add to cart (owner, 2026-11-17), a search row too: its line opens this tagged search and says "See today's price". */}
-              <CartAddButton href={ebay} productUrl={ebay} storeName={ebayLabel(country)} title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
-              <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-primary shrink-0 whitespace-nowrap px-3 sm:w-48">
-                Search eBay →
-              </a>
-            </li>
-          )}
-          {/* The slot's row (thirdRow) is the second row, right under eBay (owner, 2026-11-06). */}
-          {hasEbayRow ? null : thirdRow}
-          {showTcgRef && tcgRef?.marketUsd != null ? (
-            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
-              <span className="w-5 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-2">
-                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
-                </p>
-              </div>
-              <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">
-                {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
-              </span>
-              {tcgRef.url ? (
-                <CartAddButton href={tcgRef.href} productUrl={tcgRef.url} storeName="TCGplayer" title={name ?? slug ?? "Item"} priceCents={usdCentsToCountry(tcgRef.marketUsd, country)} currency={c.currency} image={image} className="pb-cart text-slate-300" />
-              ) : null}
-              <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
-                <span className="hidden sm:inline">Buy on TCGplayer →</span>
-                <span className="sm:hidden">→</span>
-              </a>
-            </li>
-          ) : null}
-          {showTcgSearch ? (
-            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
-              <span className="w-5 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-2">
-                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  No TCGplayer price on file for this {noun}. See its current listings.{" "}
-                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
-                </p>
-              </div>
-              <CartAddButton href={tcgSearchHref} productUrl={tcgRef?.url ?? tcgSearchHref} storeName="TCGplayer" title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
-              <a href={tcgSearchHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="tcg_fallback" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
-                {tcgRef?.href ? "Buy on TCGplayer →" : "Search TCGplayer →"}
-              </a>
-            </li>
-          ) : null}
-        </ol>
-      ) : null}
       {open.length ? (
         <ol className="divide-y divide-ink-800">
           {fetchAfter(null)}
@@ -196,8 +137,9 @@ export function PriceBoardView({
             const best = bestTreatment(i === 0 && open.length > 1, o);
             const plainBest = best === "plain";
             return [
+              o === pins[0] ? <Fragment key="market-head">{marketHead}</Fragment> : null,
               <li key={`${o.source}-${country}`} data-price-row="" data-cents={o.priceCents > 0 ? o.priceCents : undefined} data-paid={o.paid || o.ebay || tcg ? 1 : 0} className={`pb-row flex items-center gap-3 px-4 py-3 sm:px-5 ${best === "loud" ? PIN_OUTLINE.cheapest : o === pinEbay ? PIN_OUTLINE.ebay : ""}`}>
-                <span className="pb-n num w-5 shrink-0 text-center text-sm text-slate-500">{i + 1}</span>
+                <span className="pb-n num w-5 shrink-0 text-center text-sm text-slate-500">{pinned ? "" : at + 1}</span>
                 <div className="pb-info min-w-0 flex-1">
                   <p className="pb-name flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{o.label}</span>
@@ -268,6 +210,75 @@ export function PriceBoardView({
           ) : null}
         </div>
       )}
+      {!hasEbayRow || showTcgRef || showTcgSearch ? (
+        <ol className="divide-y divide-ink-800 border-t border-ink-800">
+          {pins.length ? null : marketHead}
+          {hasEbayRow ? null : (
+            <li className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${PIN_OUTLINE.ebay}`}>
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{ebayLabel(country)}</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {preRelease
+                    ? "Not released yet: eBay sellers set their own dispatch dates, so check each listing."
+                    : `No ${ebayLabel(country)} price on file for this ${noun}. Search its current listings.`}{" "}
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              {/* Every price row has an Add to cart (owner, 2026-11-17), a search row too: its line opens this tagged search and says "See today's price". */}
+              <CartAddButton href={ebay} productUrl={ebay} storeName={ebayLabel(country)} title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
+              <a href={ebay} target="_blank" rel={outboundRel()} data-retailer="ebay_no_listing" data-page={page} data-card={slug} data-surface="ebay_fallback" className="btn-primary shrink-0 whitespace-nowrap px-3 sm:w-48">
+                Search eBay →
+              </a>
+            </li>
+          )}
+          {/* The slot's row (thirdRow) is the second row, right under eBay (owner, 2026-11-06). */}
+          {hasEbayRow ? null : thirdRow}
+          {showTcgRef && tcgRef?.marketUsd != null ? (
+            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              <span className="num shrink-0 text-right text-base font-bold text-white sm:text-lg">
+                {money(usdCentsToCountry(tcgRef.marketUsd, country), country)}
+              </span>
+              {tcgRef.url ? (
+                <CartAddButton href={tcgRef.href} productUrl={tcgRef.url} storeName="TCGplayer" title={name ?? slug ?? "Item"} priceCents={usdCentsToCountry(tcgRef.marketUsd, country)} currency={c.currency} image={image} className="pb-cart text-slate-300" />
+              ) : null}
+              <a href={tcgRef.href} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="board_pinned" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
+                <span className="hidden sm:inline">Buy on TCGplayer →</span>
+                <span className="sm:hidden">→</span>
+              </a>
+            </li>
+          ) : null}
+          {showTcgSearch ? (
+            <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <span className="w-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  No TCGplayer price on file for this {noun}. See its current listings.{" "}
+                  <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
+                </p>
+              </div>
+              <CartAddButton href={tcgSearchHref} productUrl={tcgRef?.url ?? tcgSearchHref} storeName="TCGplayer" title={name ?? slug ?? "Item"} detail="Search results" priceCents={0} currency={c.currency} image={image} className="text-slate-300" />
+              <a href={tcgSearchHref} target="_blank" rel={outboundRel()} data-retailer="tcgplayer" data-page={page} data-card={slug} data-surface="tcg_fallback" className="btn-tcg shrink-0 whitespace-nowrap px-3 sm:w-48">
+                {tcgRef?.href ? "Buy on TCGplayer →" : "Search TCGplayer →"}
+              </a>
+            </li>
+          ) : null}
+        </ol>
+      ) : null}
       {open.length ? (
         <div className="border-t border-ink-800">
           <ReportPriceButton key={country} productId={productId} market={country} offers={open.map((o) => ({ source: o.source, label: o.label }))} />

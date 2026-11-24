@@ -35,8 +35,8 @@ test("a store link is a retailer-marked shop link; only eBay and TCGplayer are o
   assert.deepEqual(pickPaidLinks(links), { ebay: links[1].href, tcg: links[2].href });
 });
 
-test("mounted once; GA4 only; rating card respected; no Amazon in the card", () => {
-  assert.match(src("app/layout.tsx"), /<ReturnNudge \/>/);
+test("unmounted (owner, 2026-11-23: no ad covers content); GA4 only; rating card respected; no Amazon in the card", () => {
+  assert.doesNotMatch(src("app/layout.tsx"), /<ReturnNudge \/>/);
   assert.match(src("components/ReturnNudge.tsx"), /\[data-rate-card\]/);
   assert.match(src("components/ReturnNudge.tsx"), /nudge_paid_click/);
   assert.doesNotMatch(src("components/ReturnNudge.tsx"), /@vercel\/analytics/);

@@ -5036,3 +5036,38 @@ one slim alerts bar, phone rows with 44px targets, and click and scroll tracking
   "Shipping at checkout" and no delivered price is claimed.
 - Section chips stick under the header at its measured height (two rows below xl). Buy clicks keep the beacon's data-* attributes
   with surface `bf_list`; GA gets `bf_section` once per section seen (scroll depth) and `bf_filter` per filter used.
+
+## 2026-11-24: The owner's UX review, ported from DexCompare (no interrupting cards, fresh prices, sort, typo search, stores first)
+
+The owner reviewed DexCompare on desktop (AU) on 23 Nov and asked for the fixes site-wide, urgently (CompareEmpire #351-#353).
+OP Compare already had sort and filters on /sealed, a "Did you mean" in the search box, per-row "updated" times and a phone clamp
+on hub intros; this entry is what fitted and was missing here.
+
+- **No interrupting cards (P0 1).** `lib/visitor-busy.ts`: nothing opens on its own while a dialog is open, a text field has focus
+  or a key was pressed in the last 5 s. `lib/prompt-slot.ts`: ONE self-opening card a visit (sessionStorage). The rating card
+  asks both. The floating "Still comparing?" eBay/TCGplayer card (`ReturnNudge`, A/B since 2026-11-18) is unmounted: an ad that
+  covers content. The cart stays off.
+- **Fresh prices (P0 2).** GitHub started the 07:07 and 19:07 imports up to 8 hours late (19 hours between snapshots on 22-23
+  Nov). `price-freshness.yml` reads `snapshot/meta.json` every two hours, starts Import prices itself once the snapshot is 11
+  hours old (alerts "none"; never while an import or the eBay pass is queued or running) and fails red at 13 hours, so GitHub
+  emails the owner. The watchdog's snapshot check is amber at 12 hours and red at 16 (was 30 and 46).
+- **Sort (P0 3).** /sealed adds "Price per pack" and "Most under TCGplayer market" (outside the US the market price is converted
+  at the indicative rate for ORDERING only, never shown converted). Set, type, price band and stock filters were already there;
+  OP sells English product only, so there is no language filter, and no era.
+- **Typo-tolerant search (P0 5).** /browse answers a search that finds no card with the nearest real name (`suggestNames`) and
+  says "Showing results for …"; nothing at all shows the most valuable cards. Sealed matching (the box and /sealed) takes BB, SD,
+  DP, PB and one-edit typos (`sealedNameMatches`). GA4 gets `search_zero`, `search_fixed` or `search_results` per results page
+  (normalised words only).
+- **Less above the title (P0 6).** The Black Friday / Cyber Monday line closes with ✕ for 7 days.
+- **Stores first (P1 10).** The price board lists the stores, cheapest first, then eBay and TCGplayer (the cheaper first) under a
+  "Marketplaces · Ad" line, with the search rows below them. This reverses the pinned-at-top order of 2026-11-17 on the board only;
+  the quick view keeps its order. The truly cheapest row keeps its Cheapest mark wherever it sits. Click guard: eBay and TCGplayer
+  board clicks per 100 product views at release + 2 days; tell the owner if either falls more than 40%.
+- **One action per row (P1 11):** the store thumbs are hidden on phones. The sale pages' badges, list and
+  filters are the Black Friday entry's (#255). **Jump links (P1 13)** on sealed and card pages
+  (Prices, History, Questions, and Printings on a card), and the sealed page's history moved up under the prices. **Intros (P1 14)**
+  are two lines and "How it works" at every width (the whole text stays in the HTML). **Images (P1 15):** one retry after 1.5 s,
+  then the site mark (`ImageRescue`). **Accessibility (P2 20-21):** a visible focus ring everywhere, a title on the watchlist icon.
+- **Not done here, and why:** delivered price by default (P1 9: the board has no price + shipping mode to switch on; postage is a
+  line on each row); the Deals menu (P2 16: OP's has two seasonal entries, not nine); visual set index (P2 17: set pages changed in
+  #253 the same day). Rides the same release as the Black Friday page work (#255), so it costs no extra build.

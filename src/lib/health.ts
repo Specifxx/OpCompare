@@ -218,7 +218,7 @@ export const evalImportAge = (at: Date | string | null, now: Date): Check =>
   evalAge({ id: "import-age", area: "prices", label: "Price import", at, warnH: 16, failH: 30, now, what: "successful import", missing: "fail", hint: "The twice-daily import has not succeeded. Open the Import prices workflow in GitHub Actions and read the failed step; prices are served from the last snapshot meanwhile." });
 
 export const evalSnapshotAge = (at: Date | string | null, now: Date): Check =>
-  evalAge({ id: "snapshot-age", area: "prices", label: "GitHub price snapshot", at, warnH: 30, failH: 46, now, what: "snapshot", hint: "Pages read the snapshot first and fall back to the database after 48 hours. A stale snapshot means the import's publish step is failing." });
+  evalAge({ id: "snapshot-age", area: "prices", label: "GitHub price snapshot", at, warnH: 12, failH: 16, now, what: "snapshot", hint: "Prices on every page are this old (owner, 2026-11-23: alert past 12 hours). GitHub starts the scheduled import hours late; Price freshness (price-freshness.yml) starts it every two hours once the snapshot passes 12 hours. Still stale: the import or its publish step is failing." });
 
 /** The Compare Empire family feed (DECISIONS.md "Sites that grow each other"): written into every snapshot by
  *  scripts/family-sync.ts. Never a fail: the sister sites only show less. Missing before its first run. */
@@ -454,6 +454,7 @@ export interface JobExpectation {
 
 export const JOBS: JobExpectation[] = [
   { file: "import-prices.yml", label: "Price import", maxAgeH: 18, critical: true },
+  { file: "price-freshness.yml", label: "Price freshness", maxAgeH: 6, critical: false },
   { file: "ebay-prices.yml", label: "eBay pass", maxAgeH: 30 },
   { file: "email.yml", label: "Email outbox", maxAgeH: 7 },
   { file: "email-weekly.yml", label: "Weekly newsletter", maxAgeH: 24 * 8 },

@@ -65,13 +65,14 @@ test("the catalogue pages render the intro", () => {
   for (const f of ["sets", "leaders", "colors", "sealed", "price-guide", "market", "movers"].map((x) => `src/app/${x}/page.tsx`)) assert.match(fs.readFileSync(path.join(root, f), "utf8"), /HubIntro/, f);
 });
 
-// 2026-11-23: on a phone the intro is three lines and a "Read more". The whole text stays in the HTML, with no script.
-test("the hub intro's phone clamp is CSS only: every paragraph rendered, a checkbox toggle, nothing clamped from sm up", () => {
+// 2026-11-23: the intro is two lines and a "How it works" toggle at every width (owner's UX review, P1 14). The whole text stays
+// in the HTML, with no script.
+test("the hub intro's clamp is CSS only: every paragraph rendered, a checkbox toggle", () => {
   const src = fs.readFileSync(path.join(process.cwd(), "src/components/HubIntro.tsx"), "utf8");
   assert.doesNotMatch(src, /"use client"|useState|onClick|\.slice\(0/, "no script and no paragraph cut");
   assert.match(src, /paragraphs\.map\(\(p, i\) => \(/);
   assert.match(src, /<input type="checkbox" id=\{`hub-intro-\$\{id\}`\} className="hub-intro-toggle sr-only"/);
   const css = fs.readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
   const block = css.slice(css.indexOf(".hub-intro-more { display: none; }"));
-  assert.match(block, /@supports selector\(:has\(\*\)\) \{\s*@media \(max-width: 639\.98px\) \{\s*\.hub-intro:not\(:has\(\.hub-intro-toggle:checked\)\) \.hub-intro-body \{\s*max-height/);
+  assert.match(block, /@supports selector\(:has\(\*\)\) \{\s*(?:\/\*[^*]*\*\/\s*)?@media all \{\s*\.hub-intro:not\(:has\(\.hub-intro-toggle:checked\)\) \.hub-intro-body \{\s*max-height/);
 });
