@@ -71,7 +71,7 @@ test("the panel opens with a labelled search box holding the URL's words, a real
   assert.match(input, /name="q"/, "a named field, so the GET form carries it without JavaScript");
   assert.match(input, /value="luffy"/);
   assert.match(input, /enterKeyHint="search"/i);
-  assert.match(input, /placeholder="Card name or number…"/, "what q matches: a name or a card number (lib/search.ts)");
+  assert.match(input, /placeholder="Card name, number or set…"/, "what q matches: a name, a card number or a set (lib/search.ts)");
   assert.match(input, new RegExp(`maxLength="${QUERY_MAX}"`), "no more than parseBrowse reads");
   assert.match(input, /class="input"/, "the panel's own input style");
   const id = /id="([^"]+)"/.exec(input)?.[1];

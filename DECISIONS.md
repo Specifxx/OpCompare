@@ -5147,3 +5147,19 @@ heading or JSON-LD changes; no ad, partner strip or "Compare other TCGs" block i
 `home-colours`, `home-about`. `tests/home.test.ts` pins the page wrapper's class list, so it now names `home-flow`.
 
 **Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.
+
+## 2026-11-26: Sealed product is findable from every search box (owner: "you can't search any sealed products")
+
+The owner could not find sealed product by searching. Three causes: the sealed matcher read only the product's name, and no
+name carries its set code, so "OP13", "op-13 booster box" or "EB02" found nothing; the header box filled its rows with up to
+ten cards before any sealed row, so a set code (which matches ten cards) pushed every sealed row out; and Enter opened
+/browse, which listed cards only and said "Nothing matches" for "booster box".
+
+Now `searchSealed` (lib/sealed-query.ts) matches the name, kind, set code and set name, with set codes joined however they
+are typed ("op 13" = "OP-13" = "op13", "op1" = "op01") and no typo tolerance on a word with digits (OP13 is never OP12).
+Box before case before pack, newest set first, tournament promo packs last unless the words ask for them. The header box
+always keeps up to three sealed rows (five, listed first, when the words ask for sealed: box, deck, case, BB…); /browse shows
+the sealed matches above the cards (a grid of eight when the words ask for sealed or no card matches, three compact rows for
+a card search such as "luffy", so its cards stay on the first screen), with "See all N sealed" to /sealed?q=. /sealed's
+own keyword box uses the same matcher. The card list's Set facet opens by default with a "Find a set" box (RiftCompare's).
+`tests/sealed-search.test.ts`.

@@ -37,7 +37,7 @@ test("P0 5: the card list answers a typo with the nearest real name, says so, an
   assert.match(page, /suggestNames\(cat\.cards\.map/);
   assert.match(page, /Showing results for/);
   assert.match(page, /Popular cards right now/);
-  assert.match(read("src/app/api/search/route.ts"), /sealedNameMatches\(s\.name, q\)/);
+  assert.match(read("src/app/api/search/route.ts"), /searchSealed\(sealed, q,/);
 });
 
 test("P0 1: self-opening cards wait while the visitor types and share one prompt a visit; the floating ad card is off", () => {

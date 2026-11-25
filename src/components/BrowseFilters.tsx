@@ -156,9 +156,13 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
     go(clearFilters(sp, showSearch ? [] : ["q"]));
   };
 
+  // "Find a set" (RiftCompare's sealed Set facet): ~70 sets in five groups were a long scroll to OP13.
+  const [setQuery, setSetQuery] = useState("");
+  const setTerm = setQuery.trim().toLowerCase().replace(/[\s-]/g, "");
+  const setShown = (s: SetLite) => !setTerm || s.name.toLowerCase().replace(/[\s-]/g, "").includes(setTerm) || s.code.toLowerCase().replace(/[\s-]/g, "").includes(setTerm);
   const byKind = Object.entries(SET_KINDS)
     .sort((a, b) => a[1].order - b[1].order)
-    .map(([k, v]) => ({ kind: k, label: v.plural, sets: sets.filter((s) => s.kind === k).sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")) }))
+    .map(([k, v]) => ({ kind: k, label: v.plural, sets: sets.filter((s) => s.kind === k && setShown(s)).sort((a, b) => (b.releasedOn ?? "").localeCompare(a.releasedOn ?? "")) }))
     .filter((g) => g.sets.length);
 
   return (
@@ -199,7 +203,7 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            placeholder="Card name or number…"
+            placeholder="Card name, number or set…"
             className="input"
           />
         </div>
@@ -254,7 +258,21 @@ export function BrowseFilters({ q, sets, country, action = "/browse", hide = [] 
         </label>
       </Section>
       {!hide.includes("set") ? (
-        <Section title="Set" open={values(sp, "set").length > 0}>
+        <Section title="Set" open>
+          <input
+            type="text"
+            inputMode="search"
+            value={setQuery}
+            onChange={(e) => setSetQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.preventDefault();
+            }}
+            aria-label="Find a set"
+            placeholder={`Find a set (OP13, Egghead…)`}
+            autoComplete="off"
+            className="input mb-2 text-sm"
+          />
+          {byKind.length === 0 ? <p className="px-1 py-2 text-xs text-slate-500">No sets match “{setQuery}”.</p> : null}
           {byKind.map((g) => (
             <div key={g.kind} className="pb-2">
               <p className="pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{g.label}</p>

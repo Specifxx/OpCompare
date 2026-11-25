@@ -102,6 +102,7 @@ export function CardSearch({
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [total, setTotal] = useState(0);
+  const [sealedFirst, setSealedFirst] = useState(false);
   const [suggest, setSuggest] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -147,6 +148,7 @@ export function CardSearch({
     if (s.length < 2) {
       setHits([]);
       setTotal(0);
+      setSealedFirst(false);
       setSuggest([]);
       setLoading(false);
       return;
@@ -160,6 +162,7 @@ export function CardSearch({
           const data = await r.json();
           setHits(data.hits ?? []);
           setTotal(data.total ?? 0);
+          setSealedFirst(Boolean(data.sealedFirst));
           setSuggest(Array.isArray(data.suggest) ? data.suggest : []);
           setActive(-1);
         }
@@ -211,12 +214,14 @@ export function CardSearch({
 
   const trimmed = q.trim();
   const zero = trimmed.length < 2;
-  const cards = useMemo(() => hits.filter((h) => h.kind === "card").slice(0, cap), [hits, cap]);
+  // Sealed rows always get their places (owner, 2026-11-26: "you can't search any sealed products"): until then ten card hits
+  // for "OP13" pushed every sealed row out of the box. Words that ask for sealed ("booster box", "starter deck") list it first.
   const sealed = useMemo(
-    () => (onPick ? [] : hits.filter((h) => h.kind === "sealed").slice(0, Math.max(0, Math.min(3, cap - cards.length)))),
-    [hits, cap, cards.length, onPick],
+    () => (onPick ? [] : hits.filter((h) => h.kind === "sealed").slice(0, sealedFirst ? Math.min(5, cap) : Math.min(3, cap))),
+    [hits, cap, onPick, sealedFirst],
   );
-  const rows: Hit[] = useMemo(() => [...cards, ...sealed], [cards, sealed]);
+  const cards = useMemo(() => hits.filter((h) => h.kind === "card").slice(0, Math.max(0, cap - sealed.length)), [hits, cap, sealed.length]);
+  const rows: Hit[] = useMemo(() => (sealedFirst ? [...sealed, ...cards] : [...cards, ...sealed]), [cards, sealed, sealedFirst]);
   const recent = recentSearches.slice(0, MOBILE_CAP);
   const count = zero ? recent.length : rows.length;
   const hasZeroContent = recent.length > 0 || recentCards.length > 0;
@@ -463,6 +468,7 @@ export function CardSearch({
             <ul id={listId} role="listbox" aria-label="Search suggestions" className="overflow-y-auto overscroll-contain py-1" style={{ maxHeight: maxH }}>
               {rows.map((h, i) => {
                 const firstSealed = h.kind === "sealed" && (i === 0 || rows[i - 1].kind !== "sealed");
+                const firstCardAfterSealed = h.kind === "card" && i > 0 && rows[i - 1].kind === "sealed";
                 const inner = (
                   <>
                     {h.img ? (
@@ -487,6 +493,7 @@ export function CardSearch({
                 return (
                   <li key={`${h.kind}-${h.slug}`} role="presentation">
                     {firstSealed ? <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sealed products</p> : null}
+                    {firstCardAfterSealed ? <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cards</p> : null}
                     {/* Close in the bubble phase, after the row's own link has handled the
                         click: a capture-phase close unmounts the list before
                         CardQuickLink's onClick runs, and the browser then

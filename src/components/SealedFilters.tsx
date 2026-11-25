@@ -114,7 +114,7 @@ export function SealedFilters({ types, sets, currency }: { types: string[]; sets
             }}
             className="pb-3"
           >
-            <input type="search" aria-label="Search sealed products" placeholder="Search sealed…" value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => q.trim() !== (sp.get("q") ?? "") && update((p) => (q.trim() ? p.set("q", q.trim()) : p.delete("q")))} className="input w-full" />
+            <input type="search" aria-label="Search sealed products" placeholder="Name, set or code (OP13)…" value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => q.trim() !== (sp.get("q") ?? "") && update((p) => (q.trim() ? p.set("q", q.trim()) : p.delete("q")))} className="input w-full" />
           </form>
 
           <Section title={`Price (${currency})`} defaultOpen>

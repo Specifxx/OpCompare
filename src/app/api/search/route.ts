@@ -5,12 +5,14 @@ import { headline } from "@/lib/price";
 import { money } from "@/lib/format";
 import { cardImage } from "@/lib/images";
 import { norm, searchCards, suggestNames } from "@/lib/search";
-import { sealedNameMatches } from "@/lib/sealed-query";
+import { searchSealed, wantsSealed } from "@/lib/sealed-query";
 
 export const dynamic = "force-dynamic";
 
-// The header/hero search dropdown (CardSearch). Cards first (up to 10, the
-// box shows 6 on a phone), then up to 3 sealed products; when nothing matches,
+// The header/hero search dropdown (CardSearch). Cards (up to 10, the box shows
+// 6 on a phone) and up to 5 sealed products, matched on name, kind, set code and
+// set name (lib/sealed-query.ts searchSealed); `sealedFirst` when the words ask
+// for sealed ("booster box", "OP13 case"), so the box lists them first. When nothing matches,
 // `suggest` carries up to three real card names close to what was typed.
 export async function GET(req: Request) {
   const q = (new URL(req.url).searchParams.get("q") ?? "").slice(0, 80);
@@ -38,12 +40,14 @@ export async function GET(req: Request) {
       priceKind: h.kind,
     };
   });
-  const words = norm(q).split(" ").filter(Boolean);
-  const sealedHits = sealed
-    // Synonyms (BB, SD, DP, PB) and one-letter typos (owner, 2026-11-23 UX review, P0 5): lib/sealed-query.ts sealedNameMatches.
-    .filter((s) => /box|deck|pack|case/i.test(s.kind) && words.length > 0 && sealedNameMatches(s.name, q))
-    .sort((a, b) => (b.marketUsd ?? 0) - (a.marketUsd ?? 0))
-    .slice(0, 3)
+  const setText = (id: number | null) => {
+    const set = id != null ? cat.setById.get(id) : undefined;
+    return set ? `${set.code} ${set.name}` : undefined;
+  };
+  const setReleased = (id: number | null) => (id != null ? cat.setById.get(id)?.releasedOn ?? undefined : undefined);
+  const sealedAll = searchSealed(sealed, q, { country, setTextOf: setText, setReleased });
+  const sealedHits = sealedAll
+    .slice(0, 5)
     .map((s) => {
       const h = headline(s, country);
       return {
@@ -52,7 +56,7 @@ export async function GET(req: Request) {
         name: s.name,
         number: null,
         variant: null,
-        set: s.kind,
+        set: [s.setId != null ? cat.setById.get(s.setId)?.code : null, s.kind].filter(Boolean).join(" · "),
         img: s.imageUrl ? s.imageUrl.replace("_in_1000x1000", "_200w") : null,
         price: fmt(h),
         priceKind: h.kind,
@@ -60,7 +64,7 @@ export async function GET(req: Request) {
     });
   const suggest = all.length || sealedHits.length ? [] : suggestNames(cat.cards.map((c) => c.name), q);
   return NextResponse.json(
-    { hits: [...cards, ...sealedHits], total: all.length, suggest },
+    { hits: [...cards, ...sealedHits], total: all.length, sealedTotal: sealedAll.length, sealedFirst: sealedHits.length > 0 && (wantsSealed(q) || all.length === 0), suggest },
     { headers: { "Cache-Control": "private, max-age=60" } },
   );
 }

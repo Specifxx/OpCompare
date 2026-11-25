@@ -25,8 +25,11 @@ import {
   type SearchParams,
 } from "@/lib/browse";
 import { COUNTRIES } from "@/lib/country";
-import { getCatalog } from "@/lib/data";
-import { int } from "@/lib/format";
+import { getCatalog, getSealedCatalog } from "@/lib/data";
+import { SealedTile } from "@/components/SealedTile";
+import { searchSealed, wantsSealed } from "@/lib/sealed-query";
+import { int, money } from "@/lib/format";
+import { headline } from "@/lib/price";
 import { getCountry } from "@/lib/get-country";
 import { pageOg } from "@/lib/og/meta";
 import { cleanPageNumber } from "@/lib/facets";
@@ -57,14 +60,29 @@ export default async function BrowsePage({
 }) {
   const country = getCountry();
   const c = COUNTRIES[country];
-  const cat = await getCatalog();
+  const [cat, sealedCat] = await Promise.all([getCatalog(), getSealedCatalog()]);
   const asked = parseBrowse(searchParams);
   let q = asked;
+  // SEALED PRODUCTS FOR THE SAME WORDS (owner, 2026-11-26: "you can't search any sealed products"; RiftCompare's /browse does
+  // this). Enter in the header box lands here, so "OP13 booster box" or "starter deck" shows the products, not "Nothing matches".
+  // A plain text search's first page only, and only while no card-only filter is ticked; the full list is /sealed?q=.
+  const cardOnly = asked.sets.length || asked.colors.length || asked.rarities.length || asked.types.length || asked.printings.length || asked.min != null || asked.max != null;
+  const sealedFound =
+    asked.q && asked.page === 1 && !cardOnly
+      ? searchSealed(sealedCat, asked.q, {
+          country,
+          setReleased: (id) => (id != null ? cat.setById.get(id)?.releasedOn ?? undefined : undefined),
+          setTextOf: (id) => {
+            const set = id != null ? cat.setById.get(id) : undefined;
+            return set ? `${set.code} ${set.name}` : undefined;
+          },
+        })
+      : [];
   let res = runBrowse(cat.cards, cat.sets, cat.setById, q, country);
   // Typo-tolerant search (owner, 2026-11-23 UX review, P0 5: "charizrd" returned nothing): a search that matches no card is
   // answered with the nearest real card name (suggestNames, the box's "Did you mean"), said out loud above the grid.
   let fixedFrom: string | null = null;
-  if (asked.q && res.total === 0) {
+  if (asked.q && res.total === 0 && sealedFound.length === 0) {
     const [best] = suggestNames(cat.cards.map((x) => x.name), asked.q, 1);
     if (best) {
       const retry = runBrowse(cat.cards, cat.sets, cat.setById, { ...asked, q: best }, country);
@@ -76,8 +94,10 @@ export default async function BrowsePage({
     }
   }
   const { total, pages, items } = res;
+  const sealedLead = sealedFound.length > 0 && (wantsSealed(asked.q) || total === 0);
+  const sealedShown = sealedFound.slice(0, sealedLead ? 8 : 3);
   // Nothing at all: the most valuable cards instead of a dead end (P2 18).
-  const popular = asked.q && total === 0 ? mostValuable(cat.cards, 8) : [];
+  const popular = asked.q && total === 0 && sealedFound.length === 0 ? mostValuable(cat.cards, 8) : [];
   const page = Math.min(q.page, pages);
   const newest = newestBoosterSet(cat.sets);
   const chase = newest
@@ -99,7 +119,7 @@ export default async function BrowsePage({
       <Breadcrumbs trail={[{ name: "Card database" }]} />
       <header className="mb-6">
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-          {q.q ? `“${q.q}” — One Piece cards` : "One Piece Card List"}
+          {q.q ? `“${q.q}” — One Piece cards and sealed` : "One Piece Card List"}
         </h1>
         <div className="mt-2 max-w-[65ch] space-y-3 text-[15px] leading-relaxed text-slate-300">
           <p>
@@ -151,7 +171,13 @@ export default async function BrowsePage({
           <div id="results" className="mt-3 flex scroll-mt-24 flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
               <span className="num font-semibold text-white">{int(total)}</span>{" "}
-              cards · page {page} of {pages}
+              cards{total > 0 ? ` · page ${page} of ${pages}` : ""}
+              {sealedFound.length ? (
+                <>
+                  {" · "}
+                  <span className="num font-semibold text-white">{int(sealedFound.length)}</span> sealed
+                </>
+              ) : null}
               {filtered ? (
                 <>
                   {" · "}
@@ -167,7 +193,7 @@ export default async function BrowsePage({
             </div>
           </div>
 
-          {asked.q ? <SearchOutcome query={asked.q} fixedTo={fixedFrom ? q.q : null} results={total} template="browse" /> : null}
+          {asked.q ? <SearchOutcome query={asked.q} fixedTo={fixedFrom ? q.q : null} results={total + sealedFound.length} template="browse" /> : null}
           {fixedFrom ? (
             <p className="mt-3 text-sm text-slate-300" data-search-fixed="">
               Showing results for <b className="text-white">{q.q}</b>. No card matches “{fixedFrom}”.
@@ -203,6 +229,55 @@ export default async function BrowsePage({
             </div>
           ) : null}
 
+          {sealedShown.length ? (
+            <section className="mt-4" aria-label="Sealed products" data-browse-sealed="">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-bold text-white">
+                  Sealed products <span className="num text-sm font-normal text-slate-400">· {int(sealedFound.length)}</span>
+                </h2>
+                <Link href={`/sealed?q=${encodeURIComponent(asked.q)}`} prefetch={false} className="text-sm font-medium text-brand-400 hover:underline">
+                  {sealedFound.length > sealedShown.length ? `See all ${int(sealedFound.length)} sealed →` : "Filter sealed →"}
+                </Link>
+              </div>
+              {sealedLead ? (
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                  {sealedShown.map((s) => (
+                    <SealedTile key={s.id} s={s} country={country} setCode={s.setId ? cat.setById.get(s.setId)?.code : null} />
+                  ))}
+                </div>
+              ) : (
+                // A card search ("luffy") keeps its cards on the first screen: three compact rows, not a grid of boxes.
+                <ul className="mt-2 divide-y divide-ink-800 overflow-hidden rounded-lg border border-ink-800">
+                  {sealedShown.map((s) => {
+                    const h = headline(s, country);
+                    return (
+                      <li key={s.id}>
+                        <Link href={`/sealed/${s.slug}`} prefetch={false} className="flex items-center gap-3 px-3 py-2 hover:bg-ink-800/60">
+                          {s.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={s.imageUrl.replace("_in_1000x1000", "_200w")} alt={s.name} loading="lazy" className="h-10 w-10 shrink-0 rounded-sm bg-white/95 object-contain" />
+                          ) : (
+                            <span className="h-10 w-10 shrink-0 rounded-sm bg-ink-800" />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-slate-100">{s.name}</span>
+                            <span className="block truncate text-xs text-slate-500">
+                              {[s.setId ? cat.setById.get(s.setId)?.code : null, s.kind].filter(Boolean).join(" · ")}
+                            </span>
+                          </span>
+                          <span className="num shrink-0 text-sm font-semibold text-accent">
+                            {h.cents == null ? "—" : `${h.kind === "reference" ? "≈ " : ""}${money(h.cents, country)}`}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {items.length && sealedLead ? <h2 className="mt-6 text-base font-bold text-white">Cards</h2> : null}
+            </section>
+          ) : null}
+
           {items.length ? (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {items.map((card, i) => (
@@ -215,7 +290,7 @@ export default async function BrowsePage({
                 />
               ))}
             </div>
-          ) : (
+          ) : sealedShown.length ? null : (
             <div className="mt-6">
               {q.q ? (
                 <EmptyState
