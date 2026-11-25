@@ -1534,6 +1534,41 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
   [data-price-row] [data-store-vote] { display: none !important; }
 }
 
+/* The gutter column (components/GutterAds.tsx, owner 2026-11-25): one slim labelled TCGplayer column in the empty right side of a wide
+   window. It sits absolutely in the layout's content wrapper (relative, padded left by the menu), so it starts under the header, ends
+   where the content ends and never covers the page; its card is sticky under the one-row header (about 65px from 1280px). Sized to the
+   gutter right of the 1400px page's content (1352px inside its padding), at most 180px, 14px clear of it and of the window. Mounted
+   only from 1880px (GUTTER_MIN), so the page column never gives up any width. */
+.gutter-ads {
+  --g: calc((100% - var(--sidenav-w) - 1352px) / 2);
+  --gw: min(180px, calc(var(--g) - 28px));
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  width: var(--gw);
+  z-index: 10;
+}
+.gutter-ads-right { right: calc((var(--g) - var(--gw)) / 2); }
+.gutter-card {
+  position: sticky;
+  top: 82px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px); /* clear of the Feedback button in the corner */
+  padding: 10px;
+}
+.gutter-list {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  flex: 1 1 auto;
+  margin-top: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {

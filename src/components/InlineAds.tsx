@@ -34,7 +34,7 @@ export function inlineTiles(chase: ChaseTile[], country: string): { ebay: Tile[]
 
 // One fetch per page view.
 let inflight: Promise<ChaseTile[] | null> | null = null;
-function load(): Promise<ChaseTile[] | null> {
+export function load(): Promise<ChaseTile[] | null> {
   if (!inflight) {
     inflight = fetch("/api/chase")
       .then((r) => (r.ok ? (r.json() as Promise<ChaseTile[]>) : null))

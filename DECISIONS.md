@@ -5096,3 +5096,19 @@ A paid tester's think-aloud on TCG Prices (tcgcompare DECISIONS.md, 2026-11-25) 
 ones that pay us. Under the price table the product page now says "Every store we track is listed, whether it pays us or not, in
 price order" with a link to /methodology, and the group-chat share button reads "Share deal" (its full wording stays as the
 button's accessible name): the tester found the page's buttons too wordy. Cart and watch wording wait for their A/B verdicts.
+
+## 2026-11-25: The home banners mid-page, and a TCGplayer column in the empty right side of a very wide window (owner)
+
+The owner, 2026-11-25, on a desktop: "Why are the display ads at the very bottom of the site? … there's so much space on the left and the
+right side of the website." (YGO Compare #267, DexCompare #367, MTG Compare #276.)
+
+- **Home page:** the eBay and TCGplayer banner pair moves from the very foot of the page to right after Today's Top Deals (popular
+  cards, sealed links and deals first), before the price guide callout, the sections, the guides and the FAQ. Never under the hero.
+- **Gutter column** (`components/GutterAds.tsx`, `.gutter-ads` in globals.css): OP Compare's left side is the menu, and it is a LIGHT
+  site (the ad-intensity test's control), so it takes ONE labelled TCGplayer column in the right-hand gutter, from 1880px wide (the
+  first width with room right of the menu and the 1400px page). Sized to that gutter, at most 180px, 14px clear of the page and the
+  window; absolute in the layout's content wrapper with a sticky card under the header, so it never covers the header, the footer or the
+  page, and never takes width from it. Browser only (CLS 0), the same /api/chase answer the banners read, labelled Ad, tagged
+  `tcgplayer_gutter`, ad-free for Plus and Premium, never Amazon. Its tiles start after the banner's four. Reverses "the side rails are
+  gone" (2026-11-13) on the owner's word.
+- **Read:** tcgplayer_gutter clicks per 100 desktop visitors; if desktop store buy clicks per visitor fall 10%, the column goes.

@@ -24,7 +24,7 @@ export const TCG_SEARCH = "https://www.tcgplayer.com/search/one-piece-card-game/
 export type Tile = { key: string | number; href: string; image: string; name: string; price: string; retailer: string; card: string };
 
 /** The in-page block's and the dock's tiles, most valuable first. Pure, for the tests. */
-export function railTiles(tiles: ChaseTile[], country: string, where: "inline" | "dock" = "inline"): { ebay: Tile[]; tcg: Tile[] } {
+export function railTiles(tiles: ChaseTile[], country: string, where: "inline" | "dock" | "gutter" = "inline"): { ebay: Tile[]; tcg: Tile[] } {
   const byValue = [...tiles].sort((a, b) => b.marketUsd - a.marketUsd);
   // Live listings in the visitor's market first; the rest of the ten are eBay searches for the card,
   // so a market with few live listings still gets a full rail.

@@ -23,6 +23,7 @@ import QuickViewProvider from "@/components/QuickViewProvider";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { SideNav } from "@/components/SideNav";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
+import { GutterAds } from "@/components/GutterAds";
 import { PlanProvider } from "@/components/PlanProvider";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
@@ -198,7 +199,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     the content container on <main> (a pl-* and container-app's
                     px-* on one element fight over padding-left). Pages never add
                     their own outer container-app or py-*. */}
-                <div className="pl-[var(--sidenav-w)]">
+                <div className="relative pl-[var(--sidenav-w)]">
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line above the content. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
@@ -206,6 +207,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     {/* The one ad block sits below the page's own content, never above it (2026-11-19, core-update quality pass). */}
                     <AdRouteGate><FooterAds /></AdRouteGate>
                   </main>
+                  {/* The gutter column (owner, 2026-11-25): a labelled TCGplayer column in the empty right side of a wide window (1880px+). */}
+                  <AdRouteGate><GutterAds /></AdRouteGate>
                 </div>
                 {/* No Premium slider (owner, 2026-11-03, on RiftCompare: "get rid of all
                     the sliders regarding the premium and the signups. People can do it
