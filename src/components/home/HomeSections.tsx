@@ -63,7 +63,7 @@ export function HomeSections({ data, ebayPicks = null }: { data: HomeData; ebayP
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <Reveal stagger className="home-sets grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {sets.map((s) => {
             const upcoming = (s.releasedOn ?? "") > today;
             const isNew = !upcoming && (s.releasedOn ?? "") >= newCutoff;
@@ -83,8 +83,8 @@ export function HomeSections({ data, ebayPicks = null }: { data: HomeData; ebayP
             );
           })}
         </Reveal>
-        <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">Browse by colour</div>
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="home-colours mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">Browse by colour</div>
+        <Reveal stagger className="home-colours grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {COLOR_KEYS.map((k) => (
             <Link
               key={k}

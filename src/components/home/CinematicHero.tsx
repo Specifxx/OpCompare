@@ -87,7 +87,7 @@ export function CinematicHero({
           <h1 className="mx-auto max-w-4xl text-2xl font-extrabold leading-[1.15] tracking-tight text-white sm:mt-4 sm:text-4xl lg:text-5xl">
             <span className="text-brand-400">One Piece</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
           </h1>
-          <p className="mx-auto mt-2 max-w-2xl text-base text-slate-300 sm:mt-4">
+          <p className="hero-sub mx-auto mt-2 max-w-2xl text-base text-slate-300 sm:mt-4">
             <strong className="block text-base font-semibold text-white sm:text-xl">Buy One Piece cards at the best price</strong>
             <span className="mt-1 block text-sm sm:mt-0 sm:inline sm:text-base">
               Price check any card and find the cheapest place to buy — live One Piece Card Game prices from every {heroAdjective} store we track, plus
@@ -104,7 +104,7 @@ export function CinematicHero({
           <CountryHeroToggle />
           <TrendingChips cards={trendingCards} />
           <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} updatedAt={updatedAt} renderedAt={renderedAt} lockCountry={region?.code} />
-          <div className="mt-6 flex flex-col items-center gap-2">
+          <div className="hero-meta mt-6 flex flex-col items-center gap-2">
             <Link
               href="/browse"
               className="tap-link rounded text-sm font-semibold text-slate-300 underline-offset-4 outline-none transition-colors hover:text-brand-400 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"

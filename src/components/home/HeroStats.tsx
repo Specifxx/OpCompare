@@ -30,7 +30,7 @@ export function HeroStats({
   const s = statsByCountry[country] ?? statsByCountry.US;
   const storeWord = s.stores === 1 ? "store" : "stores";
   return (
-    <div className="mt-3 text-center">
+    <div className="hero-meta mt-3 text-center">
       <p className="num text-xs text-slate-500 sm:text-sm">
         {totalCards.toLocaleString("en-US")} cards · {s.stores.toLocaleString("en-US")} {country} {storeWord}
         {updatedAt && (

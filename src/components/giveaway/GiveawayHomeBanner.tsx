@@ -7,7 +7,7 @@ export function GiveawayHomeBanner() {
   return (
     <a
       href="/giveaway?utm_source=home&utm_medium=banner&utm_campaign=giveaway"
-      className="gw-hero group flex items-center gap-4 rounded-2xl border border-white/10 p-3 transition hover:shadow-2xl sm:p-4"
+      className="gw-hero home-give group flex items-center gap-4 rounded-2xl border border-white/10 p-3 transition hover:shadow-2xl sm:p-4"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={G.imageUrl} alt={G.prize} width={56} height={56} className="h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-1" />
