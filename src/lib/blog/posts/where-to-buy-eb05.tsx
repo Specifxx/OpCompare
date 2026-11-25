@@ -47,8 +47,8 @@ export const whereToBuyEb05: Post = {
   minutes: 6,
   faq: [
     {
-      q: "When does One Piece EB05 come out?",
-      a: "Bandai's English product page dates EB05, Extra Booster: One Piece Heroines Edition Vol. 2, 30 October 2026; the Japanese edition is dated 31 October 2026. Every upcoming set is on [the release dates page](/release-dates).",
+      q: "When did One Piece EB05 come out?",
+      a: "It came out on 30 October 2026 in English, by Bandai's English product page for EB05, Extra Booster: One Piece Heroines Edition Vol. 2; the Japanese edition is dated 31 October 2026. Every upcoming set is on [the release dates page](/release-dates).",
     },
     {
       q: "How much does an EB05 booster pack cost?",
@@ -68,12 +68,12 @@ export const whereToBuyEb05: Post = {
     },
     {
       q: "What comes after EB05?",
-      a: "OP-18, The Dominance of God, listed for 20 November 2026. Its pre-order prices are on [the OP18 pre-order board](/op18-preorders), and every later set is on [the release dates page](/release-dates).",
+      a: "OP-18, The Dominance of God, out on 20 November 2026 by Bandai's English product page. Its box and pack prices are on [the OP18 price page](/op18-preorders), and every later set is on [the release dates page](/release-dates).",
     },
   ],
   related: [
     { href: PREORDER_PATH, label: "EB05 pre-order prices" },
-    { href: PREORDER_PAGES.OP18, label: "OP18 pre-order prices" },
+    { href: PREORDER_PAGES.OP18, label: "OP18 booster box prices" },
     { href: "/release-dates", label: "Release dates" },
     { href: "/sealed", label: "Sealed products" },
   ],
