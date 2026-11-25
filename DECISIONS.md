@@ -5102,3 +5102,15 @@ button's accessible name): the tester found the page's buttons too wordy. Cart a
 Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
 (2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
 and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
+
+## 2026-11-26: "Is this box worth it?" on Booster Box and Booster Case pages
+
+The box value calculator (/tools/box-ev) was linked from no box page. A Booster Box or Booster Case page of a released
+booster, extra or premium set now carries one small card (`components/BoxEvCard.tsx`): the expected value of opening
+one box from the calculator's own default model (`boxEvOfSet` in `lib/box-ev.ts`: TCGplayer US market prices, the
+community pull-rate estimates, the box's pack count), converted for the visitor's market, beside the cheapest in-stock
+store box on that page, a plain verdict (and the calculator's chase-heavy caveat), and one link to
+`/tools/box-ev?set=<code>`, which now opens on that set. Under 80% of the paying pools priced (`CARD_MIN_PRICED_SHARE`,
+stricter than the calculator's 50% verdict guard) there is no card; pre-sale products get none; a case page states
+the per-box value only. It reads only the catalogue the page already loads: no new loader, cache or query. Its read is
+buy clicks from these cards by 15 Dec (`box_ev_card` event).

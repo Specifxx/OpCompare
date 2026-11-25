@@ -189,3 +189,23 @@ test("the page and calculator say the rates are community estimates set low, and
   assert.match(calc, /set low on purpose/);
   assert.match(read("next.config.js"), /source: "\/tools\/box-value", destination: "\/tools\/box-ev", permanent: true/);
 });
+
+// ── The sealed page's "Is this box worth it?" card ──
+import { boxEvOfSet, CARD_MIN_PRICED_SHARE, computeEv as evOf, derivedRates as ratesOf, poolStats as statsOf } from "../src/lib/box-ev";
+
+test("boxEvOfSet: the calculator's default model for one set, and nothing for a thinly priced set", () => {
+  const rows = [
+    { setId: 1, printing: "standard", rarity: "C", marketUsd: 10 },
+    { setId: 1, printing: "standard", rarity: "UC", marketUsd: 20 },
+    { setId: 1, printing: "standard", rarity: "R", marketUsd: 50 },
+    { setId: 1, printing: "standard", rarity: "SR", marketUsd: 500 },
+    { setId: 2, printing: "standard", rarity: "SR", marketUsd: 99999 },
+  ];
+  const ev = boxEvOfSet(rows, 1, 24)!;
+  const stats = statsOf(rows.filter((r) => r.setId === 1).map((r) => ({ ...r, valueCents: r.marketUsd })));
+  const counts = new Map([...stats].map(([k, s]) => [k, s.total]));
+  assert.equal(ev.evBoxCents, evOf({ stats, rates: ratesOf({ counts, packs: 24 }), packs: 24, boxPriceCents: 0 }).evBoxCents);
+  const thin = rows.map((r, i) => ({ ...r, marketUsd: i < Math.floor(4 * CARD_MIN_PRICED_SHARE) - 1 ? r.marketUsd : null }));
+  assert.equal(boxEvOfSet(thin, 1, 24), null);
+  assert.equal(boxEvOfSet(rows, 3, 24), null);
+});

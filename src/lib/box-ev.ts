@@ -302,3 +302,22 @@ export function cheapestBoxOffer<T extends BoxOfferListing>(offers: readonly T[]
   }
   return best;
 }
+
+// ── One set's number, for the sealed product page's "Is this box worth it?" card ──
+// The calculator's own default model (derivedRates with the box's pack count), so the card and /tools/box-ev quote
+// the same expected value. Stricter than the calculator's verdict guard: under CARD_MIN_PRICED_SHARE of the paying
+// pools priced there is no card at all, because an unpriced card counts as zero and the number would read far too low.
+export const CARD_MIN_PRICED_SHARE = 0.8;
+
+export function boxEvOfSet(
+  cards: readonly (PoolCard & { setId: number; marketUsd: number | null })[],
+  setId: number,
+  packs: number,
+): EvResult | null {
+  const pool = cards.filter((c) => c.setId === setId).map((c) => ({ ...c, valueCents: c.marketUsd }));
+  const stats = poolStats(pool);
+  if (stats.size === 0) return null;
+  const counts = new Map<PoolKey, number>([...stats].map(([k, s]) => [k, s.total]));
+  const ev = computeEv({ stats, rates: derivedRates({ counts, packs }), packs, boxPriceCents: 0 });
+  return ev.evBoxCents > 0 && ev.pricedShare >= CARD_MIN_PRICED_SHARE ? ev : null;
+}

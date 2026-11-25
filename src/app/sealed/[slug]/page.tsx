@@ -42,6 +42,10 @@ import { isStoreSource } from "@/lib/stores";
 import { visitorHistory } from "@/lib/price-history-view";
 import { BlackFridayStrip } from "@/components/BlackFridayStrip";
 import { bfStripFor } from "@/lib/bf-strip-sealed";
+import { BoxEvCard } from "@/components/BoxEvCard";
+import { BOOSTER_SET_KINDS, boxEvOfSet, cheapestBoxOffer } from "@/lib/box-ev";
+import { convertUsdCents } from "@/lib/fx";
+import { PACKS_PER_BOX } from "@/lib/pack-composition";
 
 type Props = { params: { slug: string } };
 
@@ -87,6 +91,17 @@ export default async function SealedDetailPage({ params }: Props) {
     s.packCount && s.packCount > 1 && h.cents != null
       ? Math.round(h.cents / s.packCount)
       : null;
+  // "Is this box worth it?" (components/BoxEvCard.tsx): Booster Box and Booster Case pages of a released booster set
+  // whose cards are priced well enough, from the catalogue the page already reads (lib/box-ev.ts boxEvOfSet).
+  const isCase = s.kind === "Booster Case";
+  const boxPacks =
+    (s.kind === "Booster Box" && s.packCount && s.packCount > 1 ? s.packCount : null) ??
+    all.find((x) => x.setId === s.setId && x.kind === "Booster Box" && x.packCount != null && x.packCount > 1)?.packCount ??
+    PACKS_PER_BOX;
+  const boxEv =
+    (s.kind === "Booster Box" || isCase) && set && BOOSTER_SET_KINDS.has(set.kind) && !s.presale ? boxEvOfSet(cat.cards, set.id, boxPacks) : null;
+  const boxEvLocal = boxEv ? convertUsdCents(boxEv.evBoxCents, co.currency) : null;
+  const boxStore = boxEv && !isCase ? cheapestBoxOffer(s.offers, country) : null;
   const sameSet = all
     .filter(
       (x) => x.setId === s.setId && x.id !== s.id && x.kind !== "Promo Pack",
@@ -306,6 +321,18 @@ export default async function SealedDetailPage({ params }: Props) {
           </section>
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
+          {boxEv && boxEvLocal != null && set && (
+            <BoxEvCard
+              setCode={set.code}
+              setName={set.name}
+              evText={money(boxEvLocal, country)}
+              priceText={boxStore ? money(boxStore.priceCents, country) : null}
+              ratio={boxStore && boxStore.priceCents > 0 ? boxEvLocal / boxStore.priceCents : null}
+              chaseHeavy={boxEv.chaseShare >= 0.9}
+              isCase={isCase}
+              converted={co.currency !== "USD"}
+            />
+          )}
           {/* The Discord hub's restock and price-drop feed, under the comparison (owner, 2026-11-20). */}
           {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the comparison, 22 Nov to 1 Dec, labelled Ad. */}
           <TcgplayerCyberBanner
