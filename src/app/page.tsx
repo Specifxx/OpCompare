@@ -51,6 +51,9 @@ export default async function HomePage() {
       <HomePopularCards data={data} storeCount={storeCount} />
       <HomeSealedLinks kinds={data.sealedKinds} />
       <HomeTopDeals dealsByCountry={data.dealsByCountry} />
+      {/* The ad banners mid-page (owner, 2026-11-25: the ads sat at the very bottom of the page): after the cards, sealed
+          and deals the visitor came for, before the guides and the questions; never under the hero (2026-11-19 quality pass). */}
+      <InlineAds page="home" />
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />
       <HomeGuides cat={data.cat} />
@@ -141,8 +144,6 @@ export default async function HomePage() {
           ),
         }}
       />
-      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
-      <InlineAds page="home" />
     </div>
   );
 }
