@@ -38,7 +38,7 @@ export function NavbarShell({ children }: { children: ReactNode }) {
   return (
     <header
       ref={ref}
-      className={`sticky top-0 z-header border-b pl-[var(--sidenav-w)] transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 xmas-garland ${AT_TOP.join(
+      className={`sticky top-0 z-header border-b pl-[var(--sidenav-w)] transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${AT_TOP.join(
         " "
       )}`}
     >
