@@ -50,6 +50,10 @@ export default async function SealedPage({ searchParams }: { searchParams: Recor
     country,
     setSlugOf: (id) => (id != null ? cat.setById.get(id)?.slug : undefined),
     setReleased: (id) => (id != null ? cat.setById.get(id)?.releasedOn ?? undefined : undefined),
+    setTextOf: (id) => {
+      const set = id != null ? cat.setById.get(id) : undefined;
+      return set ? `${set.code} ${set.name}` : undefined;
+    },
   };
   const rows = sortSealed(filterSealed(sealed, query, ctx), query.sort, ctx);
   const soldOut = new Set(soldOutIds?.[country] ?? []);

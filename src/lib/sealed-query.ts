@@ -94,6 +94,8 @@ export interface SealedCtx {
   setSlugOf: (setId: number | null) => string | undefined;
   /** Set release date (YYYY-MM-DD) of a set id. */
   setReleased: (setId: number | null) => string | undefined;
+  /** The set's code and name ("OP13 Carrying On His Will"), so a search for "OP13" or the set's name finds its product. */
+  setTextOf?: (setId: number | null) => string | undefined;
 }
 
 /** In stock here: a listing in the visitor's market. */
@@ -112,7 +114,7 @@ export function filterSealed(rows: SealedLite[], q: SealedQuery, ctx: SealedCtx)
       if (!slug || !sets.has(slug)) return false;
     }
     if (q.stock && !inStockHere(s, ctx.country)) return false;
-    if (needle && !sealedNameMatches(s.name, needle)) return false;
+    if (needle && !sealedNameMatches(s.name, needle, sealedExtraText(s, ctx.setTextOf?.(s.setId)))) return false;
     if (q.min != null || q.max != null) {
       const cents = sortPrice(s, ctx.country);
       if (cents == null) return false;
@@ -180,15 +182,63 @@ const SEALED_SYNONYMS: Record<string, string> = {
   prb: "premium booster",
 };
 
-/** Every query word (after synonyms) matches a word of the name: exactly, as a prefix, or within one edit (two for 7+ letters). */
-export function sealedNameMatches(name: string, query: string): boolean {
-  const qn = norm(query);
+/**
+ * Set codes as people type them: "OP-13", "op 13", "OP13", "op1", "ST-15", "prb 01", "EB-02" all become one word ("op13", "op01",
+ * "st15", "prb01", "eb02"), on both the query and the product's text, so a code always meets itself.
+ */
+export function joinSetCodes(s: string): string {
+  return s.replace(/\b(op|st|eb|prb|sd|lt)\s?(\d{1,2})\b/g, (_m, p: string, d: string) => `${p}${d.padStart(2, "0")}`);
+}
+
+/** The words a product is found by besides its name: its kind and its set's code and name (owner, 2026-11-26: "OP13 booster box" found nothing). */
+export function sealedExtraText(s: Pick<SealedLite, "kind">, setText: string | undefined): string {
+  return `${s.kind} ${setText ?? ""}`;
+}
+
+/**
+ * Every query word (after synonyms) matches a word of the name or of `extra` (the kind, set code and set name): exactly, as a
+ * prefix, or within one edit (two for 7+ letters). Set codes are joined first ("op 13" = "op13").
+ */
+export function sealedNameMatches(name: string, query: string, extra = ""): boolean {
+  const qn = joinSetCodes(norm(query));
   if (!qn) return true;
-  const nn = norm(name);
+  const nn = joinSetCodes(norm(name));
   if (nn.includes(qn)) return true;
+  const hay = extra ? `${nn} ${joinSetCodes(norm(extra))}` : nn;
   const words = qn.split(" ").flatMap((w) => (SEALED_SYNONYMS[w] ?? w).split(" "));
-  const nameWords = nn.split(" ");
+  const nameWords = hay.split(" ");
   return words.every((w) =>
-    nameWords.some((t) => t === w || t.startsWith(w) || (w.length >= 4 && editDistance(w, t, w.length >= 7 ? 2 : 1) <= (w.length >= 7 ? 2 : 1))),
+    // Typos only in words of letters: "op13" is never "op12" one edit away.
+    nameWords.some((t) => t === w || t.startsWith(w) || (w.length >= 4 && !/\d/.test(w) && editDistance(w, t, w.length >= 7 ? 2 : 1) <= (w.length >= 7 ? 2 : 1))),
   );
+}
+
+/** A query that asks for event or promo packs by name; otherwise tournament promo packs rank last in a search. */
+const PROMO_WORDS = /\b(promo|event|tournament|pre ?release|celebration|anniversary|championship|treasure cup|regional)\b/;
+
+/**
+ * The header box's and /browse's sealed answer to a text search (owner, 2026-11-26: "you can't search any sealed products"): every
+ * product whose name, kind, set code or set name matches, ordered by how well the name matches, then retail kind (box before case
+ * before pack), then newest set, then market value. Tournament promo packs come last unless the words ask for them.
+ */
+export function searchSealed(rows: SealedLite[], query: string, ctx: Pick<SealedCtx, "setTextOf" | "setReleased" | "country">): SealedLite[] {
+  const qn = joinSetCodes(norm(query));
+  if (qn.replace(/\s/g, "").length < 2) return [];
+  const promo = PROMO_WORDS.test(qn);
+  const hits = rows.filter((s) => sealedNameMatches(s.name, query, sealedExtraText(s, ctx.setTextOf?.(s.setId))));
+  const score = (s: SealedLite) => {
+    const nn = joinSetCodes(norm(s.name));
+    return (nn === qn ? 4 : nn.startsWith(qn) ? 3 : nn.includes(qn) ? 2 : 0) + (s.kind === "Promo Pack" && !promo ? -10 : 0);
+  };
+  const rel = (s: SealedLite) => s.releasedOn ?? ctx.setReleased(s.setId) ?? "";
+  return hits
+    .map((s) => ({ s, k: score(s) }))
+    .sort((a, b) => b.k - a.k || rank(a.s.kind) - rank(b.s.kind) || rel(b.s).localeCompare(rel(a.s)) || (b.s.marketUsd ?? 0) - (a.s.marketUsd ?? 0) || a.s.id - b.s.id)
+    .map((x) => x.s);
+}
+
+/** Words that say the visitor wants sealed product, so the header box lists sealed rows first. */
+export function wantsSealed(query: string): boolean {
+  const words = joinSetCodes(norm(query)).split(" ");
+  return words.some((w) => /^(box|boxes|booster|boosters|case|cases|deck|decks|pack|packs|display|displays|bb|bbox|sd|dp|pb|prb|tin|collection|sealed|starter|etb|sleeved)$/.test(w));
 }
