@@ -5089,3 +5089,10 @@ freeze) or ad-free. Events `gad_seen` and `gad_buy` {arm}, once a visit. The old
 keep the unit only if ad money per 1,000 guide views beats the buy clicks it costs, and guide pages do not get slower. About 93%
 of OP's desktop views were bots in late November, so the unit stays on guides until those stop reaching ad pages (AdSense
 invalid-traffic risk).
+
+## 2026-11-25 — Fiverr usability review, ported from TCG Prices
+
+A paid tester's think-aloud on TCG Prices (tcgcompare DECISIONS.md, 2026-11-25) asked whether we compare every store or only the
+ones that pay us. Under the price table the product page now says "Every store we track is listed, whether it pays us or not, in
+price order" with a link to /methodology, and the group-chat share button reads "Share deal" (its full wording stays as the
+button's accessible name): the tester found the page's buttons too wordy. Cart and watch wording wait for their A/B verdicts.

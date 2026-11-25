@@ -285,6 +285,10 @@ export default async function SealedDetailPage({ params }: Props) {
               )
             }
           />
+          {/* Fiverr usability review, 2026-11-25: "is this looking at all the pricing, or only the sites you get a commission from?" */}
+          <p className="!mt-2 text-xs text-slate-400">
+            Every store we track is listed, whether it pays us or not, in price order. <Link href="/methodology" className="underline underline-offset-2 hover:text-slate-100">How we compare</Link>
+          </p>
           {/* The price history sits right under the prices (owner, 2026-11-23 UX review, P1 13), above the banners. */}
           <section id="history" className="card-surface scroll-mt-40 p-5 xl:scroll-mt-36">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
