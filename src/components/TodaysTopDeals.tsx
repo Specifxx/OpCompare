@@ -121,7 +121,7 @@ export function TodaysTopDeals({ deals }: { deals: TopDeals }) {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl text-white">Today&apos;s Top Deals</h2>
-          <p className="mt-1 text-[15px] text-slate-400">The best live opportunities in {info.place} right now — refreshed twice a day.</p>
+          <p className="shelf-note mt-1 text-[15px] text-slate-400">The best live opportunities in {info.place} right now — refreshed twice a day.</p>
         </div>
         <Link href="/tools/deal-finder" className="btn-ghost">
           Browse all deals →
@@ -155,7 +155,7 @@ export function TodaysTopDeals({ deals }: { deals: TopDeals }) {
               No {TIERS.find((t) => t.key === tier)?.label(thresholds, fmt).toLowerCase()} deals in {info.place} right now — try another filter.
             </div>
           ) : (
-            <div className={`grid grid-cols-1 items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
+            <div className={`deals-cols grid grid-cols-1 items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
               {columns.map(({ def, items }) => {
                 const gated = def.gated && !member;
                 const shown = items;

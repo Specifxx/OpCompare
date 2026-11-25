@@ -39,7 +39,7 @@ export default async function HomePage() {
   const faqs = homeFaqs({ ebayLive: site?.ebayLive ?? false });
   const storeCount = data.stats.statsByCountry[DEFAULT_COUNTRY].stores;
   return (
-    <div className="rb-display-sans flex flex-col gap-10">
+    <div className="rb-display-sans flex flex-col gap-10 home-flow">
       <CinematicHero
         totalCards={data.stats.totalCards}
         statsByCountry={data.stats.statsByCountry}
@@ -57,7 +57,7 @@ export default async function HomePage() {
       <PriceGuideCallout totalCards={data.stats.totalCards} />
       <HomeSections data={data} />
       <HomeGuides cat={data.cat} />
-      <section className="card-surface p-6">
+      <section className="home-about card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">
           One Piece card prices in the US, Australia, the UK, Singapore, Canada and the EU — all in one place
         </h2>

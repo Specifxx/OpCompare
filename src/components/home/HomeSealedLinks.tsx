@@ -6,7 +6,7 @@ import Link from "next/link";
 export function HomeSealedLinks({ kinds }: { kinds: string[] }) {
   if (kinds.length === 0) return null;
   return (
-    <nav aria-label="One Piece sealed product" className="-mt-4 flex flex-wrap items-center gap-2 text-sm">
+    <nav aria-label="One Piece sealed product" className="home-sealed -mt-4 flex flex-wrap items-center gap-2 text-sm">
       <Link href="/sealed" className="font-semibold text-brand-300 hover:underline">
         Sealed prices:
       </Link>

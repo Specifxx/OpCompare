@@ -1557,6 +1557,81 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 }
 
 
+/* ── The phone's home page, tidied (owner, 2026-11-26: "there's just too much going on, especially for mobile phone"). On a phone
+   the page is one path: the headline, a row of trending cards, the popular cards, the giveaway, the sealed row, the deals, six sets,
+   the account card, the questions and the guides. What the header and the bottom bar already offer (the search, the market in its own
+   chooser, the price guide) and what repeats (the sale strip is the page's one promo, so the creators and gift pills go while it
+   shows; the sub-lines, the counts, the four steps, the second guides row) is hidden below 640px. The same HTML at every width:
+   nothing leaves the page for a crawler or a desktop, no URL, heading or JSON-LD changes, and no ad moves. DECISIONS.md, 2026-11-26. ── */
+@media (max-width: 639px) {
+  #op-hero a[href="/creators"],
+  body:has([data-holiday-strip]:not([style*="none"])) #op-hero .xmas-pill-row,
+  body:has([data-holiday-strip]:not([style*="none"])) #op-hero .xmas-banner-row,
+  #op-hero .hero-sub,
+  #op-hero [data-region-control="hero"],
+  #op-hero .hero-meta,
+  .home-flow .shelf-note,
+  .home-flow > section[aria-labelledby="price-guide-callout-h"],
+  .home-flow > section[aria-labelledby="how-it-works-heading"],
+  .home-flow > [data-home-guides],
+  .home-flow .home-colours,
+  .home-flow .home-sets > :nth-child(n + 7),
+  .home-flow .deals-cols > :nth-child(n + 3),
+  .home-flow > .home-about > p {
+    display: none;
+  }
+  /* The band is as tall as the headline and the row under it, not 30% of the screen. */
+  #op-hero {
+    min-height: 0;
+  }
+  /* The trending cards: one sideways row of chips instead of three rows of two. */
+  .hero-ways {
+    display: flex;
+    align-items: center;
+    max-width: none;
+    margin-top: 1rem;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    contain: inline-size;
+  }
+  .hero-ways::-webkit-scrollbar,
+  .home-flow > .home-sealed::-webkit-scrollbar {
+    display: none;
+  }
+  .hero-ways > * {
+    flex: 0 0 auto;
+  }
+  .hero-ways > .chip {
+    border-radius: 9999px;
+    padding-inline: 0.875rem;
+  }
+  /* The sealed links: one sideways row, not three wrapped ones. */
+  .home-flow > .home-sealed {
+    flex-wrap: nowrap;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    white-space: nowrap;
+    contain: inline-size;
+  }
+  .home-flow > .home-sealed > * {
+    flex: 0 0 auto;
+  }
+  /* The popular cards come before the giveaway: the same blocks, the phone's order only (the page is already a flex column). */
+  .home-flow > .home-give {
+    order: 1;
+  }
+  .home-flow > .home-shelf ~ * {
+    order: 2;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {

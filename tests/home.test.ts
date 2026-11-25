@@ -37,7 +37,7 @@ test("the homepage and the region homes are static: no cookie, header or session
 test("the homepage leads with price comparison: popular and chase cards, a slim sealed link line, then deals; guides and blog last (owner, 2026-10-28)", () => {
   const page = codeOnly(read("src/app/page.tsx"));
   // The heading face is the root layout's since 2026-11-14 (one voice site-wide); the wrapper keeps its tracking.
-  assert.match(page, /className="rb-display-sans flex flex-col gap-10"/);
+  assert.match(page, /className="rb-display-sans flex flex-col gap-10 home-flow"/);
   // The ad banners mid-page, after the deals (owner, 2026-11-25: "why are the display ads at the very bottom of the site?").
   const order = ["<CinematicHero", "<HomePopularCards", "<HomeSealedLinks", "<HomeTopDeals", "<InlineAds", "<PriceGuideCallout", "<HomeSections", "card-surface p-6", "<EditorialHub"];
   let at = -1;

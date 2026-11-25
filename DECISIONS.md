@@ -5118,3 +5118,32 @@ right side of the website." (YGO Compare #267, DexCompare #367, MTG Compare #276
   `tcgplayer_gutter`, ad-free for Plus and Premium, never Amazon. Its tiles start after the banner's four. Reverses "the side rails are
   gone" (2026-11-13) on the owner's word.
 - **Read:** tcgplayer_gutter clicks per 100 desktop visitors; if desktop store buy clicks per visitor fall 10%, the column goes.
+
+## 2026-11-26: The phone's home page, tidied (one path: the headline, a row of trending cards, the popular cards)
+
+**Owner, 2026-11-26:** "we should still tidy up the landing page for our sites a little bit, because I think there's just too
+much going on, especially for mobile phone."
+
+**Measured at 390px before:** 11,437px tall. Above the first card: the sale strip, the creators pill, the gift pill, the headline,
+the buy phrase and five lines of sub-text, "Shopping from" and six market chips, six trending chips in three rows, a line of
+counts, a link to the database and the giveaway card. The first card began on the second screen, and the page then ran through
+three deal lists, the price guide callout, four "how it works" steps, twelve sets, six colours, a guides row, four paragraphs
+about the site and a second guides card.
+
+**Now, below 640px only:** the headline, the trending cards as ONE sideways row of chips, then the popular cards (on the first
+screen), the giveaway, the sealed links as one sideways row, Today's Top Deals (savings and price drops), the ad block, six sets,
+the account card, the folded questions and the guides card. 7,113px. Hidden on a phone: the creators and gift pills while the sale
+strip is showing (one promo a page; closing the strip brings them back), the buy phrase and sub-line, the hero's market chips (the
+header's flag chooser is on the same screen), the counts and the database link (the header's Database link), the shelves' notes,
+the third deal list (7-day climbs), the price guide callout (the bottom bar's Prices), the four steps, the sets after the sixth
+and the colour tiles (both behind "Every set, starter deck and promo"), the guides row (the guides card below lists the same
+posts) and the four paragraphs above the questions. The hero band loses its 30vh minimum. The giveaway moves under the popular
+cards by `order`, on a phone only. The header's Log in, Sign up and menu, and the account card, are untouched.
+
+**Unchanged:** the HTML is the same at every width, so a crawler, find-in-page and a desktop see every block; no URL, title,
+heading or JSON-LD changes; no ad, partner strip or "Compare other TCGs" block is touched. CSS only, in one block in `globals.css`
+("The phone's home page, tidied", above the last reduced-motion block, which must stay last); the hooks are `hero-sub`,
+`hero-ways`, `hero-meta`, `home-flow`, `home-give`, `home-shelf`, `home-sealed`, `shelf-note`, `deals-cols`, `home-sets`,
+`home-colours`, `home-about`. `tests/home.test.ts` pins the page wrapper's class list, so it now names `home-flow`.
+
+**Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.
