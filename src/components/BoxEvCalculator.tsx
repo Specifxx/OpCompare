@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format-currency";
 import { convertUsdCents, USD_TO } from "@/lib/fx";
 import { currencyOf } from "@/lib/country";
@@ -82,6 +82,12 @@ export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offer
   const { country } = useCountry();
   const currency = currencyOf(country);
   const [setCode, setSetCode] = useState(sets[0]?.setCode ?? "");
+  // A link from a sealed box page's "Is this box worth it?" card names its set (?set=OP-09). Read after mount, so the
+  // ISR page needs no searchParams and no Suspense boundary.
+  useEffect(() => {
+    const want = new URLSearchParams(window.location.search).get("set");
+    if (want && sets.some((s) => s.setCode === want)) setSetCode(want);
+  }, [sets]);
   const firstPacks = sets[0]?.packs ?? DEFAULT_PACKS;
   const [packs, setPacks] = useState(firstPacks);
   // null = "use the cheapest box we track" (see `offer` below); a string is what
