@@ -17,6 +17,7 @@ import {
   chaseOrder,
   chasePrintings,
   empty,
+  isReleased,
   priceBit,
   rarityCounts,
   rarityLabel,
@@ -61,16 +62,23 @@ function Source({ href, label }: { href: string; label: string }) {
 
 export const op18ChaseCards: Post = {
   slug: "op18-chase-cards",
-  title: () => "OP18 Chase Cards: Secret Rares, Manga Rare & Alt Arts",
+  // Switches on the catalogue's release date (2026-11-25): before it the post was a reveal
+  // tracker; after it, the "op18 chase cards" searches (pos ~10) want the dearest pulls today.
+  title: ({ cat }) =>
+    isReleased(setByCode(cat, "OP18")) ? "OP18 Chase Cards: Most Valuable Pulls & Prices Today" : "OP18 Chase Cards: Secret Rares, Manga Rare & Alt Arts",
   description:
-    "The chase cards revealed so far for One Piece OP18 The Dominance of God: Secret Rares, the Manga Rare and alt arts, with live pre-order prices.",
-  tags: ["op18", "chase cards", "pre-order"],
+    "The chase cards in One Piece OP18 The Dominance of God, ranked by live price: the Secret Rares, the Manga Rare and the alt arts, with the cheapest store price in your currency.",
+  tags: ["op18", "chase cards", "most valuable"],
   date: "2026-10-24",
   minutes: 5,
   faq: [
     {
       q: "What are the OP18 secret rares?",
-      a: "The Secret Rares TCGplayer has listed so far are in the table on this page, each with its live price; the list fills in as more are revealed. Bandai's product page does not print a rarity breakdown.",
+      a: "Every Secret Rare TCGplayer lists for OP18 is named at the top of this page and in the chase table, each with its live price. Bandai's product page does not print a rarity breakdown.",
+    },
+    {
+      q: "What is the most valuable OP18 card?",
+      a: "The first card in the top-10 table on this page, by TCGplayer's market price, read from our catalogue on every price import. Prices move daily in a set's first weeks, so check the card's own page before you buy.",
     },
     {
       q: "Is there a Manga Rare in OP18?",
@@ -98,12 +106,14 @@ export const op18ChaseCards: Post = {
     const sec = cards.filter((c) => c.rarity === "SEC" && c.printing === "standard");
     const manga = cards.filter((c) => c.printing === "manga");
     const priced = cards.filter((c) => c.marketUsd != null).sort(byMarketDesc);
+    const out = isReleased(set);
+    const top = priced.slice(0, 10);
     return {
       heroCards: withArt(chase),
       summary: [
         <>
-          <strong>{plural(cards.length, "OP18 printing")}</strong> are listed so far, of Bandai&apos;s 127+1 card types; {plural(chase.length, "chase printing")}{" "}
-          (Secret Rare, Manga, SP or alt art) among them.
+          <strong>{plural(cards.length, "OP18 printing")}</strong> {out ? "are listed" : "are listed so far"}, of Bandai&apos;s 127+1 card types;{" "}
+          {plural(chase.length, "chase printing")} (Secret Rare, Manga, SP or alt art) among them.
         </>,
         sec.length ? (
           <>
@@ -131,25 +141,48 @@ export const op18ChaseCards: Post = {
         ) : null,
         priced[0] ? (
           <>
-            <strong>Highest pre-order price so far:</strong> <CardLink c={priced[0]} />, {priceBit(priced[0], country)}.
+            <strong>{out ? "Most valuable OP18 card today:" : "Highest pre-order price so far:"}</strong> <CardLink c={priced[0]} />, {priceBit(priced[0], country)}.
           </>
         ) : null,
-        <>Out 20 November 2026 (Bandai), US$4.99 a pack.</>,
+        <>{out ? "Released" : "Out"} 20 November 2026 (Bandai), US$4.99 a pack.</>,
       ].filter(Boolean),
       lede: (
         <>
-          <p>
-            <strong>OP18, The Dominance of God</strong>, is the next One Piece booster set: Water Seven and the Holy Knights of God, with Saint Gunko and Saint
-            Shamrock making their card game debut, by Bandai&apos;s product page. Here are the chase printings revealed so far — the Secret Rares, Manga Rare
-            and alt arts — with what they cost to pre-order today. The list grows as cards are revealed, with no guessing in between.
-          </p>
+          {out ? (
+            <p>
+              <strong>OP18, The Dominance of God</strong>, came out on 20 November 2026: Water Seven and the Holy Knights of God, with Saint Gunko and Saint
+              Shamrock making their card game debut, by Bandai&apos;s product page. Here are its chase cards — the Secret Rares, Manga Rare and alt arts —
+              ranked by what they sell for today, with the cheapest price at the stores we track in your currency. Every price is read from our catalogue on
+              each import, never typed.
+            </p>
+          ) : (
+            <p>
+              <strong>OP18, The Dominance of God</strong>, is the next One Piece booster set: Water Seven and the Holy Knights of God, with Saint Gunko and Saint
+              Shamrock making their card game debut, by Bandai&apos;s product page. Here are the chase printings revealed so far — the Secret Rares, Manga Rare
+              and alt arts — with what they cost to pre-order today. The list grows as cards are revealed, with no guessing in between.
+            </p>
+          )}
           <Source href={BANDAI_OP18} label="Bandai, BOOSTER PACK -THE DOMINANCE OF GOD- [OP-18]" />
         </>
       ),
       sections: [
+        ...(out && top.length
+          ? [
+              {
+                id: "top",
+                title: `The ${top.length} most valuable OP18 cards today`,
+                body: (
+                  <>
+                    <CardTable cards={top} setById={cat.setById} country={country} caption="By TCGplayer market price, every printing" />
+                    <p>Each card links to its own page, which compares every store we track and keeps its price history.</p>
+                  </>
+                ),
+              },
+            ]
+          : []),
         {
           id: "chase",
-          title: "Every OP18 chase printing revealed so far",
+          title: out ? "Every OP18 chase printing" : "Every OP18 chase printing revealed so far",
           body: chase.length ? (
             <>
               <CardGrid cards={chase} setById={cat.setById} country={country} caption="Priced printings first, then Manga, alt art and Secret Rare" />
@@ -164,7 +197,7 @@ export const op18ChaseCards: Post = {
         },
         {
           id: "printings",
-          title: "What is listed so far",
+          title: out ? "What TCGplayer lists" : "What is listed so far",
           body: (
             <>
               <PrintingTable cards={cards} />
@@ -180,14 +213,21 @@ export const op18ChaseCards: Post = {
         },
         {
           id: "buy",
-          title: "Pre-ordering OP18",
+          title: out ? "Buying OP18: box or singles?" : "Pre-ordering OP18",
           body: (
             <>
               <p>{boxSentence(set, sealed, country)} Bandai&apos;s MSRP is US$4.99 per pack.</p>
-              <Callout title="Pre-order prices are not settled prices">
-                Before release, single-card prices come from a handful of pre-order listings and often fall once boxes are opened. If you want one chase card,
-                set a watch on its page rather than paying the first price.
-              </Callout>
+              {out ? (
+                <Callout title="First-month prices are still settling">
+                  In a set&apos;s first weeks, chase singles usually drift as more boxes are opened. If you are after one card, buying the single is the sure way to
+                  get it; set a watch on its page to hear when it drops rather than paying today&apos;s price.
+                </Callout>
+              ) : (
+                <Callout title="Pre-order prices are not settled prices">
+                  Before release, single-card prices come from a handful of pre-order listings and often fall once boxes are opened. If you want one chase card,
+                  set a watch on its page rather than paying the first price.
+                </Callout>
+              )}
               <p>
                 For the Leaders, read our guides to <Link href="/guides/op18-green-luffy-leader-deck-guide">green Luffy</Link>,{" "}
                 <Link href="/guides/karoo-leader-guide-op18">Karoo</Link> and <Link href="/guides/saint-gunko-leader-guide-op18">Saint Gunko</Link>.
@@ -204,19 +244,19 @@ export const op18ChaseCards: Post = {
 
 export const op18CardList: Post = {
   slug: "op18-card-list",
-  title: () => "OP18 Card List: Every Revealed Card & Price So Far",
-  description: "Every One Piece OP18 The Dominance of God card revealed so far, by rarity, with images, Leaders and live pre-order prices in your currency.",
-  tags: ["op18", "card list", "pre-order"],
+  title: ({ cat }) => (isReleased(setByCode(cat, "OP18")) ? "OP18 Card List: Every Card, Leader & Price" : "OP18 Card List: Every Revealed Card & Price So Far"),
+  description: "Every One Piece OP18 The Dominance of God card by rarity, with images, the Leaders and live prices in your currency.",
+  tags: ["op18", "card list"],
   date: "2026-10-24",
   minutes: 6,
   faq: [
     {
       q: "How many cards are in OP18?",
-      a: "Bandai's English product page says 127+1 types in total. This list shows the ones TCGplayer has listed so far and grows as more are revealed.",
+      a: "Bandai's English product page says 127+1 types in total. This list shows every one TCGplayer lists, read from our catalogue on each price import.",
     },
     {
       q: "Who are the OP18 Leaders?",
-      a: "The Leaders listed so far are in the Leader table on this page, each linked to its own page. Guides: [green Luffy](/guides/op18-green-luffy-leader-deck-guide), [Karoo](/guides/karoo-leader-guide-op18) and [Saint Gunko](/guides/saint-gunko-leader-guide-op18).",
+      a: "The Leaders are in the Leader table on this page, each linked to its own page. Guides: [green Luffy](/guides/op18-green-luffy-leader-deck-guide), [Karoo](/guides/karoo-leader-guide-op18) and [Saint Gunko](/guides/saint-gunko-leader-guide-op18).",
     },
     {
       q: "Does OP18 have new keywords?",
@@ -234,11 +274,12 @@ export const op18CardList: Post = {
     const cards = setCards(cat, set);
     const standard = cards.filter((c) => c.printing === "standard");
     const leaders = standard.filter((c) => c.cardType === "Leader").sort((a, b) => (a.number ?? "").localeCompare(b.number ?? ""));
+    const out = isReleased(set);
     return {
       heroCards: withArt(chaseOrder(cards)),
       summary: [
         <>
-          <strong>{plural(standard.length, "card")}</strong> of OP18&apos;s 127+1 (Bandai) are listed so far, plus {cards.length - standard.length} alt-art and Manga
+          <strong>{plural(standard.length, "card")}</strong> of OP18&apos;s 127+1 (Bandai) are listed{out ? "" : " so far"}, plus {cards.length - standard.length} alt-art and Manga
           printings.
         </>,
         leaders.length ? (
@@ -246,14 +287,23 @@ export const op18CardList: Post = {
             <strong>{plural(leaders.length, "Leader")}:</strong> {leaders.map((l) => l.name).join(", ")}.
           </>
         ) : null,
-        <>Release: 20 November 2026 (Bandai); themes Water Seven and the Holy Knights of God.</>,
+        <>
+          {out ? "Released" : "Release:"} 20 November 2026 (Bandai); themes Water Seven and the Holy Knights of God.
+        </>,
       ].filter(Boolean),
       lede: (
         <>
-          <p>
-            Here is every <strong>OP18 The Dominance of God</strong> card revealed so far, grouped by rarity, with its image and cheapest price where one is
-            listed. It is read from our catalogue on every visit, so new reveals appear as TCGplayer lists them.
-          </p>
+          {out ? (
+            <p>
+              Here is every <strong>OP18 The Dominance of God</strong> card, grouped by rarity, with its image and cheapest price where one is listed. It is read
+              from our catalogue, so prices follow every import.
+            </p>
+          ) : (
+            <p>
+              Here is every <strong>OP18 The Dominance of God</strong> card revealed so far, grouped by rarity, with its image and cheapest price where one is
+              listed. It is read from our catalogue on every visit, so new reveals appear as TCGplayer lists them.
+            </p>
+          )}
           <Source href={BANDAI_OP18} label="Bandai, BOOSTER PACK -THE DOMINANCE OF GOD- [OP-18]" />
         </>
       ),
