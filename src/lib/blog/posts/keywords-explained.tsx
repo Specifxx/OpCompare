@@ -315,7 +315,7 @@ export const keywordsExplained: Post = {
                 Learning the cards? Read <Link href="/guides/one-piece-card-rarities-explained">One Piece card rarities explained</Link>.
               </li>
               <li>
-                Buying the new set? Compare prices on <Link href={OP18_PREORDERS}>the OP18 pre-order page</Link>, then see{" "}
+                Buying the new set? Compare prices on <Link href={OP18_PREORDERS}>the OP18 box and pack prices</Link>, then see{" "}
                 {set ? <Link href={`/sets/${set.slug}`}>the OP18 The Dominance of God card list</Link> : "the OP18 card list"}.
               </li>
               <li>

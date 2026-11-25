@@ -74,11 +74,11 @@ export const op18ChaseCards: Post = {
     },
     {
       q: "Is there a Manga Rare in OP18?",
-      a: "Yes: TCGplayer lists a Manga printing in OP18, shown in the chase table on this page. Prices before release are pre-order prices and move daily.",
+      a: "Yes: TCGplayer lists a Manga printing in OP18, shown in the chase table on this page. Prices move daily, most of all in a set's first weeks.",
     },
     {
-      q: "When does OP18 come out?",
-      a: "Bandai's English product page dates OP-18, The Dominance of God, 20 November 2026, at an MSRP of US$4.99 per pack; cards are tournament legal 7 days after release. Pre-order prices are on [the OP18 pre-order board](/op18-preorders).",
+      q: "When did OP18 come out?",
+      a: "On 20 November 2026, by Bandai's English product page for OP-18, The Dominance of God, at an MSRP of US$4.99 per pack; cards are tournament legal 7 days after release. Box and pack prices are on [the OP18 price page](/op18-preorders).",
     },
     {
       q: "How many cards are in OP18?",
@@ -87,7 +87,7 @@ export const op18ChaseCards: Post = {
   ],
   related: [
     { href: "/sets/op18-the-dominance-of-god", label: "OP18 card list" },
-    { href: PREORDER_PAGES.OP18, label: "OP18 pre-order prices" },
+    { href: PREORDER_PAGES.OP18, label: "OP18 booster box prices" },
     { href: OP18_LIST, label: "Every revealed OP18 card" },
   ],
   build: ({ cat, sealed, country }) => {
@@ -226,7 +226,7 @@ export const op18CardList: Post = {
   related: [
     { href: "/sets/op18-the-dominance-of-god", label: "OP18 set page" },
     { href: OP18_CHASE, label: "OP18 chase cards" },
-    { href: PREORDER_PAGES.OP18, label: "OP18 pre-order prices" },
+    { href: PREORDER_PAGES.OP18, label: "OP18 booster box prices" },
   ],
   build: ({ cat, sealed, country }) => {
     const set = setByCode(cat, "OP18");
@@ -306,8 +306,8 @@ export const eb05ChaseCards: Post = {
       a: "Bandai's English product page says 6 types of SP cards featuring special designs. The SP printings TCGplayer lists are in the chase table on this page.",
     },
     {
-      q: "When does EB05 come out?",
-      a: "Bandai's English product page dates EB-05, Extra Booster: One Piece Heroines Edition Vol. 2, 30 October 2026, at US$4.99 per pack. [The EB05 pre-order board](/eb05-preorders) compares pre-order prices by market.",
+      q: "When did EB05 come out?",
+      a: "On 30 October 2026, by Bandai's English product page for EB-05, Extra Booster: One Piece Heroines Edition Vol. 2, at US$4.99 per pack. [The EB05 price page](/eb05-preorders) compares box and pack prices by market.",
     },
     {
       q: "How many cards are in EB05?",
