@@ -5114,3 +5114,11 @@ store box on that page, a plain verdict (and the calculator's chase-heavy caveat
 stricter than the calculator's 50% verdict guard) there is no card; pre-sale products get none; a case page states
 the per-box value only. It reads only the catalogue the page already loads: no new loader, cache or query. Its read is
 buy clicks from these cards by 15 Dec (`box_ev_card` event).
+
+## 2026-11-26: "Japanese edition" row on six English booster box pages (test, 2 to 16 Dec)
+
+With DexCompare's 14 set rows, the Japanese edition test (pass: 150 taps in 14 days, read 16 Dec). Six English Booster Box
+pages (`JA_ROW_SETS` in `lib/japanese-edition.ts`: OP13, OP12, OP09, OP05, OP01, PRB-01) carry one row for the same set's
+Japanese booster box: a tagged eBay SEARCH on the visitor's own eBay ("One Piece OP-13 Japanese booster box"), labelled a
+different product and a paid link, with no price. The matcher's refusal of Japanese titles stays: nothing Japanese is
+matched, priced, ranked or called the cheapest. Each tap is a `ja_edition` event. The list stays at six until 16 Dec.

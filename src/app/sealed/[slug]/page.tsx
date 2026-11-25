@@ -15,7 +15,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { DropShare } from "@/components/DropShare";
 import { SealedWatchButton } from "@/components/SealedWatchButton";
 import { Breadcrumbs, Faq, JsonLd, SectionHeader } from "@/components/ui";
-import { affiliateUrl, onePieceEbayQuery } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl, onePieceEbayQuery } from "@/lib/affiliate";
 import { COUNTRIES, isoCountry } from "@/lib/country";
 import { dropText, priceGap, shareText } from "@/lib/share-link";
 import { buyRow, marketRows } from "@/lib/quick-view";
@@ -43,6 +43,8 @@ import { visitorHistory } from "@/lib/price-history-view";
 import { BlackFridayStrip } from "@/components/BlackFridayStrip";
 import { bfStripFor } from "@/lib/bf-strip-sealed";
 import { BoxEvCard } from "@/components/BoxEvCard";
+import { JapaneseEditionRow } from "@/components/JapaneseEditionRow";
+import { JA_ROW_SETS, jaBoxQuery, jaPrintedCode } from "@/lib/japanese-edition";
 import { BOOSTER_SET_KINDS, boxEvOfSet, cheapestBoxOffer } from "@/lib/box-ev";
 import { convertUsdCents } from "@/lib/fx";
 import { PACKS_PER_BOX } from "@/lib/pack-composition";
@@ -321,6 +323,15 @@ export default async function SealedDetailPage({ params }: Props) {
           </section>
           {s.presale && set ? <ReleaseAlertSlot setSlug={set.slug} setName={set.name} releasedOn={set.releasedOn} source="sealed" unreleasedOnly /> : null}
           <CardMarketsTable offers={s.offers} name={s.name} country={country} noun="price by market" />
+          {s.kind === "Booster Box" && set && JA_ROW_SETS.includes(set.code) && (
+            <JapaneseEditionRow
+              href={ebaySearchUrl(country, jaBoxQuery(set.code), "sealed-ja-edition")}
+              code={jaPrintedCode(set.code)}
+              setName={set.name}
+              ebayName={ebayLabel(country)}
+              slug={s.slug}
+            />
+          )}
           {boxEv && boxEvLocal != null && set && (
             <BoxEvCard
               setCode={set.code}
