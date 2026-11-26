@@ -5181,3 +5181,28 @@ the sister sites' registries and the Riftbound retailer directory). `scripts/pro
 (`probe-stores-eu.yml`) against the catalogue snapshot; the 89 with 3+ products matched IN STOCK were added as country EU
 (Japanese, Chinese and accessory collections left out; nerdbank.de left out as spielewelt.de's mirror), each with an
 "unmeasured" line in `shipping-rates.json` until the next postage snapshot. The matcher is unchanged.
+
+## 2026-11-26: eBay calls go to what visitors click to buy, and the pass stops spending the day for its own sake
+
+Owner: "DexCompare used 2,390 of 2,500 eBay calls in a day and OP Compare used 2,310, 4,700 of the 5,000 daily allowance between
+them. Add caching and prioritise calls to products with the most buy clicks and earnings, so the allowance does not run out on the
+top products." The run of 25 Nov: 925 pairs were due (958 modelled calls), and the pass spent 2,220. The other ~1,260 were the
+top-up (`fillPairs`, 2026-10-09: "use up all the API creds"), which refreshed rows that were still valid (rows live 72 hours):
+the US had 5 pairs due and searched 1,074.
+
+- **The top-up now refreshes only products visitors clicked to buy, only a pair a day or more old, at most 200 calls**
+  (`TOPUP_MIN_AGE_HOURS`, `TOPUP_MAX_CALLS`). This reverses 2026-10-09's "spend the whole day": the keyset is shared with
+  DexCompare and the two were using 94% of it.
+- **Buy clicks first.** OP Compare sent no per-product buy event, so RiftCompare's /api/demand/oc had no clicks for it
+  (`data/demand.json` `clicks` was empty). `ConsentGatedAnalytics` now sends `buy_product { product, region }` beside
+  `buy_click` (DexCompare's event; `buyProductKey`: the link's data-card, else the card or sealed page), and the pass reads
+  `data/demand.json`'s clicks (28 days + 2 × the last 7). A clicked product is hot (PH / S1, every 48 h), and inside every tier
+  the pairs that earn most (clicks × price, `earnScore`) go first, ahead of the views-based demand order. Until clicks
+  accumulate the order is the old one.
+- **The empty-search cache.** A pair whose last completed search found no listing (`EbayCheck.matched = false`) is not searched
+  again for a week (`UNMATCHED_INTERVAL_HOURS` 168) unless the product has buy clicks. On 25 Nov, 1,138 of 2,220 searches
+  matched nothing.
+- Unchanged: the US$20 floor, sealed before singles, DAILY_CALL_CAP 2,500, the 300 reserve, the shares and US first.
+
+Expected: about 950-1,150 calls a day instead of 2,220 (the due pairs, fewer once the cache holds, plus up to 200 top-up).
+Read the run log's "top-up" and "buy clicks" lines from 27 Nov.

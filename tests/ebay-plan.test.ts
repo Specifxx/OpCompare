@@ -28,6 +28,11 @@ import {
   clampLimits,
   duePairs,
   fillPairs,
+  TOPUP_MIN_AGE_HOURS,
+  TOPUP_MAX_CALLS,
+  UNMATCHED_INTERVAL_HOURS,
+  CLICK_DEMAND_POINTS,
+  earnScore,
   HOT_DEMAND_POINTS,
   SINGLES_ABS_MIN_CENTS,
   SEARCH_WEIGHT,
@@ -350,6 +355,9 @@ test("the methodology page states the plan's floors and intervals", () => {
   assert.equal(TIER_INTERVAL_HOURS.P1, 72);
   assert.ok(page.includes("Once a day"));
   assert.ok(page.includes("fixed daily budget"));
+  assert.ok(page.includes("click to buy come first of all"), "buy clicks (2026-11-26)");
+  assert.equal(UNMATCHED_INTERVAL_HOURS, 168);
+  assert.ok(page.includes("a search that found nothing waits a week"), "the empty-search cache");
   assert.equal((read(".github/workflows/ebay-prices.yml").match(/- cron:/g) ?? []).length, 1);
 });
 
@@ -435,29 +443,61 @@ test("demandPoints and pairScore: a search is worth SEARCH_WEIGHT views, stale d
   assert.equal(pairScore(null, 9), 0);
 });
 
-test("fillPairs: only eligible pairs that are not due, tier then oldest, so leftover budget has somewhere to go", () => {
+test("fillPairs (the top-up): only clicked products, eligible, not due and a day or more old (owner, 2026-11-26)", () => {
   const now = new Date("2026-10-09T12:37:00Z");
   const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
   const prods: PlanProduct[] = [
-    { id: 1, kind: "single", marketUsd: 20000, number: "OP01-120", launch: false },
-    { id: 2, kind: "single", marketUsd: 5000, number: "OP01-121", launch: false },
-    { id: 3, kind: "single", marketUsd: 5000, number: "OP01-122", launch: false },
-    { id: 4, kind: "single", marketUsd: 5000, number: "OP01-123", launch: false },
-    { id: 5, kind: "single", marketUsd: 100, number: "OP01-124", launch: false },
+    { id: 1, kind: "single", marketUsd: 20000, number: "OP01-120", launch: false, clicks: 3 },
+    { id: 2, kind: "single", marketUsd: 5000, number: "OP01-121", launch: false, clicks: 1 },
+    { id: 3, kind: "single", marketUsd: 5000, number: "OP01-122", launch: false, clicks: 2 },
+    { id: 4, kind: "single", marketUsd: 5000, number: "OP01-123", launch: false, clicks: 9 },
+    { id: 5, kind: "single", marketUsd: 100, number: "OP01-124", launch: false, clicks: 9 },
+    { id: 6, kind: "single", marketUsd: 20000, number: "OP01-125", launch: false },
   ];
   const checks = new Map<string, Date>([
-    [pairKey(1, "US"), ago(10)], // S1, 48h interval: not due
-    [pairKey(2, "US"), ago(50)], // S2, 72h: not due, older
-    [pairKey(3, "US"), ago(20)], // S2: not due, newer
+    [pairKey(1, "US"), ago(30)], // clicked, S1 (48h), 30h old: a top-up pair
+    [pairKey(2, "US"), ago(25)], // clicked (so S1), 25h: a top-up pair
+    [pairKey(3, "US"), ago(10)], // clicked but checked 10h ago: too fresh to refresh early
     // 4: never searched → due, not a fill pair
-    [pairKey(5, "US"), ago(1)], // under the floor: never eligible
+    [pairKey(5, "US"), ago(30)], // under the floor: never eligible, clicks or not
+    [pairKey(6, "US"), ago(30)], // no clicks: keeps its row until it is due
   ]);
   const fill = fillPairs(prods, "US", checks, now, { minValueCents: 300 });
-  assert.deepEqual(fill.map((p) => p.productId), [1, 2, 3]);
+  assert.deepEqual(fill.map((p) => p.productId), [1, 2], "most earning first: 3 clicks × $200 before 1 × $50");
   const due = duePairs(prods, "US", checks, now, { minValueCents: 300 });
   assert.deepEqual(due.map((p) => p.productId), [4]);
-  // Together they are every eligible pair, each in exactly one list.
-  assert.equal(fill.length + due.length, 4);
+  assert.equal(TOPUP_MIN_AGE_HOURS, 24);
+  assert.equal(TOPUP_MAX_CALLS, 200);
+});
+
+test("buy clicks: a clicked product is hot, and inside a tier the pairs that earn most (clicks × price) go first", () => {
+  const now = new Date("2026-10-09T12:37:00Z");
+  const box = (id: number, cents: number, o: Partial<PlanProduct> = {}): PlanProduct => ({ id, kind: "sealed", marketUsd: cents, sealedKind: "Booster Box", launch: false, ...o });
+  assert.equal(tierOf(box(1, 10000), "US"), "P1");
+  assert.equal(tierOf(box(1, 10000, { clicks: 1 }), "US"), "PH", "one buy click makes it hot");
+  assert.equal(tierOf({ id: 2, kind: "single", marketUsd: 3000, number: "OP01-001", launch: false, clicks: 1 }, "US"), "S1");
+  assert.equal(tierOf(box(3, 1000, { clicks: 50 }), "US"), null, "the floor beats clicks");
+  const prods = [box(1, 10000, { demand: 40 }), box(2, 10000, { clicks: 2, demand: 10 }), box(3, 30000, { clicks: 2, demand: 10 }), box(4, 10000, { clicks: 10, demand: 10 })];
+  assert.deepEqual(duePairs(prods, "US", new Map(), now).map((p) => p.productId), [4, 3, 2, 1], "10 × $100, then 2 × $300, then 2 × $100, then views alone");
+  assert.equal(earnScore(10000, 10), 1000);
+  assert.equal(earnScore(null, 3), 3);
+  assert.equal(earnScore(10000, undefined), 0);
+  assert.equal(CLICK_DEMAND_POINTS, HOT_DEMAND_POINTS);
+});
+
+test("the empty-search cache: a pair whose last search found nothing waits a week, unless the product has buy clicks", () => {
+  const now = new Date("2026-10-09T12:37:00Z");
+  const ago = (h: number) => new Date(now.getTime() - h * 3600_000);
+  assert.equal(UNMATCHED_INTERVAL_HOURS, 168);
+  assert.equal(isDue(ago(80), "P1", now), true, "a matched P1 pair is due after 72h − grace");
+  assert.equal(isDue(ago(80), "P1", now, false, { unmatched: true }), false, "an unmatched one waits");
+  assert.equal(isDue(ago(166), "P1", now, false, { unmatched: true }), true, "…a week, less the grace");
+  assert.equal(isDue(ago(80), "P1", now, false, { unmatched: true, clicked: true }), true, "a clicked product never waits longer");
+  assert.equal(isDue(ago(1), "P1", now, true, { unmatched: true }), true, "EBAY_FORCE still forces");
+  const p: PlanProduct = { id: 7, kind: "sealed", marketUsd: 10000, sealedKind: "Booster Box", launch: false };
+  const checks = new Map([[pairKey(7, "US"), ago(80)]]);
+  assert.equal(duePairs([p], "US", checks, now).length, 1);
+  assert.equal(duePairs([p], "US", checks, now, { unmatched: new Set([pairKey(7, "US")]) }).length, 0);
 });
 
 test("quotaDayStart: eBay's day runs 07:00 UTC to 07:00 UTC, so a drifting schedule never sees yesterday's spend", () => {
@@ -491,4 +531,22 @@ test("sealed first: every due sealed pair, most in-demand first, before any sing
   const checks = new Map([["3|US", ago(80)]]);
   const due2 = duePairs([sealedP(2, 3000, { demand: 0 }), sealedP(3, 3000, { demand: 9 })], "US", checks, now);
   assert.deepEqual(due2.map((p) => p.productId), [3, 2]);
+});
+
+test("buy clicks reach the eBay pass: buy_product names the product, data/demand.json's clicks are read 28 days + 2 × 7 days", async () => {
+  const { buyProductKey } = await import("../src/lib/buy-click");
+  assert.equal(buyProductKey("op01-120-shanks", "/"), "op01-120-shanks");
+  assert.equal(buyProductKey(null, "/card/op01-120-shanks"), "op01-120-shanks");
+  assert.equal(buyProductKey(null, "/sealed/op-09-booster-box/"), "op-09-booster-box");
+  assert.equal(buyProductKey(null, "/sets/op-09"), null, "a list click names no product");
+  assert.equal(buyProductKey("not a slug!", "/price-guide"), null);
+  const { buyClicksFrom, RECENT_CLICK_WEIGHT } = await import("../src/lib/ebay-import");
+  const c = buyClicksFrom({ clicks: { a: [10, 4], b: [0, 0] } });
+  assert.equal(c.get("a"), 10 + RECENT_CLICK_WEIGHT * 4);
+  assert.ok(!c.has("b"));
+  assert.equal(buyClicksFrom(null).size, 0);
+  // the browser sends it next to buy_click, and the pass reads the committed file, never a database
+  const ga = read("src/components/ConsentGatedAnalytics.tsx");
+  assert.match(ga, /track\("buy_product", \{ product, region:/);
+  assert.match(read("src/lib/ebay-import.ts"), /readBuyClicks\(\)/);
 });
