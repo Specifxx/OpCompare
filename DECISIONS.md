@@ -5172,3 +5172,12 @@ market). Its robots.txt disallowed `/collections/*/*` for every agent, so we ask
 `Allow: /collections/*/products.json` under `User-agent: *` and named its sealed collections. We read only
 `one-piece` (sealed only, English and Japanese), `sealedOnly: true`; Japanese listings are never matched. Listed on
 DexCompare and MTG Compare the same day.
+
+## 2026-11-26 — EU store sweep: 89 eurozone shops
+
+Owner, 2026-11-26: "we need a much bigger European scene … we need all those stores in". The candidates were 213 eurozone
+Shopify shops with One Piece collections that OP Compare did not list (`research/eu-candidate-bases-2026-11-26.txt`, from
+the sister sites' registries and the Riftbound retailer directory). `scripts/probe-stores.ts` ran them on a GitHub runner
+(`probe-stores-eu.yml`) against the catalogue snapshot; the 89 with 3+ products matched IN STOCK were added as country EU
+(Japanese, Chinese and accessory collections left out; nerdbank.de left out as spielewelt.de's mirror), each with an
+"unmeasured" line in `shipping-rates.json` until the next postage snapshot. The matcher is unchanged.
