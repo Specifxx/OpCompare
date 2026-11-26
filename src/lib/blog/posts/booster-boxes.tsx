@@ -8,11 +8,28 @@ import { byMarketDesc, monthYear } from "../util";
 
 export const boosterBoxes: Post = {
   slug: "one-piece-booster-box-prices",
-  title: ({ cat }) => `One Piece Booster Box Prices: Every Set Compared (${monthYear(cat.pricesAt)})`,
-  description: "Every One Piece booster box side by side: TCGplayer market price, the cheapest in-stock box in your market, the cost per pack, and which boxes have climbed since release.",
+  title: ({ cat }) => `One Piece Booster Box Prices & MSRP: Every Set Compared (${monthYear(cat.pricesAt)})`,
+  description:
+    "How much is a One Piece booster box? Bandai's MSRP is US$4.99 a pack (US$119.76 for a 24-pack box); here is every box's TCGplayer market price, the cheapest in-stock box in your market and the cost per pack.",
   tags: ["sealed", "booster box", "prices"],
   date: "2026-10-03",
   minutes: 6,
+  // Search Console, 28 days to 24 Nov: the post is shown for "one piece booster
+  // box msrp", "what is msrp for one piece booster box" and "how much is a one
+  // piece booster box" (positions 13-43) without answering them. The MSRP is
+  // Bandai's own per-pack figure from its English product pages (OP-18, EB-05,
+  // the same as the other OP posts quote); Bandai states no box price, so the
+  // box figure is only 24 x the pack MSRP and says so.
+  faq: [
+    {
+      q: "What is the MSRP of a One Piece booster box?",
+      a: "Bandai sets the MSRP per pack, not per box: US$4.99 a pack on its English product pages for recent sets such as OP-18 and EB-05. A main-set booster box holds 24 packs, so at MSRP it comes to US$119.76 before tax. Bandai does not publish a box price, and stores set their own; the table on this page shows what each box sells for today.",
+    },
+    {
+      q: "How much is a One Piece booster box?",
+      a: "It depends on the set. A box still in print usually sells close to 24 packs at MSRP, while boxes from early sets cost several times more once they are out of print. The table lists every English booster box with TCGplayer's market price and the cheapest in-stock box in your market, and each row links to that box's page with every store's live price.",
+    },
+  ],
   related: [
     { href: "/sealed", label: "Sealed products" },
     { href: "/tools/box-ev", label: "Box EV calculator" },
@@ -70,6 +87,9 @@ export const boosterBoxes: Post = {
             <strong>{money(Math.round(olderAvg), "US")}</strong>.
           </>
         ) : null,
+        <>
+          <strong>MSRP:</strong> Bandai sets US$4.99 a pack in English, so a 24-pack box at MSRP is US$119.76 before tax (Bandai states no box price).
+        </>,
         <>Each row links to that box&apos;s page with every store&apos;s live price in {c.place}.</>,
       ].filter(Boolean),
       lede: (

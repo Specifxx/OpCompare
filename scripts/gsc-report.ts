@@ -82,8 +82,8 @@ async function main() {
     // What each of the top fix-list pages is shown for, so job D can tell a
     // title/description fix from a navigational query no title can win.
     say("");
-    say("### Fix list: the queries each page is shown for (28 days, top 8)");
-    for (const r of fix.slice(0, 8)) {
+    say("### Fix list: the queries each page is shown for (28 days, top 12 pages)");
+    for (const r of fix.slice(0, 12)) {
       const pq = await q({
         startDate: day(28),
         endDate: day(2),
@@ -118,10 +118,13 @@ function pageTables(now: Row[], before: Row[]): Row[] {
   head();
   for (const r of [...now].sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions).slice(0, 15)) say(line(r));
   say("");
-  say("### Fix list: shown on Google pages 1-2, clicked least (28 days, 100+ impressions)");
+  say("### Fix list: shown on Google pages 1-2, clicked least (28 days, 50+ impressions, store pages left out)");
   head();
+  // /stores/* rank for the shop's own name (navigational searches no title can
+  // win), so they are left out; 50 impressions lets money pages such as
+  // /tools/box-ev and the booster box post reach the list (site loop, 26 Nov).
   const fix = now
-    .filter((r) => r.impressions >= 100 && r.position <= 20)
+    .filter((r) => r.impressions >= 50 && r.position <= 20 && !path(r.keys[0]).startsWith("/stores/"))
     .sort((a, b) => a.clicks / a.impressions - b.clicks / b.impressions || b.impressions - a.impressions)
     .slice(0, 15);
   for (const r of fix) say(line(r));
