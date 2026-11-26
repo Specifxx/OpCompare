@@ -103,6 +103,8 @@ export const whereToBuyEb05: Post = {
     const unlisted = products.filter((s) => COUNTRY_LIST.every((m) => s.low[m.code] == null));
     const marketsWith = COUNTRY_LIST.filter((m) => products.some((s) => s.low[m.code] != null));
     const others = upcomingPreorderPages(cat.sets, today).filter((l) => l.code !== CODE);
+    // The three dearest printings, linked: the chase cards searchers look for by name (Search Recovery, 2026-11-26).
+    const top = cards.filter((x) => x.marketUsd != null).sort(byMarketDesc).slice(0, 3);
     const setLink = <Link href={`/sets/${set.slug}`}>the EB05 card list</Link>;
     const boardLink = (text: string) => <Link href={PREORDER_PATH}>{text}</Link>;
 
@@ -212,6 +214,19 @@ export const whereToBuyEb05: Post = {
                 <p>
                   TCGplayer lists {plural(cards.length, "EB05 printing")} so far, alternate arts counted separately; {setLink} prices each one as stores list
                   it.
+                  {top.length ? (
+                    <>
+                      {" "}
+                      The dearest so far on TCGplayer:{" "}
+                      {top.map((x, i) => (
+                        <span key={x.id}>
+                          {i ? (i === top.length - 1 ? " and " : ", ") : ""}
+                          <Link href={`/card/${x.slug}`}>{x.name}</Link> ({[x.number, money(x.marketUsd!, "US")].filter(Boolean).join(", ")})
+                        </span>
+                      ))}
+                      .
+                    </>
+                  ) : null}
                 </p>
               ) : (
                 <p>No EB05 cards are listed on TCGplayer yet; {setLink} fills in as they are.</p>

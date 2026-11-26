@@ -125,7 +125,8 @@ export const boosterBoxes: Post = {
               </p>
               <Callout title="Is a box worth opening?">
                 Usually not as an investment — most boxes contain none of a set&apos;s most valuable cards. The <Link href="/tools/box-ev">box EV
-                calculator</Link> puts a box&apos;s price next to its expected value: what the pulls are worth on average, at pull rates set low on purpose.
+                calculator</Link> puts a box&apos;s price next to its expected value: what the pulls are worth on average, at pull rates set low on purpose, and <Link href="/tools/pack-sim">the pack simulator</Link> opens a virtual box of any set so you can see how often one
+                beats its price.
               </Callout>
             </>
           ),
