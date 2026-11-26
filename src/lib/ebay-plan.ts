@@ -23,10 +23,18 @@
 //             singles.
 //   ROTATING  every other single above the floor is refreshed every 72h, most
 //             overdue first, as the budget allows.
-// Within a tier a pair's SCORE (price × (1 + demand)) breaks ties; a run that
-// has searched everything due tops up with the hottest pairs, so no quota is
-// left over. Rows live 72h, so a pair refreshed on time never goes dark; when
-// the day's budget runs out the hot pairs come first and the rest wait.
+// BUY CLICKS FIRST (owner, 2026-11-26: "prioritise calls to products with the
+//             most buy clicks and earnings, so the allowance does not run out on
+//             the top products"): a product a visitor clicked to buy in the last
+//             28 days (ClickEvent) is HOT, and inside every tier the pairs that
+//             earn most (buy clicks × price) go first.
+// Within a tier a pair's SCORE (price × (1 + demand)) breaks the remaining ties.
+// CACHING (owner, 2026-11-26): rows live 72h, so a pair refreshed on time never
+// goes dark and is not searched again before it is due; a search that found no
+// listing is not repeated for UNMATCHED_INTERVAL_HOURS unless visitors click the
+// product; and the top-up of a run's leftover budget (once "spend the whole day")
+// only refreshes clicked products a day or more old, at most TOPUP_MAX_CALLS.
+// Unspent calls stay on the shared keyset (OP and Dex used 4,700 of its 5,000).
 //
 // Changing a floor, share or interval changes the arithmetic: update
 // tests/ebay-plan.test.ts, the methodology copy (a test reads it) and DECISIONS.
@@ -69,6 +77,19 @@ export function demandPoints(searchCount: number, viewCount: number, lastViewedA
   const raw = Math.max(0, searchCount) * SEARCH_WEIGHT + Math.max(0, viewCount);
   const stale = lastViewedAt != null && now.getTime() - lastViewedAt.getTime() > DEMAND_HALF_DAYS * 86_400_000;
   return stale ? raw / 2 : raw;
+}
+
+/** A buy click is worth this many demand points (one click makes a product HOT). */
+export const CLICK_DEMAND_POINTS = HOT_DEMAND_POINTS;
+/** A pair whose last completed search found nothing is not searched again for this long, unless the product has buy clicks. */
+export const UNMATCHED_INTERVAL_HOURS = 168;
+/** The top-up (fillPairs) after the due pairs: only clicked products, only a pair at least this old, at most this many calls. */
+export const TOPUP_MIN_AGE_HOURS = 24;
+export const TOPUP_MAX_CALLS = 200;
+
+/** What a pair is likely to earn, relatively: buy clicks × price (US$). 0 without clicks. */
+export function earnScore(valueCents: number | null, clicks: number | undefined): number {
+  return Math.max(0, clicks ?? 0) * Math.max(1, (valueCents ?? 0) / 100);
 }
 
 /** What a click on this product is worth, relatively: price × (1 + demand). Orders the queue inside a tier. */
@@ -229,6 +250,8 @@ export interface PlanProduct {
   matchable?: boolean;
   /** Demand points (demandPoints): searches and opens by visitors. Unset = none. */
   demand?: number;
+  /** Buy clicks (ClickEvent) in the last 28 days, any market. Unset = none. */
+  clicks?: number;
 }
 
 export function singlesFloor(m: EbayMarket, minValueCents: number = DEFAULT_MIN_VALUE_CENTS): number {
@@ -246,17 +269,21 @@ export function tierOf(p: PlanProduct, m: EbayMarket, minValueCents: number = DE
     if (!scope.singles || !p.number) return null;
     if (p.marketUsd == null) return ref != null && ref >= singlesFloor(m, minValueCents) ? "SU" : null;
     if (p.marketUsd < singlesFloor(m, minValueCents)) return null; // the floor beats demand
-    return p.marketUsd >= S1_MIN_CENTS || (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "S1" : "S2";
+    return p.marketUsd >= S1_MIN_CENTS || (p.demand ?? 0) >= HOT_DEMAND_POINTS || (p.clicks ?? 0) > 0 ? "S1" : "S2";
   }
   if (!scope.sealed || !p.sealedKind || !SEARCHED_SEALED_KINDS.has(p.sealedKind)) return null;
   if ((p.marketUsd ?? ref ?? -1) < SEALED_MIN_CENTS) return null;
-  return (p.demand ?? 0) >= HOT_DEMAND_POINTS ? "PH" : "P1";
+  return (p.demand ?? 0) >= HOT_DEMAND_POINTS || (p.clicks ?? 0) > 0 ? "PH" : "P1";
 }
 
-/** Is a pair due? Never searched → yes; else when its age reaches interval − grace. EBAY_FORCE → always. */
-export function isDue(checkedAt: Date | null, tier: Tier, now: Date, force = false): boolean {
+/**
+ * Is a pair due? Never searched → yes; else when its age reaches interval − grace. EBAY_FORCE → always. A pair whose last search
+ * found nothing (`unmatched`) waits UNMATCHED_INTERVAL_HOURS instead, unless the product has buy clicks (`clicked`).
+ */
+export function isDue(checkedAt: Date | null, tier: Tier, now: Date, force = false, o: { unmatched?: boolean; clicked?: boolean } = {}): boolean {
   if (force || !checkedAt) return true;
-  return now.getTime() - checkedAt.getTime() >= (TIER_INTERVAL_HOURS[tier] - DUE_GRACE_HOURS) * 3600_000;
+  const hours = o.unmatched && !o.clicked ? Math.max(UNMATCHED_INTERVAL_HOURS, TIER_INTERVAL_HOURS[tier]) : TIER_INTERVAL_HOURS[tier];
+  return now.getTime() - checkedAt.getTime() >= (hours - DUE_GRACE_HOURS) * 3600_000;
 }
 
 export function isLaunch(releasedOn: Date | null | undefined, presale: boolean, now: Date): boolean {
@@ -278,18 +305,23 @@ export interface Pair {
   score: number;
   /** Demand points (sealed pairs are ordered by this first: the most in-demand sealed product is searched first). */
   demand?: number;
+  /** earnScore: buy clicks × price. Inside every tier the pairs that earn most go first. */
+  earn?: number;
 }
 
 export const pairKey = (productId: number, market: string) => `${productId}|${market}`;
 
 /**
- * Tier first of all (sealed before singles, hot before rotating). Inside a sealed tier the most in-demand product
+ * Tier first of all (sealed before singles, hot before rotating). Then what a pair earns (buy clicks × price, owner 2026-11-26).
+ * Inside a sealed tier the most in-demand product
  * first (owner, 2026-11-19: by popularity, never the least popular). Then never-searched, then most overdue (the
  * rotation), then the higher score.
  */
 export function comparePairs(a: Pair, b: Pair, now: Date): number {
   const t = TIER_PRIORITY[a.tier] - TIER_PRIORITY[b.tier];
   if (t) return t;
+  const e = (b.earn ?? 0) - (a.earn ?? 0);
+  if (e) return e;
   if (isSealedTier(a.tier)) {
     const d = (b.demand ?? 0) - (a.demand ?? 0);
     if (d) return d;
@@ -312,39 +344,47 @@ export function duePairs(
   market: EbayMarket,
   checks: Map<string, Date>,
   now: Date,
-  opts: { force?: boolean; minValueCents?: number } = {},
+  opts: { force?: boolean; minValueCents?: number; unmatched?: ReadonlySet<string> } = {},
 ): Pair[] {
   const out: Pair[] = [];
   for (const p of products) {
     const tier = tierOf(p, market, opts.minValueCents);
     if (!tier) continue;
-    const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
-    if (!isDue(checkedAt, tier, now, opts.force)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand), demand: p.demand ?? 0 });
+    const key = pairKey(p.id, market);
+    const checkedAt = checks.get(key) ?? null;
+    if (!isDue(checkedAt, tier, now, opts.force, { unmatched: opts.unmatched?.has(key), clicked: (p.clicks ?? 0) > 0 })) continue;
+    out.push(toPair(p, market, tier, checkedAt));
   }
   return out.sort((a, b) => comparePairs(a, b, now));
 }
 
+function toPair(p: PlanProduct, market: EbayMarket, tier: Tier, checkedAt: Date | null): Pair {
+  const value = p.marketUsd ?? p.refUsd ?? null;
+  return { productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(value, p.demand), demand: p.demand ?? 0, earn: earnScore(value, p.clicks) };
+}
+
 /**
- * Every eligible pair of one market that is NOT due yet, in the same priority
- * order (tier, then oldest). A run that has searched everything due spends the
- * rest of its budget on these, so no quota is left over while eligible cards
- * exist: dear cards are simply refreshed sooner than their interval.
+ * The top-up: eligible pairs that are NOT due yet, in the same priority order, that a run with budget left may refresh early. Since
+ * 2026-11-26 (owner: the shared allowance must not run out) ONLY products visitors clicked to buy, and only a pair checked at least
+ * TOPUP_MIN_AGE_HOURS ago: everything else keeps its row (72h) until it is due. The caller caps the top-up at TOPUP_MAX_CALLS.
  */
 export function fillPairs(
   products: PlanProduct[],
   market: EbayMarket,
   checks: Map<string, Date>,
   now: Date,
-  opts: { minValueCents?: number } = {},
+  opts: { minValueCents?: number; unmatched?: ReadonlySet<string> } = {},
 ): Pair[] {
   const out: Pair[] = [];
   for (const p of products) {
+    if ((p.clicks ?? 0) <= 0) continue;
     const tier = tierOf(p, market, opts.minValueCents);
     if (!tier) continue;
-    const checkedAt = checks.get(pairKey(p.id, market)) ?? null;
-    if (isDue(checkedAt, tier, now)) continue;
-    out.push({ productId: p.id, market, kind: p.kind, tier, marketUsd: p.marketUsd, checkedAt, cost: p.kind === "single" ? SINGLE_CALL_COST : SEALED_CALL_COST, score: pairScore(p.marketUsd ?? p.refUsd ?? null, p.demand), demand: p.demand ?? 0 });
+    const key = pairKey(p.id, market);
+    const checkedAt = checks.get(key) ?? null;
+    if (isDue(checkedAt, tier, now, false, { unmatched: opts.unmatched?.has(key), clicked: true })) continue;
+    if (checkedAt && now.getTime() - checkedAt.getTime() < TOPUP_MIN_AGE_HOURS * 3600_000) continue;
+    out.push(toPair(p, market, tier, checkedAt));
   }
   return out.sort((a, b) => comparePairs(a, b, now));
 }

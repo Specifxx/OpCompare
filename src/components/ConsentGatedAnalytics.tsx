@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { track } from "@vercel/analytics";
-import { buyClickProps, clickContext, forVercel, networkOf, type ClickEl } from "@/lib/buy-click";
+import { buyClickProps, buyProductKey, clickContext, forVercel, networkOf, type ClickEl } from "@/lib/buy-click";
 import { useConsent } from "@/lib/use-consent";
 import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
@@ -19,6 +19,7 @@ import { ebayPopNow } from "@/lib/stand-out-arm";
 // Analytics for any click on an a[data-retailer] (price rows, eBay and TCGplayer
 // buttons, Deal Finder, Best Basket …). It lives inside the consent gate, so it
 // only exists while Analytics does; it never touches our own server or database.
+// With it, `buy_product { product, region }` when the click names a product (lib/buy-click.ts buyProductKey).
 // Custom events need a Vercel plan that includes them (Pro or Enterprise).
 function BuyClickEvents() {
   useEffect(() => {
@@ -37,6 +38,9 @@ function BuyClickEvents() {
       try {
         Object.assign(props, { dock_arm: dockArmNow(), ad_look: adLookNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow() });
         track("buy_click", forVercel(props));
+        // Which product: DexCompare's buy_product, two properties. The eBay pass refreshes the most clicked products first.
+        const product = buyProductKey(a.getAttribute("data-card"), location.pathname);
+        if (product) track("buy_product", { product, region: (props.country ?? "us").toLowerCase() });
       } catch {
         /* an analytics failure never gets in the way of the click */
       }

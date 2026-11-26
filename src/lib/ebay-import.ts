@@ -10,6 +10,8 @@
 //
 // This pass does not aggregate, record history or revalidate: the 07:07 and
 // 19:07 store import does all three with the fresh eBay rows.
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { SEALED_VIEW_PREFIX } from "./card-views";
@@ -43,6 +45,7 @@ import {
   demandPoints,
   singlesFloor,
   fillPairs,
+  TOPUP_MAX_CALLS,
   marketScope,
   EBAY_MARKETS,
   FOREIGN_SPEND_BUDGET,
@@ -101,6 +104,29 @@ export interface EbayPassSummary {
   collisions: number;
   derivedCA: { written: number; deleted: number };
   rejects: Record<string, number>;
+}
+
+/** Buy clicks are counted over this many days (data/demand.json's long window). */
+export const CLICK_WINDOW_DAYS = 28;
+/** A click of the last 7 days counts this many times more (it is in both windows: recent demand weighs more). */
+export const RECENT_CLICK_WEIGHT = 2;
+
+/** Buy clicks per product slug from a demand file ({ clicks: { slug: [28 days, 7 days] } }): 28-day + RECENT_CLICK_WEIGHT × 7-day. */
+export function buyClicksFrom(demand: { clicks?: Record<string, readonly number[] | undefined> } | null | undefined): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [slug, v] of Object.entries(demand?.clicks ?? {})) {
+    const n = Math.max(0, Number(v?.[0]) || 0) + RECENT_CLICK_WEIGHT * Math.max(0, Number(v?.[1]) || 0);
+    if (n > 0) out.set(slug, n);
+  }
+  return out;
+}
+
+function readBuyClicks(file = path.join(process.cwd(), "data", "demand.json")): Map<string, number> {
+  try {
+    return buyClicksFrom(JSON.parse(readFileSync(file, "utf8")));
+  } catch {
+    return new Map();
+  }
 }
 
 /** Our own spend over the last 24h + this much slack before we suspect someone else spends this keyset. */
@@ -203,12 +229,12 @@ export async function runEbayPass(
   // ── Products ───────────────────────────────────────────────────────────────
   const [cardsRaw, sealedRaw, checkRows] = await Promise.all([
     pub.card.findMany({
-      select: { id: true, name: true, number: true, variant: true, marketUsd: true, set: { select: { code: true, name: true, releasedOn: true } } },
+      select: { id: true, slug: true, name: true, number: true, variant: true, marketUsd: true, set: { select: { code: true, name: true, releasedOn: true } } },
     }),
     pub.sealed.findMany({
-      select: { id: true, name: true, kind: true, marketUsd: true, releasedOn: true, presale: true, set: { select: { code: true, name: true, releasedOn: true } } },
+      select: { id: true, slug: true, name: true, kind: true, marketUsd: true, releasedOn: true, presale: true, set: { select: { code: true, name: true, releasedOn: true } } },
     }),
-    pub.ebayCheck.findMany({ select: { productId: true, market: true, checkedAt: true } }),
+    pub.ebayCheck.findMany({ select: { productId: true, market: true, checkedAt: true, matched: true } }),
   ]);
   // The FULL index, as the store import builds it: a title that fits another printing is a miss.
   const idx = buildCardIndex(cardsRaw.filter((c) => c.number).map((c) => ({ ...c, setCode: c.set.code, setName: c.set.name })));
@@ -260,10 +286,16 @@ export async function runEbayPass(
   } catch (e) {
     log(`eBay: demand could not be read (${e instanceof Error ? e.message.split("\n")[0] : e}); ranking by price alone`);
   }
+  // Buy clicks (owner, 2026-11-26: calls go first to the products with the most buy clicks and earnings): the buy_product events
+  // of the last 28 days by product slug, plus the last 7 days' again (data/demand.json, from RiftCompare's /api/demand/oc, committed
+  // daily by import-prices.yml). A missing or unreadable file means no clicks, never a failed run.
+  const clicksBySlug = readBuyClicks();
   let products: PlanProduct[] = [
-    ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null, demand: demand.get(c.id) })),
-    ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null, demand: demand.get(s.id) })),
+    ...cardsRaw.map((c): PlanProduct => ({ id: c.id, kind: "single", marketUsd: c.marketUsd, number: c.number, launch: cardLaunch.get(c.id)!, refUsd: refUsd.get(c.id) ?? null, demand: demand.get(c.id), clicks: clicksBySlug.get(c.slug) })),
+    ...sealedRaw.map((s): PlanProduct => ({ id: s.id, kind: "sealed", marketUsd: s.marketUsd, sealedKind: s.kind, launch: sealedLaunch.get(s.id)!, refUsd: refUsd.get(s.id) ?? null, demand: demand.get(s.id), clicks: clicksBySlug.get(s.slug) })),
   ];
+  const clicked = products.filter((p) => (p.clicks ?? 0) > 0);
+  log(`eBay: ${clicked.length} products had buy clicks in the last ${CLICK_WINDOW_DAYS} days (${clicked.filter((p) => p.kind === "sealed").length} sealed); they are hot and go first, most clicks × price first`);
   // ONE floor (owner, 2026-10-24: nothing under US$20, whatever its demand; US$40 in
   // the EU): lib/ebay-plan.ts singlesFloor. EBAY_MIN_VALUE_CENTS can only raise it.
   const floor = Math.max(fixedFloor ?? DEFAULT_MIN_VALUE_CENTS, SINGLES_ABS_MIN_CENTS);
@@ -297,6 +329,8 @@ export async function runEbayPass(
     log(`eBay: only products named "${onlyName}" (${products.length})`);
   }
   const checks = new Map<string, Date>(checkRows.map((r) => [pairKey(r.productId, r.market), r.checkedAt]));
+  // The cache of empty searches: a pair whose last completed search found nothing waits a week (lib/ebay-plan.ts UNMATCHED_INTERVAL_HOURS).
+  const unmatched = new Set(checkRows.filter((r) => !r.matched).map((r) => pairKey(r.productId, r.market)));
 
   // Sweep what the floor now excludes: an eBay price or panel left by an earlier
   // run for a card worth less than the floor (or sealed under US$20) is removed,
@@ -324,18 +358,20 @@ export async function runEbayPass(
   const markets = only ? [only] : EBAY_MARKETS;
   const due: Partial<Record<EbayMarket, Pair[]>> = {};
   for (const m of markets) {
-    due[m] = duePairs(products, m, checks, now, { force, minValueCents: floors[m] });
+    due[m] = duePairs(products, m, checks, now, { force, minValueCents: floors[m], unmatched });
     summary.byMarket[m] = { ...emptyStats(), due: due[m]!.length };
   }
   const plan = planRun(due, prime.budget, now, { only });
-  // Top-up: whatever the due pairs leave of the budget goes to the eligible pairs
-  // that are NOT due yet (dearest tier first, oldest first), so no quota is left
-  // unspent while cards wait. Not for a forced or name-narrowed run.
+  // Top-up: what the due pairs leave goes ONLY to products visitors clicked to buy whose row is a day or more old, at most
+  // TOPUP_MAX_CALLS (owner, 2026-11-26: until then it spent the whole day, ~1,260 calls on 25 Nov refreshing rows that were still
+  // valid). The rest stays on the shared keyset. Not for a forced or name-narrowed run.
   let fillOrder: Pair[] = [];
   if (!force && !onlyName) {
     const fill: Partial<Record<EbayMarket, Pair[]>> = {};
-    for (const m of markets) fill[m] = fillPairs(products, m, checks, now, { minValueCents: floors[m] });
-    fillOrder = planRun(fill, prime.budget, now, { only }).order;
+    for (const m of markets) fill[m] = fillPairs(products, m, checks, now, { minValueCents: floors[m], unmatched });
+    const room = Math.max(0, Math.min(TOPUP_MAX_CALLS, prime.budget - plan.modelled));
+    fillOrder = room > 0 ? planRun(fill, room, now, { only }).order : [];
+    log(`eBay top-up: ${fillOrder.length} clicked pairs refreshed early (at most ${TOPUP_MAX_CALLS} calls)`);
   }
   summary.modelled = Math.round(plan.modelled);
   for (const p of plan.order) summary.byMarket[p.market].planned++;

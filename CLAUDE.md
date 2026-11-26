@@ -72,6 +72,10 @@ read rows through `public-data.ts` / `public-db.ts` (a Prisma-shaped read-only c
   72h, most overdue first, price × (1 + demand) breaking ties. **Sealed first (owner, 2026-11-19):** every due sealed pair, most
   in-demand first, is searched before any single (tiers PH/P1 ahead of S1/S2/SU); cards get only what sealed leaves. Never rank by price alone
   again, never add a depth-by-budget floor back (`marketFloors` is gone on purpose).
+  **Buy clicks first, and nothing spent for its own sake (owner, 2026-11-26):** a product visitors clicked to buy (`buy_product` →
+  `data/demand.json`) is hot, and inside every tier the pairs that earn most (clicks × price) go first; a pair whose last search
+  found nothing waits a week (`UNMATCHED_INTERVAL_HOURS`) unless clicked; the leftover-budget top-up refreshes only clicked pairs
+  a day or more old, at most `TOPUP_MAX_CALLS`. Never go back to spending the whole day: the keyset is shared with DexCompare.
 - The budget is `min(EBAY_MAX_CALLS, remaining − EBAY_QUOTA_RESERVE)` per run
   (unknown `remaining` → daily limit minus our last-24h spend; the cap is at
   most half the spendable day); `spendable` starts at 0 and every Browse call

@@ -110,6 +110,18 @@ export function pageFromPath(pathname: string): string {
   return pathname.split("/")[1] || "home";
 }
 
+/**
+ * The product a buy click is for (owner, 2026-11-26: the eBay pass puts its calls on the products visitors click to buy): the link's
+ * own data-card (a card or sealed slug), else the card or sealed page the click was made on, else null (a list click names none).
+ * Sent as `buy_product { product, region }`, the event RiftCompare's /api/demand/oc counts per product into data/demand.json.
+ */
+export function buyProductKey(card: string | null, pathname: string): string | null {
+  const own = clip(card, 160);
+  if (own && /^[a-z0-9][a-z0-9-]*$/i.test(own)) return own.toLowerCase();
+  const m = /^\/(?:card|sealed)\/([a-z0-9][a-z0-9-]*)\/?$/i.exec(pathname);
+  return m ? m[1].toLowerCase() : null;
+}
+
 /** The event's properties for one clicked link, or null when it carries no retailer. */
 export function buyClickProps(attrs: { retailer: string | null; page: string | null; card: string | null; surface: string | null; href?: string | null }, pathname: string, ctx?: ClickContext): BuyClickProps | null {
   const retailer = clip(attrs.retailer, 60);

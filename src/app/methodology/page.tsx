@@ -47,7 +47,9 @@ export default async function Methodology() {
             open most first; cards get the searches left over, since every card
             already has TCGplayer's and the stores' prices. The ones visitors search for and open most,
             and cards of US$100 and up, are refreshed every two days; the rest every
-            three days, most overdue first, within a fixed daily budget of searches. We show the
+            three days, most overdue first, within a fixed daily budget of searches. Products visitors
+            click to buy come first of all, and a search that found nothing waits a week before we try
+            it again. We show the
             cheapest matching Buy It Now listing as an asking price, never
             re-ranked: it sits among the stores by item price. Canadian card rows
             are the US listing, shipped from the US. Every market also gets a
