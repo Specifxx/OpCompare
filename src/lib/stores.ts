@@ -581,6 +581,11 @@ const RAW_STORES: StoreInfo[] = [
   { key: "magictraders", name: "Magic Traders", base: "https://magictraders.nl", country: "EU", collections: ["one-piece-pre-order", "one-piece-1"] },
   // Team Board Game (Singapore, WooCommerce): 32 matched, 2 in stock.
   { key: "teamboardgame", name: "Team Board Game", base: "https://teamboardgame.com", country: "SG", collections: [], platform: "woocommerce" },
+  // Iconic Trading Cards (Ware, UK; Iconic Trading Cards Limited, Co. 17300570). Asked to be
+  // listed, 2026-11-21; the owner added `Allow: /collections/*/products.json` to its robots.txt
+  // for us on 2026-11-23 and named its sealed collections. Its "one-piece" collection is sealed
+  // only (English and Japanese; the matcher never takes a Japanese listing).
+  { key: "iconictcg", name: "Iconic Trading Cards", base: "https://iconic-tcg.com", country: "UK", collections: ["one-piece"], sealedOnly: true },
 ];
 
 /** Every store, with `policyUrl` filled where the store's policy page was verified. */
