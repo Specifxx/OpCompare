@@ -5,15 +5,11 @@
 name: Probe stores (research)
 on:
   workflow_dispatch: {}
-  push:
-    branches: ["claude/**"]
-    paths:
-      - research/eu-candidate-bases-*.txt
 permissions:
   contents: write
 jobs:
   probe:
-    if: startsWith(github.ref_name, 'claude/')
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'claude/')
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
