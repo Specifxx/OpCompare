@@ -5206,3 +5206,14 @@ the US had 5 pairs due and searched 1,074.
 
 Expected: about 950-1,150 calls a day instead of 2,220 (the due pairs, fewer once the cache holds, plus up to 200 top-up).
 Read the run log's "top-up" and "buy clicks" lines from 27 Nov.
+
+## 2026-11-27 — Empire design system v1 on OP Compare (CSS only)
+
+A visitor on a sister site asked us to hire a designer "so it wasn't giving claudeslop". RiftCompare took the shared
+standard first (TCGEmpire #699, `rift-ds`); OP Compare runs Rift's hero, so it gets the same pass as an `op-ds` block in
+`globals.css`, placed before the last reduced-motion block (tests/design-system.test.ts keeps that one last). The hero is a
+masthead, left-aligned from 640px (centred on phones); the creators link is a plain bordered link (no gradient pill, no
+pinging dot); the search has a firm 1.5px edge and the brand focus ring; 10px radius on cards, inputs, buttons and the
+market picker, 6px on chips; the giveaway card and trophy are flat. The motes canvas (`HeroSparks`, 2026-11-03) is no
+longer mounted. No markup, word, order, URL or heading changed; OP red, the Santa hat and the seasonal lines stay. Rules and
+the list of tells: the project's design-system/README.md. Never add those tells back.

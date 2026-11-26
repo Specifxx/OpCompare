@@ -7,7 +7,6 @@ import { HeroStats } from "./HeroStats";
 import { TrendingChips, type TrendingCard } from "./TrendingChips";
 import { BrandLogo } from "@/components/BrandLogo";
 import { HalloweenDecor } from "./HalloweenDecor";
-import { HeroSparks } from "./HeroSparks";
 import { ChristmasGifts } from "./ChristmasGifts";
 import { ThrillerBarkComing } from "./ThrillerBarkComing";
 import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
@@ -64,8 +63,7 @@ export function CinematicHero({
     <ParallaxShell>
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="op-hero-band absolute inset-0 border-b border-ink-800 bg-ink-950" />
-        {/* The living background (owner, 2026-11-03): motes that part around the pointer, sparks on a click. */}
-        <HeroSparks />
+        {/* The motes canvas (HeroSparks, owner 2026-11-03) went with the 2026-11-27 design pass (globals.css op-ds). */}
         <HalloweenDecor />
       </div>
       {/* Foreground content: its own rail reservation (the band is full-bleed,
