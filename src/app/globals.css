@@ -1632,6 +1632,70 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
   }
 }
 
+/* op-ds:start — Empire design system v1 on OP Compare (2026-11-27; the project's design-system/README.md).
+   A visitor on a sister site asked us to hire a designer "so it wasn't giving claudeslop"; RiftCompare took the same
+   standard first (TCGEmpire, rift-ds). CSS only: no markup, words, order, URL or h1/h2 outline change. OP red stays the
+   one accent; the Santa hat and the seasonal lines stay. The hero's motes canvas (HeroSparks) is no longer mounted. */
+
+/* 1. The hero is a masthead: a flat band, a hairline under it, left-aligned from 640px. */
+#op-hero { min-height: 0 !important; }
+#op-hero h1 { font-weight: 750; letter-spacing: -0.03em; }
+@media (min-width: 640px) {
+  #op-hero .container-app { text-align: left; }
+  #op-hero .container-app .mx-auto { margin-left: 0 !important; }
+  #op-hero .container-app .justify-center { justify-content: flex-start !important; }
+  #op-hero .container-app .flex-col.items-center { align-items: flex-start !important; }
+  #op-hero .container-app .text-center { text-align: left !important; }
+  #op-hero .hero-ways > .chip { justify-content: flex-start; }
+}
+
+/* 2. The creators link: a plain bordered link, no gradient pill, no glow, no pinging dot. */
+#op-hero a[href*="creators"] {
+  background: rgb(var(--c-ink-900)) !important;
+  border-color: rgb(var(--c-ink-700)) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: 10px !important;
+}
+#op-hero a[href*="creators"] .animate-ping { display: none !important; }
+#op-hero a[href*="creators"] > span:first-child { background: rgb(var(--c-brand-500)) !important; border-radius: 6px !important; }
+
+/* 3. The search: a firm 1.5px edge and the brand focus ring. */
+#op-hero input[type="search"],
+#op-hero input[type="text"] {
+  border-width: 1.5px !important;
+  border-color: rgb(var(--c-ink-600)) !important;
+  border-radius: 10px !important;
+}
+#op-hero input:focus {
+  border-color: rgb(var(--c-brand-400)) !important;
+  box-shadow: 0 0 0 3px rgb(var(--c-brand-400) / 0.18) !important;
+}
+
+/* 4. Shape: 10px on cards, inputs, buttons and the market picker; 6px on chips and tags. */
+.card-surface,
+.btn,
+.input,
+[data-region-control="hero"] > div {
+  border-radius: 10px !important;
+}
+[data-region-control="hero"] > div > * { border-radius: 6px !important; }
+.chip,
+.tag { border-radius: 6px !important; }
+
+/* 5. No glow or glass: the giveaway card and trophy are flat surfaces; hover is a firmer edge, never a lift. */
+.gw-hero,
+.gw-trophy {
+  background: rgb(var(--c-ink-900)) !important;
+  box-shadow: none !important;
+}
+.gw-panel { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+[class*="hover:-translate-y"]:hover { transform: none !important; }
+[class*="hover:shadow-glow"]:hover { box-shadow: none !important; }
+main h2 { letter-spacing: -0.01em; }
+/* op-ds:end */
+
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {
