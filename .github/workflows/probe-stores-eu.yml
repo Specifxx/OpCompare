@@ -1,0 +1,40 @@
+# Store probe over a research list of shop origins (scripts/probe-stores.ts, Shopify
+# collection discovery and the real matcher against the snapshot catalogue). Runs
+# only on a claude/** branch and commits its log back to that branch for review.
+# Read-only for the site: it changes no store list and never deploys.
+name: Probe stores (research)
+on:
+  workflow_dispatch: {}
+  push:
+    branches: ["claude/**"]
+    paths:
+      - research/eu-candidate-bases-*.txt
+permissions:
+  contents: write
+jobs:
+  probe:
+    if: startsWith(github.ref_name, 'claude/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Probe
+        run: |
+          args=""
+          for b in $(cat research/eu-candidate-bases-*.txt); do args="$args $b EU"; done
+          npx tsx scripts/probe-stores.ts $args 2>&1 | tee research/probe-eu.log
+      - name: Keep the result on the branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add -f research/probe-eu.log || true
+          git commit -m "Research: EU store probe log (${{ github.run_id }})" || exit 0
+          git pull --rebase -q origin ${{ github.ref_name }} || true
+          git push origin HEAD:${{ github.ref_name }}
