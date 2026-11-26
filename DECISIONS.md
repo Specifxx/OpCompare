@@ -5163,3 +5163,12 @@ the sealed matches above the cards (a grid of eight when the words ask for seale
 a card search such as "luffy", so its cards stay on the first screen), with "See all N sealed" to /sealed?q=. /sealed's
 own keyword box uses the same matcher. The card list's Set facet opens by default with a "Find a set" box (RiftCompare's).
 `tests/sealed-search.test.ts`.
+
+## 2026-11-26: Iconic Trading Cards (UK), on the owner's request
+
+Iconic Trading Cards (iconic-tcg.com, Ware; Iconic Trading Cards Limited, Co. 17300570) asked to be listed on
+DexCompare on 2026-11-21. Vetted on 2026-11-23 (company, returns and delivery pages, GBP, Trustpilot claimed, prices at
+market). Its robots.txt disallowed `/collections/*/*` for every agent, so we asked; the owner added
+`Allow: /collections/*/products.json` under `User-agent: *` and named its sealed collections. We read only
+`one-piece` (sealed only, English and Japanese), `sealedOnly: true`; Japanese listings are never matched. Listed on
+DexCompare and MTG Compare the same day.
