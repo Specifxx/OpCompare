@@ -173,7 +173,7 @@ condition) and `/alerts/action` (a signed action token) — never from the root
 layout or a public page; `tests/app-no-db-import.test.ts` pins the set):
 `src/lib/{watchlist-server,collection-server,collection-share,set-owned,notifications,sealed-watch,deck-watch,published-decks-server}.ts`.
 The collection-alerts libraries do the same, for token- or per-request reads and writes only:
-`src/lib/{alert-routes,alert-subscribe,alert-mute,alert-actions,newsletter-signup}.ts`
+`src/lib/{alert-routes,alert-subscribe,alert-mute,alert-actions,newsletter-signup,premium-gift-pass-access}.ts`
 and `src/lib/launch-promo.ts` (called from `accounts.ts` at sign-up; the popup reads the counter
 through `/api/promo` and `getLaunchPromo()` in `data.ts`, never the table)
 (the unsubscribe and action tokens, the anonymous watch door and the newsletter signup; none imports
@@ -218,7 +218,9 @@ admin session only, audited) and the launch promotion's single claim
 (`src/lib/launch-promo.ts`: the first 50 NEW accounts get 30 days of Premium,
 taken by one atomic capped upsert on the `Counter` row `launch-promo` in the
 same transaction as the grant, called only from `upsertOAuthUser` for the row it
-just created; `tests/launch-promo.test.ts` pins it), extend-only except an
+just created; `tests/launch-promo.test.ts` pins it), the emailed 3-day pass (`src/lib/premium-gift-pass-server.ts`,
+script-side, owner 2026-11-27: 3 days extend-only just before each send, taken back if the send fails, sends closed
+after 1 Dec 2026 12:00 UTC; `tests/premium-gift-pass.test.ts`), extend-only except an
 explicit admin revoke, and
 Stripe writes only for subscriptions whose Price or metadata says
 `site=opcompare` (`src/lib/stripe-entitlement.ts`). `past_due`
