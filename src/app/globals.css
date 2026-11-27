@@ -1642,7 +1642,7 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 #op-hero h1 { font-weight: 750; letter-spacing: -0.03em; }
 @media (min-width: 640px) {
   #op-hero .container-app { text-align: left; }
-  #op-hero .container-app .mx-auto { margin-left: 0 !important; }
+  #op-hero .container-app [class~="mx-auto"] { margin-left: 0 !important; }
   #op-hero .container-app .justify-center { justify-content: flex-start !important; }
   #op-hero .container-app .flex-col.items-center { align-items: flex-start !important; }
   #op-hero .container-app .text-center { text-align: left !important; }
