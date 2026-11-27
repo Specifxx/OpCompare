@@ -63,7 +63,7 @@ import { cardImage } from "@/lib/images";
 import { ReleaseAlertSlot } from "@/components/ReleaseAlertSlot";
 import { headline } from "@/lib/price";
 import { pageOg } from "@/lib/og/meta";
-import { cheapestBuyRow, isPreRelease, paidAlternativeRow } from "@/lib/quick-view";
+import { cheapestBuyRow, cheapestPaidRow, isPreRelease, paidAlternativeRow } from "@/lib/quick-view";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { isStoreSource } from "@/lib/stores";
 import { aliasesFor } from "@/lib/card-aliases";
@@ -246,6 +246,8 @@ export default async function CardPage({ params }: Props) {
     };
   });
   const best = perMarket((m) => cheapestBuyRow(card.offers, m, loc));
+  // The buy bar test (lib/bar-test.ts, from 3 Dec): the cheapest paid row, for the "paid" arm, where the cheapest pays nothing.
+  const paidBest = perMarket((m) => cheapestPaidRow(card.offers, m, loc));
   // The share message per market: the real gap between the cheapest and dearest open row (lib/share-link.ts).
   const shareTexts = perMarket((m) => shareText(title, priceGap(marketRows(card.offers, m).map((o) => ({ priceCents: o.priceCents, retailerName: buyRow(o, m, loc).label }))), (c) => money(c, m)));
   const paidAlt = perMarket((m) => paidAlternativeRow(card.offers, m, loc));
@@ -765,7 +767,7 @@ export default async function CardPage({ params }: Props) {
       <RecentlyViewed className="mt-10" record={{ slug: card.slug, name: card.name, variant: card.variant, setCode: card.set.code, number: card.number, img: card.hasImage ? cardImage.thumb(card.id) : null }} />
 
       <RelatedGuides guides={guides} className="card-surface mt-10 p-5" />
-      <MarketStickyBuyBar best={best} boardId="price-comparison" page="card" slug={card.slug} name={title} cardId={card.id} />
+      <MarketStickyBuyBar best={best} paid={paidBest} boardId="price-comparison" page="card" slug={card.slug} name={title} cardId={card.id} />
       {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
       <InlineAds page="card" className="mt-12" />
     </div>

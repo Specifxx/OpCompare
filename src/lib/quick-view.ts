@@ -105,6 +105,17 @@ export function paidAlternativeRow(
   return { row, pctMore };
 }
 
+/**
+ * The phone buy bar test's "paid" arm (lib/bar-test.ts, from 3 Dec): when the cheapest open row pays nothing, the cheapest row that
+ * pays on eBay or TCGplayer in the same market, at its real price, whatever the gap; null when the cheapest already pays
+ * or no row does. Never called the cheapest.
+ */
+export function cheapestPaidRow(offers: OfferRow[], country: Country, loc: string, isPaid: (href: string) => boolean = isPaidLink): BuyRow | null {
+  const rows = marketRows(offers, country).map((o) => buyRow(o, country, loc));
+  if (!rows[0] || isPaid(rows[0].href)) return null;
+  return rows.find((r) => (r.ebay || r.source === "tcgplayer") && isPaid(r.href)) ?? null;
+}
+
 export interface QuickViewMarket {
   /** Open offers in this market (all of them, not just the rows sent). */
   count: number;

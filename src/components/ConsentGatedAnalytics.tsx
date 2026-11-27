@@ -9,6 +9,7 @@ import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
 import { ebayBtnNow } from "@/lib/buy-btn-arm";
 import { ebayPopNow } from "@/lib/stand-out-arm";
+import { barTestClick } from "@/lib/bar-test";
 
 // RiftCompare's ConsentGatedAnalytics: Vercel Analytics mounts only once
 // useConsent() resolves (a CMP grant, or the no-CMP grace period), never on the
@@ -38,6 +39,7 @@ function BuyClickEvents() {
       try {
         Object.assign(props, { dock_arm: dockArmNow(), ad_look: adLookNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow() });
         track("buy_click", forVercel(props));
+        barTestClick(a, props.paid === true);
         // Which product: DexCompare's buy_product, two properties. The eBay pass refreshes the most clicked products first.
         const product = buyProductKey(a.getAttribute("data-card"), location.pathname);
         if (product) track("buy_product", { product, region: (props.country ?? "us").toLowerCase() });

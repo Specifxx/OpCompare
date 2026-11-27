@@ -118,11 +118,13 @@ export function MarketTopBuy({
 }
 
 /** The pinned phone buy bar: the same row as MarketTopBuy. Keyed by market so it re-measures. */
-export function MarketStickyBuyBar({ best, ...rest }: { best: PerMarket<BuyRow | null>; boardId: string; page: string; slug: string; name: string; cardId: number }) {
+export function MarketStickyBuyBar({ best, paid, ...rest }: { best: PerMarket<BuyRow | null>; paid?: PerMarket<BuyRow | null>; boardId: string; page: string; slug: string; name: string; cardId: number }) {
   const country = useMarket();
   const b = pickMarket(best, country);
   if (!b) return null;
-  return <CardStickyBuyBar key={country} {...rest} price={money(b.priceCents, country)} store={b.label} href={b.href} retailer={b.retailer} ebay={b.ebay} />;
+  const p = paid ? pickMarket(paid, country) : null;
+  const alt = p ? { price: money(p.priceCents, country), store: p.label, href: p.href, retailer: p.retailer, ebay: p.ebay } : null;
+  return <CardStickyBuyBar key={country} {...rest} price={money(b.priceCents, country)} store={b.label} href={b.href} retailer={b.retailer} ebay={b.ebay} paid={alt} />;
 }
 
 /** The alert call to action: "in stock" wording where nothing is listed in the visitor's market. */

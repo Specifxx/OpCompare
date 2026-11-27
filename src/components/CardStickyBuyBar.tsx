@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { outboundRel } from "@/lib/affiliate";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { TOP_BUY_ATTR } from "./CardTopBuy";
+import { barTestSeen, type BarArm } from "@/lib/bar-test";
 
 // The card page's phone buy path, bottom half (RiftCompare's CardStickyBuyBar):
 // below lg, once the top buy block has scrolled away, "<price> at <store> ·
@@ -21,7 +22,10 @@ export function CardStickyBuyBar({
   slug,
   name,
   cardId,
+  paid,
 }: {
+  /** The buy bar test's "paid" arm (lib/bar-test.ts): the market's cheapest paid row, where the cheapest pays nothing; else null. */
+  paid?: { price: string; store: string; href: string; retailer: string; ebay: boolean } | null;
   /** The card's id, for the watch heart (wave 2). */
   cardId?: number;
   /** The price board's element id. */
@@ -37,6 +41,11 @@ export function CardStickyBuyBar({
   name: string;
 }) {
   const [show, setShow] = useState(false);
+  // The bar test (lib/bar-test.ts): counted once a visit on a phone card page, from 3 Dec; null (today's bar) before then.
+  const [arm, setArm] = useState<BarArm | null>(null);
+  useEffect(() => setArm(barTestSeen()), []);
+  const ad = arm === "paid" && paid ? paid : null;
+  const row = ad ?? { price, store, href, retailer, ebay };
   const bar = useRef<HTMLDivElement>(null);
   // Hidden = inert: nothing in it can be tabbed to or read out.
   useEffect(() => {
@@ -87,19 +96,20 @@ export function CardStickyBuyBar({
     >
       <div className="mx-auto flex max-w-xl items-center gap-2">
         <p className="min-w-0 flex-1 truncate text-sm">
-          <span className="num font-bold text-white">{price}</span>
-          <span className="text-slate-400"> at {store}</span>
+          {ad ? <span className="mr-1.5 rounded border border-ink-700 px-1.5 text-[11px] font-bold leading-[18px] text-slate-400">Ad</span> : null}
+          <span className="num font-bold text-white">{row.price}</span>
+          <span className="text-slate-400"> {ad ? "on" : "at"} {row.store}</span>
         </p>
         {cardId != null ? <PriceWatchButton cardId={cardId} slug={slug} name={name} /> : null}
         <a
-          href={href}
+          href={row.href}
           target="_blank"
           rel={outboundRel()}
-          data-retailer={retailer}
+          data-retailer={row.retailer}
           data-page={page}
           data-card={slug}
           data-surface="sticky_buy_bar"
-          className={`${ebay ? "btn-ebay" : "btn-primary"} shrink-0`}
+          className={`${row.ebay ? "btn-ebay" : "btn-primary"} shrink-0`}
         >
           Buy →
         </a>

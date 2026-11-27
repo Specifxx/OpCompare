@@ -5303,3 +5303,15 @@ can be taken down a little because we already have enough feedback". The rate-us
 more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
 
 Released at 22:40 UTC: TCGplayer's sale card, owner asked for urgent releases.
+
+## 2026-11-27 — The phone buy bar test: the paid link in the bar, from 3 Dec (Head of Conversion)
+
+The card page's phone buy bar repeats the market's cheapest row, often a store that pays nothing; across our sites about two of
+every three buy clicks go to unpaid stores while eBay earns about A$0.35 a click and TCGplayer about A$0.42 (30 days to 23 Nov).
+So, 50/50 in the browser from 3 Dec (`lib/bar-test.ts`, localStorage `bar-test`), phones and card pages only, never the quick view:
+"store" keeps today's bar; "paid", where the cheapest row pays nothing, shows the cheapest eBay or TCGplayer row that pays in the
+same market (`cheapestPaidRow`, lib/quick-view.ts) at its real price with an "Ad" label. The top buy block and the board are
+unchanged; the bar never calls the paid row the cheapest. One event, `bar_test` {k}: "<arm>:seen" once a visit, "<arm>:paid" /
+"<arm>:store" on the visit's first click of each kind on a card page. Read 16 Dec: paid clickers per 100 seen visits per arm, and
+that store clicks do not fall by more than paid ones rise. OP's only new test; it rides the Monday 30 Nov release and does
+nothing before 3 Dec.
