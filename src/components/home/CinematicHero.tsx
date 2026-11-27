@@ -8,6 +8,7 @@ import { TrendingChips, type TrendingCard } from "./TrendingChips";
 import { BrandLogo } from "@/components/BrandLogo";
 import { HalloweenDecor } from "./HalloweenDecor";
 import { ChristmasGifts } from "./ChristmasGifts";
+import { MascotGuide } from "@/components/MascotGuide";
 import { ThrillerBarkComing } from "./ThrillerBarkComing";
 import { CreatorsCornerBadge } from "./CreatorsCornerBadge";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
@@ -97,6 +98,8 @@ export function CinematicHero({
               <CardSearch size="lg" placeholder="Search any One Piece card or sealed product…" />
             </Suspense>
           </div>
+          {/* Penny suggests a first search (owner, 2026-11-27: "a little mascot saying, hey, search this term here"). */}
+          <MascotGuide examples={["Luffy", "OP-13", "Booster Box"]} fallbackHref="/search?q=" />
           {/* The region chooser, with flags, straight under the search (owner,
               2026-11-02: make it prominent); under the intro on phones. */}
           <CountryHeroToggle />
