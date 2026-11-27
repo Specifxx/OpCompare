@@ -5285,3 +5285,9 @@ dry run by default, 60 a batch, 90 at most).
 - **Fits the Premium tests:** sends stop 1 Dec 2026 12:00 UTC by a hard constant; a pass holder may still check out while the
   pass is their only Premium.
 - The opt-out route ships with the next release (Monday), so the first batch is sent after it, inside the window.
+
+## 2026-11-27 — The rating card no longer asks on its own
+
+Owner, 27 Nov: "make sure that users have a good experience … not too many pop-ups … the feedback pop-up on Rift Compare
+can be taken down a little because we already have enough feedback". The rate-us corner card never opens by itself any
+more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
