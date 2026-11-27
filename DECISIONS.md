@@ -5217,3 +5217,11 @@ pinging dot); the search has a firm 1.5px edge and the brand focus ring; 10px ra
 market picker, 6px on chips; the giveaway card and trophy are flat. The motes canvas (`HeroSparks`, 2026-11-03) is no
 longer mounted. No markup, word, order, URL or heading changed; OP red, the Santa hat and the seasonal lines stay. Rules and
 the list of tells: the project's design-system/README.md. Never add those tells back.
+
+## 2026-11-27 — Black Friday mode for one day (owner)
+
+Owner, 27 Nov: "for one day, have the site turn into Black Friday mode … advertising way more about products and links". For
+Black Friday in every time zone (00:00 UTC 27 Nov to 10:00 UTC 28 Nov, `lib/bf-mode.ts`) the promo line under the header becomes
+one bold Black Friday bar: the Black Friday deals page, and a labelled TCGplayer sale link (subId tcgplayer, page bf-mode). Same
+place as the line, in the server HTML, never a pop-up, fixed or floating; ✕ hides it for the visit. The browser re-reads the
+clock, so a cached page reverts on time with no build; the files can go after Cyber Monday.
