@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BfModeBar } from "@/components/BfModeBar";
 import { affiliateUrl } from "@/lib/affiliate";
-import { bfModeOn } from "@/lib/bf-mode";
+import { bfModeOn, bfPhase } from "@/lib/bf-mode";
 import { saleStrip } from "@/lib/holiday-strip";
 import { StripClose } from "./StripClose";
 
@@ -26,7 +26,7 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
   if (!on) return strip;
   return (
     <BfModeBar
-      on={on}
+      on={on} phase={bfPhase(Date.now())}
       href="/black-friday"
       title="One Piece sealed deals"
       line="booster boxes under TCGplayer and every store today"
