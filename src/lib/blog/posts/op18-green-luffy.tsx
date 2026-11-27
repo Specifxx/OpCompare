@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CardGrid } from "@/components/blog/BlogBits";
 import { COUNTRIES } from "../../country";
+import { encodeDeckParam } from "../../deck";
 import { money } from "../../format";
 import type { Post } from "../types";
 import { plural } from "../util";
@@ -36,11 +37,17 @@ import {
 // and no decklist is printed until Bandai publishes the set.
 const UNTAPPERS = ["OP18-025", "OP18-024", "OP18-028", "OP18-031"];
 
+/** The deck pricer's list for the Leader and a playset of each untap card: a core, never a 50-card list. */
+export const coreList = (leader: string, cards: { number: string | null }[]): string =>
+  ["Leader", `1x${leader}`, "Characters", ...cards.filter((x) => x.number).map((x) => `4x${x.number}`)].join("\n");
+
 export const op18GreenLuffy: Post = {
   slug: "op18-green-luffy-leader-deck-guide",
-  title: () => "OP18 Green Luffy Deck Guide: How to Play It",
+  // "Core cards" (2026-11-27, Search Console): the guide is shown for "op18 green luffy deck list" (pos ~9). It prints
+  // no 50-card list of its own (DeckCallout), so the title promises what it has: the untap core, priced in the deck pricer.
+  title: () => "OP18 Green Luffy Deck Guide: Core Cards & How to Play",
   description:
-    "How to play the OP18 green Monkey.D.Luffy deck: the leader's attack-twice effect, the green cards that untap it, the game plan and where to buy OP18.",
+    "The OP18 green Luffy deck: the leader's attack-twice effect, the four green cards that untap it (its core, priced in one click), the game plan and OP18 prices.",
   tags: ["guide", "op18", "leaders", "green"],
   category: "guide",
   date: "2026-10-16",
@@ -64,7 +71,11 @@ export const op18GreenLuffy: Post = {
     },
     {
       q: "Is green Luffy going to be good?",
-      a: "Nobody can say yet: Bandai has not published the full card list and there are no tournament results. On the reported text, green has several cards that untap the Leader, which is what this deck needs. We will update this guide when the final English text is out.",
+      a: "Too early to say: OP18 came out on 20 November 2026 and its cards became tournament legal a week later, so there are no meaningful tournament results yet. On the reported text, green has several cards that untap the Leader, which is what this deck needs.",
+    },
+    {
+      q: "Is there an OP18 green Luffy decklist?",
+      a: "This guide prints no 50-card list of its own until tournament results exist. It gives the deck's core: the Leader plus Gonbe, Kokoro, Chimney and Nico Robin, the green cards that set him active again, which the guide's deck pricer link prices as playsets in one click. Paste any full green Luffy list into [the deck pricer](/deck) to price it card by card, or browse [the decks players have published](/decks).",
     },
   ],
   related: [
@@ -244,6 +255,15 @@ export const op18GreenLuffy: Post = {
                       : "Before release these are pre-order listings, so treat them as a watchlist, not a valuation:"}
                   </p>
                   <CardGrid cards={untappers} setById={cat.setById} country={country} />
+                  {op18Out(cat) && luffy?.number ? (
+                    <p>
+                      <strong>The core, priced:</strong>{" "}
+                      <Link href={`/deck?list=${encodeDeckParam(coreList(luffy.number, untappers))}`}>
+                        price the Leader and a playset of {plural(untappers.length, "untap card")}
+                      </Link>{" "}
+                      at the cheapest store in {c.place}, card by card, then add the rest of your list. It is a starting core, not a full deck.
+                    </p>
+                  ) : null}
                 </>
               ) : null}
               {manga ? (

@@ -339,3 +339,21 @@ test("after OP18's release (2026-11-21): no pre-order wording, the decklist box 
     for (const m of html.matchAll(/href="([^"]+)"/g)) if (m[1].startsWith("/")) assert.ok(resolves(m[1], c.cat), `${slug}: ${m[1]}`);
   }
 });
+
+test("green Luffy after release: the core link prices the Leader and a playset of each untap card, nothing more; none before release", async () => {
+  const { parseDeckList, decodeList } = await import("../src/lib/deck");
+  const out = SETS.map((s) => (s.code === "OP18" ? { ...s, releasedOn: day(-1) } : s));
+  const sealed = SEALED.map((s) => ({ ...s, presale: false }));
+  const html = render(post(SLUGS[0]), ctx("US", CARDS, out, sealed));
+  const m = /href="\/deck\?list=([^"]+)"/.exec(html);
+  assert.ok(m, "core link");
+  const lines = parseDeckList(decodeList(decodeURIComponent(m![1].replace(/&amp;/g, "&"))));
+  const leader = lines.filter((l) => l.leader);
+  assert.deepEqual(leader.map((l) => [l.number, l.qty]), [["OP18-022", 1]]);
+  const rest = lines.filter((l) => !l.leader);
+  assert.ok(rest.length >= 1 && rest.length <= 4, "the untap cards only");
+  assert.ok(rest.every((l) => l.qty === 4 && ["OP18-024", "OP18-025", "OP18-028", "OP18-031"].includes(l.number!)));
+  assert.match(html, /not a full deck/);
+  const pre = render(post(SLUGS[0]), ctx("US"));
+  assert.doesNotMatch(pre, /href="\/deck\?list=/);
+});
