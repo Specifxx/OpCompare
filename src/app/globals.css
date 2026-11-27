@@ -1748,8 +1748,6 @@ table thead th {
 table tbody tr { transition: background-color 120ms ease; }
 table tbody tr:hover { background: rgb(var(--c-ink-850) / 0.7); }
 
-/* 6. Motion: nothing blurs or rises in on scroll; everything is there on first paint. */
-.cine-item { opacity: 1 !important; transform: none !important; filter: none !important; }
 /* empire-v2:end */
 
 @media (prefers-reduced-motion: reduce) {
