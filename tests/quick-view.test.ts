@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import type { CardDetail, OfferRow } from "../src/lib/data";
-import { cardDisplayName, cheapestBuyRow, isPreRelease, marketRows, paidAlternativeRow, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
+import { cardDisplayName, cheapestBuyRow, cheapestPaidRow, isPreRelease, marketRows, paidAlternativeRow, quickViewHistory, quickViewPayload, QUICKVIEW_ROWS } from "../src/lib/quick-view";
 import { planBasket } from "../src/lib/basket";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -269,4 +269,12 @@ test("the popup pins the board's eBay and TCGplayer rows above cheaper stores, t
   assert.equal(us.pinned, 2);
   assert.equal(us.rows.length, QUICKVIEW_ROWS);
   assert.equal(us.count, 8);
+});
+
+test("cheapestPaidRow (the buy bar test's paid arm): the cheapest eBay or TCGplayer row, any gap, only when the cheapest pays nothing", () => {
+  const tcg = (priceCents: number) => offer({ source: "tcgplayer", market: "US", priceCents, url: "https://www.tcgplayer.com/product/1" });
+  const store = (priceCents: number) => offer({ source: "store:a", market: "US", priceCents });
+  assert.equal(cheapestPaidRow([store(1000), tcg(1500)], "US", "/card/x")?.source, "tcgplayer", "past the 20% band still counts");
+  assert.equal(cheapestPaidRow([tcg(900), store(1000)], "US", "/card/x"), null, "the cheapest already pays");
+  assert.equal(cheapestPaidRow([store(1000)], "US", "/card/x"), null, "nothing paid in the market");
 });
