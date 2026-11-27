@@ -13,6 +13,7 @@ import { Ago } from "./Ago";
 import { StoreVote } from "./StoreVote";
 import { CartAddButton } from "./cart/CartAddButton";
 import { ReportPriceButton } from "./ReportPriceButton";
+import { TcgSaleChip } from "@/components/TcgSaleChip";
 
 // The price comparison (RiftCompare's card-page board): every open offer in one
 // market, cheapest first by ITEM price; sold-out stores folded below; eBay
@@ -144,6 +145,7 @@ export function PriceBoardView({
                   <p className="pb-name flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">{o.label}</span>
                     {o.host && <StoreVote url={o.host} name={o.label} className="text-slate-400" />}
+                    {tcg ? <TcgSaleChip /> : null}
                     {best === "loud" ? <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">Cheapest</span> : null}
                     {plainBest ? <BestPriceTag /> : null}
                   </p>
@@ -242,6 +244,7 @@ export function PriceBoardView({
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
+                  <TcgSaleChip />
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   <span className="rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-slate-400">Paid link</span>
@@ -265,6 +268,7 @@ export function PriceBoardView({
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-white">TCGplayer</span>
+                  <TcgSaleChip />
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   No TCGplayer price on file for this {noun}. See its current listings.{" "}
