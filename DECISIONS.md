@@ -5225,3 +5225,16 @@ Black Friday in every time zone (00:00 UTC 27 Nov to 10:00 UTC 28 Nov, `lib/bf-m
 one bold Black Friday bar: the Black Friday deals page, and a labelled TCGplayer sale link (subId tcgplayer, page bf-mode). Same
 place as the line, in the server HTML, never a pop-up, fixed or floating; ✕ hides it for the visit. The browser re-reads the
 clock, so a cached page reverts on time with no build; the files can go after Cyber Monday.
+
+## 2026-11-27 — Empire design language v2, "Ledger"
+
+The owner (2026-11-27) asked for a rework so the sites look state of the art and expert-designed, not vibe-coded. v1 (`op-ds`)
+took the template tells off. v2 (`empire-v2`, right after `op-ds` in `globals.css`, before the final reduced-motion block; the
+project's design-system/README.md) gives the look a point of view, a price ledger:
+- Geist is now the one family for words and headings, and Geist Mono for figures. Both are bundled through next/font/local, so the
+  weekly build fetches no font. They replace Google-served Inter, JetBrains Mono and Archivo, whose variable names are kept.
+- Dark surfaces and the slate text ramp are neutral greys (the navy cast is gone), still 4.5:1 on every surface
+  (`tests/theme.test.ts`). OP red stays the one accent.
+- Sealed photos sit on one inset paper plate, table heads are mono and uppercase, and nothing blurs or rises in on scroll.
+- Buy buttons keep their fill, and the light palette is unchanged.
+CSS, fonts and the two tests' pins only: no word, order, URL, heading or ranking changed.

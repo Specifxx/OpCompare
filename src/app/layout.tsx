@@ -1,7 +1,7 @@
 import { ADSENSE_CLIENT_ID } from "@/lib/adsense";
 import { HolidayStrip } from "@/components/HolidayStrip";
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Archivo } from "next/font/google";
+import localFont from "next/font/local";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 // The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
@@ -55,11 +55,13 @@ import { ImageRescue } from "@/components/ImageRescue";
 // silently keeps the system fallback whenever the font misses the ~100ms
 // first-paint window; adjustFontFallback size-matches the fallback so the
 // swap-in causes negligible layout shift.
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+// Empire design v2 "Ledger" (2026-11-27): Geist for words and headings, Geist Mono for figures, bundled (OFL,
+// fonts/Geist-OFL.txt) so the weekly build never fetches a font.
+const inter = localFont({ src: "./fonts/Geist-Variable.woff2", weight: "100 900", variable: "--font-sans", display: "swap" });
 // preload: false — the mono face only dresses numbers, never the H1 that is the
 // LCP, so it arrives with the stylesheet and swaps in. Inter (body) and
 // Archivo (the H1) stay preloaded.
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
+const jetbrainsMono = localFont({ src: "./fonts/GeistMono-Variable.woff2", weight: "100 900", variable: "--font-mono", display: "swap", preload: false });
 // Client-only corner widgets, as on RiftCompare: each renders nothing on the
 // server (it needs /api/me or browser storage first), so ssr:false keeps their
 // JS off the first paint without changing the HTML.
@@ -67,17 +69,11 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 // hero and the footer ad zone (#op-hero, #op-ad-zone).
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), { ssr: false });
 
-// Headings: Archivo, the heavy neutral grotesque the homepage introduced
+// Headings: Geist since 2026-11-27 (design v2); before that Archivo, the heavy neutral grotesque the homepage introduced
 // (2026-11-14: one heading voice site-wide, replacing Fraunces, as RiftCompare
 // did on 2026-10-16). One family under both variables: --font-display for every
 // h1-h3 and `font-display`, --font-riftbound for the homepage's own wrapper.
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  style: ["normal"],
-  variable: "--font-display",
-  display: "swap",
-});
+const archivo = localFont({ src: "./fonts/Geist-Variable.woff2", weight: "100 900", variable: "--font-display", display: "swap" });
 
 // Impact's snippet is `<meta name='impact-site-verification' value='…'>`: a `value`
 // attribute, which React's meta typings do not list, so it is spread in.
