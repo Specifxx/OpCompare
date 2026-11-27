@@ -5285,3 +5285,4 @@ dry run by default, 60 a batch, 90 at most).
 - **Fits the Premium tests:** sends stop 1 Dec 2026 12:00 UTC by a hard constant; a pass holder may still check out while the
   pass is their only Premium.
 - The opt-out route ships with the next release (Monday), so the first batch is sent after it, inside the window.
+- Released urgently on 2026-11-27 (owner: "deploy it urgently"), from main once the 8-hour gate opened.
