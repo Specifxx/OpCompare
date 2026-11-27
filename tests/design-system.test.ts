@@ -151,12 +151,13 @@ test("OP Compare's retired design vocabulary is gone: no straw, no sea, no comic
   assert.ok(!existsSync(join(ROOT, "src/lib/theme.ts")));
 });
 
-test("fonts: RiftCompare's next/font block on <html>, one Archivo heading voice site-wide, mono numerals", () => {
+test("fonts: one bundled Geist family on <html> (design v2, 2026-11-27): Geist for words and headings, Geist Mono for numerals", () => {
   const layout = read("src/app/layout.tsx");
-  assert.match(layout, /import \{ Inter, JetBrains_Mono, Archivo \} from "next\/font\/google";/);
-  assert.match(layout, /const inter = Inter\(\{ subsets: \["latin"\], variable: "--font-sans", display: "swap" \}\);/);
-  assert.match(layout, /JetBrains_Mono\(\{ subsets: \["latin"\], variable: "--font-mono", display: "swap", preload: false \}\)/);
-  assert.match(layout, /weight: \["600", "700", "800", "900"\],\s*style: \["normal"\],\s*variable: "--font-display",\s*display: "swap",/);
+  assert.match(layout, /import localFont from "next\/font\/local";/);
+  assert.doesNotMatch(layout, /next\/font\/google/, "no font fetched at build");
+  assert.match(layout, /const inter = localFont\(\{ src: "\.\/fonts\/Geist-Variable\.woff2", weight: "100 900", variable: "--font-sans", display: "swap" \}\);/);
+  assert.match(layout, /localFont\(\{ src: "\.\/fonts\/GeistMono-Variable\.woff2", weight: "100 900", variable: "--font-mono", display: "swap", preload: false \}\)/);
+  assert.match(layout, /const archivo = localFont\(\{ src: "\.\/fonts\/Geist-Variable\.woff2", weight: "100 900", variable: "--font-display", display: "swap" \}\);/);
   assert.match(layout, /<html lang="en" data-theme="dark" className=\{`\$\{inter\.variable\} \$\{jetbrainsMono\.variable\} \$\{archivo\.variable\}`\}/);
   assert.match(layout, /<body className="min-h-screen bg-ink-950">/);
   // One heading face (2026-11-14): no second display font, and the homepage loads none of its own.

@@ -11,19 +11,19 @@
      renders pixel-identically. The light set is further down under
      `:root[data-theme="light"]`; src/lib/theme-shared.ts explains the switch
      and tests/theme.test.ts pins that both sets define every variable. */
-  --c-ink-950: 10 12 16;
-  --c-ink-900: 14 17 22;
-  --c-ink-850: 19 23 31;
-  --c-ink-800: 25 30 40;
-  --c-ink-700: 37 43 56;
-  --c-ink-600: 51 59 77;
+  --c-ink-950: 9 10 12;
+  --c-ink-900: 17 18 21;
+  --c-ink-850: 24 26 30;
+  --c-ink-800: 31 33 38;
+  --c-ink-700: 44 46 53;
+  --c-ink-600: 62 65 73;
   --c-brand-400: 255 107 107;
   --c-slate-100: 241 245 249;
   --c-slate-200: 226 232 240;
-  --c-slate-300: 203 213 225;
-  --c-slate-400: 148 163 184;
-  --c-slate-500: 133 147 166;
-  --c-slate-600: 118 130 143;
+  --c-slate-300: 214 215 219;
+  --c-slate-400: 166 169 177;
+  --c-slate-500: 150 153 162;
+  --c-slate-600: 132 135 145;
   --c-slate-700: 51 65 85;
   --c-slate-800: 30 41 59;
   --c-slate-900: 15 23 42;
@@ -50,15 +50,15 @@
   --c-lime-300: 190 242 100;
   --c-purple-300: 216 180 254;
   --c-blue-300: 147 197 253;
-  --page-bg: #0b0e14;
-  --page-fg: #e8eaee;
+  --page-bg: #090a0c;
+  --page-fg: #ededef;
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
   /* The scrolled header's drop (NavbarShell SCROLLED, tailwind `shadow-header`). */
   --shadow-header: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --scroll-track: #0f131c;
-  --scroll-thumb: #2c3650;
-  --scroll-thumb-hover: #3a4564;
+  --scroll-track: #111215;
+  --scroll-thumb: #2c2e35;
+  --scroll-thumb-hover: #3e4149;
   /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
      0 by default so every element that pads/positions against it (the header,
      main, the footer ad zone, the footer itself, CinematicHero's full-bleed
@@ -1695,6 +1695,62 @@ html[data-ebaypop="pop"] li:has(a[data-retailer^="ebay"]:is(.btn-primary, .btn-b
 [class*="hover:shadow-glow"]:hover { box-shadow: none !important; }
 main h2 { letter-spacing: -0.01em; }
 /* op-ds:end */
+
+/* empire-v2:start — "Ledger", the Empire design language v2 (2026-11-27; the project's design-system/README.md).
+   Owner (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded. v1 took the
+   template tells off; v2 gives the site a point of view, a price ledger: Geist for words and headings, Geist Mono for
+   every figure, near-black neutral surfaces (tokens set in place at the top of this file), product photos on one paper
+   plate, mono table heads over hairline rows, nothing that blurs or rises in on scroll. The brand colour stays the one
+   accent and buy buttons keep their fill. CSS and fonts only: no word, order, URL, heading or ranking change. */
+
+/* 1. Type: one family. Tight display tracking, mono figures. */
+body {
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .font-display { letter-spacing: -0.03em; }
+h1 { font-weight: 700; }
+h2, h3 { font-weight: 600 !important; }
+.num, .font-mono, .tabular-nums { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* 2. Surfaces: flat bordered cards, 12 / 8 / 6 radii, no shadow, a firmer edge on hover. */
+.card-surface { border-radius: 12px !important; box-shadow: none !important; }
+.btn, .input { border-radius: 8px !important; }
+.chip, .tag { border-radius: 6px !important; }
+.card-surface:hover { box-shadow: none !important; }
+
+/* 3. Product photos: one paper plate, inset inside the card, the photo multiplied onto it. */
+.card-surface > .bg-white\/95,
+.card-surface > a > .bg-white\/95 {
+  background: #f3f2ee !important;
+  margin: 6px 6px 0;
+  border-radius: 8px;
+}
+.card-surface .bg-white\/95 img { mix-blend-mode: multiply; }
+.card-surface > .bg-white\/95 > span.rounded-sm {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.02em;
+  border-radius: 4px !important;
+}
+
+/* 4. The price is the loudest thing on a tile. */
+.card-surface .num.text-lg { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.025em; }
+
+/* 5. Price tables: a ledger. Mono uppercase heads, hairline rows with a hover tint. */
+table thead th {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+table tbody tr { transition: background-color 120ms ease; }
+table tbody tr:hover { background: rgb(var(--c-ink-850) / 0.7); }
+
+/* 6. Motion: nothing blurs or rises in on scroll; everything is there on first paint. */
+.cine-item { opacity: 1 !important; transform: none !important; filter: none !important; }
+/* empire-v2:end */
 
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
