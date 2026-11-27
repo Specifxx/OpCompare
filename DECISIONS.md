@@ -5250,3 +5250,22 @@ example searches for this game. A tap types the example into the search box and 
 - Inline in the hero, server-rendered, no layout shift. Never a pop-up, an overlay or a second prompt (one prompt per visit).
 - One short wave on load and on hover, none under reduced motion. Neutral bubble that reads on dark and light.
 - The h1, title, meta, URLs and order of the page are unchanged; the hero gains one line of text and three buttons.
+
+## 2026-11-27: A 3-day Premium pass, emailed to free accounts
+
+Owner, 27 Nov: email the registered accounts that aren't Premium, in batches per site, with Premium's features laid out
+clearly, and give them a 3-day pass. RiftCompare sends it for the shared-Premium sites; OP Compare has its own accounts, so
+it sends its own, script-side like every OP email (`scripts/premium-gift-pass.ts`, dispatch-only `email-premium-pass.yml`,
+dry run by default, 60 a batch, 90 at most).
+
+- **The email is the pass:** just before each send the account gets 3 days of Premium (`premiumUntil` extend-only, tier set
+  only when no period was active) and Counter `gp3:<id>`, in one transaction; a refused send is put back as it was. This is a
+  new, named writer of `premiumUntil` (CLAUDE.md, Plus & Premium).
+- **Who:** non-paying, non-admin accounts with a verified address (emailed link or Google), not opted out of this email or of
+  alert email (`AlertMute`), not welcomed in the last 72 hours, newest first, never twice.
+- **Opt-out:** the address signed with a key derived from `EMAIL_LINK_SECRET` (its own label), so no token table; the page only
+  asks on GET (link scanners) and opts out on POST (button or RFC 8058 one-click), stored as Counter `gp3-optout:<email>`.
+  Read at request time only through `lib/premium-gift-pass-access.ts` (per-user exception list), which never sends.
+- **Fits the Premium tests:** sends stop 1 Dec 2026 12:00 UTC by a hard constant; a pass holder may still check out while the
+  pass is their only Premium.
+- The opt-out route ships with the next release (Monday), so the first batch is sent after it, inside the window.

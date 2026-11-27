@@ -64,7 +64,7 @@ test("CLAUDE.md names every wave-2 per-user library in the accounts exception", 
 });
 
 test("per-user libraries are imported only by the pages CLAUDE.md names", () => {
-  const libs = ["watchlist-server", "collection-server", "collection-share", "set-owned", "notifications", "sealed-watch", "deck-watch", "published-decks-server", "basket-server", "alert-routes", "alert-actions", "alert-subscribe", "alert-mute", "newsletter-signup"];
+  const libs = ["watchlist-server", "collection-server", "collection-share", "set-owned", "notifications", "sealed-watch", "deck-watch", "published-decks-server", "basket-server", "alert-routes", "alert-actions", "alert-subscribe", "alert-mute", "newsletter-signup", "premium-gift-pass-access"];
   const allowed = new Set([
     "src/app/watching/page.tsx",
     "src/app/dashboard/page.tsx",

@@ -1,0 +1,49 @@
+name: Premium 3-day pass batch
+
+# One batch of the 3-day Premium pass email to OP Compare accounts that are not Premium (scripts/premium-gift-pass.ts;
+# owner, 2026-11-27). Dispatch only, never scheduled. Dry run by default. Each email grants the pass, nobody gets two, and
+# sends stop by themselves on 1 Dec 2026, 12:00 UTC.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Accounts in this batch (at most 90)"
+        type: string
+        default: "60"
+      dry:
+        description: "1 = count only, 0 = send"
+        type: choice
+        options: ["1", "0"]
+        default: "1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.OP2 || vars.OP2 || secrets.OP3 || vars.OP3 || secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_LINK_SECRET: ${{ secrets.EMAIL_LINK_SECRET }}
+      EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
+      LIMIT: ${{ inputs.limit }}
+      DRY_RUN: ${{ inputs.dry }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - name: Send one batch
+        run: npx tsx scripts/premium-gift-pass.ts

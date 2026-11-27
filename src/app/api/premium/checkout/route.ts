@@ -6,6 +6,7 @@ import { checkoutParams } from "@/lib/checkout-params";
 import { isPlanClickSurface } from "@/lib/nudge-surface";
 import { isInterval, isTier } from "@/lib/plans";
 import { isPremium } from "@/lib/premium";
+import { giftPassMayCheckout } from "@/lib/premium-gift-pass-access";
 import { planInterval, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
 import { priceIdFor, stripe, stripeEnabled } from "@/lib/stripe";
@@ -23,7 +24,8 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   if (!stripeEnabled()) return NextResponse.json({ error: "Subscriptions aren't open yet." }, { status: 503 });
   // A member changes plan in place (/premium's member card), never with a second subscription.
-  if (isPremium(user) && !user.isAdmin) return NextResponse.json({ error: "You're already a member — change your plan from the membership page." }, { status: 409 });
+  // The emailed 3-day pass (lib/premium-gift-pass.ts) is a gift: its holder may still subscribe while it is their only Premium.
+  if (isPremium(user) && !user.isAdmin && !(await giftPassMayCheckout(user.id))) return NextResponse.json({ error: "You're already a member — change your plan from the membership page." }, { status: 409 });
   const body = (await req.json().catch(() => ({}))) as { tier?: unknown; interval?: unknown; plan?: unknown; surface?: unknown; back?: unknown };
   const tier = isTier(body.tier) ? body.tier : "premium";
   const interval = isInterval(body.interval) ? body.interval : body.plan === "annual" || body.plan === "monthly" ? planInterval(body.plan) : "month";
