@@ -5327,3 +5327,11 @@ shipping on Direct orders over $50, help.tcgplayer.com "Buying from TCGplayer Di
 code, credit or countdown (`tests/offer-calendar.test.ts`). The card keeps its rules: once a visit, the visit's one prompt slot,
 never while typing; after the sale its ✕ keeps it away for 7 days instead of for good. Both re-read the clock in the browser, so the
 switch needs no build. Change a partner line only after reading its page again.
+
+## 2026-11-28: The 3-day pass by Gmail BCC
+
+Owner, 27–28 Nov: send the pass by hand from Gmail (BCC) instead of a mail API. OP's batch workflow has no mail key, so
+`email-premium-pass.yml` gains `grant_only`: it grants the pass to a batch (same audience, Counter row and window as the
+mailed batch) and hands back the addresses and one copy of the email encrypted to a certificate given as an input (the
+repository is public: an address never reaches a log or a plain artifact). The BCC copy's unsubscribe link is a reply to
+compareempire@gmail.com, since a BCC carries no per-person token.

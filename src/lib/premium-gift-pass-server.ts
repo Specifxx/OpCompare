@@ -108,3 +108,34 @@ export async function runGiftPassBatch(opts: { dryRun: boolean; limit?: number }
   }
   return { ...base, sent, failed, remaining: a.pending.length - sent, ...(errors.size ? { errors: [...errors] } : {}) };
 }
+
+/**
+ * The owner's Gmail route (2026-11-28: "send it manually … all these BCC emails", Gmail BCC from the Compare Empire
+ * account): grant the pass to up to `limit` pending accounts and return their addresses and ONE copy of the email to send
+ * by hand. Same audience, Counter row and window as the mailed batch, so nobody gets it twice. A BCC copy carries no
+ * per-person opt-out token, so its unsubscribe link is a reply to the sending address.
+ */
+export async function grantGiftPassOnly(opts: { limit?: number; unsubUrl: string }): Promise<{ ok: boolean; error?: string; granted: number; failed: number; remaining: number; emails: string[]; subject?: string; html?: string }> {
+  const now = Date.now();
+  if (!giftPassOpen(now)) return { ok: false, error: "the 3-day pass closed on 1 Dec 2026, 12:00 UTC", granted: 0, failed: 0, remaining: 0, emails: [] };
+  const limit = Math.min(opts.limit && opts.limit > 0 ? opts.limit : GIFT_DEFAULT_BATCH, 450);
+  const [rows, optedOut, sentIds] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20_000,
+      select: { id: true, email: true, displayName: true, isAdmin: true, premiumUntil: true, emailVerified: true, googleId: true, welcomeEmailSentAt: true },
+    }),
+    loadOptedOut(),
+    loadSent(),
+  ]);
+  const a = giftAudience(rows, { optedOut, sent: sentIds, now });
+  const emails: string[] = [];
+  let failed = 0;
+  for (const r of a.pending.slice(0, limit)) {
+    const g = await grant(r.id, Date.now()).catch(() => null);
+    if (g) emails.push(r.email.trim());
+    else failed++;
+  }
+  const m = buildGiftPassEmail({ siteUrl: SITE_URL, displayName: "", until: now + GIFT_PASS.days * 86_400_000, unsubUrl: opts.unsubUrl });
+  return { ok: true, granted: emails.length, failed, remaining: a.pending.length - emails.length, emails, subject: m.subject, html: m.html };
+}
