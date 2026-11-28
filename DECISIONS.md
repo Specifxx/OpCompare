@@ -5315,3 +5315,15 @@ unchanged; the bar never calls the paid row the cheapest. One event, `bar_test` 
 "<arm>:store" on the visit's first click of each kind on a card page. Read 16 Dec: paid clickers per 100 seen visits per arm, and
 that store clicks do not fall by more than paid ones rise. OP's only new test; it rides the Monday 30 Nov release and does
 nothing before 3 Dec.
+
+## 2026-11-28 — The offer calendar: the sale bar and card keep running after Cyber Weekend
+
+The owner, 28 Nov: the Cyber Weekend bar and TCGplayer's sale card brought a record day of TCGplayer earnings, so "keep the
+banners going and the pop-ups going" after the sale. From the end of TCGplayer's sale (`BF_MODE.end`, 04:00 UTC 1 Dec) the same
+bar, and on the card sites the same card, carry `lib/offer-calendar.ts`: the season in New York time (Christmas from 1 Dec, last
+orders from 14 Dec, after Christmas from 26 Dec, the new year 1-7 Jan, everyday deals the rest of the year), a site's own dated
+event when it names one, our own page for each, and only a partner offer its own help pages state as standing (TCGplayer: free US
+shipping on Direct orders over $50, help.tcgplayer.com "Buying from TCGplayer Direct", read 28 Nov). Never an invented discount,
+code, credit or countdown (`tests/offer-calendar.test.ts`). The card keeps its rules: once a visit, the visit's one prompt slot,
+never while typing; after the sale its ✕ keeps it away for 7 days instead of for good. Both re-read the clock in the browser, so the
+switch needs no build. Change a partner line only after reading its page again.
