@@ -1,0 +1,28 @@
+name: Premium 3-day pass, re-print an encrypted batch
+
+# Prints the ENCRYPTED gift-batch artifact of an earlier email-premium-pass run as base64 (ciphertext only: the batch is
+# encrypted to the certificate that run was given, so nothing readable reaches the log). For a session that cannot
+# download artifacts. Owner's Gmail route, 2026-11-28.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "The email-premium-pass run that made the batch"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  print:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gift-batch
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - run: base64 -w0 gift-batch.enc; echo
