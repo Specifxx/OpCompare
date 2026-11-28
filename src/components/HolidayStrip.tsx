@@ -3,6 +3,7 @@ import { BfModeBar } from "@/components/BfModeBar";
 import { TcgSalePopup } from "@/components/TcgSalePopup";
 import { affiliateUrl } from "@/lib/affiliate";
 import { bfModeOn, bfPhase } from "@/lib/bf-mode";
+import { TCGPLAYER_STANDING } from "@/lib/offer-calendar";
 import { saleStrip } from "@/lib/holiday-strip";
 import { StripClose } from "./StripClose";
 
@@ -23,13 +24,30 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
       <StripClose id={s.href.slice(1)} />
     </div>
   ) : null;
-  const on = bfModeOn(Date.now());
-  if (!on) return strip;
+  const now = Date.now();
+  const on = bfModeOn(now);
+  // After the sale the bar and the card keep running with the offer calendar (lib/offer-calendar.ts, owner 2026-11-28).
   return (
     <>
     <BfModeBar
-      on={on} phase={bfPhase(Date.now())}
+      on={on} phase={bfPhase(now)} now={now}
       href="/black-friday"
+      evergreen={{
+        title: "One Piece sealed deals",
+        line: "booster boxes under TCGplayer and every store today",
+        href: "/sealed",
+        hrefs: { afterChristmas: "/boxing-day", newYear: "/january-sales" },
+        ad: (
+        <a
+          href={affiliateUrl("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&ProductTypeName=Sealed+Products", "tcgplayer", "/offer-bar")}
+          rel="sponsored nofollow noopener noreferrer"
+          target="_blank"
+          className="underline underline-offset-2"
+        >
+          <span style={{ color: "#fff" }}>{TCGPLAYER_STANDING.short}</span> · Ad
+        </a>
+        ),
+      }}
       title="One Piece sealed deals"
       line="booster boxes under TCGplayer and every store today"
       ad={
@@ -46,7 +64,7 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
       {strip}
     </BfModeBar>
     {/* TCGplayer's sale card (owner, 2026-11-27): once a visit, never while typing, closes for good (TcgSalePopup.tsx). */}
-    <TcgSalePopup slotKey="oc_prompt_slot" dealsHref="/black-friday">
+    <TcgSalePopup slotKey="oc_prompt_slot" dealsHref="/black-friday" offerHref={"/sealed"}>
       <a href={affiliateUrl("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=booster+box&ProductTypeName=Sealed+Products", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">Booster boxes</a>
       <a href={affiliateUrl("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&ProductTypeName=Sealed+Products", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">All sealed</a>
       <a href={affiliateUrl("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&ProductTypeName=Cards", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">Singles</a>
