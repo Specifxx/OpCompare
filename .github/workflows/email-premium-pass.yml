@@ -73,3 +73,6 @@ jobs:
           name: gift-batch
           path: gift-batch.enc
           retention-days: 1
+      - name: Print the encrypted batch (grant_only; ciphertext only)
+        if: inputs.grant_only == '1'
+        run: base64 -w0 gift-batch.enc; echo
