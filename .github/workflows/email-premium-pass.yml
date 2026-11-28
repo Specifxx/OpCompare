@@ -15,6 +15,15 @@ on:
         type: choice
         options: ["1", "0"]
         default: "1"
+      grant_only:
+        description: "1 = grant the pass and hand back the addresses ENCRYPTED to `cert` (the Gmail route), no mail"
+        type: choice
+        options: ["0", "1"]
+        default: "0"
+      cert:
+        description: "grant_only: a PEM certificate, base64 (public; the batch is encrypted to it)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -37,6 +46,7 @@ jobs:
       NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://opcompare.app' }}
       LIMIT: ${{ inputs.limit }}
       DRY_RUN: ${{ inputs.dry }}
+      GRANT_ONLY: ${{ inputs.grant_only }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,3 +57,19 @@ jobs:
       - run: npm run db:generate
       - name: Send one batch
         run: npx tsx scripts/premium-gift-pass.ts
+      - name: Encrypt the granted batch (grant_only)
+        if: inputs.grant_only == '1'
+        env:
+          CERT_B64: ${{ inputs.cert }}
+        run: |
+          test -n "$CERT_B64" || { echo "cert is required"; rm -f gift-batch.json; exit 1; }
+          echo "$CERT_B64" | base64 -d > cert.pem
+          openssl cms -encrypt -binary -aes256 -in gift-batch.json -out gift-batch.enc -outform DER cert.pem
+          shred -u gift-batch.json
+      - name: Upload the encrypted batch
+        if: inputs.grant_only == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gift-batch
+          path: gift-batch.enc
+          retention-days: 1
